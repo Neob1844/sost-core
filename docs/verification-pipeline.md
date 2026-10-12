@@ -22,8 +22,10 @@ The pipeline is sequential — each layer must pass before the next runs.
 
 ### Layer 3 — cASERT bitsQ Difficulty (CHEAP, ~microseconds)
 - avg288-based bitsQ (block 5175+): compares average of last 288 block intervals against 600s target
-- Dynamic cap (block 5260+): per-block change limited by deviation band (0%/0.5%/1.5%/2.5%/3.0%), median288 sanity check
-- Historical: exponential half-life formula (12h/24h/48h) was active for blocks 0&ndash;5174
+- Dynamic cap (block 5270+, current): dead band ±15 s (0%), then per-block change limited by deviation band (0.5%/1.0%/2.0%/3.0% for |dev| in (15,60]/(60,120]/(120,240]/>240 s)
+- Historical: blocks 5260–5269 used a ±30 s dead band, 0.5%/1.5%/2.5%/3.0% steps and a median288 override
+- Historical: exponential half-life formula (48h before block 1450, then 24h) was active for blocks 0&ndash;5174
+- Validator requires bits_q == casert_next_bitsq(...) exactly, every block
 - Epoch 0 anchor always uses GENESIS_BITSQ (765,730)
 - Global bounds: MIN_BITSQ=65,536, MAX_BITSQ=16,711,680
 
@@ -81,7 +83,7 @@ Reorg depth limit: 500 blocks.
 | Difficulty adjustment | Every 2016 blocks (~2 weeks) | Every block (LWMA) | Every block (cASERT, avg288 + dynamic cap) |
 | Block time target | 600s (10 min) | 120s (2 min) | 600s (10 min) |
 | Anti-stall mechanism | None (2-week retarget) | LWMA handles stalls | cASERT Decay: 2h activation, tiered level decay |
-| Anti-acceleration | None | LWMA handles acceleration | cASERT: dynamic cap + equalizer (emergency-only, ceiling H10, 40 profiles) |
+| Anti-acceleration | None | LWMA handles acceleration | cASERT: dynamic cap + equalizer (43 profiles E7–H35, direct lag map since block 5323, ceiling H35 since block 12000; historically H10 ceiling with 40 profiles) |
 | Emission model | Halving every 210,000 blocks | Smooth tail emission (0.6 XMR/block) | Smooth exponential decay (q=e^(-1/4), ~9% annual) |
 | Max supply | 21,000,000 BTC | Infinite (tail emission) | ~4,669,201 SOST (Feigenbaum δ × 10⁶) |
 | Constitutional reserve | None | None | 25% gold vault + 25% PoPC pool (enforced at consensus) |

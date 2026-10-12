@@ -41,7 +41,7 @@
       "  transition: transform .18s ease, color .18s ease, border-color .2s ease;",
       "  box-shadow: 0 0 8px rgba(251,1,13,0.42), 0 0 18px rgba(245,158,11,0.22);",
       "  text-shadow: 0 0 6px rgba(251,1,13,0.55);",
-      "  animation: sostNavPulse 2.4s ease-in-out infinite;",
+      "  animation: sostNavPulse 3.1s ease-in-out infinite;",
       "  -webkit-tap-highlight-color: transparent;",
       "}",
       // Watch is the one nav link that HAS a box, and it inherited .nav-links a at 4px —
@@ -86,6 +86,7 @@
       "body.nav-collapsed nav { padding: 4px 0 !important; min-height: 0 !important; height: auto !important; }",
       "body.nav-collapsed nav .nav-logo,",
       "body.nav-collapsed nav .nav-links,",
+      "body.nav-collapsed nav #vcx-sost,",
       "body.nav-collapsed nav a[href=\"casert-spec.html\"],",
       "body.nav-collapsed nav a[href=\"sost-dex.html\"],",
       "body.nav-collapsed nav a[href=\"sost-popc.html\"],",
@@ -131,7 +132,7 @@
       "   smaller 18px override — force the standard size everywhere). */
       "nav .nav-logo { font-size: 26px !important; letter-spacing: 3px !important; gap: 14px !important; }",
       /* The ONLY pulsing logo on the whole site: the SOST mark — min->max glow. */
-      "nav .nav-logo img { animation: sostLogoPulse 3.6s ease-in-out infinite; }",
+      "nav .nav-logo img { animation: sostLogoPulse 4.7s ease-in-out infinite; }",
       "@keyframes sostLogoPulse {",
       "  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,1,13,.45)) drop-shadow(0 0 10px rgba(251,1,13,.25)); }",
       "  50% { filter: drop-shadow(0 0 22px rgba(251,1,13,1)) drop-shadow(0 0 52px rgba(251,1,13,.92)) drop-shadow(0 0 88px rgba(251,1,13,.6)); }",
@@ -147,6 +148,16 @@
 
   function applyState(collapsed) {
     document.body.classList.toggle("nav-collapsed", collapsed);
+    // MOBILE: HIDE NAV must also fold away the expanded hamburger menu. The
+    // mobile menu is shown via `.nav-links.open` (display:flex !important),
+    // which out-specifies the collapse rule and would otherwise keep the full
+    // link list on screen. Dropping `.open` when collapsing lets the collapse
+    // rule hide it; the hamburger stays visible to reopen it. No-op on desktop
+    // (nav-links has no `.open` there).
+    if (collapsed) {
+      var _nl = document.querySelector("nav .nav-links");
+      if (_nl) _nl.classList.remove("open");
+    }
     var btns = document.querySelectorAll(".sost-nav-toggle, #navToggleBtn");
     btns.forEach(function (b) {
       b.textContent = collapsed ? "▼ SHOW NAV" : "▲ HIDE NAV";
@@ -229,7 +240,7 @@
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
-      <a href="sost-universal-assets.html" style="color:#DAA520">Universal Assets</a>
+      <a href="sost-universal-assets.html" style="color:#DAA520">Tokenization &amp; Offers</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
@@ -265,6 +276,65 @@
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
 `;
+  /* Console-style nav buttons: every section gets its OWN colour, all taken from colours the
+     site already uses; no two neighbours (window of 4) are alike — min ΔE76 31. Mine=bright SOST red,
+     Price Reference=gold, Explorer=amber, Markets=LIVE green are kept on purpose. */
+  var SOST_NAV_COLORS = {"javascript:void(0)":"#f59e0b","index.html":"#d946ef","sost-genesis.html":"#22d3ee","sost-technology.html":"#00ff88","sost-transactions.html":"#ff8a8a","sost-gold-reserve.html":"#ff6600","sost-reference.html":"#d4af37","sost-universal-assets.html":"#ff00ff","sost-popc.html":"#00aaff","sost-tokenomics.html":"#39ff14","sost-roadmap.html":"#26a17b","sost-protocol-spec.html":"#b8860b","sost-whitepaper.html":"#ff5ccd","sost-mine.html":"#ff2d3b","sost-network-status.html":"#88ff00","sost-mining-calculator.html":"#38bdf8","sost-why-no-pools.html":"#fde68a","sost-getting-started.html":"#f472b6","sost-quickstart.html":"#ff6b35","sost-community.html":"#d7ff00","sost-foundation.html":"#9fe8ff","sost-foundation-balances.html":"#ffd166","sost-popc-contracts.html":"#ec4899","sost-popc-quickstart.html":"#cfe88a","sost-e2e.html":"#4488ff","sost-gold-dex.html":"#7ee2a8","sost-security.html":"#ffb86b","sost-faq.html":"#cbb6e6","beacon.html":"#e879f9","protocol-registry.html":"#a3e635","casert-spec.html":"#ff6b6b","sost-explorer.html":"#fbbf24","sost-help.html":"#7fb3ff","sost-miner-troubleshooter.html":"#c084fc","sost-markets.html":"#4ade80","sost-infrastructure.html":"#e6d9b6","sost-otc.html":"#ffff00","sost-wallet.html":"#ff8800","sost-app/":"#00ffff","sost-talk.html":"#8b9bf4","sost-contact.html":"#f5c889"};
+  function sxRgba(h,a){ var n=parseInt(h.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
+  function styleNavButtons(nl){
+    if(!document.getElementById('sost-nav-sx-style')){ var st=document.createElement('style'); st.id='sost-nav-sx-style';
+      st.textContent="nav .nav-links{gap:6px!important;row-gap:6px!important}\nnav .nav-links.sx-rect{flex-direction:column!important;align-items:stretch!important;flex-wrap:nowrap!important;flex:1 1 100%!important;width:100%!important;max-width:100%!important;box-sizing:border-box}\nnav .nav-links .sx-row{display:flex;gap:6px;width:100%}\nnav .nav-links.sx-rect a.sx{justify-content:center;white-space:nowrap;min-width:0}\nnav .nav-links a.sx{position:relative;display:inline-flex!important;align-items:center;gap:7px;padding:5px 11px 5px 9px!important;border-radius:3px!important;font-family:ui-monospace,\"JetBrains Mono\",Menlo,Consolas,monospace!important;font-size:10.5px!important;font-weight:600!important;letter-spacing:1.1px!important;text-transform:uppercase;line-height:1.15!important;color:var(--c)!important;text-decoration:none!important;text-shadow:0 0 8px var(--c45);border:1px solid var(--c35)!important;border-bottom-color:var(--c55)!important;background:linear-gradient(var(--c),var(--c)) 0 0/7px 1.5px no-repeat,linear-gradient(var(--c),var(--c)) 0 0/1.5px 7px no-repeat,linear-gradient(var(--c),var(--c)) 100% 100%/7px 1.5px no-repeat,linear-gradient(var(--c),var(--c)) 100% 100%/1.5px 7px no-repeat,linear-gradient(180deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,0) 48%,rgba(0,0,0,.28) 100%),linear-gradient(90deg,var(--c10),rgba(9,11,15,.94) 62%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.7),0 1px 0 rgba(0,0,0,.85),0 0 12px -7px var(--c);transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease,filter .2s ease}\nnav .nav-links a.sx{overflow:hidden}nav .nav-links a.sx::after{content:\"\";position:absolute;top:0;bottom:0;left:-60%;width:45%;pointer-events:none;background:linear-gradient(105deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.22) 50%,rgba(255,255,255,0) 100%);transform:skewX(-18deg);opacity:0}nav .nav-links a.sx:hover::after{animation:sxSweep .65s ease-out 1}@keyframes sxSweep{0%{left:-60%;opacity:1}100%{left:125%;opacity:1}}\nnav .nav-links a.sx::before{content:\"\";width:5px;height:5px;border-radius:50%;flex:0 0 auto;background:var(--c);box-shadow:0 0 6px var(--c),0 0 2px var(--c);opacity:.9}\nnav .nav-links a.sx:hover{transform:translateY(-1px);filter:brightness(1.18);border-color:var(--c)!important;background-color:transparent!important;box-shadow:inset 0 0 12px -5px var(--c),0 0 16px -4px var(--c),0 2px 0 rgba(0,0,0,.85)}\nnav .nav-links a.sx:focus-visible{outline:1px solid var(--c);outline-offset:2px}\nnav .nav-links a.sx.active{border:1px solid var(--c)!important;box-shadow:inset 0 0 14px -4px var(--c),0 0 18px -3px var(--c)}\nnav .nav-links a.sx.active::before{animation:sxLed 1.3s ease-in-out infinite}\n@keyframes sxLed{0%,100%{opacity:1;box-shadow:0 0 8px var(--c),0 0 3px var(--c)}50%{opacity:.25;box-shadow:none}}\n@media (prefers-reduced-motion:reduce){nav .nav-links a.sx,nav .nav-links a.sx::before,nav .nav-links a.sx::after{transition:none!important;animation:none!important}}"; (document.head||document.documentElement).appendChild(st); }
+    var as=nl.querySelectorAll('a[href]');
+    for(var i=0;i<as.length;i++){ var c=SOST_NAV_COLORS[as[i].getAttribute('href')]; if(!c) continue;
+      as[i].style.color=''; as[i].classList.add('sx'); as[i].style.setProperty('--c',c);
+      as[i].style.setProperty('--c10',sxRgba(c,.10)); as[i].style.setProperty('--c35',sxRgba(c,.35));
+      as[i].style.setProperty('--c45',sxRgba(c,.45)); as[i].style.setProperty('--c55',sxRgba(c,.55)); }
+  }
+
+  /* RECTANGLE LAYOUT: the buttons are split, IN ORDER, into the fewest rows that fit, with the rows
+     balanced (linear partition minimising the widest row). Each row then stretches to the full width,
+     every button growing in proportion to its natural width — so the block is an exact rectangle
+     (both edges aligned on every row, the last one included). Re-run on resize / when the mobile menu
+     opens (ResizeObserver) and once fonts are ready. */
+  var SX_GAP = 6;
+  function sxPartition(w, avail){
+    var n=w.length, pre=[0]; for(var i=0;i<n;i++) pre.push(pre[i]+w[i]);
+    function rowW(a,b){ return pre[b]-pre[a]+SX_GAP*(b-a-1); }
+    for(var R=1;R<=n;R++){
+      // dp[k][j] = minimal possible max-row-width placing first j items in k rows
+      var dp=[], cut=[]; for(var k=0;k<=R;k++){ dp.push(new Array(n+1).fill(Infinity)); cut.push(new Array(n+1).fill(0)); }
+      dp[0][0]=0;
+      for(var k=1;k<=R;k++) for(var j=k;j<=n;j++) for(var t=k-1;t<j;t++){
+        var v=Math.max(dp[k-1][t], rowW(t,j)); if(v<dp[k][j]){ dp[k][j]=v; cut[k][j]=t; } }
+      if(dp[R][n]<=avail){ var rows=[], j2=n; for(var k2=R;k2>=1;k2--){ var t2=cut[k2][j2]; rows.unshift([t2,j2]); j2=t2; } return rows; }
+    }
+    return w.map(function(_,i){ return [i,i+1]; });
+  }
+  function layoutNavRect(nl){
+    var as=[].slice.call(nl.querySelectorAll('a.sx')); if(!as.length) return;
+    nl.classList.add('sx-rect');
+    var cs=getComputedStyle(nl), avail=nl.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0)-2; if(avail<=0) return;
+    if(nl._sxW===avail && nl._sxDone) return;
+    // flatten (undo a previous layout) and measure natural widths
+    nl.classList.remove('sx-rect');
+    as.forEach(function(a){ a.style.flex='0 0 auto'; nl.appendChild(a); });
+    [].slice.call(nl.querySelectorAll('.sx-row')).forEach(function(r){ r.remove(); });
+    var w=as.map(function(a){ return Math.ceil(a.getBoundingClientRect().width); });
+    var rows=sxPartition(w, avail);
+    rows.forEach(function(r){
+      var row=document.createElement('div'); row.className='sx-row';
+      for(var i=r[0];i<r[1];i++){ as[i].style.flex=w[i]+' 0 auto'; row.appendChild(as[i]); }
+      nl.appendChild(row);
+    });
+    nl.classList.add('sx-rect'); nl._sxW=avail; nl._sxDone=true;
+  }
+  function sxWatch(nl){
+    var run=function(){ nl._sxDone=false; layoutNavRect(nl); };
+    if(window.ResizeObserver){ var last=0; new ResizeObserver(function(){ var cw=nl.clientWidth; if(cw && cw!==last){ last=cw; run(); } }).observe(nl); }
+    else window.addEventListener('resize',run);
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(run);
+    run();
+  }
   function injectNav(){
     var nl = document.querySelector("nav .nav-links");
     if(!nl) return;
@@ -275,6 +345,8 @@
     for(var i=0;i<as.length;i++){
       if((as[i].getAttribute("href")||"").toLowerCase() === page){ as[i].classList.add("active"); }
     }
+    styleNavButtons(nl);
+    sxWatch(nl);
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectNav, {once:true});
   else injectNav();
@@ -314,7 +386,7 @@
          is what the logo PNG's own alpha measures. Read from the file, not chosen by eye.
          ------------------------------------------------------------------------------------ */
       '.sq-wrap{display:inline-flex;flex:0 0 auto;line-height:0;',
-      '  animation:sqPulse 2.2s ease-in-out infinite}',
+      '  animation:sqPulse 2.9s ease-in-out infinite}',
       '@keyframes sqPulse{',
       '  0%,100%{filter:drop-shadow(0 0 9px var(--g1)) drop-shadow(0 0 20px var(--g2))}',
       '  50%{filter:drop-shadow(0 0 20px var(--g1)) drop-shadow(0 0 42px var(--g2))',
@@ -343,6 +415,13 @@
       '  filter:none !important;border-radius:0 !important;display:block;background:#000003}',
       '.sost-news-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20%;background:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);border:1px solid rgba(245,158,11,.6);text-decoration:none;line-height:1;flex:0 0 auto;box-shadow:0 0 20px rgba(245,158,11,.95),0 0 40px rgba(245,158,11,.55);overflow:hidden;-webkit-tap-highlight-color:transparent}',
       '.sost-news-btn:hover{border-color:rgba(255,200,87,.95);transform:translateY(-1px);transition:transform .15s ease,border-color .2s ease}',
+      '/* inner-logo enlargement: inner content only, outer circle unchanged */',
+      'nav img[src*="convergencex-logo"]{transform:scale(1.3125)}',
+      'nav a.atomix-btn .atomix-icon{transform:translateY(7px) scale(1.25)}',
+      'nav a.atomix-btn .atomix-label{transform:translateY(7px) scale(0.906)}',
+      'nav .sost-news-btn>span{transform:translateY(7px) scale(1.25)}',
+      'nav .sost-news-btn>span:last-child{transform:translateY(7px) scale(0.997)}',
+      'nav a[href$="#dtd"]>span,nav .sost-dtd-btn>span{transform:scale(1.05)}',
       'body.nav-collapsed nav .sost-news-btn{display:none !important}'
     ].join('\n');
     (document.head||document.documentElement).appendChild(st);
@@ -355,16 +434,16 @@
     // after it (NOT in the small Watch/Home row). Match by its asBtnGlow animation so it
     // is immune to href changes (the tile now points to sost-dex.html, formerly the
     // founder console). Fall back to the legacy hrefs / WATCH icon for old structures.
-    var watch=nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]')||nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
+    var watch=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]')||nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
     if(!watch) return;                                            // need the logo-button row
     var sz=watch.offsetWidth||110;                               // match the sibling box
     var a=document.createElement('a');
     a.href='news.html'; a.title='News & Updates';
     a.className='sost-news-btn';
     a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
-    var ic=Math.round(sz*0.30), tx=Math.max(9,Math.round(sz*0.115));
+    var ic=Math.round(sz*0.26), tx=Math.max(8,Math.round(sz*0.093));
     a.innerHTML='<span style="font-size:'+ic+'px;line-height:1;margin-bottom:2px">📰</span>'
-      +'<span style="color:#f59e0b;font-size:'+tx+'px;font-weight:900;letter-spacing:1px;text-shadow:0 0 8px rgba(245,158,11,.6)">NEWS</span>';
+      +'<span style="color:#f59e0b;font-size:'+tx+'px;font-weight:900;letter-spacing:.5px;line-height:1.08;text-align:center;text-shadow:0 0 8px rgba(245,158,11,.6)">NEWS &amp;<br>UPDATES</span>';
     watch.parentNode.insertBefore(a, watch.nextSibling);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectNewsBtn,{once:true});
@@ -421,12 +500,12 @@
       +'<button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>'
       +'<div id="sv-chooser" class="sv-chooser"><div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>'
       +'<div class="sv-cards">'
-      +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4\',\'SOST in 2 Minutes &middot; V15\')">'
-      +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
-      +'<span class="sv-card-h">SOST in 2 Minutes</span><span class="sv-card-s">SOST &middot; V15</span></button>'
-      +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-mechanisms.mp4\',\'SOST Mechanisms &middot; Atomic Swap &amp; DTD\')">'
-      +'<span class="sv-thumb" style="background-image:url(\'sost-mechanisms-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
-      +'<span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span></button>'
+      +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4?v=20261011b\',\'SOST in 3 Minutes &middot; protocol, mining &amp; tokenization\')">'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg?v=20261011b\')"><span class="sv-play">&#9654;</span></span>'
+      +'<span class="sv-card-h">SOST in 3 Minutes</span><span class="sv-card-s">Protocol, mining &amp; tokenization</span></button>'
+      +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-mechanisms.mp4?v=20261011c\',\'SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot\')">'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-mechanisms-poster.jpg?v=20261011\')"><span class="sv-play">&#9654;</span></span>'
+      +'<span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span></button>'
       +'</div></div>'
       +'<div id="sv-player" class="sv-player" style="display:none">'
       +'<video id="sv-video" class="sv-video" controls preload="metadata" playsinline><source id="sv-source" src="" type="video/mp4">Your browser does not support HTML5 video.</video>'
@@ -474,7 +553,7 @@
       '.sost-dtd-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;',
       'border-radius:20%;background:radial-gradient(circle at 50% 35%,#0f2417,#07120b);',
       'border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;',
-      'animation:dtdBtnGlow 2s ease-in-out infinite;overflow:hidden;',
+      'animation:dtdBtnGlow 2.6s ease-in-out infinite;overflow:hidden;',
       '-webkit-tap-highlight-color:transparent}',
       '.sost-dtd-btn:hover{border-color:#7CFFA0;transform:translateY(-1px);transition:transform .15s ease,border-color .2s ease}',
       'body.nav-collapsed nav .sost-dtd-btn{display:none !important}'
@@ -486,10 +565,10 @@
     if(!nav) return;
     // Already there — the home page ships its own inline copy and must not gain a second.
     if(nav.querySelector('.sost-dtd-btn') || nav.querySelector('a[href$="#dtd"]')) return;
-    var anchor=nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
+    var anchor=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
     if(!anchor) return;                       // no large-button row on this page
     styleOnce();
-    var sz=anchor.offsetWidth||72;            // match the sibling box, whatever this page uses
+    var sz=anchor.offsetWidth; if(!sz||sz<90) sz=110;   // match the sibling box; guard the CSS-load race (avoid the old 72 fallback)
     var a=document.createElement('a');
     a.href='index.html#dtd'; a.title='DTD — Deterministic Token Distribution';
     a.className='sost-dtd-btn';
@@ -498,7 +577,7 @@
     a.innerHTML='<span style="color:#39ff14;font-size:'+big+'px;font-weight:900;letter-spacing:1px;'
       +'text-shadow:0 0 14px rgba(57,255,20,.85)">DTD</span>'
       +'<span style="color:#7CFFA0;font-size:'+small+'px;font-weight:700;letter-spacing:.4px;'
-      +'text-align:center;margin-top:2px">TOKEN<br>DISTRIBUTION</span>';
+      +'text-align:center;margin-top:2px">DETERMINISTIC<br>TOKEN<br>DISTRIBUTION</span>';
     anchor.parentNode.insertBefore(a, anchor);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectDtdBtn,{once:true});
@@ -539,6 +618,8 @@
     }
     nav.querySelectorAll('a[style*="dtdBtnGlow"],.sost-dtd-btn').forEach(function(e){ wrap(e,'dtd'); });
     nav.querySelectorAll('a[style*="asBtnGlow"]').forEach(function(e){ wrap(e,'as'); });
+    // ATOMIC SWAP DEX: same module geometry, its own paint (css/atomix-btn.css).
+    nav.querySelectorAll('a.atomix-btn').forEach(function(e){ wrap(e,'ax'); });
     nav.querySelectorAll('.sost-news-btn').forEach(function(e){ wrap(e,'news'); });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tag,{once:true});
@@ -572,4 +653,270 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wrapSv,{once:true});
   else wrapSv();
   setTimeout(wrapSv,0); setTimeout(wrapSv,600);
+})();
+
+/* ============================================================================
+   SOST TOKENIZATION (Asset Layer) — global nav logo. A COLOUR-INVERTED TWIN of the
+   SOST logo: identical size, shape and silhouette (asset-layer-logo.png is a pixel
+   swap of sost-logo.png — red body, black Σ). No text, no badge. PULSING WHITE glow
+   (in sync with the SOST mark). Sits IMMEDIATELY BEFORE the
+   ConvergenceX logo. Links to sost-universal-assets.html. Additional module; never
+   replaces the SOST logo. No consensus/backend involvement.
+   ========================================================================== */
+(function(){
+  "use strict";
+  var LOGO='asset-layer-logo.png?v=v434';
+  function styleOnce(){
+    if(document.getElementById('sost-tok-logo-style')) return;
+    var st=document.createElement('style'); st.id='sost-tok-logo-style';
+    st.textContent=[
+      'a.sost-tok-logo{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;',
+      'text-decoration:none;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}',
+      'a.sost-tok-logo img{object-fit:cover;display:block;animation:tokLogoPulse 4.7s ease-in-out infinite}',
+      '@keyframes tokLogoPulse{0%,100%{filter:drop-shadow(0 0 4px rgba(255,255,255,.5)) drop-shadow(0 0 10px rgba(255,255,255,.3))}50%{filter:drop-shadow(0 0 22px rgba(255,255,255,1)) drop-shadow(0 0 52px rgba(255,255,255,.9)) drop-shadow(0 0 88px rgba(255,255,255,.6))}}',
+      'a.sost-tok-logo:hover{transform:translateY(-1px)}',
+      '@media(prefers-reduced-motion:reduce){a.sost-tok-logo img{animation:none;filter:drop-shadow(0 0 14px rgba(255,255,255,.95)) drop-shadow(0 0 34px rgba(255,255,255,.6))}}',
+      /* start the right-hand group, immediately before ConvergenceX (steal its margin) */
+      'nav .container > a.sost-tok-logo{margin-left:auto !important}',
+      'nav .container > a.sost-tok-logo + a[href="casert-spec.html"]{margin-left:0 !important;flex:0 0 auto !important}',
+      /* hide with the rest of the bar under HIDE NAV */
+      'body.nav-collapsed nav a.sost-tok-logo{display:none !important}'
+    ].join('');
+    (document.head||document.documentElement).appendChild(st);
+  }
+  function inject(){
+    var nav=document.querySelector('nav'); if(!nav) return;
+    if(nav.querySelector('a.sost-tok-logo')) return;
+    var cx=nav.querySelector('a[href="casert-spec.html"]'); if(!cx) return; // no canonical bar here
+    styleOnce();
+    // EXACTLY the SOST logo size (110 on every page); fall back to ConvergenceX/110.
+    var sImg=nav.querySelector('.nav-logo img');
+    var sz=(sImg&&sImg.offsetWidth) || (cx.querySelector('img')&&cx.querySelector('img').offsetWidth) || cx.offsetWidth || 110;
+    var a=document.createElement('a');
+    a.href='sost-universal-assets.html'; a.className='sost-tok-logo';
+    a.title='SOST Tokenization & Offers';
+    a.setAttribute('aria-label','SOST Tokenization & Offers');
+    var img=document.createElement('img');
+    img.src=LOGO; img.alt='SOST Tokenization';
+    img.width=sz; img.height=sz; img.style.width=sz+'px'; img.style.height=sz+'px';
+    a.appendChild(img);
+    cx.parentNode.insertBefore(a, cx);   // JUST BEFORE ConvergenceX
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',inject,{once:true});
+  else inject();
+  setTimeout(inject,0); setTimeout(inject,350); setTimeout(inject,800);
+})();
+
+
+/* ============================================================================
+   SITE-VISIT COUNTER — on every page's top nav (same place & behaviour as Home).
+   Reuses a page's existing #vcx-sost host (Home/Explorer ship one inline); on all
+   other pages it injects the host as a sibling of .nav-links so HIDE NAV folds it
+   away too. Collapsed by default (a discreet "▸ site visits" button); one shared
+   /counter backend (site=sostcore) so the number is identical everywhere.
+   ========================================================================== */
+(function(){
+  "use strict";
+  if(!document.getElementById('vcx-counter-style')){
+    var st=document.createElement('style'); st.id='vcx-counter-style';
+    st.textContent=".vcx{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border:1px solid var(--vcx-bd);border-radius:999px;background:var(--vcx-bg);font-family:ui-monospace,Menlo,Consolas,monospace;vertical-align:middle}"
+    +".vcx-dot{width:7px;height:7px;border-radius:50%;background:var(--vcx-ac);box-shadow:0 0 8px var(--vcx-ac);animation:vcxP 1.8s ease-in-out infinite;flex:0 0 auto}"
+    +"@keyframes vcxP{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}"
+    +".vcx-num{display:inline-flex;font-weight:700;font-size:15px;letter-spacing:.5px;color:var(--vcx-ac);text-shadow:0 0 10px var(--vcx-ac)}"
+    +".vcx-d{display:inline-block;height:1.25em;width:.64em;overflow:hidden}"
+    +".vcx-s{display:flex;flex-direction:column;transition:transform 1.6s cubic-bezier(.16,1,.3,1)}"
+    +".vcx-s>i{height:1.25em;line-height:1.25em;text-align:center;font-style:normal}"
+    +".vcx-sep{display:inline-block;width:.32em;text-align:center;opacity:.65;color:var(--vcx-ac)}"
+    +".vcx-lbl{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--vcx-mut)}"
+    +".vcx-btn{font:600 10px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:1.3px;text-transform:uppercase;color:var(--vcx-mut);background:transparent;border:1px solid var(--vcx-bd);border-radius:999px;padding:6px 12px;cursor:pointer;opacity:.7;transition:opacity .2s,color .2s,border-color .2s}"
+    +".vcx-btn:hover{opacity:1;color:var(--vcx-ac);border-color:var(--vcx-ac)}";
+    (document.head||document.documentElement).appendChild(st);
+  }
+  function fmt(n){ return Number(n).toLocaleString('en-US'); }
+  function build(el,val){
+    var s=fmt(val); el.innerHTML='';
+    for(var i=0;i<s.length;i++){ var ch=s[i];
+      if(ch<'0'||ch>'9'){ var sp=document.createElement('span'); sp.className='vcx-sep'; sp.textContent=ch; el.appendChild(sp); continue; }
+      var d=document.createElement('span'); d.className='vcx-d';
+      var stc=document.createElement('span'); stc.className='vcx-s';
+      for(var k=0;k<=9;k++){ var it=document.createElement('i'); it.textContent=k; stc.appendChild(it); }
+      d.appendChild(stc); el.appendChild(d);
+      (function(stc,t){ stc.style.transform='translateY(0)'; setTimeout(function(){ stc.style.transform='translateY(-'+(t*10)+'%)'; },80); })(stc,+ch);
+    }
+  }
+  function ensureHost(){
+    var h=document.getElementById('vcx-sost'); if(h) return h;
+    var nav=document.querySelector('nav'); if(!nav) return null;
+    var nl=nav.querySelector('.nav-links'); var parent=(nl&&nl.parentNode)||nav;
+    h=document.createElement('span'); h.id='vcx-sost';
+    h.style.cssText='margin-left:auto;display:inline-flex;align-items:center';
+    if(nl&&nl.parentNode){ nl.parentNode.insertBefore(h, nl.nextSibling); } else { parent.appendChild(h); }
+    return h;
+  }
+  function mountCounter(){
+    var host=ensureHost(); if(!host) return;
+    if(host.querySelector('.vcx-btn')) return;        // already mounted (Home/Explorer inline, or earlier call)
+    var o={site:'sostcore',seed:3375,base:'/counter',btn:'▸ site visits',accent:'#4ade80',border:'#16331f',bg:'rgba(8,16,10,.7)',mut:'#5f7a68',label:'site visits'};
+    host.style.setProperty('--vcx-ac',o.accent); host.style.setProperty('--vcx-bd',o.border);
+    host.style.setProperty('--vcx-bg',o.bg); host.style.setProperty('--vcx-mut',o.mut);
+    var sk='vcx_'+o.site, hit=!sessionStorage.getItem(sk);
+    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} }
+    // ONE request on load: registers the visit (first page of the session) and returns the real count,
+    // so the odometer rolls ONCE, straight to the live number. seed is only a fallback if /counter is down.
+    var real=null, shown=false;
+    var ready=fetch(o.base+'?site='+encodeURIComponent(o.site)+(hit?'&hit=1':'')).then(function(r){return r.json();}).then(function(d){
+      if(d&&typeof d.count==='number') real=d.count;
+    }).catch(function(){});
+    var btn=document.createElement('button'); btn.type='button'; btn.className='vcx-btn'; btn.textContent=o.btn;
+    var box=document.createElement('span'); box.className='vcx'; box.style.display='none';
+    var dot=document.createElement('span'); dot.className='vcx-dot';
+    var num=document.createElement('span'); num.className='vcx-num';
+    var lbl=document.createElement('span'); lbl.className='vcx-lbl'; lbl.textContent=o.label;
+    box.appendChild(dot); box.appendChild(num); box.appendChild(lbl);
+    host.appendChild(btn); host.appendChild(box);
+    function show(){ if(shown) return; shown=true; build(num, real!==null?real:o.seed); }
+    btn.addEventListener('click',function(){
+      btn.style.display='none'; box.style.display='inline-flex';
+      if(real!==null){ show(); return; }
+      num.textContent='\u2026'; ready.then(show); setTimeout(show,4000);
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',mountCounter,{once:true});
+  else mountCounter();
+  setTimeout(mountCounter,600); setTimeout(mountCounter,1600);
+})();
+
+/* ============================================================================
+   wSOST & GOLD VAULT — large circular nav module (research roadmap page).
+   Sits between ATOMIC SWAP DEX and NEWS & UPDATES in the large-button row of every
+   page that has one (Explorer included). Circular by design: the emblem is the SOST
+   Sigma inside a single red ring ("wrapped"). Links to sost-wsost-gold-vault.html.
+   Research page only — no consensus, bridge or wallet involvement.
+   ========================================================================== */
+(function(){
+  "use strict";
+  var IMG='assets/wsost/wsost-gold-vault-nav-256.webp?v=v554', IMG_PNG='assets/wsost/wsost-gold-vault-nav-256.png?v=v554';
+  function styleOnce(){
+    if(document.getElementById('sost-wsost-btn-style')) return;
+    var st=document.createElement('style'); st.id='sost-wsost-btn-style';
+    st.textContent=[
+      'a.sost-wsost-btn{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:50%;',
+      'text-decoration:none;-webkit-tap-highlight-color:transparent;transition:transform .15s ease;line-height:0}',
+      'a.sost-wsost-btn img{display:block;width:100%;height:100%;object-fit:contain;border-radius:50%;',
+      'animation:wsostGlow 3.4s ease-in-out infinite}',
+      '@keyframes wsostGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(255,30,40,.55)) drop-shadow(0 0 14px rgba(255,30,40,.3))}',
+      '50%{filter:drop-shadow(0 0 16px rgba(255,30,40,.95)) drop-shadow(0 0 34px rgba(255,30,40,.55)) drop-shadow(0 0 4px rgba(255,209,102,.5))}}',
+      'a.sost-wsost-btn:hover{transform:translateY(-1px) scale(1.03)}',
+      'a.sost-wsost-btn:focus-visible{outline:2px solid #ffd166;outline-offset:3px}',
+      '@media(prefers-reduced-motion:reduce){a.sost-wsost-btn img{animation:none;filter:drop-shadow(0 0 12px rgba(255,30,40,.8))}}',
+      'body.nav-collapsed nav a.sost-wsost-btn{display:none !important}'
+    ].join('');
+    (document.head||document.documentElement).appendChild(st);
+  }
+  function inject(){
+    var nav=document.querySelector('nav'); if(!nav) return;
+    if(nav.querySelector('a.sost-wsost-btn')) return;
+    var ax=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
+    if(!ax) return;                                         // no large-button row on this page
+    styleOnce();
+    var sz=ax.offsetWidth; if(!sz||sz<60) sz=110;
+    sz=Math.round(sz*1.2*0.93);                             // +20% then -7% vs the sibling modules (owner request)
+    var a=document.createElement('a');
+    a.href='sost-wsost-gold-vault.html'; a.className='sost-wsost-btn';
+    a.title='wSOST & Gold Vault — bridge, Gold Reserve V2 and governance (research roadmap, not live)';
+    a.setAttribute('aria-label','wSOST & Gold Vault');
+    a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
+    var pic=document.createElement('picture');
+    pic.innerHTML='<source srcset="'+IMG+'" type="image/webp">';
+    var img=document.createElement('img'); img.src=IMG_PNG; img.alt='wSOST & Gold Vault'; img.width=sz; img.height=sz;
+    pic.appendChild(img); a.appendChild(pic);
+    pic.style.cssText='display:block;width:100%;height:100%';
+    // Before NEWS & UPDATES (or its square wrapper); otherwise right after ATOMIC SWAP DEX.
+    var news=nav.querySelector('.sost-news-btn')||nav.querySelector('a[href="news.html"]');
+    var newsBox=news&&news.parentElement&&news.parentElement.classList.contains('sq-wrap')?news.parentElement:news;
+    var axBox=ax.parentElement&&ax.parentElement.classList.contains('sq-wrap')?ax.parentElement:ax;
+    if(newsBox&&newsBox.parentNode===axBox.parentNode) newsBox.parentNode.insertBefore(a,newsBox);
+    else axBox.parentNode.insertBefore(a,axBox.nextSibling);
+  }
+  function run(){ inject(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true});
+  else run();
+  setTimeout(run,0); setTimeout(run,450); setTimeout(run,1300);
+})();
+
+
+/* ============================================================================
+   "CLICK HERE TO OPEN EXPLORER" — red callout above the main SOST logo.
+   Same pattern and timing as the Explorer's jackpot hint (visible 15 s, hidden 15 s,
+   1.6 s soft pulse), in SOST red. A real <a> to the Explorer. Only on pages whose main
+   logo already opens the Explorer (the Explorer itself keeps its HOME logo, no callout).
+   The nav reserves room above the logo so the callout never covers it or leaves the screen.
+   ========================================================================== */
+(function(){
+  "use strict";
+  if(/sost-explorer\.html$/.test(location.pathname)) return;
+  function styleOnce(){
+    if(document.getElementById('sost-xp-callout-style')) return;
+    var st=document.createElement('style'); st.id='sost-xp-callout-style';
+    st.textContent=[
+      'nav.has-xp-callout{padding-top:58px !important}',
+      'nav.has-xp-callout .container{position:relative}',
+      'a.sost-xp-callout{--xp:#fb010d;position:absolute;z-index:60;display:block;box-sizing:border-box;',
+      'background:linear-gradient(135deg,rgba(8,6,8,.97),rgba(26,2,4,.97));border:1px solid var(--xp);border-radius:9px;',
+      'padding:9px 15px;white-space:nowrap;font:600 15px var(--font-mono,ui-monospace,monospace);color:#ff5c63;',
+      'letter-spacing:.4px;text-decoration:none;opacity:0;pointer-events:none;transition:opacity .35s ease;',
+      'animation:xpRedPulse 1.6s ease-in-out infinite}',
+      'a.sost-xp-callout.show,a.sost-xp-callout:focus-visible{opacity:1;pointer-events:auto}',
+      'a.sost-xp-callout:focus-visible{outline:2px solid #ffd6d8;outline-offset:3px}',
+      'a.sost-xp-callout::after{content:"";position:absolute;top:100%;left:var(--pl,50%);transform:translateX(-50%);',
+      'border:8px solid transparent;border-top-color:var(--xp)}',
+      'a.sost-xp-callout .xp-hand{display:inline-block;margin-right:7px;animation:xpBob 1s ease-in-out infinite}',
+      '@keyframes xpBob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}',
+      '@keyframes xpRedPulse{0%,100%{box-shadow:0 0 8px rgba(251,1,13,.35),0 0 16px rgba(251,1,13,.15)}',
+      '50%{box-shadow:0 0 16px rgba(251,1,13,.75),0 0 32px rgba(251,1,13,.35)}}',
+      '@media (prefers-reduced-motion:reduce){a.sost-xp-callout,a.sost-xp-callout .xp-hand{animation:none}}',
+      '@media (max-width:640px){a.sost-xp-callout{font-size:13px;padding:8px 12px}}',
+      'body.nav-collapsed nav a.sost-xp-callout{display:none !important}'
+    ].join('');
+    (document.head||document.documentElement).appendChild(st);
+  }
+  var el=null, img=null, box=null, nav=null;
+  function place(){
+    if(!el||!img||!box) return;
+    var b=box.getBoundingClientRect(), i=img.getBoundingClientRect();
+    if(!i.width) return;
+    var w=el.offsetWidth, h=el.offsetHeight;
+    var cx=i.left+i.width/2-b.left;                         // logo centre, container coordinates
+    var vw=document.documentElement.clientWidth;
+    var left=cx-w/2;
+    var minL=8-b.left, maxL=vw-8-w-b.left;                  // keep the whole target on screen
+    if(left<minL) left=minL; if(left>maxL) left=Math.max(minL,maxL);
+    el.style.left=left+'px';
+    el.style.top=(i.top-b.top-h-11)+'px';
+    el.style.setProperty('--pl',Math.max(12,Math.min(w-12,cx-left))+'px');
+  }
+  function inject(){
+    nav=document.querySelector('nav'); if(!nav||nav.querySelector('a.sost-xp-callout')) return;
+    var logo=nav.querySelector('a.nav-logo[href$="sost-explorer.html"]'); if(!logo) return;
+    img=logo.querySelector('img'); if(!img) return;
+    box=logo.parentNode;
+    styleOnce();
+    nav.classList.add('has-xp-callout');
+    el=document.createElement('a');
+    el.href='https://sostcore.com/sost-explorer.html';
+    el.className='sost-xp-callout';
+    el.setAttribute('aria-label','Open SOST Explorer');
+    el.innerHTML='<span class="xp-hand" aria-hidden="true">&#128070;</span>CLICK HERE TO OPEN EXPLORER';
+    box.appendChild(el);
+    place();
+    window.addEventListener('resize',place);
+    if(img.complete===false) img.addEventListener('load',place);
+    setTimeout(place,400); setTimeout(place,1500);
+    function show(){ place(); el.classList.add('show'); setTimeout(hide,15000); }
+    function hide(){ el.classList.remove('show'); setTimeout(show,15000); }
+    show();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',inject,{once:true});
+  else inject();
+  setTimeout(inject,500);
 })();

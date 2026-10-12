@@ -1,0 +1,10 @@
+[Unit]
+Description=SOST private-dashboard auth (custom login, signed session cookie)
+After=network.target
+[Service]
+ExecStart=/usr/bin/python3 /opt/sost/sost-dash-auth.py
+Restart=always
+User=root
+NoNewPrivileges=true
+[Install]
+WantedBy=multi-user.target

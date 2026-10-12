@@ -1,5 +1,8 @@
 (function() {
   'use strict';
+  /* Canonical global search = the inline horizontal bar (.gs-search-bar / #gsSearchIn).
+     The nav mini-toggle init() is retained but no longer invoked to avoid a duplicate
+     global search; initInlineSearch() already skips the explorer (it has #searchIn). */
 
   var EXPLORER = 'sost-explorer.html';
 
@@ -7,6 +10,7 @@
     { title: 'Home', desc: 'SOST Protocol overview — Sovereign Stock Token', url: 'index.html', kw: 'home protocol gold pow sovereign stock token' },
     { title: 'Genesis Block', desc: 'Block zero — genesis parameters, constitutional addresses, raw data', url: 'sost-genesis.html', kw: 'genesis block zero origin first block constitutional addresses parameters verification founder vault' },
     { title: 'Technology', desc: 'ConvergenceX PoW, cASERT unified difficulty', url: 'sost-technology.html', kw: 'convergencex algorithm mining cpu asert casert difficulty pow proof work' },
+    { title: 'wSOST & Gold Vault', desc: 'Research roadmap: wSOST 1:1 bridge, Gold Reserve V2, on-chain governance, #40,000 horizon (not live)', url: 'sost-wsost-gold-vault.html', kw: 'wsost wrapped sost bridge gold reserve v2 gold vault xaut paxg governance vote voting block 40000 research horizon erc20 ethereum proof of reserves' },
     { title: 'Tokenomics', desc: 'Supply, emission, epoch decay, stocks', url: 'sost-tokenomics.html', kw: 'supply emission epoch decay stocks tokenomics monetary policy' },
     { title: 'PoPC', desc: 'Proof of Personal Custody — gold bond and escrow', url: 'sost-popc.html', kw: 'proof custody gold bond escrow model a model b popc audit slash' },
     { title: 'Gold Reserve', desc: 'Heritage Reserve, Gold Funding Vault, XAUT, PAXG', url: 'sost-gold-reserve.html', kw: 'reserve heritage funding vault xaut paxg gold metals' },
@@ -308,9 +312,8 @@
   document.head.appendChild(style);
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { init(); initInlineSearch(); });
+    document.addEventListener('DOMContentLoaded', function() { initInlineSearch(); });
   } else {
-    init();
     initInlineSearch();
   }
 })();

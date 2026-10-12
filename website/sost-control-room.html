@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SOST Control Room</title>
+<meta name="description" content="SOST Control Room: live network state (height, bitsQ, Equalizer, miners, DTD, Jackpot V2, peers, supply) strictly separated from historical statistics. Read-only snapshot: new blocks appear within about 2 seconds, clocks tick every second.">
+<link rel="icon" href="favicon.ico">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="control-room/cr.css?v=5">
+</head>
+<body>
+<div class="wrap">
+  <header class="top" id="crTop">
+    <span class="brand"><b>SOST</b> CONTROL ROOM</span> <a href="sost-explorer.html" class="badge" style="text-decoration:none">EXPLORER →</a>
+    <span class="badge" id="srcBadge">LOADING</span>
+    <span class="sp"></span>
+    <span class="h mono" id="topHeight">—</span>
+    <span class="badge" id="updated">—</span>
+    <button type="button" class="badge navbtn" id="navHide" aria-controls="crTop" aria-expanded="true" title="Hide this bar">▲ HIDE NAV</button>
+  </header>
+  <button type="button" class="badge navbtn navshow" id="navShow" aria-controls="crTop" aria-expanded="false" title="Show the top bar" hidden>▼ SHOW NAV</button>
+
+  <section class="hero" id="hero" aria-label="Network at a glance"></section>
+  <div class="health" id="health" aria-label="Health facts"></div>
+  <section class="sec" id="pulse" aria-labelledby="pulseH">
+    <div class="sec-h"><h2 id="pulseH"><span class="dot" aria-hidden="true"></span>Live network pulse</h2>
+      <span class="note">Last 144 blocks (~24 h). Colour = producer · brightness = recency · bottom bar = block time. Hover a producer to isolate its blocks.</span></div>
+    <div class="p w12 mosaic-wrap"><div class="mosaic" id="mosaic" role="img" aria-label="Last 144 blocks by producer"></div><div class="legend" id="mosaicLegend"></div></div>
+  </section>
+
+  <section class="sec" id="active" aria-labelledby="activeH">
+    <div class="sec-h"><h2 id="activeH"><span class="dot" aria-hidden="true"></span>Active now</h2>
+      <span class="note">Values at the current tip (LIVE) or over an explicit recent window (WINDOW). Nothing on this side is cumulative.</span></div>
+    <div class="grid" id="activeGrid"></div>
+  </section>
+
+  <section class="sec" id="events" aria-labelledby="eventsH">
+    <div class="sec-h"><h2 id="eventsH">Security &amp; events</h2>
+      <span class="note">Only facts the node reports or this page observed. Nothing inferred.</span></div>
+    <div class="ev" id="eventGrid"></div>
+  </section>
+
+  <section class="sec hist" id="historical" aria-labelledby="histH">
+    <div class="sec-h"><h2 id="histH">Historical</h2><span class="badge">ARCHIVE · NOT CURRENT</span>
+      <span class="note">Cumulative, since-genesis or past-window statistics. None of these describe the network right now.</span></div>
+    <div class="grid" id="histGrid"></div>
+  </section>
+</div>
+<script src="control-room/state.js?v=3"></script>
+<script src="control-room/adapter.js?v=3"></script>
+<script src="control-room/ui.js?v=4"></script>
+</body>
+</html>

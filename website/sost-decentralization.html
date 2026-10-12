@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Decentralization Status — SOST</title>
+<meta name="description" content="SOST decentralization status — permissionless Proof-of-Work consensus architecture; operational decentralization is an ongoing engineering objective. Internal engineering measurements, not an independent third-party audit.">
+<style>
+  :root{--bg:#070709;--panel:#101016;--panel2:#15151d;--line:#24242e;--line2:#34343f;
+    --red:#fb010d;--red-soft:rgba(251,1,13,.09);--gold:#DAA520;--cyan:#22d3ee;--green:#4ade80;--amber:#f59e0b;
+    --t1:#e9edf2;--t2:#a7b0bd;--t3:#6d7684;--mono:'JetBrains Mono','IBM Plex Mono',ui-monospace,monospace;
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--t1);font-family:var(--sans);line-height:1.6;font-size:15px}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+  header.top{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(7,7,9,.92);backdrop-filter:blur(12px);z-index:10}
+  header.top .wrap{display:flex;align-items:center;gap:14px;padding:12px 20px}
+  header.top a.home{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--t1);font-weight:800;letter-spacing:1px}
+  header.top a.home img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(251,1,13,.6))}
+  header.top a.home .b{color:var(--red);font-size:19px}
+  header.top .sp{flex:1}
+  header.top a.nav{color:var(--t3);text-decoration:none;font-size:12.5px;letter-spacing:.5px}
+  header.top a.nav:hover{color:var(--t1)}
+  .hero{padding:40px 0 22px;border-bottom:1px solid var(--line)}
+  .eye{color:var(--red);font-family:var(--mono);font-size:12px;letter-spacing:2.5px;text-transform:uppercase}
+  h1{font-size:30px;font-weight:800;letter-spacing:-.4px;margin:10px 0 12px;text-wrap:balance}
+  .lead{color:var(--t2);font-size:15.5px;max-width:70ch}
+  .lead b{color:var(--t1)}
+  section{padding:26px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:12px;font-family:var(--mono);letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+  .tile{background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--line2);border-radius:8px;padding:14px 16px}
+  .tile .k{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--t3)}
+  .tile .v{font-family:var(--mono);font-size:24px;color:var(--gold);margin-top:5px;line-height:1}
+  .tile .n{font-size:11px;color:var(--t3);margin-top:7px;line-height:1.45}
+  .lbl{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.8px;padding:2px 6px;border-radius:3px;border:1px solid;margin-top:8px}
+  .l-obs{color:var(--cyan);border-color:#1b5b66;background:rgba(34,211,238,.08)}
+  .l-known{color:var(--t2);border-color:var(--line2);background:rgba(255,255,255,.03)}
+  .l-inf{color:var(--amber);border-color:#6b4e16;background:rgba(245,158,11,.08)}
+  .l-unk{color:var(--t3);border-color:var(--line2);background:transparent}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+  th{text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--t3);padding:8px 10px;border-bottom:1px solid var(--line2)}
+  td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--t2);vertical-align:top}
+  td b{color:var(--t1)}
+  .st{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.6px;padding:3px 8px;border-radius:3px;border:1px solid;white-space:nowrap}
+  .s-impl{color:var(--green);border-color:#2f6b43;background:rgba(74,222,128,.08)}
+  .s-iv{color:var(--cyan);border-color:#1b5b66;background:rgba(34,211,238,.08)}
+  .s-prog{color:var(--gold);border-color:#6b5316;background:rgba(218,165,32,.09)}
+  .s-plan{color:var(--amber);border-color:#6b4e16;background:rgba(245,158,11,.08)}
+  .s-no{color:var(--red);border-color:#6b1a1f;background:rgba(251,1,13,.08)}
+  ul{list-style:none;margin:6px 0 0}
+  li{position:relative;padding-left:16px;margin-bottom:7px;color:var(--t2)}
+  li::before{content:"▸";position:absolute;left:0;color:var(--red);font-size:11px}
+  .callout{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:6px;padding:14px 18px;margin-top:6px;font-size:13.5px;color:var(--t2)}
+  .callout b{color:var(--t1)}
+  .meta{font-family:var(--mono);font-size:11.5px;color:var(--t3);margin-top:8px}
+  .meta a{color:var(--cyan);text-decoration:none}
+  footer{padding:26px 0;color:var(--t3);font-size:12px}
+  code{font-family:var(--mono);color:var(--gold);font-size:.92em}
+  @media(max-width:600px){h1{font-size:24px}.tile .v{font-size:20px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="home" href="index.html"><img src="sost-logo.png?v=v392" alt="SOST"><span class="b">SOST</span></a>
+  <span class="sp"></span>
+  <a class="nav" href="sost-explorer.html">Explorer</a>
+  <a class="nav" href="sost-network-status.html">Network</a>
+  <a class="nav" href="index.html">← Home</a>
+</div></header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eye">// Decentralization Status</div>
+    <h1>Decentralization Status</h1>
+    <p class="lead"><b>Permissionless Proof-of-Work consensus architecture. Operational decentralization is an ongoing engineering objective.</b> SOST distinguishes consensus decentralization (which blocks are valid is decided by protocol rules, not an administrator) from operational decentralization (nodes, peers, bootstrap, infrastructure and software distribution). The figures below are measured live where possible and labelled by how they are known. No single server, operator, website, miner or organization should be required for SOST to keep validating and extending its chain.</p>
+  </div>
+
+  <section>
+    <h2>Observed network &mdash; live</h2>
+    <div class="grid" id="metrics">
+      <div class="tile"><div class="k">Loading…</div><div class="v">—</div></div>
+    </div>
+    <div class="meta" id="asof">Reading <a href="decentralization-status.json">decentralization-status.json</a> …</div>
+    <div style="margin-top:12px;font-size:12px;color:var(--t3);display:flex;gap:14px;flex-wrap:wrap">
+      <span><span class="lbl l-obs">OBSERVED</span> measured now</span>
+      <span><span class="lbl l-known">KNOWN</span> documented project infra</span>
+      <span><span class="lbl l-inf">INFERRED</span> reasoned, not measured</span>
+      <span><span class="lbl l-unk">UNKNOWN</span> not asserted</span>
+    </div>
+    <div class="callout" style="border-left-color:var(--red);margin-top:16px">A connected peer or IP address is <b>not</b> evidence of an independent operator. SOST does not report peers/IPs as "independent nodes" and does not claim a number of independent operators it cannot prove.</div>
+  </section>
+
+  <section>
+    <h2>Current infrastructure dependencies</h2>
+    <table>
+      <thead><tr><th>Dependency</th><th>Today</th><th>Label</th></tr></thead>
+      <tbody>
+        <tr><td><b>Bootstrap DNS seeds</b></td><td>seed-eu / seed-apac / seed-us / seed.<b>sostcore.com</b> — all under one project-controlled domain (single DNS dependency)</td><td><span class="st s-prog">BEING REDUCED</span></td></tr>
+        <tr><td><b>Primary node</b></td><td>one project-operated VPS (Germany); a Singapore node is planned</td><td><span class="st s-prog">BEING REDUCED</span></td></tr>
+        <tr><td><b>Public RPC gateway</b></td><td>1 instance (sostcore.com/rpc/public) — read + broadcast; wallet/admin methods auth-gated</td><td><span class="st s-prog">SINGLE SOURCE</span></td></tr>
+        <tr><td><b>Explorer</b></td><td>1 instance (sostcore.com/sost-explorer.html) — observing only; the chain survives if it is down</td><td><span class="st s-prog">SINGLE SOURCE</span></td></tr>
+        <tr><td><b>Release distribution</b></td><td>GitHub releases; a reproducible build recipe enables independent hash verification</td><td><span class="st s-iv">EXPANDING</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Implemented protections &amp; planned tests</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Permissionless Proof-of-Work consensus (ConvergenceX / SbPoW + cASERT)</td><td><span class="st s-impl">IMPLEMENTED</span></td></tr>
+        <tr><td>DTD anti-dominance eligibility gate (≥10% of last 288 excluded when ≥11 distinct miners) + SbPoW signed-miner gate</td><td><span class="st s-impl">IMPLEMENTED</span></td></tr>
+        <tr><td>Persistent peer store + address gossip (so nodes keep peers across restarts and learn peers from each other)</td><td><span class="st s-plan">NOT IN AUDITED CODE — PLANNED</span></td></tr>
+        <tr><td>Deterministic, height-triggered activation (e.g. V30000 at #30,000 — no operator switches on consensus)</td><td><span class="st s-impl">IMPLEMENTED</span></td></tr>
+        <tr><td>Reproducible build recipe (independent hash verification of v30000)</td><td><span class="st s-iv">PUBLISHED</span></td></tr>
+        <tr><td>More independent public nodes &amp; miners; multi-source peer discovery</td><td><span class="st s-prog">IN PROGRESS</span></td></tr>
+        <tr><td>Independent third-party seed operators / multiple bootstrap paths</td><td><span class="st s-plan">PLANNED</span></td></tr>
+        <tr><td>Singapore infrastructure node</td><td><span class="st s-plan">PLANNED</span></td></tr>
+        <tr><td>~24 h primary-infrastructure independence test (kill the primary node, verify the network continues)</td><td><span class="st s-plan">PLANNED — NOT EXECUTED</span></td></tr>
+        <tr><td>External independent security audit</td><td><span class="st s-no">NOT COMPLETED</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section style="border-bottom:none">
+    <h2>What this is — and is not</h2>
+    <ul>
+      <li>Decentralization is treated as a measurable engineering objective, not a binary marketing label.</li>
+      <li>A network can have permissionless PoW consensus while still improving miner diversity, node diversity, geographic spread, bootstrap resilience and software reproducibility.</li>
+      <li>Historical deployment figures (e.g. up to 11 nodes at times) are <b>not</b> the number of currently active <b>independent</b> operators.</li>
+    </ul>
+    <div class="callout"><b>Internal engineering measurements, not an independent third-party audit.</b> SOST does not claim to be "fully decentralized" or to have "complete decentralization". See the engineering docs: <code>docs/decentralization/</code> (reproducible build, bootstrap audit, run-a-node, mine-SOST, infra-independence test plan, S14 roadmap).</div>
+  </section>
+
+<!-- ============ SOST vs BITCOIN vs ETHEREUM — comparative maturity (2026-10-05) ============ -->
+<section class="section" id="sost-vs-btc-eth-2026-10-05"><div class="container">
+  <div style="border:1px solid var(--border-med,#2a2a2a);border-radius:14px;background:linear-gradient(180deg,rgba(184,134,11,.05),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:var(--gold-primary,#b8860b)">// ENGINEERING vs MATURITY &middot; SOST V30000 FINAL CANDIDATE &middot; 2026-10-05</div>
+    <h2 style="font-size:23px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0)">Where SOST really stands &mdash; an honest comparison with <span style="color:#F7931A">Bitcoin</span> and <span style="color:#8b9bf4">Ethereum</span></h2>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7;margin:4px 0 2px">We separate <b>the quality of the architecture we are building</b> from <b>the real maturity of a network that still has few operators and little time under real attack</b>. The star ratings below are an <b>orientative comparative judgement, not a scientific metric</b>.</p>
+
+    <!-- logos -->
+    <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:center;justify-content:center;margin:16px 0 6px">
+      <div style="text-align:center">
+        <img src="sost-logo.png" alt="SOST" style="height:46px;width:auto;vertical-align:middle"><div style="font:800 11px ui-monospace;color:var(--gold-primary,#b8860b);margin-top:4px;letter-spacing:1px">SOST V30000</div>
+      </div>
+      <div style="text-align:center">
+        <svg width="46" height="46" viewBox="0 0 64 64" aria-label="Bitcoin"><circle cx="32" cy="32" r="32" fill="#F7931A"/><text x="32" y="44" font-family="Arial,Helvetica,sans-serif" font-size="40" font-weight="700" fill="#fff" text-anchor="middle">&#8383;</text></svg>
+        <div style="font:800 11px ui-monospace;color:#F7931A;margin-top:4px;letter-spacing:1px">BITCOIN</div>
+      </div>
+      <div style="text-align:center">
+        <svg width="40" height="46" viewBox="0 0 256 417" aria-label="Ethereum"><path fill="#8A92B2" d="M127.9 0L125 9.5v275.6l2.9 2.9 127.9-75.6z"/><path fill="#62688F" d="M127.9 0L0 212.3l127.9 75.6V154.2z"/><path fill="#62688F" d="M127.9 312.2l-1.6 2v98.2l1.6 4.8L256 236.6z"/><path fill="#8A92B2" d="M127.9 417.2V312.2L0 236.6z"/><path fill="#454A75" d="M127.9 287.9l127.9-75.6-127.9-58.1z"/><path fill="#62688F" d="M0 212.3l127.9 75.6V154.2z"/></svg>
+        <div style="font:800 11px ui-monospace;color:#8b9bf4;margin-top:4px;letter-spacing:1px">ETHEREUM</div>
+      </div>
+    </div>
+
+    <!-- comparison table -->
+    <div style="overflow-x:auto;width:100%;margin:10px 0">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px">
+        <thead><tr style="border-bottom:2px solid #2a2a2a">
+          <th style="text-align:left;padding:8px 10px;color:var(--text-secondary,#94a3b8)">Area</th>
+          <th style="text-align:right;padding:8px 10px;color:#fb010d"><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</th>
+          <th style="text-align:right;padding:8px 10px;color:#F7931A"><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</th>
+          <th style="text-align:right;padding:8px 10px;color:#8b9bf4"><img src="assets/coins/eth.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ethereum</th>
+        </tr></thead>
+        <tbody style="color:#cbd5e1">
+          <tr style="border-bottom:1px solid #1a1a1a"><td style="padding:7px 10px">Technology / architecture</td><td style="text-align:right">⭐⭐⭐⭐½</td><td style="text-align:right">⭐⭐⭐⭐</td><td style="text-align:right">⭐⭐⭐⭐⭐</td></tr>
+          <tr style="border-bottom:1px solid #1a1a1a"><td style="padding:7px 10px">Software / protocol security</td><td style="text-align:right">⭐⭐⭐½☆</td><td style="text-align:right">⭐⭐⭐⭐⭐</td><td style="text-align:right">⭐⭐⭐⭐½</td></tr>
+          <tr style="border-bottom:1px solid #1a1a1a"><td style="padding:7px 10px">Real decentralization</td><td style="text-align:right">⭐⭐½☆☆</td><td style="text-align:right">⭐⭐⭐⭐⭐</td><td style="text-align:right">⭐⭐⭐⭐☆</td></tr>
+          <tr style="border-bottom:1px solid #1a1a1a"><td style="padding:7px 10px">P2P resilience / autonomy</td><td style="text-align:right">⭐⭐⭐⭐☆</td><td style="text-align:right">⭐⭐⭐⭐⭐</td><td style="text-align:right">⭐⭐⭐⭐⭐</td></tr>
+          <tr style="border-bottom:1px solid #1a1a1a"><td style="padding:7px 10px">Adversarial testing</td><td style="text-align:right">⭐⭐⭐⭐☆</td><td style="text-align:right">⭐⭐⭐⭐⭐</td><td style="text-align:right">⭐⭐⭐⭐⭐</td></tr>
+          <tr style="border-bottom:1px solid #1a1a1a"><td style="padding:7px 10px">Maturity / years under real attack</td><td style="text-align:right">⭐☆☆☆☆</td><td style="text-align:right">⭐⭐⭐⭐⭐</td><td style="text-align:right">⭐⭐⭐⭐⭐</td></tr>
+          <tr style="border-bottom:1px solid #1a1a1a"><td style="padding:7px 10px">Operator / infrastructure diversity</td><td style="text-align:right">⭐⭐☆☆☆</td><td style="text-align:right">⭐⭐⭐⭐⭐</td><td style="text-align:right">⭐⭐⭐⭐½</td></tr>
+          <tr style="border-bottom:1px solid #1a1a1a"><td style="padding:7px 10px">Release verifiability <span style="color:#64748b">*</span></td><td style="text-align:right">⭐⭐⭐⭐☆</td><td style="text-align:right">⭐⭐⭐⭐⭐</td><td style="text-align:right">⭐⭐⭐⭐⭐</td></tr>
+          <tr style="border-top:2px solid #2a2a2a;font-weight:800;color:#e2e8f0"><td style="padding:9px 10px">Overall today</td><td style="text-align:right">⭐⭐⭐½☆</td><td style="text-align:right">⭐⭐⭐⭐⭐</td><td style="text-align:right">⭐⭐⭐⭐½</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:#64748b;line-height:1.6;margin:0 0 10px"><span style="color:#64748b">*</span> SOST has reproducible builds, verifiable SHA256 hashes and package self-verification; a signed release + independent distribution are still to be finalized. Stars are a comparative orientation, not a measurement.</p>
+
+    <!-- grounded evidence -->
+    <p style="font-size:12.5px;color:#c9d6e2;line-height:1.7;margin:8px 0">These SOST notes are not theoretical. The current candidate has passed <b>122/122</b> consensus tests, SACS V2, SEC2, OLD↔NEW compatibility, partition/heal, <b>SOSTCORE-DISAPPEARS 5/5</b>, fuzzing, ASan/UBSan/LeakSan, P2P adversarial/eclipse/poisoning, reproducible build and package verification. The testing even <b>uncovered a real remote-DoS (SIGPIPE) before release</b> — now fixed; the follow-up disconnect-storm keeps node, RPC and file descriptors stable.</p>
+
+    <!-- castles example -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;margin-top:10px">
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #F7931A;border-radius:10px;padding:13px 15px">
+        <div style="color:#F7931A;font:800 12px ui-monospace;margin-bottom:6px">🏰 Bitcoin</div>
+        <p style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0">A relatively simple castle that has been <b>under attack for many years</b>. Countless guards, independent gates and copies all over the world. If a company, a website or a server disappears, <b>Bitcoin doesn't even notice</b>. That is why it sits at the top on security and decentralization.</p>
+      </div>
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #8b9bf4;border-radius:10px;padding:13px 15px">
+        <div style="color:#8b9bf4;font:800 12px ui-monospace;margin-bottom:6px">🏰 Ethereum</div>
+        <p style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0">A far more sophisticated castle — more rooms, machines and possibilities than Bitcoin. That gives it enormous technology, but also <b>more things to watch</b>. Thousands of nodes, developers, clients and operators, and years of real-world operation.</p>
+      </div>
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid var(--gold-primary,#b8860b);border-radius:10px;padding:13px 15px">
+        <div style="color:#d4a017;font:800 12px ui-monospace;margin-bottom:6px">🏰 SOST</div>
+        <p style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0">A <b>technologically ambitious</b> castle, but much younger. The consensus is permissionless, yet until recently too many <i>operational</i> things could still depend on our own infrastructure. We are now removing those dependencies one by one — and testing that they are really gone.</p>
+      </div>
+    </div>
+
+    <!-- decentralization diagrams -->
+    <div style="font:12px/1.5 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto;width:100%"><div style="color:#fbbf24;font-weight:800;margin-bottom:6px">DECENTRALIZATION — ARCHITECTURAL DIRECTION (target, not current mainnet state)</div><pre style="margin:0;white-space:pre">BEFORE (too much depended on us)        TARGET (autonomous mesh)
+
+            SOSTCORE                      node ───── node
+               │                          │  \       / │
+       ┌───────┼───────┐                  │   \     /  │
+     node    node    node                 node ─── node
+                                            \       /
+                                          independent seed</pre><div style="color:#c9d6e2;margin-top:8px;white-space:normal">Nodes now remember peers, reconnect, exchange addresses (ADDR/GETADDR) and use independent <code>seeds.txt</code>. We ran a lab test that <b>turned SOSTCORE off entirely</b>: the chain kept going, a new node joined via <code>seeds.txt</code>, a restarted node recovered peers, and consensus needed no sostcore.com — <b>SOSTCORE-DISAPPEARS 5/5 PASS</b>. That is a major <i>technical</i> decentralization step.</div></div>
+
+    <!-- SIGPIPE before/after -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;margin:10px 0">
+      <div style="font:11.5px/1.5 ui-monospace,monospace;background:#07090e;border:1px solid #5a1a1a;border-radius:8px;padding:11px 13px;overflow-x:auto;width:100%"><div style="color:#ff6b6b;font-weight:800;margin-bottom:5px">BEFORE — SIGPIPE DoS</div><pre style="margin:0;white-space:pre;color:#ffb3b3">peer connects
+     ↓
+closes violently
+     ↓
+node tries to write
+     ↓
+SIGPIPE
+     ↓
+NODE DIES</pre></div>
+      <div style="font:11.5px/1.5 ui-monospace,monospace;background:#07090e;border:1px solid #1d5b2e;border-radius:8px;padding:11px 13px;overflow-x:auto;width:100%"><div style="color:#39ff14;font-weight:800;margin-bottom:5px">AFTER — fixed (7b9ac273)</div><pre style="margin:0;white-space:pre;color:#b7ffcf">peer closes
+     ↓
+write/send fails
+     ↓
+EPIPE
+     ↓
+peer dropped
+     ↓
+NODE STAYS ALIVE</pre></div>
+    </div>
+
+    <!-- why the ratings -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-top:6px">
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:13px 15px">
+        <div style="color:#e2e8f0;font:800 12px ui-monospace;margin-bottom:6px">Why only ⭐⭐½ on decentralization?</div>
+        <p style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0">Because <b>"the software allows decentralization"</b> is not the same as <b>"the network is actually decentralized"</b>. We've done much of the first. The second needs people and infrastructure <b>we don't control</b>: if nearly all nodes, seeds, domains, the VPS, the mirror and almost all mining are ours, the network does not yet have Bitcoin-grade decentralization.</p>
+      </div>
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:13px 15px">
+        <div style="color:#e2e8f0;font:800 12px ui-monospace;margin-bottom:6px">Why ⭐⭐⭐½ on security and not ⭐⭐⭐⭐⭐?</div>
+        <p style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0">We're doing a lot right — SEC2, SACS V2, fuzzing, sanitizers, eclipse/poisoning/partition tests, reproducible builds, package verification, rollback — and these found the real SIGPIPE bug before release. But Bitcoin and Ethereum have endured <b>years of real attacks with huge money at stake</b>. You cannot manufacture <b>10 years of attacks in 10 days</b>. The missing pieces — <b>independent audit + real time under attack</b> — cannot be fully accelerated.</p>
+      </div>
+    </div>
+
+    <!-- roadmap targets -->
+    <div style="font:12px/1.6 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto;width:100%"><div style="color:#67e8f9;font-weight:800;margin-bottom:6px">A realistic target for SOST (not "as secure as Bitcoin")</div><pre style="margin:0;white-space:pre">SHORT TERM  (V30000 + independent infra)      MID TERM  (operators+seeds+miners+ASN+mirrors+audit)
+  TECHNOLOGY        ⭐⭐⭐⭐½                      TECHNOLOGY        ⭐⭐⭐⭐½
+  SECURITY          ⭐⭐⭐⭐                       SECURITY          ⭐⭐⭐⭐½
+  DECENTRALIZATION  ⭐⭐⭐                        DECENTRALIZATION  ⭐⭐⭐⭐</pre><div style="color:#c9d6e2;margin-top:8px;white-space:normal">The 5th star of security and decentralization <b>is not programmed</b> — it is earned with time + independent operators + capital at risk + real attacks + external audits + surviving failures.</div></div>
+
+    <!-- what next -->
+    <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #fbbf24;border-radius:10px;padding:13px 15px;margin-top:6px">
+      <div style="color:#fbbf24;font:800 12px ui-monospace;margin-bottom:6px">What has to happen next (no consensus change)</div>
+      <ol style="font-size:12px;color:#94a3b8;line-height:1.75;margin:0;padding-left:18px">
+        <li>Independent node/seed on a <b>different provider and ASN</b>, ideally another country (not our VPS, not our domain).</li>
+        <li>A second and third <b>genuinely independent</b> seed.</li>
+        <li><b>External operators</b> — someone who isn't us downloads SOST, verifies it, runs a node and stays connected without asking us for anything.</li>
+        <li><b>More independent miners.</b> Peer decentralization without hashrate decentralization is incomplete.</li>
+        <li><b>Independent release mirror + signed release.</b></li>
+        <li><b>External code audit</b> — consensus, SACS, P2P, and later S14/DEX.</li>
+        <li><b>More geographic and ASN/provider diversity.</b></li>
+        <li><b>Let time pass</b> — months and years with nodes running, reorgs, server failures, upgrades and real attacks.</li>
+      </ol>
+      <p style="font-size:12px;color:#e6d9b6;line-height:1.7;margin:8px 0 0"><b>SOST is well advanced in engineering; now it has to turn that engineering into a network that can live without us.</b></p>
+    </div>
+
+    <p style="margin-top:12px;font-size:11px;color:#64748b;line-height:1.7"><b style="color:#fbbf24">Disclaimer.</b> The star ratings are an orientative comparative judgement, not a scientific measurement. SOST does not claim to be "as secure as Bitcoin" or "fully decentralized". The V30000 FINAL CANDIDATE (commit 7b9ac273) is under test and not yet deployed; 78fefb67 remains the known-good baseline (which also carries the now-fixed SIGPIPE issue). Bitcoin and Ethereum names/logos are used for comparison only. No consensus, binary, activation height, SEC2 or SACS was changed by this page — documentation only.</p>
+  </div>
+</div></section>
+
+  <footer>© 2026 SOST · MIT-licensed · <a href="index.html" style="color:var(--cyan);text-decoration:none">sostcore.com</a> · canonical data: <a href="decentralization-status.json" style="color:var(--cyan);text-decoration:none">decentralization-status.json</a></footer>
+</div>
+
+<script>
+(function(){
+  var FIELDS=[
+    ['consensus_architecture','Consensus',false],
+    ['active_288','Active producers · last 288',true],
+    ['producers_since_genesis','Unique producers · all-time',true],
+    ['producers_in_window_from_7100','Producers since Phase-2',true],
+    ['observed_connected_peers','Observed connected peers',true],
+    ['largest_observed_miner_share','Largest miner share',true],
+    ['public_rpc_instances','Public RPC instances',true],
+    ['chain_tip','Chain height',true]
+  ];
+  function lblClass(l){return {OBSERVED:'l-obs',KNOWN:'l-known',INFERRED:'l-inf',UNKNOWN:'l-unk'}[l]||'l-known';}
+  fetch('decentralization-status.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){
+    var html='';
+    FIELDS.forEach(function(f){
+      var o=d[f[0]]||{}; var v=o.value;
+      var disp = (v===null||v===undefined)?'n/a':(typeof v==='object'?'—':v);
+      html+='<div class="tile"><div class="k">'+f[1]+'</div><div class="v" style="'+(f[2]?'':'font-size:15px;')+'">'+disp+'</div>'
+          + (o.label?'<span class="lbl '+lblClass(o.label)+'">'+o.label+'</span>':'')
+          + (o.note?'<div class="n">'+o.note+'</div>':'')+'</div>';
+    });
+    document.getElementById('metrics').innerHTML=html;
+    document.getElementById('asof').innerHTML='As of <b style="color:#a7b0bd">'+(d.timestamp||'—')+'</b> · source <a href="decentralization-status.json">decentralization-status.json</a>';
+  }).catch(function(){
+    document.getElementById('metrics').innerHTML='<div class="tile"><div class="k">Live data unavailable</div><div class="v" style="font-size:15px">see JSON</div><div class="n">Open <a href="decentralization-status.json" style="color:#22d3ee">decentralization-status.json</a> directly.</div></div>';
+    document.getElementById('asof').textContent='';
+  });
+})();
+</script>
+</body>
+</html>

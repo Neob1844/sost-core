@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/sost-gold-reference.js?v=v400"></script>
+<script src="js/sost-gold-reference.js?v=v532c"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -152,6 +152,49 @@
   .cp-tooltip-date { color: #666; }
   .cp-tooltip-val { color: #c8c8c8; font-weight: 600; }
   .cp-range { font-size: 9px; color: var(--text-muted); margin-top: 8px; letter-spacing: 0.5px; }
+  /* v543 glow look — same language as the Explorer charts */
+  .chart-panel { position: relative; border-radius: 14px; border: 1px solid #24212d;
+    background: radial-gradient(120% 90% at 0% 0%, rgba(251,191,36,.07), transparent 55%), radial-gradient(120% 90% at 100% 100%, rgba(192,132,252,.06), transparent 55%), linear-gradient(180deg, #0f0e13, #08080a);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 12px 30px rgba(0,0,0,.45); }
+  .chart-panel::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; border-radius: 14px 14px 0 0; background: linear-gradient(90deg, #fbbf24, #fb010d 55%, transparent); pointer-events: none; }
+  #paxgChartPanel::before { background: linear-gradient(90deg, #4ade80, #22d3ee 55%, transparent); }
+  #sostChartPanel::before { background: linear-gradient(90deg, #ffd700, #c084fc 55%, transparent); }
+  .cp-title { font-size: 11px; color: #9a96ad; }
+  .cp-val { font-size: 26px; text-shadow: 0 0 16px currentColor; }
+  .cp-tf-btn { border-radius: 999px; background: rgba(0,0,0,.3); border-color: #2a2733; color: #8f8ca0; font-size: 10px; padding: 4px 10px; }
+  .cp-tf-btn:hover { color: #d8d6e3; border-color: #3a3645; }
+  .cp-tf-btn.active { box-shadow: 0 0 12px rgba(251,1,13,.35); }
+  .cp-chart-wrap { border-radius: 10px; }
+  .cp-tooltip, .coin-detail-tooltip, .sost-pair-tooltip { background: rgba(12,11,16,.92) !important; border: 1px solid #3a3645 !important; border-radius: 8px !important; box-shadow: 0 8px 24px rgba(0,0,0,.5); backdrop-filter: blur(4px); }
+  .cp-range { color: #8f8ca0; font-size: 10px; }
+  .mkref { margin: 14px 0; padding: 18px 20px; border-radius: 14px; border: 1px solid rgba(255,215,0,.25); position: relative;
+    background: radial-gradient(120% 90% at 0% 0%, rgba(255,215,0,.09), transparent 55%), linear-gradient(180deg, #121008, #08080a);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px rgba(0,0,0,.4); font-family: var(--font-mono); }
+  .mkref::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; border-radius: 14px 14px 0 0; background: linear-gradient(90deg, #ffd700, #fb010d 60%, transparent); }
+  .mkref-k { font-size: 10px; letter-spacing: 2.5px; color: #fbbf24; text-transform: uppercase; }
+  .mkref-h { font-size: 17px; color: #ece9f5; margin: 8px 0; line-height: 1.4; } .mkref-h b { color: #ffd700; text-shadow: 0 0 14px rgba(255,215,0,.4); }
+  .mkref-p { font-size: 11px; color: #a7a3b8; line-height: 1.7; }
+  .mkref-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; } .mkref-tags span { font-size: 9px; letter-spacing: 1px; border: 1px solid #3a3426; color: #d8c99a; padding: 4px 10px; border-radius: 999px; background: rgba(0,0,0,.3); }
+  .mkref-eq { font-size: 18px; color: #ece9f5; margin: 10px 0 4px; } .mkref-eq b { color: #ffd700; font-size: 22px; text-shadow: 0 0 16px rgba(255,215,0,.5); }
+  .mkref-live, .mkref-src { font-size: 10px; color: #8f8ca0; line-height: 1.7; } .mkref-src b { color: #d8d6e3; }
+  .mkref-note { margin-top: 10px; padding: 10px 12px; border-left: 3px solid #fbbf24; background: rgba(251,191,36,.05); font-size: 10.5px; color: #a7a3b8; line-height: 1.7; } .mkref-note b { color: #fbbf24; }
+  .mkref-status { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 10px; color: #8f8ca0; }
+  .mkref-link { display: inline-block; margin-top: 10px; font-size: 10.5px; color: #22d3ee; text-decoration: none; } .mkref-link:hover { text-shadow: 0 0 10px rgba(34,211,238,.6); }
+  .chart-toggle { border-radius: 999px; }
+  .chart-toggle:hover, .chart-toggle.open { box-shadow: 0 0 14px rgba(251,1,13,.3); }
+  .coin-detail-panel { border-radius: 16px !important; border: 1px solid #2a2733 !important;
+    background: radial-gradient(120% 90% at 0% 0%, rgba(74,222,128,.07), transparent 55%), radial-gradient(120% 90% at 100% 100%, rgba(192,132,252,.07), transparent 55%), linear-gradient(180deg, #111017, #08080a) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 40px rgba(74,222,128,.06); }
+  .coin-detail-chart-wrap { border-radius: 12px !important; border-color: #23202c !important; background: linear-gradient(180deg, #0c0b10, #070709) !important; }
+  .coin-detail-price { text-shadow: 0 0 18px rgba(255,255,255,.18); }
+  .coin-detail-period-btn { border-radius: 999px !important; }
+  .coin-detail-period-btn.active { box-shadow: 0 0 12px rgba(74,222,128,.3); }
+  .sost-pair-canvas, #sostGoldChartCanvas { border-radius: 10px; background: linear-gradient(180deg, #0c0b10, #070709); }
+  /* wide tables scroll inside their own box on phones instead of widening the whole page */
+  @media (max-width: 768px) {
+    #goldFiatTable, #goldCryptoTable, #sostPairsTable { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .coin-detail-panel { width: calc(100vw - 24px) !important; padding: 18px 14px !important; box-sizing: border-box; }
+  }
   .clickable-crypto { cursor: pointer; transition: color 0.15s; }
   .clickable-crypto:hover { color: var(--red-primary) !important; }
   .error-retry { cursor: pointer; text-decoration: underline; }
@@ -204,7 +247,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -223,7 +267,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -383,17 +427,18 @@
     <div class="section-header">
       <div class="section-id">SOST REFERENCE VALUE</div>
       <div class="section-title">SOST Reference Value <span class="accent">(Gold Reference)</span></div>
-      <div class="section-sub">1 SOST = 0.8886707657 mg of gold, expressed in 60 fiat currencies &mdash; source: gold spot + forex rates. <strong style="color:#fbbf24">This is NOT a market price. No active trading exists yet.</strong></div>
-      <div style="margin:12px 0;padding:10px 16px;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.2);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
-        <div style="color:#fbbf24;font-weight:600;letter-spacing:1px;margin-bottom:6px">// PRICE DISCOVERY STATUS</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:10px">
-          <span>Liquidity:</span><span style="color:#fb010d">Not available</span>
-          <span>Market:</span><span style="color:#fb010d">Not active</span>
-          <span>Exchange listing:</span><span style="color:#fbbf24">Pending (June 2026)</span>
-          <span>Valuation model:</span><span style="color:#4ade80">Internal (PoPC)</span>
-          <span>Phase:</span><span style="color:#fbbf24">Pre-Market Testing</span>
-        </div>
-        <div style="margin-top:8px;color:#666;font-size:9px">SOST does not simulate a market &mdash; it prepares for one.</div>
+      <div class="section-sub">1 SOST &equiv; 0.8886707657 mg of gold, expressed in 60 fiat currencies &mdash; source: live gold reference + forex rates. <strong style="color:#fbbf24">A reference, not a market price. No active trading exists yet.</strong></div>
+      <div class="mkref">
+        <div class="mkref-k">Monetary reference &middot; gold-denominated</div>
+        <div class="mkref-h">One SOST is initially referenced to <b>0.8886707657 milligrams of gold</b>.</div>
+        <div class="mkref-p">A transparent unit of account that expresses SOST in a fixed weight of gold &mdash; the same idea that anchored the dollar at Bretton Woods, adapted honestly for an experimental protocol. It is a reference, not a price you are promised. Initially, SOST is referenced to this fixed weight of gold; once it trades, the market will set its price.</div>
+        <div class="mkref-tags"><span>Reference &mdash; not a peg</span><span>Not redeemable for gold</span><span>Not investment advice</span><span>Experimental software</span></div>
+        <div class="mkref-eq">1 SOST &nbsp;&equiv;&nbsp; 0.8886707657 mg gold &nbsp;&asymp;&nbsp; <b id="mkRefUsd">&hellip;</b></div>
+        <div class="mkref-live" id="mkRefLive">Live gold reference &middot; loading gold spot&hellip;</div>
+        <div class="mkref-src" id="mkRefSrc"></div>
+        <div class="mkref-note"><b>&#9889; A PROPOSED initial price &mdash; not a guaranteed or future price.</b> SOST proposes the 0.8886707657 mg gold reference as its initial price for a first centralized-exchange listing. It is a proposal, not a guarantee: the price that actually applies depends on the exchange and on the real orders and liquidity available at listing. Once SOST is listed and trades, the market sets the price freely by supply and demand &mdash; it may move entirely away from this reference. This is an indicative reference, not our own live sell offer.</div>
+        <div class="mkref-status"><span>Liquidity: <b style="color:#fb3b47">not available</b></span><span>Market: <b style="color:#fb3b47">not active</b></span><span>Exchange listing: <b style="color:#fbbf24">pending &mdash; no confirmed date</b></span><span>Reference: <b style="color:#4ade80">0.8886707657 mg gold (1/1000 of a 1944 Bretton Woods dollar)</b></span></div>
+        <a class="mkref-link" href="sost-reference.html">Full gold reference, Bretton Woods derivation and what it is not &rarr;</a>
       </div>
       <button class="chart-toggle" id="sostChartToggle"><span class="ct-arrow">&#9656;</span> SOST GOLD REFERENCE CHART</button>
     </div>
@@ -450,7 +495,7 @@
     <div class="section-header">
       <div class="section-id">GOLD IN CRYPTO</div>
       <div class="section-title">Gold Price in <span class="accent">Crypto</span></div>
-      <div class="section-sub">1 troy oz gold priced in 13 cryptocurrencies — source: CoinGecko — click any name or symbol for USD chart</div>
+      <div class="section-sub">1 troy oz gold priced in 13 cryptocurrencies — source: CoinGecko (gold) &amp; Binance spot (USD prices), via the SOST gateway — click any name or symbol for USD chart</div>
     </div>
     <table class="data-table" id="goldCryptoTable">
       <thead>
@@ -469,18 +514,18 @@
     <div class="section-header">
       <div class="section-id">SOST PAIRS</div>
       <div class="section-title">SOST Trading <span class="accent">Pairs</span></div>
-      <div class="section-sub">Simulated pair rates derived from the gold reference price (1 SOST = 0.8886707657 mg gold)</div>
+      <div class="section-sub">Reference pair rates derived from the gold reference (1 SOST &equiv; 0.8886707657 mg gold) &mdash; not traded rates</div>
     </div>
     <div style="margin-bottom:16px;padding:12px 16px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
-      <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// SIMULATED PAIR DATA &mdash; NOT LIVE MARKET</div>
+      <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// REFERENCE PAIRS &mdash; NOT A LIVE MARKET</div>
       <div>SOST is <strong>not currently listed</strong> on any centralized or decentralized exchange. The pair rates below are
-      <strong>theoretical values</strong> derived algorithmically from the PoPC (Proof of Personal Custody) reference price
-      and the live market price of each counterpart asset.</div>
+      <strong>reference values</strong>: the gold reference (1 SOST &equiv; 0.8886707657 mg gold &times; live gold spot) divided by
+      the live market price of each counterpart asset.</div>
       <div style="margin-top:6px;color:#666">The gold reference expresses 1 SOST as a fixed 0.8886707657 mg of gold &mdash; informational, not a price floor or guarantee:
       <code style="color:#4ade80">price = 0.8886707657 mg &times; gold_spot (fixed gold weight)</code>.
-      This is a <strong>logical valuation</strong>, not a traded market price. Actual trading rates will differ once SOST
-      is listed, as market price is determined by supply, demand, and liquidity &mdash; not solely by backing.</div>
-      <div style="margin-top:6px;color:#555">Verify gold commitments: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan &nearr;</a></div>
+      This is a <strong>reference</strong>, not a traded market price and not a promise. Once SOST is listed, the market sets its
+      price by supply, demand and liquidity &mdash; it may move entirely away from this reference.</div>
+      <div style="margin-top:6px;color:#555">Verify network-held gold (not holder-redeemable): <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan &nearr;</a></div>
     </div>
     <table class="data-table" id="sostPairsTable">
       <thead>
@@ -502,7 +547,7 @@
   </div>
 </footer>
 
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <script>
 (function() {
   'use strict';
@@ -649,7 +694,10 @@
     return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
   }
 
-  function fmtUsd(n) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtUsd(n) {
+    var a = Math.abs(n), d = (a > 0 && a < 1) ? Math.min(8, Math.max(4, Math.ceil(-Math.log10(a)) + 3)) : 2;   // small prices keep their significant digits
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
   function fmtTip(ts) { var d = new Date(ts); return MO[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + ('0' + d.getUTCHours()).slice(-2) + ':' + ('0' + d.getUTCMinutes()).slice(-2) + ' UTC'; }
   function shortTf(tf) { return tf === '1H' || tf === '4H' || tf === '8H' || tf === '24H'; }
   function fmtAx(ts, period) { var d = new Date(ts); if (period === '1H' || period === '4H' || period === '8H') return ('0' + d.getUTCHours()).slice(-2) + ':' + ('0' + d.getUTCMinutes()).slice(-2); if (period === '24H') return ('0' + d.getUTCHours()).slice(-2) + ':00'; if (period === '3D' || period === '7D' || period === '30D') return MO[d.getUTCMonth()] + ' ' + d.getUTCDate(); if (period === '6M' || period === '1Y') return MO[d.getUTCMonth()] + ' ' + d.getUTCFullYear().toString().slice(-2); if (period === '3Y' || period === '5Y') return d.getUTCFullYear().toString(); return MO[d.getUTCMonth()] + ' ' + d.getUTCDate(); }
@@ -667,7 +715,7 @@
   function fetchForex(cb) {
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
-    fetch('https://open.er-api.com/v6/latest/USD', { signal: controller.signal })
+    fetch('/api/market-history?mode=fx', { signal: controller.signal })   // SOST gateway: shared cache of open.er-api latest USD
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.result !== 'success' || !data.rates) throw new Error('Bad response');
@@ -736,10 +784,12 @@
 
   // ===== GOLD + CRYPTO =====
   function fetchGold(cb) {
-    var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&include_24hr_change=true&vs_currencies=' + allVsCurrencies;
-    var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether&vs_currencies=usd&include_24hr_change=true';
-    var cryptoIds = Object.keys(CRYPTO_IDS).map(function(k) { return CRYPTO_IDS[k]; }).join(',');
-    var cryptoUsdUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + cryptoIds + '&vs_currencies=usd&include_24hr_change=true';
+    // SOST gateway (Explorer API): the same CoinGecko simple/price documents, fetched once and shared
+    // by every visitor (cache, de-dup, last good copy). gold_all = XAUT/PAXG in every currency of this
+    // page (allVsCurrencies), stable = USDC/USDT, crypto = the CRYPTO_IDS coins in USD.
+    var goldUrl = '/api/market-history?mode=spot&group=gold_all';
+    var stableUrl = '/api/market-history?mode=spot&group=stable';
+    var cryptoUsdUrl = '/api/market-history?mode=spot&group=crypto';
 
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
@@ -920,31 +970,6 @@
     return undefined;
   }
 
-  function tryFetchSost(id, vs, fallback, doneCb) {
-    var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
-    fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + id + '&vs_currencies=' + vs, { signal: controller.signal })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!data[id] || !data[id].usd) { fallback(); return; }
-        var prices = data[id];
-        var tbody = document.getElementById('sostFiatBody');
-        var html = '';
-        CURRENCY_GROUPS.forEach(function(g) {
-          html += regionRow(g.region, 3);
-          g.currencies.forEach(function(c) {
-            var p = (c.code === 'USD') ? prices.usd : sostInCurrency(prices, c.code);
-            html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
-              '<td class="price-val">' + (p !== undefined ? c.symbol + ' ' + fmt(p, p < 1 ? 8 : p < 100 ? 4 : 2) : '<span class="price-na">&mdash;</span>') + '</td></tr>';
-          });
-        });
-        tbody.innerHTML = html;
-        if (doneCb) doneCb();
-      })
-      .catch(function() { fallback(); })
-      .finally(function() { clearTimeout(timeoutId); });
-  }
-
   // Calculate SOST PoPC reference price — same formula as explorer
   // sost_price = (1.2 oz × avg(XAUT, PAXG)) / supply
   // XAUT and PAXG prices come from CoinGecko (they ARE listed). SOST is NOT.
@@ -977,7 +1002,7 @@
     if (!xp && !pp) {
       try {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd', false);
+        xhr.open('GET', '/api/market-history?mode=spot&group=gold_usd', false);
         xhr.timeout = 5000;
         xhr.send();
         if (xhr.status === 200) {
@@ -993,8 +1018,13 @@
       var cached = _loadGoldCache();
       if (cached) { xp = cached.xp; pp = cached.pp; }
     }
+    // Same source as sost-reference.html: SOSTGold (CoinGecko XAUT + PAXG average via the gateway).
+    var G = window.SOSTGold && window.SOSTGold.get();
+    if (G && G.ok && G.goldUsdPerOz > 0) { xp = xp || G.goldUsdPerOz; }
     if (!xp && !pp) return null;
-    _sostRefGoldP = (xp && pp) ? (xp + pp) / 2 : (xp || pp);
+    // Exactly what sost-reference.html shows: CoinGecko XAUT via the gateway; then the shared module; then candles.
+    _sostRefGoldP = (window._mkGoldXaut > 0) ? window._mkGoldXaut
+      : (G && G.ok && G.goldUsdPerOz > 0) ? G.goldUsdPerOz : ((xp && pp) ? (xp + pp) / 2 : (xp || pp));
     // Supply from chain height (use cached or fallback — NO sync XHR)
     var R0=7.85100863, Q=0.7788007830714049, EP=131553;
     var h = window._sostChainHeight || 2254;
@@ -1019,8 +1049,19 @@
       pEl.textContent = 'Loading gold prices...';
       pEl.style.fontSize = '14px';
     }
+    var G = window.SOSTGold && window.SOSTGold.get();
+    var ru = document.getElementById('mkRefUsd');
+    if (ru) ru.textContent = refUsd ? '$' + refUsd.toFixed(4) : 'reference temporarily unavailable';
+    var rl = document.getElementById('mkRefLive');
+    if (rl && refUsd && _sostRefGoldP) rl.textContent = 'Live gold reference \u00b7 gold spot $' + window.SOSTGold.gramFromOz(_sostRefGoldP).toFixed(2) + '/g \u00b7 derived from a fixed gold weight, updated as the gold price moves.';
+    var rs = document.getElementById('mkRefSrc');
+    if (rs && G && G.ok) {
+      var gt = G.ts ? new Date(G.ts) : new Date();
+      rs.innerHTML = 'Live \u00b7 gold ' + gt.toISOString().slice(0, 16).replace('T', ' ') + ' UTC \u00b7 source CoinGecko (via the SOST gateway) \u00b7 ' +
+        'XAUT <b>$' + ((window._mkGoldXaut || 0) ? window._mkGoldXaut.toFixed(2) : '\u2014') + '</b> | PAXG <b>$' + ((window._mkGoldPaxg || 0) ? window._mkGoldPaxg.toFixed(2) : '\u2014') + '</b> | Avg <b>$' + (window._mkGoldXaut && window._mkGoldPaxg ? ((window._mkGoldXaut + window._mkGoldPaxg) / 2).toFixed(2) : G.goldUsdPerOz.toFixed(2)) + '</b> \u00b7 reference uses XAUT';
+    }
     var chEl = document.getElementById('cpSostChange');
-    if (chEl) { chEl.textContent = 'Gold reference price (0.8886707657 mg)'; chEl.style.color = 'var(--text-dim,#888)'; }
+    if (chEl) { chEl.textContent = '1 SOST \u2261 0.8886707657 mg gold \u00b7 reference, not a market price \u00b7 chart: XAUT/USDT candle closes'; chEl.style.color = 'var(--text-dim,#888)'; }
     var rEl = document.getElementById('cpSostRange');
     if (rEl && refUsd && _sostRefGoldP && _sostRefSup) {
       rEl.innerHTML = 'Gold reference: 0.8886707657 mg &times; $' + (window.SOSTGold.mgFromOz(_sostRefGoldP)).toFixed(5) + '/mg = $' + (window.SOSTGold.sostFromOz(_sostRefGoldP)).toFixed(4) + '/SOST'
@@ -1059,45 +1100,90 @@
         + '</td></tr>';
     }
     tbody.innerHTML = html;
-    // Build chart data for SOST reference price (DYNAMIC — price changes with supply)
-    // Each block mined increases supply → price goes down over time
-    if (refUsd && _sostRefGoldP) {
-      if (!chartCache['sost-ref']) chartCache['sost-ref'] = {};
-      var now = Date.now();
-      var currentH = window._sostChainHeight || 2254;
-      var R0_c=7.85100863, Q_c=0.7788007830714049, EP_c=131553;
-      var blocksPerDay = 144; // ~144 blocks/day at 600s target
-
-      function priceAtHeight(h) {
-        var sup=0, bh=0;
-        while (bh <= h) { var ep=Math.floor(bh/EP_c); var r=R0_c*Math.pow(Q_c,ep); var ee=Math.min((ep+1)*EP_c-1,h); sup+=r*(ee-bh+1); bh=ee+1; }
-        return window.SOSTGold.sostFromOz(_sostRefGoldP);
-      }
-
-      var GENESIS_TIME = 1773597600 * 1000; // 2026-03-15 18:00:00 UTC in ms
-      [1, 3, 7, 30, 180, 365].forEach(function(days) {
-        var pts = [], nPts = Math.min(days * 24, 720);
-        var step = (days * 86400000) / nPts;
-        var blocksBack = days * blocksPerDay;
-        for (var i = 0; i <= nPts; i++) {
-          var t = now - (nPts - i) * step;
-          if (t < GENESIS_TIME) continue; // NO data before genesis
-          var hAtTime = Math.max(1, currentH - Math.round(blocksBack * (1 - i / nPts)));
-          if (hAtTime < 1) continue; // NO block 0
-          var p = priceAtHeight(hAtTime);
-          if (p > 5.0 || p < 0.001) continue; // filter absurd values
-          pts.push([t, p]);
-        }
-        chartCache['sost-ref'][days] = pts;
-      });
-      sostChartId = 'sost-ref';
-    }
+    // The chart series is NOT built here: sostRefSeries() derives it from real XAUT/USDT candle
+    // closes (gold) times the fixed gold weight, per timeframe. Nothing is extrapolated.
+    if (refUsd && _sostRefGoldP) sostChartId = 'sost-ref';
   }
 
   // ===== CHART DRAWING ENGINE =====
+  // Gold charts load through the SOST market gateway (/api/market-history, the Explorer's API):
+  // one shared, cached fetch for every visitor instead of each browser calling the exchange.
+  // Same market as before (Binance spot XAUT/USDT, PAXG/USDT); the LINE is the close of each
+  // real candle, and CANDLES (js/market-candles.js) draws those same candles.
+  var GW_CODE = { 'tether-gold': 'XAUT', 'pax-gold': 'PAXG' };
+  var DAYS_LABEL = { 1: '24H', 3: '3D', 7: '7D', 30: '30D', 180: '6M', 365: '1Y' };
+  // SOST gold reference, per timeframe, from REAL data: each XAUT/USDT candle close (gold) times the
+  // fixed 0.8886707657 mg weight. Same candles as the gold chart; no point is invented or carried.
+  function sostRefSeries(tf, cb) {
+    var key = 'L' + tf;
+    function ready() {
+      var x = (chartCache['tether-gold'] || {})[key] || [];
+      if (!chartCache['sost-ref']) chartCache['sost-ref'] = {};
+      if (x.length) {
+        chartCache['sost-ref'][key] = x.map(function(p) { return [p[0], window.SOSTGold.sostFromOz(p[1])]; });
+        if (tf === '24H') chartCache['sost-ref'][1] = chartCache['sost-ref'][key];
+      }
+      if (cb) cb();
+    }
+    if (chartCache['tether-gold'] && chartCache['tether-gold'][key]) ready();
+    else fetchChartHist('tether-gold', (TF_MAP[tf] || TF_MAP['24H']).days, ready, tf);
+  }
+  var TF_SPAN_MS = { '1H':36e5, '4H':144e5, '8H':288e5, '24H':864e5, '3D':2592e5, '7D':6048e5, '30D':2592e6, '6M':15552e6, '1Y':31536e6, '3Y':94608e6, '5Y':15768e7 };
+  // When the market simply has less history than the timeframe (e.g. XAUT listed recently), say so.
+  function coverageNote(data, tf) {
+    var want = TF_SPAN_MS[tf]; if (!want || !data || data.length < 2) return '';
+    var have = data[data.length - 1][0] - data[0][0];
+    if (have >= want * 0.8) return '';
+    var d = new Date(data[0][0]);
+    return ' | history available since ' + MO[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
+  }
+  // Shared look for every line chart on this page (same language as the Explorer charts):
+  // soft grid, readable axes, glowing line, deep gradient, last-value marker + axis pill.
+  var GLOW = {
+    grid: function(ctx, pL, pT, cw, ch) {
+      ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.055)'; ctx.lineWidth = 1;
+      for (var g = 0; g <= 3; g++) { var gy = Math.round(pT + ch * g / 3) + 0.5; ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cw, gy); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.beginPath(); ctx.moveTo(pL, pT + ch + 0.5); ctx.lineTo(pL + cw, pT + ch + 0.5); ctx.stroke();
+      ctx.restore();
+    },
+    yFont: function(ctx) { ctx.fillStyle = '#9a96ad'; ctx.font = '10px ' + fontMono; ctx.textAlign = 'left'; },
+    xFont: function(ctx) { ctx.fillStyle = '#6f6c80'; ctx.font = '10px ' + fontMono; ctx.textAlign = 'center'; },
+    line: function(ctx, pts, color, pT, ch, pL, cw) {
+      if (pts.length < 2) return;
+      var rgb = GLOW.rgb(color);
+      ctx.save();
+      ctx.beginPath(); pts.forEach(function(q, i) { if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); });
+      ctx.lineTo(pts[pts.length - 1][0], pT + ch); ctx.lineTo(pts[0][0], pT + ch); ctx.closePath();
+      var grd = ctx.createLinearGradient(0, pT, 0, pT + ch);
+      grd.addColorStop(0, 'rgba(' + rgb + ',0.30)'); grd.addColorStop(0.6, 'rgba(' + rgb + ',0.07)'); grd.addColorStop(1, 'rgba(' + rgb + ',0)');
+      ctx.fillStyle = grd; ctx.fill();
+      ctx.beginPath(); pts.forEach(function(q, i) { if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); });
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(' + rgb + ',0.85)'; ctx.shadowBlur = 10; ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 0.6; ctx.stroke();
+      var last = pts[pts.length - 1];
+      ctx.shadowColor = 'rgba(' + rgb + ',1)'; ctx.shadowBlur = 14; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(last[0], last[1], 4, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(last[0], last[1], 1.6, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    },
+    pill: function(ctx, x, y, text, color) {
+      ctx.save(); ctx.font = 'bold 10px ' + fontMono; var w = ctx.measureText(text).width + 10;
+      ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 8;
+      ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y - 8, w, 16, 4); else ctx.rect(x, y - 8, w, 16); ctx.fill();
+      ctx.shadowBlur = 0; ctx.fillStyle = '#050505'; ctx.textAlign = 'left'; ctx.fillText(text, x + 5, y + 3.5); ctx.restore();
+    },
+    rgb: function(c) {
+      var m = /^#?([0-9a-f]{6})$/i.exec(String(c).trim());
+      if (!m) return '226,232,240';
+      var n = parseInt(m[1], 16); return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
+    }
+  };
+
   function getChartData(prefix, cgId) {
     if (!cgId) return [];
     var tf = activeTfs[prefix] || '24H';
+    if (GW_CODE[cgId] || cgId === 'sost-ref') return (chartCache[cgId] && chartCache[cgId]['L' + tf]) || [];
     var def = TF_MAP[tf];
     var raw = (chartCache[cgId] && chartCache[cgId][def.days]) || [];
     if (!raw.length) return [];
@@ -1105,19 +1191,18 @@
     return raw;
   }
 
-  function fetchChartHist(cgId, days, cb) {
-    // Binance public klines (keyless, CORS *). CoinGecko market_chart is rate-limited (429).
-    // XAUT (Tether Gold) and PAXG (Pax Gold) both trade on Binance as USDT pairs.
-    var SYM = { 'tether-gold': 'XAUTUSDT', 'pax-gold': 'PAXGUSDT' };
-    var sym = SYM[cgId];
-    if (!sym) { if (cb) cb(); return; } // sost-ref / unknown ids use local data, never fetched here
-    var iv = { 1: ['15m', 96], 3: ['1h', 72], 7: ['1h', 168], 30: ['4h', 180], 180: ['1d', 180], 365: ['1d', 365] }[days] || ['1h', 168];
-    fetch('https://api.binance.com/api/v3/klines?symbol=' + sym + '&interval=' + iv[0] + '&limit=' + iv[1])
+  function fetchChartHist(cgId, days, cb, label) {
+    var code = GW_CODE[cgId];
+    if (!code) { if (cb) cb(); return; } // sost-ref / unknown ids use local data, never fetched here
+    label = label || DAYS_LABEL[days] || '24H';
+    fetch('/api/market-history?asset=' + code + '&vs=usdt&range=' + label + '&mode=ohlc')
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (Array.isArray(d) && d.length) {
+        if (d && d.candles && d.candles.length) {
+          var closes = d.candles.map(function(k) { return [k[0], k[4]]; });
           if (!chartCache[cgId]) chartCache[cgId] = {};
-          chartCache[cgId][days] = d.map(function(k) { return [k[0], parseFloat(k[4])]; });
+          chartCache[cgId]['L' + label] = closes;
+          if (DAYS_LABEL[days] === label) chartCache[cgId][days] = closes;   // other sections read the 24H series
         }
         if (cb) cb();
       }).catch(function() { if (cb) cb(); });
@@ -1132,32 +1217,26 @@
     var dpr = window.devicePixelRatio || 1;
     var w = c.offsetWidth, h = c.offsetHeight;
     c.width = w * dpr; c.height = h * dpr; ctx.scale(dpr, dpr); ctx.clearRect(0, 0, w, h);
-    var pL = 4, pR = 58, pT = 6, pB = 20, cw = w - pL - pR, ch = h - pT - pB;
-    // Grid lines
-    ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
-    for (var g = 1; g <= 3; g++) { var gy = pT + ch * g / 4; ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cw, gy); ctx.stroke(); }
+    var pL = 4, pR = 76, pT = 10, pB = 22, cw = w - pL - pR, ch = h - pT - pB;
+    GLOW.grid(ctx, pL, pT, cw, ch);
     if (data.length < 2) {
-      ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(pL, pT + ch / 2); ctx.lineTo(pL + cw, pT + ch / 2); ctx.stroke();
+      ctx.fillStyle = '#6f6c80'; ctx.font = '11px ' + fontMono; ctx.textAlign = 'center';
+      ctx.fillText('loading real candles\u2026', pL + cw / 2, pT + ch / 2);
       updMktChange(prefix, null); updMktRange(prefix, null); return;
     }
     var prices = data.map(function(d) { return d[1]; });
     var mn = Math.min.apply(null, prices), mx = Math.max.apply(null, prices);
     var rng = mx - mn; if (rng === 0) rng = mn * 0.001 || 1;
-    mn -= rng * 0.03; mx += rng * 0.03; rng = mx - mn;
-    // Y labels
-    ctx.fillStyle = '#444'; ctx.font = '9px ' + fontMono; ctx.textAlign = 'left';
-    for (var yi = 0; yi < 4; yi++) { var yv = mx - rng * yi / 3; var yp = pT + ch * yi / 3; ctx.fillText(fmtUsd(yv), pL + cw + 4, yp + 3); }
-    // X labels
+    mn -= rng * 0.06; mx += rng * 0.06; rng = mx - mn;
+    GLOW.yFont(ctx);
+    for (var yi = 0; yi < 4; yi++) { var yv = mx - rng * yi / 3; var yp = pT + ch * yi / 3; ctx.fillText(fmtUsd(yv), pL + cw + 6, yp + 3); }
     var nL = 6; if (nL > data.length) nL = data.length;
-    ctx.fillStyle = '#333'; ctx.textAlign = 'center';
-    for (var xi = 0; xi < nL; xi++) { var di = Math.round(xi / (nL - 1) * (data.length - 1)); var xp = pL + di / (data.length - 1) * cw; ctx.fillText(fmtAx(data[di][0], tf), xp, h - 3); }
-    // Line
-    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
-    for (var j = 0; j < data.length; j++) { var px = pL + j / (data.length - 1) * cw; var py = pT + ch - ((data[j][1] - mn) / rng) * ch; if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
-    ctx.stroke();
-    // Gradient fill
-    var grd = ctx.createLinearGradient(0, pT, 0, pT + ch); grd.addColorStop(0, color + '1a'); grd.addColorStop(1, color + '00');
-    ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath(); ctx.fillStyle = grd; ctx.fill();
+    GLOW.xFont(ctx);
+    for (var xi = 0; xi < nL; xi++) { var di = Math.round(xi / (nL - 1) * (data.length - 1)); var xp = pL + di / (data.length - 1) * cw; xp = Math.max(pL + 18, Math.min(pL + cw - 18, xp)); ctx.fillText(fmtAx(data[di][0], tf), xp, h - 5); }
+    var pts = data.map(function(d, j) { return [pL + j / (data.length - 1) * cw, pT + ch - ((d[1] - mn) / rng) * ch]; });
+    GLOW.line(ctx, pts, color, pT, ch, pL, cw);
+    GLOW.pill(ctx, pL + cw + 2, Math.max(pT + 8, Math.min(pT + ch - 8, pts[pts.length - 1][1])), fmtUsd(prices[prices.length - 1]), color);
+    c._covNote = coverageNote(data, tf);
     updMktChange(prefix, data); updMktRange(prefix, prices);
   }
 
@@ -1172,7 +1251,8 @@
   function updMktRange(prefix, prices) {
     var el = document.getElementById(prefix + 'Range'); if (!el) return;
     if (!prices || !prices.length) { el.textContent = ''; return; }
-    el.textContent = 'High: ' + fmtUsd(Math.max.apply(null, prices)) + ' | Low: ' + fmtUsd(Math.min.apply(null, prices)) + ' | Points: ' + prices.length;
+    var cv = document.getElementById(prefix + 'Chart');
+    el.textContent = 'High: ' + fmtUsd(Math.max.apply(null, prices)) + ' | Low: ' + fmtUsd(Math.min.apply(null, prices)) + ' | Points: ' + prices.length + ((cv && cv._covNote) || '');
   }
 
   function clearMktOv(prefix) {
@@ -1193,25 +1273,25 @@
       var rect = cv.getBoundingClientRect();
       var mx = e.clientX - rect.left;
       var w = cv.offsetWidth, h = cv.offsetHeight;
-      var pL = 4, pR = 58, pT = 6, pB = 20, cw = w - pL - pR, ch = h - pT - pB;
+      var pL = 4, pR = 76, pT = 10, pB = 22, cw = w - pL - pR, ch = h - pT - pB;
       var rel = (mx - pL) / cw;
       if (rel < 0 || rel > 1) { tip.style.display = 'none'; clearMktOv(prefix); return; }
       var idx = Math.round(rel * (data.length - 1));
       var pt = data[idx];
       var prices = data.map(function(d) { return d[1]; });
       var mn = Math.min.apply(null, prices), mx2 = Math.max.apply(null, prices);
-      var rng = mx2 - mn; if (rng === 0) rng = mn * 0.001 || 1; mn -= rng * 0.03; mx2 += rng * 0.03; rng = mx2 - mn;
+      var rng = mx2 - mn; if (rng === 0) rng = mn * 0.001 || 1; mn -= rng * 0.06; mx2 += rng * 0.06; rng = mx2 - mn;
       var px = pL + idx / (data.length - 1) * cw;
       var py = pT + ch - ((pt[1] - mn) / rng) * ch;
       // Overlay
       var dpr = window.devicePixelRatio || 1;
       ov.width = w * dpr; ov.height = h * dpr;
       var octx = ov.getContext('2d'); octx.scale(dpr, dpr); octx.clearRect(0, 0, w, h);
-      octx.strokeStyle = '#333'; octx.lineWidth = 1; octx.setLineDash([3, 3]);
+      octx.strokeStyle = 'rgba(255,255,255,0.28)'; octx.lineWidth = 1; octx.setLineDash([3, 3]);
       octx.beginPath(); octx.moveTo(px, pT); octx.lineTo(px, pT + ch); octx.stroke();
       octx.setLineDash([]);
-      octx.beginPath(); octx.arc(px, py, 3.5, 0, Math.PI * 2); octx.fillStyle = color; octx.fill();
-      octx.strokeStyle = '#000'; octx.lineWidth = 1; octx.stroke();
+      octx.shadowColor = color; octx.shadowBlur = 12; octx.beginPath(); octx.arc(px, py, 4.5, 0, Math.PI * 2); octx.fillStyle = color; octx.fill();
+      octx.shadowBlur = 0; octx.strokeStyle = '#fff'; octx.lineWidth = 1.2; octx.stroke();
       // Tooltip
       tip.querySelector('.cp-tooltip-date').textContent = fmtTip(pt[0]);
       tip.querySelector('.cp-tooltip-val').textContent = fmtUsd(pt[1]);
@@ -1233,9 +1313,9 @@
         btn.classList.add('active');
         activeTfs[prefix] = btn.getAttribute('data-tf');
         var days = TF_MAP[activeTfs[prefix]].days;
-        if (chartCache[cgId] && chartCache[cgId][days]) { drawMktChart(prefix, cgId, color); }
-        else if (cgId === 'sost-ref') { drawMktChart(prefix, cgId, color); /* local only, no CoinGecko */ }
-        else { fetchChartHist(cgId, days, function() { drawMktChart(prefix, cgId, color); }); }
+        if (getChartData(prefix, cgId).length) { drawMktChart(prefix, cgId, color); }
+        else if (cgId === 'sost-ref') { sostRefSeries(activeTfs[prefix], function() { drawMktChart(prefix, cgId, color); }); }
+        else { fetchChartHist(cgId, days, function() { drawMktChart(prefix, cgId, color); }, activeTfs[prefix]); }
       });
     });
   }
@@ -1253,6 +1333,14 @@
     });
   }
 
+  // LINE | CANDLES on a chart panel: real Binance spot candles served by the SOST gateway.
+  function attachCandles(prefix, code) {
+    var C = window.SOSTCandles, tf = document.getElementById(prefix + 'TfBtns');
+    if (!C || !tf) return;
+    C.attach({ key: 'mkt_' + prefix, series: [C.series(code, 'usdt', code + ' / USDT')], tf: tf, btnSel: '.cp-tf-btn', attr: 'data-tf',
+      card: tf.parentNode, wrap: tf.parentNode.querySelector('.cp-chart-wrap'), rangeEl: document.getElementById(prefix + 'Range') });
+  }
+
   // ===== GOLD SPOT CHART =====
   var goldChartInited = false;
   function initGoldChart() {
@@ -1260,6 +1348,7 @@
     goldChartInited = true;
     setupChartTfBtns('cpGold', 'tether-gold', '#b8860b');
     setupChartTooltip('cpGold', 'tether-gold', '#b8860b');
+    attachCandles('cpGold', 'XAUT');
     fetchChartHist('tether-gold', 1, function() {
       var d = chartCache['tether-gold'] && chartCache['tether-gold'][1];
       if (d && d.length) {
@@ -1277,6 +1366,7 @@
     activeTfs.cpPaxg = '24H';
     setupChartTfBtns('cpPaxg', 'pax-gold', '#4ade80');
     setupChartTooltip('cpPaxg', 'pax-gold', '#4ade80');
+    attachCandles('cpPaxg', 'PAXG');
     fetchChartHist('pax-gold', 1, function() {
       var d = chartCache['pax-gold'] && chartCache['pax-gold'][1];
       if (d && d.length) {
@@ -1289,7 +1379,7 @@
   // ===== SOST CHART =====
   var sostChartInited = false;
   function initSostChart() {
-    if (sostChartInited && sostChartId) { drawMktChart('cpSost', sostChartId, '#fb010d'); return; }
+    if (sostChartInited && sostChartId) { drawMktChart('cpSost', sostChartId, '#ffd700'); return; }
     sostChartInited = true;
     sostChartChecked = true;
     // SOST is NOT on CoinGecko. Always use PoPC reference price.
@@ -1297,37 +1387,13 @@
     if (!sostChartId) sostChartId = 'sost-ref';
     setupChartTfBtns('cpSost', sostChartId, '#ffd700');
     setupChartTooltip('cpSost', sostChartId, '#ffd700');
-    // If chart data not yet built, recalculate
-    if (!chartCache['sost-ref'] || !chartCache['sost-ref'][1]) {
-      calcSostPopcPrice();
-      if (_sostRefUsd && _sostRefGoldP) {
-        if (!chartCache['sost-ref']) chartCache['sost-ref'] = {};
-        var now = Date.now();
-        var cH = window._sostChainHeight || 2254;
-        var bpd = 144; // blocks per day
-        function _pAH(h) {
-          var s=0,b=0,R=7.85100863,Q=0.7788007830714049,E=131553;
-          while(b<=h){var e2=Math.floor(b/E);var r=R*Math.pow(Q,e2);var ee=Math.min((e2+1)*E-1,h);s+=r*(ee-b+1);b=ee+1;}
-          return window.SOSTGold.sostFromOz(_sostRefGoldP);
-        }
-        var GT = 1773597600 * 1000;
-        [1, 3, 7, 30, 180, 365].forEach(function(days) {
-          var pts = [], nPts = Math.min(days * 24, 720);
-          var step = (days * 86400000) / nPts;
-          var bb = days * bpd;
-          for (var i = 0; i <= nPts; i++) {
-            var t = Date.now() - (nPts - i) * step;
-            if (t < GT) continue;
-            var hh = Math.max(1, cH - Math.round(bb * (1 - i / nPts)));
-            if (hh < 1) continue;
-            var pv = _pAH(hh);
-            if (pv > 5.0 || pv < 0.001) continue;
-            pts.push([t, pv]);
-          }
-          chartCache['sost-ref'][days] = pts;
-        });
-      }
-    }
+    calcSostPopcPrice();
+    sostRefSeries(activeTfs.cpSost || '24H', function() {
+      var d1 = (chartCache['sost-ref'] || {})['L' + (activeTfs.cpSost || '24H')];
+      var pEl = document.getElementById('cpSostPrice');
+      drawMktChart('cpSost', 'sost-ref', '#ffd700');
+      showSostPopcPrice();
+    });
     activateSostChart();
   }
 
@@ -1336,8 +1402,8 @@
     var btns = document.querySelectorAll('#cpSostTfBtns .cp-tf-btn');
     btns.forEach(function(b) { b.classList.remove('disabled'); });
     // Re-setup buttons — SOST uses local data only (no CoinGecko fetch)
-    setupChartTfBtns('cpSost', sostChartId, '#fb010d');
-    setupChartTooltip('cpSost', sostChartId, '#fb010d');
+    setupChartTfBtns('cpSost', sostChartId, '#ffd700');
+    setupChartTooltip('cpSost', sostChartId, '#ffd700');
     var cache = chartCache[sostChartId];
     if (cache && cache[1] && cache[1].length) {
       var d1 = cache[1];
@@ -1345,7 +1411,7 @@
       var pEl = document.getElementById('cpSostPrice');
       if (pEl) { pEl.textContent = fmtUsd(latest); pEl.style.fontSize = ''; }
     }
-    drawMktChart('cpSost', sostChartId, '#fb010d');
+    drawMktChart('cpSost', sostChartId, '#ffd700');
   }
 
   // ===== CLICKABLE CRYPTO CHARTS =====
@@ -1379,21 +1445,17 @@
   var coinDetailActivePeriod = '7D';
   var coinDetailActiveCode = '';
 
+  function coinMarket(code) { return code === 'USDT' ? 'USDC' : code; }   // no USDT/USDT book: USDC (~$1) stands in
   function getCoinDetailUrl(code, period) {
-    // Binance public klines (keyless, CORS *). CryptoCompare now requires an API key.
-    // USDT has no USDTUSDT pair — use USDC (~$1) as proxy so the stablecoin row still charts.
-    var sym = (code === 'USDT' ? 'USDC' : code) + 'USDT';
-    var p = {
-      '1H':  ['1m', 60],  '4H': ['1m', 240], '8H': ['5m', 96],
-      '24H': ['1h', 24],  '3D': ['1h', 72],  '7D': ['1h', 168],
-      '30D': ['4h', 180], '6M': ['1d', 180], '1Y': ['1d', 365],
-      '3Y':  ['1w', 156], '5Y': ['1w', 260]
-    }[period] || ['1h', 168];
-    return 'https://api.binance.com/api/v3/klines?symbol=' + sym + '&interval=' + p[0] + '&limit=' + p[1];
+    // Binance spot CODE/USDT through the SOST market gateway (the Explorer's API): shared cache,
+    // no per-browser calls to the exchange. Each point is the close of a real candle.
+    return '/api/market-history?asset=' + coinMarket(code) + '&vs=usdt&range=' + encodeURIComponent(period) + '&mode=ohlc';
   }
 
+  var coinDetailIsCrypto = false;
   function showCoinDetailModal(cgId, code) {
     closeCoinDetailModal();
+    coinDetailIsCrypto = true;
     coinDetailActiveCode = code;
     coinDetailActivePeriod = '7D';
 
@@ -1448,6 +1510,12 @@
     });
 
     fetchCoinDetailData(code, '7D');
+    if (window.SOSTCandles) {
+      var mc = coinMarket(code);
+      window.SOSTCandles.attach({ key: 'mkt_coin', series: [window.SOSTCandles.series(mc, 'usdt', mc + ' / USDT')],
+        tf: document.getElementById('coinDetailPeriods'), btnSel: '.coin-detail-period-btn', attr: 'data-period',
+        card: panel, wrap: panel.querySelector('.coin-detail-chart-wrap'), rangeEl: null });
+    }
   }
 
   function fetchCoinDetailData(code, period) {
@@ -1461,8 +1529,8 @@
     fetch(url, { signal: controller.signal })
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (!Array.isArray(d) || d.length < 2) throw new Error('No data');
-        var data = d.map(function(k) { return [k[0], parseFloat(k[4])]; }); // [openTime, close]
+        if (!d || !d.candles || d.candles.length < 2) throw new Error('No data');
+        var data = d.candles.map(function(k) { return [k[0], k[4]]; }); // [openTime, close]
         drawCoinDetailChart(data, code, period);
       })
       .catch(function() {
@@ -1492,42 +1560,22 @@
     var prices = data.map(function(p) { return p[1]; });
     var mn = Math.min.apply(null, prices), mx = Math.max.apply(null, prices);
     var rng = mx - mn; if (rng === 0) rng = mn * 0.001 || 1;
-    mn -= rng * 0.03; mx += rng * 0.03; rng = mx - mn;
+    mn -= rng * 0.06; mx += rng * 0.06; rng = mx - mn;
     var cw = w - pL - pR, ch = h - pT - pB;
 
-    // Grid
-    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1;
-    for (var g = 1; g <= 3; g++) { var gy = pT + ch * g / 4; ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cw, gy); ctx.stroke(); }
-
-    // Y labels
-    ctx.fillStyle = '#444'; ctx.font = '9px ' + fontMono; ctx.textAlign = 'left';
-    for (var yi = 0; yi < 4; yi++) { var yv = mx - rng * yi / 3; var yp = pT + ch * yi / 3; ctx.fillText(fmtUsd(yv), pL + cw + 4, yp + 3); }
-
-    // X labels
-    // period passed to fmtAx directly
-    ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+    GLOW.grid(ctx, pL, pT, cw, ch);
+    GLOW.yFont(ctx);
+    for (var yi = 0; yi < 4; yi++) { var yv = mx - rng * yi / 3; var yp = pT + ch * yi / 3; ctx.fillText(fmtUsd(yv), pL + cw + 6, yp + 3); }
+    GLOW.xFont(ctx);
     var nLabels = 6; if (nLabels > data.length) nLabels = data.length;
     for (var xi = 0; xi < nLabels; xi++) {
       var di = Math.round(xi / (nLabels - 1) * (data.length - 1));
-      var xp = pL + di / (data.length - 1) * cw;
-      ctx.fillText(fmtAx(data[di][0], period), xp, h - 3);
+      var xp = Math.max(pL + 18, Math.min(pL + cw - 18, pL + di / (data.length - 1) * cw));
+      ctx.fillText(fmtAx(data[di][0], period), xp, h - 5);
     }
-
-    // Line
-    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
-    for (var j = 0; j < data.length; j++) {
-      var px = pL + j / (data.length - 1) * cw;
-      var py = pT + ch - ((data[j][1] - mn) / rng) * ch;
-      if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.stroke();
-
-    // Gradient fill
-    var grd = ctx.createLinearGradient(0, pT, 0, pT + ch);
-    grd.addColorStop(0, color + '1a'); grd.addColorStop(1, color + '00');
-    ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath();
-    ctx.fillStyle = grd; ctx.fill();
-
+    var pts = data.map(function(d, j) { return [pL + j / (data.length - 1) * cw, pT + ch - ((d[1] - mn) / rng) * ch]; });
+    GLOW.line(ctx, pts, color, pT, ch, pL, cw);
+    GLOW.pill(ctx, pL + cw + 2, Math.max(pT + 8, Math.min(pT + ch - 8, pts[pts.length - 1][1])), fmtUsd(prices[prices.length - 1]), color);
     return { prices: prices, mn: mn, mx: mx, rng: rng, cw: cw, ch: ch };
   }
 
@@ -1540,7 +1588,7 @@
 
     var color = (last >= first) ? '#4ade80' : '#fb010d';
 
-    var pL = 4, pR = 58, pT = 6, pB = 20;
+    var pL = 4, pR = (last >= 10000 ? 92 : 80), pT = 10, pB = 22;
     _renderCoinDetailChartClean(canvas, data, code, period, color, pL, pR, pT, pB);
 
     // Store state for tooltip interaction
@@ -1564,7 +1612,7 @@
 
     var rangeEl = document.getElementById('coinDetailRange');
     if (rangeEl) {
-      rangeEl.textContent = 'High: ' + fmtUsd(Math.max.apply(null, prices)) + ' | Low: ' + fmtUsd(Math.min.apply(null, prices)) + ' | Points: ' + prices.length;
+      rangeEl.textContent = 'High: ' + fmtUsd(Math.max.apply(null, prices)) + ' | Low: ' + fmtUsd(Math.min.apply(null, prices)) + ' | Points: ' + prices.length + coverageNote(data, period) + (coinDetailIsCrypto ? '' : ' | ECB daily reference rates');
     }
 
     // Setup tooltip interaction
@@ -1589,6 +1637,9 @@
     var newCanvas = canvas.cloneNode(true);
     canvas.parentNode.replaceChild(newCanvas, canvas);
     newCanvas.style.cursor = 'crosshair';
+    // cloneNode copies the element, not its bitmap: draw the chart again on the clone, or it stays blank until hovered
+    var st0 = _coinDetailChartState;
+    if (st0) _renderCoinDetailChartClean(newCanvas, st0.data, st0.code, st0.period, st0.color, st0.pL, st0.pR, st0.pT, st0.pB);
 
     newCanvas.addEventListener('mousemove', function(e) {
       var st = _coinDetailChartState;
@@ -1604,7 +1655,7 @@
 
       var prices = st.data.map(function(d) { return d[1]; });
       var mn = Math.min.apply(null, prices), mx2 = Math.max.apply(null, prices);
-      var rng = mx2 - mn; if (rng === 0) rng = mn * 0.001 || 1; mn -= rng * 0.03; mx2 += rng * 0.03; rng = mx2 - mn;
+      var rng = mx2 - mn; if (rng === 0) rng = mn * 0.001 || 1; mn -= rng * 0.06; mx2 += rng * 0.06; rng = mx2 - mn;
 
       var px = st.pL + idx / (st.data.length - 1) * cw;
       var py = st.pT + ch - ((pt[1] - mn) / rng) * ch;
@@ -1621,9 +1672,9 @@
       ctx.setLineDash([]);
 
       // Data point circle
-      ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2);
+      ctx.shadowColor = st.color; ctx.shadowBlur = 12; ctx.beginPath(); ctx.arc(px, py, 4.5, 0, Math.PI * 2);
       ctx.fillStyle = st.color; ctx.fill();
-      ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.shadowBlur = 0; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.stroke();
       ctx.restore();
 
       // Tooltip content
@@ -1682,19 +1733,16 @@
   }
 
   function getFiatDetailUrl(code, period) {
-    // Frankfurter (keyless, ECB reference rates, daily). CryptoCompare forex now needs a key.
-    // Returns USD->code over a date range; parser inverts to USD-per-unit. Daily resolution.
-    var back = { '1H':3,'4H':3,'8H':3,'24H':4,'3D':6,'7D':10,'30D':33,'6M':183,'1Y':368,'3Y':1098,'5Y':1828 }[period] || 10;
-    var end = new Date();
-    var start = new Date(end.getTime() - back * 86400000);
-    function fmt(dt) { return dt.toISOString().slice(0, 10); }
-    return 'https://api.frankfurter.dev/v1/' + fmt(start) + '..' + fmt(end) + '?base=USD&symbols=' + code;
+    // Frankfurter (keyless, ECB reference rates, daily) through the SOST gateway: the gateway builds
+    // the same date range per period and caches it. Returns USD->code; parser inverts to USD-per-unit.
+    return '/api/market-history?mode=fxhist&code=' + encodeURIComponent(code) + '&range=' + encodeURIComponent(period);
   }
 
   function showFiatDetailModal(code) {
     closeCoinDetailModal();
+    coinDetailIsCrypto = false;
     coinDetailActiveCode = code;
-    coinDetailActivePeriod = '7D';
+    coinDetailActivePeriod = '30D';
 
     var overlay = document.createElement('div');
     overlay.className = 'coin-detail-overlay';
@@ -1706,10 +1754,10 @@
     var invPrice = forexRates[code] ? (1 / forexRates[code]) : null;
     var priceStr = invPrice !== null ? '$' + fmt(invPrice, invPrice < 1 ? 6 : 4) : '--';
 
-    var periods = ['1H','4H','8H','24H','3D','7D','30D','6M','1Y','3Y','5Y'];
+    var periods = ['7D','30D','6M','1Y','3Y','5Y'];   // ECB reference rates are DAILY: no intraday buttons
     var periodBtnsHtml = '<div class="coin-detail-periods" id="coinDetailPeriods">';
     periods.forEach(function(p) {
-      var activeClass = (p === '7D') ? ' active' : '';
+      var activeClass = (p === '30D') ? ' active' : '';
       periodBtnsHtml += '<button class="coin-detail-period-btn' + activeClass + '" data-period="' + p + '">' + p + '</button>';
     });
     periodBtnsHtml += '</div>';
@@ -1745,7 +1793,7 @@
       });
     });
 
-    fetchFiatDetailData(code, '7D');
+    fetchFiatDetailData(code, '30D');
   }
 
   function fetchFiatDetailData(code, period) {
@@ -1768,15 +1816,18 @@
         drawCoinDetailChart(data, code, period);
       })
       .catch(function() {
-        if (changeEl) { changeEl.textContent = 'Chart data unavailable'; changeEl.style.color = 'var(--text-muted)'; }
+        if (changeEl) { changeEl.textContent = 'No public daily history for ' + code; changeEl.style.color = 'var(--text-muted)'; }
         var canvas = document.getElementById('coinDetailCanvas');
         if (canvas) {
           var ctx = canvas.getContext('2d');
           var dpr = window.devicePixelRatio || 1;
           var w = canvas.offsetWidth, h = canvas.offsetHeight;
           canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
-          ctx.fillStyle = '#333'; ctx.font = '12px ' + fontMono; ctx.textAlign = 'center';
-          ctx.fillText('Chart data unavailable', w / 2, h / 2);
+          ctx.fillStyle = '#8f8ca0'; ctx.font = '12px ' + fontMono; ctx.textAlign = 'center';
+          ctx.fillText('No ECB daily history for ' + code, w / 2, h / 2 - 10);
+          ctx.fillStyle = '#6f6c80'; ctx.font = '10px ' + fontMono;
+          ctx.fillText('today\u2019s rate is in the table', w / 2, h / 2 + 8);
+          ctx.fillText('no chart rather than an invented one', w / 2, h / 2 + 22);
         }
       })
       .finally(function() { clearTimeout(timeoutId); });
@@ -1832,25 +1883,25 @@
 
       if (p.fiat && p.counterpart === 'USD') {
         counterUsd = 1;
-        source = 'PoPC formula';
+        source = 'Gold reference';
       } else if (p.fiat && p.counterpart === 'EUR') {
         counterUsd = forexRates['EUR'] ? (1 / forexRates['EUR']) : null;
-        source = 'PoPC + forex';
+        source = 'Gold ref. + forex';
       } else if (p.stablecoin) {
         // USDT/USDC always ~$1.00
         counterUsd = 1.00;
-        source = 'PoPC + stablecoin ($1.00)';
+        source = 'Gold ref. + stablecoin ($1.00)';
       } else if (p.counterpart === 'PAXG') {
         // PAXG = gold token, use gold price from chart cache (same source as XAUT)
         var pd = chartCache['pax-gold'] && chartCache['pax-gold'][1];
         if (pd && pd.length) counterUsd = pd[pd.length-1][1];
         if (!counterUsd && _sostRefGoldP) counterUsd = _sostRefGoldP; // fallback to gold price
-        source = 'PoPC + gold spot';
+        source = 'Gold ref. + gold spot';
       } else if (p.counterpart === 'XAUT') {
         var xd = chartCache['tether-gold'] && chartCache['tether-gold'][1];
         if (xd && xd.length) counterUsd = xd[xd.length-1][1];
         if (!counterUsd && _sostRefGoldP) counterUsd = _sostRefGoldP;
-        source = 'PoPC + gold spot';
+        source = 'Gold ref. + gold spot';
       } else if (p.cgId) {
         counterUsd = cryptoUsdPrices[p.counterpart] || null;
         if (!counterUsd) {
@@ -1858,7 +1909,7 @@
           var cd = chartCache[p.cgId] && chartCache[p.cgId][1];
           if (cd && cd.length) counterUsd = cd[cd.length-1][1];
         }
-        source = 'PoPC + CoinGecko';
+        source = 'Gold ref. + market';
       }
 
       if (counterUsd && sostUsd) {
@@ -1905,6 +1956,8 @@
     });
 
     tbody.innerHTML = html;
+    // The table is rebuilt on every refresh: re-open the pair chart the visitor had open.
+    if (_openPair) { var _r = tbody.querySelector('.sost-pair-row[data-pair="' + _openPair + '"]'); _openPair = null; if (_r) window.togglePairChart(_r); }
   }
 
   function refreshAll() {
@@ -1919,27 +1972,31 @@
   }
 
   function refreshCharts() {
+    // Open crypto detail modal: reload its line through the gateway (candles reload themselves)
+    if (coinDetailIsCrypto && document.getElementById('coinDetailOverlay') && coinDetailActiveCode) {
+      fetchCoinDetailData(coinDetailActiveCode, coinDetailActivePeriod);
+    }
     // Refresh Gold Spot chart if open
     var goldPanel = document.getElementById('goldChartPanel');
     if (goldPanel && goldPanel.classList.contains('open')) {
       var gDays = TF_MAP[activeTfs.cpGold || '24H'].days;
-      fetchChartHist('tether-gold', gDays, function() { drawMktChart('cpGold', 'tether-gold', '#b8860b'); });
+      fetchChartHist('tether-gold', gDays, function() { drawMktChart('cpGold', 'tether-gold', '#b8860b'); }, activeTfs.cpGold || '24H');
     }
     // Refresh PAXG chart if open
     var paxgPanel = document.getElementById('paxgChartPanel');
     if (paxgPanel && paxgPanel.classList.contains('open')) {
       var pDays = TF_MAP[activeTfs.cpPaxg || '24H'].days;
       fetchChartHist('pax-gold', pDays, function() {
-        var d = chartCache['pax-gold'] && chartCache['pax-gold'][pDays];
+        var d = getChartData('cpPaxg', 'pax-gold');
         if (d && d.length) document.getElementById('cpPaxgPrice').textContent = fmtUsd(d[d.length-1][1]);
         drawMktChart('cpPaxg', 'pax-gold', '#4ade80');
-      });
+      }, activeTfs.cpPaxg || '24H');
     }
     // Refresh SOST chart if open (recalculate from PoPC, no CoinGecko)
     var sostPanel = document.getElementById('sostChartPanel');
     if (sostPanel && sostPanel.classList.contains('open') && sostChartId) {
       showSostPopcPrice(); // recalculate price + rebuild chart data
-      drawMktChart('cpSost', sostChartId, '#fb010d');
+      drawMktChart('cpSost', sostChartId, '#ffd700');
     }
     // Refresh any open crypto charts
     var openRows = document.querySelectorAll('.crypto-chart-row');
@@ -1967,8 +2024,18 @@
   fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'getblockcount',id:1})})
     .then(function(r){return r.json();}).then(function(rr){if(rr&&rr.result)window._sostChainHeight=rr.result;}).catch(function(){});
 
+  function loadGoldReference() {
+    if (!window.SOSTGold) return;
+    fetch(window.SOSTGold.GOLD_URL).then(function(r) { return r.json(); }).then(function(d) {
+      window._mkGoldXaut = (d['tether-gold'] && d['tether-gold'].usd) || 0;
+      window._mkGoldPaxg = (d['pax-gold'] && d['pax-gold'].usd) || 0;
+    }).catch(function() {}).then(function() { return window.SOSTGold.load(); })
+      .then(function() { showSostPopcPrice(); populateSostPairs(); });
+  }
   refreshAll();
+  loadGoldReference();
   setInterval(refreshAll, 60000);
+  setInterval(loadGoldReference, 60000);
 
   setupChartToggle('goldChartToggle', 'goldChartPanel', initGoldChart);
   setupChartToggle('paxgChartToggle', 'paxgChartPanel', initPaxgChart);
@@ -2011,6 +2078,7 @@
     if (chartRow.style.display === 'none') {
       chartRow.style.display = '';
       drawSostGoldChart();
+      sostRefSeries('24H', drawSostGoldChart);
     } else {
       chartRow.style.display = 'none';
     }
@@ -2021,7 +2089,7 @@
     var tip = document.getElementById('sostGoldChartTip');
     if (!canvas) return;
 
-    var sostData = chartCache['sost-ref'] && chartCache['sost-ref'][1];
+    var sostData = chartCache['sost-ref'] && chartCache['sost-ref']['L24H'];
     if (!sostData || sostData.length < 2) {
       var ctx = canvas.getContext('2d');
       var dpr = window.devicePixelRatio || 1;
@@ -2046,45 +2114,23 @@
     canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
 
-    var pL = 4, pR = 70, pT = 6, pB = 22, cw = w - pL - pR, ch = h - pT - pB;
-
-    ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
-    for (var g = 1; g <= 3; g++) { var gy = pT + ch * g / 4; ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cw, gy); ctx.stroke(); }
-
+    var pL = 4, pR = 74, pT = 10, pB = 22, cw = w - pL - pR, ch = h - pT - pB;
+    GLOW.grid(ctx, pL, pT, cw, ch);
     var prices = data.map(function(d) { return d[1]; });
     var mn = Math.min.apply(null, prices), mx = Math.max.apply(null, prices);
     var rng = mx - mn; if (rng === 0) rng = mn * 0.001 || 1;
-    mn -= rng * 0.05; mx += rng * 0.05; rng = mx - mn;
-
-    // Y labels (USD)
-    ctx.fillStyle = '#444'; ctx.font = '9px ' + fontMono; ctx.textAlign = 'left';
-    for (var yi = 0; yi < 4; yi++) {
-      var yv = mx - rng * yi / 3;
-      ctx.fillText('$' + (yv < 0.01 ? yv.toFixed(6) : yv.toFixed(4)), pL + cw + 4, pT + ch * yi / 3 + 3);
-    }
-
-    // X labels
-    ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+    mn -= rng * 0.08; mx += rng * 0.08; rng = mx - mn;
+    GLOW.yFont(ctx);
+    for (var yi = 0; yi < 4; yi++) { var yv = mx - rng * yi / 3; ctx.fillText('$' + (yv < 0.01 ? yv.toFixed(6) : yv.toFixed(4)), pL + cw + 6, pT + ch * yi / 3 + 3); }
+    GLOW.xFont(ctx);
     for (var xi = 0; xi < 6; xi++) {
-      var di = Math.round(xi / 5 * (data.length - 1));
-      var dd = new Date(data[di][0]);
-      ctx.fillText(('0' + dd.getUTCHours()).slice(-2) + ':' + ('0' + dd.getUTCMinutes()).slice(-2), pL + di / (data.length - 1) * cw, h - 4);
+      var di = Math.round(xi / 5 * (data.length - 1)); var dd = new Date(data[di][0]);
+      ctx.fillText(('0' + dd.getUTCHours()).slice(-2) + ':' + ('0' + dd.getUTCMinutes()).slice(-2), Math.max(pL + 18, Math.min(pL + cw - 18, pL + di / (data.length - 1) * cw)), h - 5);
     }
-
-    // Line
-    ctx.strokeStyle = '#fb010d'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
-    for (var j = 0; j < data.length; j++) {
-      var px = pL + j / (data.length - 1) * cw;
-      var py = pT + ch - ((data[j][1] - mn) / rng) * ch;
-      if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.stroke();
-
-    // Gradient fill
-    var grd = ctx.createLinearGradient(0, pT, 0, pT + ch);
-    grd.addColorStop(0, 'rgba(251,1,13,0.1)'); grd.addColorStop(1, 'rgba(251,1,13,0)');
-    ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath();
-    ctx.fillStyle = grd; ctx.fill();
+    var pts = data.map(function(d, j) { return [pL + j / (data.length - 1) * cw, pT + ch - ((d[1] - mn) / rng) * ch]; });
+    GLOW.line(ctx, pts, '#ffd700', pT, ch, pL, cw);
+    var lv = prices[prices.length - 1];
+    GLOW.pill(ctx, pL + cw + 2, Math.max(pT + 8, Math.min(pT + ch - 8, pts[pts.length - 1][1])), '$' + (lv < 0.01 ? lv.toFixed(6) : lv.toFixed(4)), '#ffd700');
 
     // Save base image for tooltip
     canvas._baseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -2141,7 +2187,7 @@
   window.addEventListener('resize', function() {
     if (document.getElementById('goldChartPanel').classList.contains('open')) drawMktChart('cpGold', 'tether-gold', '#b8860b');
     if (document.getElementById('paxgChartPanel') && document.getElementById('paxgChartPanel').classList.contains('open')) drawMktChart('cpPaxg', 'pax-gold', '#4ade80');
-    if (sostChartId && document.getElementById('sostChartPanel').classList.contains('open')) drawMktChart('cpSost', sostChartId, '#fb010d');
+    if (sostChartId && document.getElementById('sostChartPanel').classList.contains('open')) drawMktChart('cpSost', sostChartId, '#ffd700');
     document.querySelectorAll('.crypto-chart-row').forEach(function(row) {
       if (row.style.display === 'none') return;
       var code = row.getAttribute('data-for');
@@ -2149,7 +2195,30 @@
       if (cgId) drawMktChart('cc_' + code, cgId, '#e2e8f0');
     });
   });
+  // SOST/X over the last 24 h from REAL series only: the gold reference (XAUT closes x fixed gold
+  // weight) divided by X's own close at the SAME candle time. Candles missing on either side are
+  // skipped, never filled. USD/stablecoins: the reference itself; EUR: today's rate (labelled).
+  var PAIR_GW = { BTC:'BTC', ETH:'ETH', BNB:'BNB', SOL:'SOL', XRP:'XRP', DOT:'DOT', LTC:'LTC', LINK:'LINK', XAUT:'XAUT', PAXG:'PAXG' };
+  function loadPairSeries(cp, cb) {
+    sostRefSeries('24H', function() {
+      var ref = (chartCache['sost-ref'] || {})['L24H'] || [];
+      if (!ref.length) { cb([], ''); return; }
+      if (cp === 'USD') { cb(ref.map(function(p) { return [p[0], p[1], p[1]]; }), ''); return; }
+      if (cp === 'USDT' || cp === 'USDC') { cb(ref.map(function(p) { return [p[0], p[1], p[1]]; }), cp + ' taken as $1.00'); return; }
+      if (cp === 'EUR') {
+        var r = forexRates['EUR']; if (!r) { cb([], ''); return; }
+        cb(ref.map(function(p) { return [p[0], p[1] * r, p[1]]; }), 'EUR at today’s rate'); return;
+      }
+      var code = PAIR_GW[cp]; if (!code) { cb([], ''); return; }
+      fetch('/api/market-history?asset=' + code + '&vs=usdt&range=24H&mode=ohlc').then(function(r) { return r.json(); }).then(function(d) {
+        var m = {}; (d.candles || []).forEach(function(k) { m[k[0]] = k[4]; });
+        cb(ref.filter(function(p) { return m[p[0]] > 0; }).map(function(p) { return [p[0], p[1] / m[p[0]], p[1]]; }),
+           code + '/USDT closes at the same candle times');
+      }).catch(function() { cb([], ''); });
+    });
+  }
   // ===== SOST PAIR CHART (click to expand) =====
+  var _openPair = null;
   window.togglePairChart = function(row) {
     var pair = row.getAttribute('data-pair');
     var chartRow = row.nextElementSibling;
@@ -2159,11 +2228,18 @@
       // Close any other open pair chart
       document.querySelectorAll('.sost-pair-chart-row').forEach(function(r) { r.style.display = 'none'; });
       chartRow.style.display = '';
+      _openPair = pair;
       // Draw the chart
       var canvas = chartRow.querySelector('.sost-pair-canvas');
-      if (canvas) drawPairChart(canvas);
+      if (canvas) {
+        drawPairChart(canvas);
+        loadPairSeries(canvas.getAttribute('data-counterpart'), function(series, note) {
+          canvas._series = series; canvas._seriesNote = note; drawPairChart(canvas);
+        });
+      }
     } else {
       chartRow.style.display = 'none';
+      _openPair = null;
     }
   };
 
@@ -2172,18 +2248,16 @@
     var counterpart = canvas.getAttribute('data-counterpart');
     if (!counterUsd || counterUsd === 0) counterUsd = 1;
 
-    var sostData = chartCache['sost-ref'] && chartCache['sost-ref'][1];
-    if (!sostData || sostData.length < 2) {
-      var ctx = canvas.getContext('2d');
-      var dpr = window.devicePixelRatio || 1;
-      var w = canvas.offsetWidth, h = canvas.offsetHeight;
-      canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
-      ctx.fillStyle = '#333'; ctx.font = '11px ' + fontMono; ctx.textAlign = 'center';
-      ctx.fillText('No SOST price data available', w/2, h/2);
+    var data = canvas._series;
+    if (!data || data.length < 2) {
+      var ctx0 = canvas.getContext('2d');
+      var dpr0 = window.devicePixelRatio || 1;
+      var w0 = canvas.offsetWidth, h0 = canvas.offsetHeight;
+      canvas.width = w0 * dpr0; canvas.height = h0 * dpr0; ctx0.scale(dpr0, dpr0);
+      ctx0.fillStyle = '#6f6c80'; ctx0.font = '11px ' + fontMono; ctx0.textAlign = 'center';
+      ctx0.fillText(data ? 'No overlapping real candles for this pair right now' : 'loading real candles\u2026', w0 / 2, h0 / 2);
       return;
     }
-
-    var data = sostData.map(function(pt) { return [pt[0], pt[1] / counterUsd, pt[1]]; });
     // data[i] = [timestamp_ms, price_in_counterpart, price_usd]
 
     var ctx = canvas.getContext('2d');
@@ -2192,49 +2266,25 @@
     canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
 
-    var pL = 4, pR = 70, pT = 6, pB = 22, cw = w - pL - pR, ch = h - pT - pB;
-
-    // Grid
-    ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
-    for (var g = 1; g <= 3; g++) { var gy = pT + ch * g / 4; ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL+cw, gy); ctx.stroke(); }
+    var pL = 4, pR = 96, pT = 10, pB = 22, cw = w - pL - pR, ch = h - pT - pB;
+    GLOW.grid(ctx, pL, pT, cw, ch);
 
     var prices = data.map(function(d) { return d[1]; });
     var mn = Math.min.apply(null, prices), mx = Math.max.apply(null, prices);
     var rng = mx - mn; if (rng === 0) rng = mn * 0.001 || 1;
-    mn -= rng * 0.05; mx += rng * 0.05; rng = mx - mn;
+    mn -= rng * 0.08; mx += rng * 0.08; rng = mx - mn;
+    function pf(v) { return v < 0.001 ? v.toExponential(3) : v < 1 ? v.toFixed(6) : v.toFixed(4); }
 
-    // Y labels
-    ctx.fillStyle = '#444'; ctx.font = '9px ' + fontMono; ctx.textAlign = 'left';
-    for (var yi = 0; yi < 4; yi++) {
-      var yv = mx - rng * yi / 3;
-      var yp = pT + ch * yi / 3;
-      var lbl = yv < 0.001 ? yv.toExponential(2) : yv < 1 ? yv.toFixed(6) : yv.toFixed(4);
-      ctx.fillText(lbl + ' ' + counterpart, pL + cw + 4, yp + 3);
-    }
-
-    // X labels
-    ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+    GLOW.yFont(ctx);
+    for (var yi = 0; yi < 4; yi++) { var yv = mx - rng * yi / 3; ctx.fillText(pf(yv) + ' ' + counterpart, pL + cw + 6, pT + ch * yi / 3 + 3); }
+    GLOW.xFont(ctx);
     for (var xi = 0; xi < 6; xi++) {
-      var di = Math.round(xi / 5 * (data.length - 1));
-      var xp = pL + di / (data.length - 1) * cw;
-      var dd = new Date(data[di][0]);
-      ctx.fillText(('0'+dd.getUTCHours()).slice(-2) + ':' + ('0'+dd.getUTCMinutes()).slice(-2), xp, h - 4);
+      var di = Math.round(xi / 5 * (data.length - 1)); var dd = new Date(data[di][0]);
+      ctx.fillText(('0'+dd.getUTCHours()).slice(-2) + ':' + ('0'+dd.getUTCMinutes()).slice(-2), Math.max(pL + 18, Math.min(pL + cw - 18, pL + di / (data.length - 1) * cw)), h - 5);
     }
-
-    // Line
-    ctx.strokeStyle = '#fb010d'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
-    for (var j = 0; j < data.length; j++) {
-      var px = pL + j / (data.length - 1) * cw;
-      var py = pT + ch - ((data[j][1] - mn) / rng) * ch;
-      if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.stroke();
-
-    // Fill
-    var grd = ctx.createLinearGradient(0, pT, 0, pT + ch);
-    grd.addColorStop(0, 'rgba(251,1,13,0.1)'); grd.addColorStop(1, 'rgba(251,1,13,0)');
-    ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath();
-    ctx.fillStyle = grd; ctx.fill();
+    var pts = data.map(function(d, j) { return [pL + j / (data.length - 1) * cw, pT + ch - ((d[1] - mn) / rng) * ch]; });
+    GLOW.line(ctx, pts, '#fb3b47', pT, ch, pL, cw);
+    if (canvas._seriesNote) { ctx.fillStyle = '#6f6c80'; ctx.font = '9px ' + fontMono; ctx.textAlign = 'left'; ctx.fillText(canvas._seriesNote + ' \u00b7 ' + data.length + ' pts', pL + 6, pT + 10); }
 
     // Save base image for tooltip crosshair overlay
     canvas._baseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -2328,11 +2378,11 @@
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -2342,16 +2392,16 @@
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>
@@ -2456,5 +2506,6 @@
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
+<script src="js/market-candles.js?v=543" defer></script>
 </body>
 </html>

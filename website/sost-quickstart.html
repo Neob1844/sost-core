@@ -190,7 +190,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -209,7 +210,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -259,7 +260,7 @@
 
 <!-- HERO -->
 <div style="max-width:960px;margin:14px auto;padding:12px 16px;border:1px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.08);font-size:14px;line-height:1.6">
-<b style="color:#ffd166">Already running a node or a miner?</b> <b>SOST v16.3.0</b> is out &mdash; it changes <b>only the node</b> (full sync from genesis now works); your <b>miner &amp; CLI are byte-identical</b> to v16.2.3. Swap the node before #30,000 &mdash;
+<b style="color:#ffd166">Already running a node or a miner?</b> <b>SOST V30000</b> is out &mdash; <b>all three binaries changed</b> (node, miner and CLI; none byte-identical to v16.2.x). Re-download, verify and swap all three before #30,000 &mdash;
 <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">read the upgrade guide</a>.
 </div>
 <section class="hero">
@@ -424,9 +425,12 @@
         <p>Copy and paste these commands <strong style="color:var(--text-primary)">one at a time</strong>. Press Enter after each one:</p>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">git clone https://github.com/Neob1844/sost-core.git</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">cd sost-core</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">git fetch --tags</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">git checkout v30000</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">mkdir build &amp;&amp; cd build</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">cmake .. -DCMAKE_BUILD_TYPE=Release</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">make -j$(nproc)</span></div>
+        <div style="margin:12px 0;padding:12px 14px;border:1px solid #ffd166;border-left:3px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.07);font-size:13px;line-height:1.6;color:#d8c9a0"><b style="color:#ffd166">Important for block #30,000.</b> The V30000 release source is the <b>v30000 tag</b> (checked out above). Building the current <code>main</code> branch does <b>not</b> currently reproduce the V30000 release, so a node built from <code>main</code> would apply the old rules at #30,000 and fork off the network. New operators must build from the <b>v30000</b> tag &mdash; or use the published V30000 binaries.<div style="margin-top:6px">Prefer prebuilt V30000 binaries? See the <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">upgrade guide</a> &mdash; official release tag <b>v30000</b> with node / miner / cli SHA-256 (<code>SHA256SUMS</code>).</div></div>
         <p>The last command takes 2&ndash;5 minutes. Lots of text will scroll &mdash; that's normal. Wait until you see <span style="color:var(--green-primary)">[100%] Built target</span>.</p>
       </div>
     </div>
@@ -726,7 +730,7 @@
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
-    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
     <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Open source. <a href="sost-license.html" style="color:inherit;">MIT License — fully open source</a></p>
   </div>
@@ -745,17 +749,17 @@ function showOS(os) {
   }
 }
 </script>
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -765,16 +769,16 @@ function showOS(os) {
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

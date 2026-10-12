@@ -20,3 +20,4 @@ broadcast/
 # or a history-stripped clone into lib/forge-std. Tests are reproducible
 # from that single step; the contract sources here are the committed artifact.
 lib/
+lib/

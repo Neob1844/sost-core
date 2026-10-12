@@ -1,0 +1,26 @@
+/* Explorer price cards v2 — visual polish only (PROPOSAL, linked from sost-explorer.html once approved).
+   No layout, id or behaviour change: same grid, same canvases, same handlers. Each card gets the
+   colour of its asset as an accent (top bar, glow, price), more contrast on the small texts and
+   larger, easier-to-tap timeframe buttons. */
+.price-card{--acc:#fb010d;position:relative;border-radius:12px;border:1px solid #1c1c1c;
+  background:radial-gradient(140% 90% at 0% 0%,color-mix(in srgb,var(--acc) 9%,transparent),transparent 60%),linear-gradient(180deg,#0f0f10,#08080a);
+  box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 8px 24px rgba(0,0,0,.35);transition:border-color .2s,box-shadow .2s,transform .2s;overflow:hidden}
+.price-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--acc),color-mix(in srgb,var(--acc) 15%,transparent))}
+.price-card:hover{border-color:color-mix(in srgb,var(--acc) 45%,#1c1c1c);box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 28px rgba(0,0,0,.45),0 0 22px color-mix(in srgb,var(--acc) 18%,transparent)}
+.price-card:has(#xautTfBtns),.price-card:has(#ovxautTfBtns),.price-card:has(#ovxautethTfBtns),.price-card:has(#ovxautpaxgTfBtns){--acc:#d4af37}
+.price-card:has(#paxgTfBtns),.price-card:has(#ovpaxgTfBtns),.price-card:has(#ovpaxgethTfBtns){--acc:#4ade80}
+.price-card:has(#xautbtcTfBtns),.price-card:has(#paxgbtcTfBtns){--acc:#f7931a}
+.price-card:has(#xautethTfBtns),.price-card:has(#paxgethTfBtns){--acc:#627eea}
+.price-card:has(#ovbtcethTfBtns){--acc:#f7931a}
+.price-card:has(#chartSost){--acc:#ffd700}
+.price-card-title{font-size:10.5px;color:#8b8b8b;letter-spacing:1.8px}
+.price-card-val{font-size:26px;letter-spacing:.3px;text-shadow:0 0 18px color-mix(in srgb,var(--acc) 35%,transparent)}
+.price-change{font-size:12px;color:#8b8b8b}
+.price-card-badge{border-radius:4px;background:rgba(74,222,128,.06)}
+.tf-btns{gap:4px}
+.tf-btn{font-size:9.5px;padding:4px 7px;border-radius:4px;color:#8a8a8a;background:#121212;border-color:#262626}
+.tf-btn:hover{color:#d0d0d0;border-color:#3a3a3a}
+.tf-btn.active{background:color-mix(in srgb,var(--acc) 16%,transparent);border-color:color-mix(in srgb,var(--acc) 60%,transparent);color:var(--acc);box-shadow:0 0 10px color-mix(in srgb,var(--acc) 22%,transparent)}
+.price-card-range{color:#6f6f6f;font-size:9.5px;border-top:1px solid #161616;padding-top:7px}
+.cdl-bar button{border-radius:4px}
+@media (max-width:768px){.tf-btn{min-height:30px;padding:7px 10px}.cdl-bar button{min-height:30px}.price-card-val{font-size:23px}}

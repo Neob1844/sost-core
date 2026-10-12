@@ -266,6 +266,24 @@ class RateLimit(unittest.TestCase):
         self.assertTrue(mp._rate_ok(ip))
 
 
+class CacheHitsDoNotSpendTheUpstreamBudget(unittest.TestCase):
+    def test_fresh_entries_are_recognised(self):
+        with mp._cache_lock:
+            mp._cache['bitcoin|usd|24H|ohlc'] = {'candles': [], 'fetched_at': time.time(), 'status': 'ok'}
+            mp._cache['bitcoin|usd|3D|ohlc'] = {'candles': [], 'fetched_at': time.time() - 10_000, 'status': 'ok'}
+        self.assertTrue(mp._fresh('bitcoin|usd|24H|ohlc', mp.OHLC_TTL['24H']))
+        self.assertFalse(mp._fresh('bitcoin|usd|3D|ohlc', mp.OHLC_TTL['3D']))
+        self.assertFalse(mp._fresh('nope', 60))
+
+    def test_the_wide_budget_is_separate_and_larger(self):
+        ip = '203.0.113.9'
+        self.assertGreater(mp.RATE_LIMIT_CACHED_PER_MIN, mp.RATE_LIMIT_PER_MIN)
+        for _ in range(mp.RATE_LIMIT_CACHED_PER_MIN):
+            self.assertTrue(mp._rate_ok(ip, mp._rate_all, mp.RATE_LIMIT_CACHED_PER_MIN))
+        self.assertFalse(mp._rate_ok(ip, mp._rate_all, mp.RATE_LIMIT_CACHED_PER_MIN))
+        self.assertTrue(mp._rate_ok(ip))            # the upstream budget is untouched by cache hits
+
+
 class TtlPolicy(unittest.TestCase):
     def test_every_allowlisted_range_has_a_ttl_and_a_timeout(self):
         for label, days in mp.RANGES.items():
@@ -527,3 +545,307 @@ class ProviderKey(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+
+
+class OhlcCandles(unittest.TestCase):
+    """mode=ohlc: real provider candles only, separate cache, never repaired."""
+
+    def setUp(self):
+        with mp._cache_lock:
+            mp._cache.clear()
+        self.calls = []
+        self.real = mp._fetch_ohlc
+
+        def fake(asset, vs, label):
+            self.calls.append((asset, vs, label))
+            _real_sleep(0.05)
+            return {'candles': [[1000, 10.0, 12.0, 9.0, 11.0, 5.0]], 'interval': mp.OHLC_PLAN[label][0],
+                    'interval_s': 1800, 'dropped_null': 0, 'dropped_invalid': 0, 'source': 'yahoo-finance'}, 'ok'
+        mp._fetch_ohlc = fake
+
+    def tearDown(self):
+        mp._fetch_ohlc = self.real
+
+    def test_validate_keeps_real_candles_unchanged(self):
+        out, null, bad = mp.validate_ohlc([1, 2], {'open': [10, 11], 'high': [12, 11.5], 'low': [9, 10.5],
+                                                   'close': [11, 11.2], 'volume': [7, 0]})
+        self.assertEqual(out, [[1000, 10.0, 12.0, 9.0, 11.0, 7], [2000, 11.0, 11.5, 10.5, 11.2, 0]])
+        self.assertEqual((null, bad), (0, 0))
+
+    def test_null_candles_are_dropped_not_filled(self):
+        out, null, bad = mp.validate_ohlc([1, 2, 3], {'open': [10, None, 10], 'high': [12, 12, 12],
+                                                      'low': [9, 9, 9], 'close': [11, 11, 11]})
+        self.assertEqual([k[0] for k in out], [1000, 3000])
+        self.assertEqual(null, 1)
+
+    def test_invalid_candles_are_dropped_never_corrected(self):
+        out, null, bad = mp.validate_ohlc([1, 2, 3], {'open': [10, 10, 10], 'high': [9, 12, 12],
+                                                      'low': [9, 11, 8], 'close': [11, 11, 13]})
+        # #1 high < close, #2 low > open, #3 high < close: all three violate, none is repaired
+        self.assertEqual(out, [])
+        self.assertEqual(bad, 3)
+
+    def test_length_mismatch_rejects_the_whole_response(self):
+        with self.assertRaises(ValueError):
+            mp.validate_ohlc([1, 2], {'open': [1, 2], 'high': [1], 'low': [1, 2], 'close': [1, 2]})
+
+    def test_only_real_cross_markets_are_accepted(self):
+        self.assertEqual(mp.parse_ohlc_params('asset=tether-gold&vs=btc&range=24H&mode=ohlc'), ('tether-gold', 'btc', '24H'))
+        self.assertEqual(mp.parse_ohlc_params('asset=pax-gold&vs=eth&range=1Y&mode=ohlc'), ('pax-gold', 'eth', '1Y'))
+        for q in ('asset=bitcoin&vs=btc&range=24H&mode=ohlc', 'asset=ethereum&vs=btc&range=24H&mode=ohlc',
+                  'asset=bitcoin&range=2H&mode=ohlc'):
+            with self.assertRaises(ValueError):
+                mp.parse_ohlc_params(q)
+        self.assertEqual(mp.parse_ohlc_params('asset=bitcoin&range=7d&mode=ohlc'), ('bitcoin', 'usd', '7D'))
+
+    def test_markets_page_usdt_books(self):
+        self.assertEqual(mp.parse_ohlc_params('asset=SOL&vs=usdt&range=1H&mode=ohlc'), ('SOL', 'usdt', '1H'))
+        self.assertEqual(mp.ohlc_plan('SOL', 'usdt', '1H')[:3], ('binance', 'SOLUSDT', '1m'))
+        self.assertEqual(mp.ohlc_plan('XAUT', 'usdt', '7D')[:3], ('binance', 'XAUTUSDT', '4h'))
+        for q in ('asset=DOGE&vs=usdt&range=1H&mode=ohlc', 'asset=SOL&vs=usd&range=1H&mode=ohlc',
+                  'asset=sol&vs=usdt&range=1H&mode=ohlc', 'asset=../x&vs=usdt&range=1H&mode=ohlc'):
+            with self.assertRaises(ValueError):
+                mp.parse_ohlc_params(q)
+
+    def test_a_pair_without_a_market_is_never_synthesized(self):
+        p, st = mp.get_ohlc('tether-gold', 'eth', '24H')
+        self.assertEqual((st, p['source_status'], p['candles']), (200, 'no_market', []))
+        self.assertEqual(self.calls, [])                      # nothing fetched, nothing divided
+
+    def test_cross_plans_use_native_venue_intervals(self):
+        self.assertEqual(mp.ohlc_plan('tether-gold', 'btc', '7D')[:3], ('binance', 'XAUTBTC', '4h'))
+        self.assertEqual(mp.ohlc_plan('pax-gold', 'eth', '5Y')[:3], ('kraken', 'PAXGETH', '15d'))
+        self.assertEqual(mp.ohlc_plan('bitcoin', 'usd', '7D')[:3], ('yahoo', 'BTC-USD', '90m'))
+        for (a, v), m in mp.MARKETS.items():
+            for label in mp.OHLC_PLAN:
+                plan = mp.ohlc_plan(a, v, label)
+                if m is None:
+                    self.assertIsNone(plan)
+                else:
+                    iv = plan[2]
+                    self.assertIn(iv, mp.BINANCE_IV if m[0] == 'binance' else mp.KRAKEN_IV, (a, v, label))
+
+    def test_exchange_rows_are_validated_like_yahoo(self):
+        rows = [[1000, '1.0', '1.2', '0.9', '1.1', '5'], [2000, '1.0', '0.8', '0.9', '1.1', '5'], [3000, None, '1', '1', '1', '0']]
+        ts, q = mp._rows_to_arrays(rows, 0, 1, 2, 3, 4, 5, 1)
+        out, null, bad = mp.validate_ohlc(ts, q)
+        self.assertEqual((len(out), null, bad), (1, 1, 1))
+        self.assertEqual(out[0], [1000000, 1.0, 1.2, 0.9, 1.1, 5.0])
+
+    def test_every_line_range_has_an_ohlc_plan(self):
+        self.assertEqual(set(mp.OHLC_PLAN), set(mp.RANGES))
+        for label, (iv, win) in mp.OHLC_PLAN.items():
+            self.assertIn(iv, mp.INTERVAL_S)
+            self.assertIn(label, mp.OHLC_TTL)
+            self.assertGreaterEqual(win // mp.INTERVAL_S[iv], 10, label)   # enough candles to read
+            self.assertLessEqual(win // mp.INTERVAL_S[iv], 200, label)    # never needle-thin
+
+    def test_ohlc_and_line_never_share_a_cache_entry(self):
+        mp.get_ohlc('bitcoin', 'usd', '24H')
+        self.assertIn('bitcoin|usd|24H|ohlc', mp._cache)
+        self.assertNotIn('bitcoin|usd|1', mp._cache)
+        self.assertIsNone(mp._cache.get('bitcoin|usd|1'))
+
+    def test_second_visit_is_a_cache_hit(self):
+        mp.get_ohlc('pax-gold', 'usd', '7D')
+        p, st = mp.get_ohlc('pax-gold', 'usd', '7D')
+        self.assertEqual((st, p['source_status']), (200, 'cached'))
+        self.assertEqual(len(self.calls), 1)
+
+    def test_concurrent_visitors_produce_one_upstream_request(self):
+        ts = [threading.Thread(target=mp.get_ohlc, args=('ethereum', 'usd', '1H')) for _ in range(20)]
+        [t.start() for t in ts]
+        [t.join() for t in ts]
+        self.assertEqual(len(self.calls), 1)
+
+    def test_failure_serves_stale_then_unavailable(self):
+        mp.get_ohlc('tether-gold', 'usd', '24H')
+        mp._cache['tether-gold|usd|24H|ohlc']['fetched_at'] -= mp.OHLC_TTL['24H'] + 1
+        mp._fetch_ohlc = lambda a, v, l: (None, 'rate_limited')
+        p, st = mp.get_ohlc('tether-gold', 'usd', '24H')
+        self.assertEqual((st, p['source_status'], p['upstream_error']), (200, 'stale', 'rate_limited'))
+        p, st = mp.get_ohlc('tether-gold', 'usd', '3D')      # nothing cached for this one
+        self.assertEqual((st, p['source_status']), (503, 'unavailable'))
+        self.assertNotIn('candles', p)
+
+    def test_ohlc_entries_survive_a_restart(self):
+        d = tempfile.mkdtemp()
+        old = mp.STATE_FILE
+        try:
+            mp.STATE_FILE = os.path.join(d, 'c.json')
+            mp.get_ohlc('bitcoin', 'usd', '30D')
+            self.assertTrue(mp.save_state())
+            mp._cache.clear()
+            self.assertGreaterEqual(mp.load_state(), 1)
+            self.assertEqual(mp._cache['bitcoin|usd|30D|ohlc']['candles'], [[1000, 10.0, 12.0, 9.0, 11.0, 5.0]])
+            self.assertEqual(mp._entry_ttl('bitcoin|usd|30D|ohlc'), mp.OHLC_TTL['30D'])
+        finally:
+            mp.STATE_FILE = old
+            shutil.rmtree(d)
+
+    def test_real_fetch_rejects_a_relabelled_granularity(self):
+        body = json.dumps({'chart': {'result': [{'meta': {'dataGranularity': '1d'}, 'timestamp': [int(time.time())],
+                                                 'indicators': {'quote': [{'open': [1], 'high': [2], 'low': [1], 'close': [2]}]}}]}})
+
+        class R:
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def read(self): return body.encode()
+        real = mp.urllib.request.urlopen
+        mp.urllib.request.urlopen = lambda *a, **k: R()
+        try:
+            res, reason = self.real('bitcoin', 'usd', '24H')        # asks 30m, provider says 1d
+        finally:
+            mp.urllib.request.urlopen = real
+        self.assertIsNone(res)
+        self.assertEqual(reason, 'granularity_mismatch')
+
+
+class JsonSnapshots(unittest.TestCase):
+    """Markets page documents (spot prices, FX latest, FX history) behind the gateway."""
+
+    GOOD = {'spot': {'tether-gold': {'usd': 4180.0}}, 'fx': {'result': 'success', 'rates': {'EUR': 0.9}},
+            'fxh': {'rates': {'2026-10-10': {'EUR': 0.9}}}}
+
+    def setUp(self):
+        with mp._cache_lock:
+            mp._cache.clear()
+        self.calls = []
+        self.real = mp._fetch_json
+        self.next = None
+
+        def fake(kind, venue, url):
+            self.calls.append((kind, venue, url))
+            _real_sleep(0.05)
+            return self.next if self.next is not None else (self.GOOD[kind], 'ok')
+        mp._fetch_json = fake
+
+    def tearDown(self):
+        mp._fetch_json = self.real
+
+    def q(self, s):
+        return urllib.parse.parse_qs(s)
+
+    def test_only_allowlisted_names_are_accepted(self):
+        for mode, s in (('spot', 'group=gold_all'), ('fx', ''), ('fxhist', 'code=eur&range=7d')):
+            mp.json_target(mode, self.q(s))
+        for mode, s in (('spot', 'group=everything'), ('spot', 'group=https://evil'), ('fxhist', 'code=XXX&range=7D'),
+                        ('fxhist', 'code=EUR&range=9Y'), ('other', '')):
+            with self.assertRaises(ValueError):
+                mp.json_target(mode, self.q(s))
+
+    def test_urls_are_built_from_constants(self):
+        _, _, venue, url = mp.json_target('spot', self.q('group=stable'))
+        self.assertEqual(venue, 'coingecko')
+        self.assertTrue(url().startswith(mp.CG_SIMPLE + '?'))
+        _, _, venue, url = mp.json_target('spot', self.q('group=crypto'))
+        self.assertEqual(venue, 'binance')
+        self.assertTrue(url().startswith(mp.BINANCE_TICKER + '?symbols='))
+        _, _, venue, url = mp.json_target('fxhist', self.q('code=EUR&range=30D'))
+        self.assertTrue(url().startswith(mp.FRANKFURTER_URL) and url().endswith('base=USD&symbols=EUR'))
+        self.assertEqual(mp.json_target('fx', self.q(''))[3](), mp.FX_URL)
+
+    def test_gold_all_covers_every_currency_the_page_shows(self):
+        vs = mp.SPOT_GROUPS['gold_all']['vs_currencies'].split(',')
+        self.assertEqual(len(vs), len(mp.SPOT_FIAT) + len(mp.SPOT_CRYPTO_CODES))
+        self.assertIn('eur', vs); self.assertIn('xlm', vs)
+
+    def test_cache_and_dedup(self):
+        key, kind, venue, url = mp.json_target('spot', self.q('group=gold_usd'))
+        ts = [threading.Thread(target=mp.get_json, args=(key, kind, venue, url)) for _ in range(15)]
+        [t.start() for t in ts]; [t.join() for t in ts]
+        self.assertEqual(len(self.calls), 1)
+        body, st, src = mp.get_json(key, kind, venue, url)
+        self.assertEqual((st, src), (200, 'cached'))
+
+    def test_failure_serves_last_good_and_never_caches_an_error(self):
+        key, kind, venue, url = mp.json_target('fx', self.q(''))
+        mp.get_json(key, kind, venue, url)
+        mp._cache[key]['fetched_at'] -= mp.JSON_TTL['fx'] + 1
+        self.next = (None, 'rate_limited')
+        body, st, src = mp.get_json(key, kind, venue, url)
+        self.assertEqual((st, src, body), (200, 'stale', self.GOOD['fx']))
+        key2, kind2, venue2, url2 = mp.json_target('spot', self.q('group=stable'))
+        body, st, src = mp.get_json(key2, kind2, venue2, url2)
+        self.assertEqual((st, src), (503, 'error'))
+        self.assertNotIn(key2, mp._cache)
+
+    def test_error_bodies_are_rejected(self):
+        self.assertFalse(mp._json_ok('spot', {'status': {'error_code': 429}}))
+        self.assertFalse(mp._json_ok('fx', {'result': 'error'}))
+        self.assertFalse(mp._json_ok('fxh', {'message': 'not found'}))
+        self.assertTrue(mp._json_ok('spot', self.GOOD['spot']))
+
+    def test_snapshots_survive_a_restart_and_do_not_break_warming(self):
+        d = tempfile.mkdtemp(); old = mp.STATE_FILE
+        try:
+            mp.STATE_FILE = os.path.join(d, 'c.json')
+            for mode, s in (('spot', 'group=crypto'), ('fx', ''), ('fxhist', 'code=EUR&range=7D')):
+                mp.get_json(*mp.json_target(mode, self.q(s)))
+            self.assertTrue(mp.save_state())
+            mp._cache.clear()
+            self.assertEqual(mp.load_state(), 3)
+            self.assertIn('json|fxh|EUR|7D', mp._cache)
+        finally:
+            mp.STATE_FILE = old; shutil.rmtree(d)
+
+    def test_binance_tickers_become_the_simple_price_shape(self):
+        url = mp.json_target('spot', self.q('group=gold_usd'))[3]()
+        rows = [{'symbol': 'XAUTUSDT', 'lastPrice': '4180.5', 'priceChangePercent': '-0.10'},
+                {'symbol': 'PAXGUSDT', 'lastPrice': 'bad', 'priceChangePercent': '0.2'}]
+        out = mp._binance_to_simple(url, rows)
+        self.assertEqual(out, {'tether-gold': {'usd': 4180.5, 'usd_24h_change': -0.1}})   # bad row dropped, not filled
+        self.assertTrue(mp._json_ok('spot', out))
+        self.assertIsNone(mp._binance_to_simple(url, {'code': -1121}))
+
+    def test_group_ttls(self):
+        self.assertEqual(mp.json_ttl('json|spot|crypto'), 30)
+        self.assertEqual(mp.json_ttl('json|spot|stable'), 600)
+        self.assertEqual(mp.json_target('spot', self.q('group=gold_ref'))[2], 'coingecko')   # documented reference source
+        self.assertEqual(mp.json_ttl('json|fx|latest'), 3600)
+        self.assertEqual(mp.json_ttl('json|fxh|EUR|7D'), 21600)
+
+
+class SparseMarkets(unittest.TestCase):
+    """Intervals without trades are gaps: exchange-filled rows are removed, never drawn, never invented."""
+
+    def run_fetch(self, rows, label='24H'):
+        real = mp._venue_get
+        mp._venue_get = lambda venue, url: rows
+        try:
+            return mp._fetch_ohlc('tether-gold', 'btc', label)
+        finally:
+            mp._venue_get = real
+
+    def test_filled_rows_become_gaps(self):
+        now = int(time.time())
+        t = lambda k: (now - 3600 * k) * 1000
+        rows = [[t(10), '0.0504', '0.0504', '0.0504', '0.0504', '0'],      # filled: no trade -> gap
+                [t(9), '0.0504', '0.0506', '0.0503', '0.0505', '1.2'],      # real
+                [t(8), '0.0505', '0.0505', '0.0505', '0.0505', '0'],        # filled -> gap
+                [t(7), '0.0505', '0.0505', '0.0505', '0.0505', '0.3']]      # one trade at one price: REAL (thin dash)
+        res, why = self.run_fetch(rows)
+        self.assertEqual(why, 'ok')
+        self.assertEqual([k[0] for k in res['candles']], [t(9), t(7)])
+        self.assertEqual(res['dropped_filled'], 2)
+        self.assertEqual(res['expected_intervals'], 48)
+        self.assertEqual(res['empty_intervals'], 46)
+        self.assertEqual(len(res['candles']) + res['empty_intervals'], res['expected_intervals'])
+
+    def test_zero_real_candles_is_reported_not_synthesized(self):
+        now = int(time.time())
+        res, why = self.run_fetch([[(now - 600) * 1000, '1', '1', '1', '1', '0']])
+        self.assertEqual((why, res['candles']), ('ok', []))
+        self.assertEqual(mp._ohlc_payload(dict(res, fetched_at=time.time()), 'fresh', time.time())['source_status'], 'no_candles')
+
+    def test_pre_rule_cache_entries_are_not_restored(self):
+        d = tempfile.mkdtemp(); old = mp.STATE_FILE
+        try:
+            mp.STATE_FILE = os.path.join(d, 'c.json')
+            with open(mp.STATE_FILE, 'w') as f:
+                json.dump({'version': 1, 'entries': {'bitcoin|usd|24H|ohlc': {'candles': [], 'interval': '30m', 'fetched_at': time.time()}}}, f)
+            with mp._cache_lock:
+                mp._cache.clear()
+            self.assertEqual(mp.load_state(), 0)
+        finally:
+            mp.STATE_FILE = old; shutil.rmtree(d)

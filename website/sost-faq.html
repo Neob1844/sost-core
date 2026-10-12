@@ -100,6 +100,10 @@
   .faq-a-inner { padding: 0 20px 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8; border-top: 1px solid var(--border-dim); padding-top: 16px; }
   .faq-a-inner strong { color: var(--text-primary); }
   .faq-a-inner code { color: var(--cyan-primary); font-size: 11px; }
+  .faq-a-inner a { color: var(--cyan-primary); }
+  .faq-a-inner p { margin: 0 0 10px; }
+  .faq-a-inner ul { margin: 6px 0 10px; padding-left: 20px; }
+  .faq-a-inner li { margin-bottom: 4px; }
 
   /* FOOTER */
   footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
@@ -130,7 +134,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -149,7 +154,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -204,7 +209,7 @@
   <div class="container">
     <div class="hero-label fade-in">Frequently Asked Questions</div>
     <h1 class="fade-in delay-1">Common <span>Questions.</span><br>Direct <span>Answers.</span></h1>
-    <p class="hero-sub fade-in delay-2">Everything you need to know about SOST — mining, tokenomics, the gold reserve, PoPC, and SOST. Click any question to expand.</p>
+    <p class="hero-sub fade-in delay-2">Everything you need to know about SOST — mining, tokenomics, the DTD, the V30000 upgrade, and the (now legacy) gold reserve and PoPC. Click any question to expand.</p>
   </div>
 </section>
 
@@ -268,12 +273,12 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does difficulty adjustment work?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST uses cASERT, a unified difficulty adjustment system with two components:<br><br><strong>cASERT bitsQ</strong> (primary controller): since block 5175, bitsQ uses avg288 &mdash; comparing the average of the last 288 block intervals against the 600-second target. This replaced the earlier half-life exponential model (V1: 48h, V2: 24h &mdash; both historical only). Since block 5260, a dynamic cap scales the maximum per-block adjustment by deviation: 0%/0.5%/1.5%/2.5%/3.0%, with a median288 consistency check. bitsQ is the primary long-term calibration mechanism.<br><br><strong>cASERT equalizer</strong>: emergency-only stability controller with a height-gated ceiling. <b>Pre-V12 (#5,750..#7,349):</b> H13 ceiling, 21 active E7&ndash;H13, 22 reserved H14&ndash;H35. <b>V12 (#7,350+):</b> H20 ceiling, 28 active E7&ndash;H20, 15 reserved H21&ndash;H35. H10+ profiles carry margin=115. This completes the cASERT equalizer calibration. If the chain runs too fast relative to the ideal schedule (genesis + height &times; 600s), the equalizer hardens ConvergenceX stability requirements. It eases back toward B0 only when the chain is genuinely running slow. If mining stalls for 2+ hours, a zone-based decay mechanism gradually reduces the level to prevent chain halt. bitsQ corrects speed; the equalizer protects emission in emergency scenarios.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST uses cASERT, a unified difficulty adjustment system with two components:<br><br><strong>cASERT bitsQ</strong> (primary controller): since block 5175, bitsQ uses avg288 &mdash; comparing the average of the last 288 block intervals against the 600-second target. This replaced the earlier half-life exponential model (V1: 48h, V2: 24h &mdash; both historical only). Since block 5,270 the active rule is: no adjustment inside a ±15 s dead band, then a dynamic per-block cap scaled by deviation — 0.5% / 1.0% / 2.0% / &asymp;3.03% (3.0% is the ceiling). The median was removed from consensus at block 5,270. bitsQ is the primary long-term calibration mechanism.<br><br><strong>cASERT equalizer</strong>: emergency-only stability controller with a height-gated ceiling. <b>Pre-V12 (#5,750..#7,349):</b> H13 ceiling, 21 active E7&ndash;H13, 22 reserved H14&ndash;H35. <b>V12 (#7,350..#11,999):</b> H20 ceiling, 28 active E7&ndash;H20, 15 reserved H21&ndash;H35. <b>V13 (#12,000+, current): H35 ceiling &mdash; all 43 profiles E7&ndash;H35 active, none reserved.</b> H10+ profiles carry margin=115. This completes the cASERT equalizer calibration. If the chain runs too fast relative to the ideal schedule (genesis + height &times; 600s), the equalizer hardens ConvergenceX stability requirements. It eases back toward B0 only when the chain is genuinely running slow. If mining stalls for 2+ hours, a zone-based decay mechanism gradually reduces the level to prevent chain halt. bitsQ corrects speed; the equalizer protects emission in emergency scenarios.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does SOST resolve forks?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST uses <strong>best-chain-by-cumulative-work</strong> selection, not longest-chain. Each block contributes work = <code>floor(2^256 / (target + 1))</code>. The chain with the highest total accumulated work wins. This prevents attacks using many easy blocks to outpace a shorter chain with more real work &mdash; the same approach used by Bitcoin.<br><br><strong>Fork resolution is atomic:</strong> if a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is fully restored. Maximum reorganization depth: 500 blocks (~3.5 days).</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST uses <strong>best-chain-by-cumulative-work</strong> selection, not longest-chain. Each block contributes work = <code>floor(2^256 / (target + 1))</code>. The chain with the highest total accumulated work wins. This prevents attacks using many easy blocks to outpace a shorter chain with more real work &mdash; the same approach used by Bitcoin.<br><br><strong>Fork resolution is atomic:</strong> if a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is fully restored. Maximum reorganization depth: 500 blocks (~3.5 days) for history before #30,000. From #30,000 (SACS V2, V30000 release), deep fork blocks beyond 500 that are post-activation are kept and judged strictly by valid cumulative work instead of being hard-rejected.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -298,7 +303,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>Can anyone access or move the gold reserve?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>Not under normal operation.</strong> The Heritage Reserve is sealed by default. Moving previously purchased reserve assets requires <strong>Emergency Catastrophe</strong> dual-gate authorization: &ge;75% miner signaling (108 out of 144 blocks) AND a Execution Order. Neither party can act alone. Only two actions are permitted: E1 (rotate to other allowlisted metals) or E2 (liquidate-buy-redistribute).</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Not under normal operation.</strong> Note: the spend-side governance described here (dual-gate) was designed but is <b>not active on chain</b> — it was deferred and is now legacy, superseded by the DTD. The Heritage Reserve is sealed by default. Moving previously purchased reserve assets requires <strong>Emergency Catastrophe</strong> dual-gate authorization: &ge;75% miner signaling (108 out of 144 blocks) AND a Execution Order. Neither party can act alone. Only two actions are permitted: E1 (rotate to other allowlisted metals) or E2 (liquidate-buy-redistribute).</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -323,12 +328,12 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is PoPC?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol. The PoPC Pool funding mechanism launched at genesis (March 15, 2026) &mdash; 25% of every block reward (until #25,000; 0 since) accumulates in the pool. The custody contracts themselves (Model A + B) have a target activation of block 10,000+ (April 2027). Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).<br><br>Any user, including SOST, can make direct donations to the Perpetual Vault (Gold Funding Vault: <a href="sost-explorer.html?search=sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" style="color:#4ade80;text-decoration:underline;cursor:pointer;"><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></a>) to support SOST and endow it with perpetual added value.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary commitment protocol built around a <strong>single native-SOST bond</strong>. The PoPC Pool funding mechanism launched at genesis (March 15, 2026) &mdash; 25% of every block reward accumulated in the pool <strong>until #25,000, and has been 0 since V15</strong>. <strong>PoPC is now paused / legacy and has been superseded by the DTD / DTD Jackpot architecture</strong>; it is not required for any DTD eligibility. The earlier two-model gold-custody design (Model A self-custody bonds + Model B timelocked escrow) is <strong>historical</strong> and was replaced by the single native-SOST bond. PoPC is <strong>not</strong> tokenization, not staking, and not yield farming.<br><br>Any user, including SOST, can make direct donations to the Perpetual Vault (Gold Funding Vault: <a href="sost-explorer.html?search=sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" style="color:#4ade80;text-decoration:underline;cursor:pointer;"><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></a>) to support SOST and endow it with perpetual added value.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
-      <div class="faq-q"><h3>When does PoPC launch?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Target activation: <strong>April 2027</strong> (Phase 2). By that time, the PoPC Pool will have accumulated approximately 103,160 SOST from coinbase allocations. The escrow contract will be published and verified on explorer. Independent audit planned before activation.<br><br><div style="background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.2);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin:12px 0 0;font-size:12px;color:var(--text-secondary);line-height:1.8;"><strong style="color:var(--text-primary);">Timeline Flexibility Notice:</strong> SOST reserves the right to accelerate or delay any committed timeline if it determines that SOST can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.</div></div></div>
+      <div class="faq-q"><h3>Is PoPC active?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>No. PoPC is paused / legacy</strong> and has been <strong>superseded by the DTD / DTD Jackpot architecture</strong>. Its emission share ended at <strong>#25,000</strong> (V15) and has been <strong>zero since</strong>. There is no scheduled future activation of the custody contracts; the previously-stated target has been retired. PoPC is not required for any DTD eligibility.<br><br><div style="background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.2);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin:12px 0 0;font-size:12px;color:var(--text-secondary);line-height:1.8;"><strong style="color:var(--text-primary);">Timeline Flexibility Notice:</strong> SOST reserves the right to accelerate or delay any committed timeline if it determines that SOST can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.</div></div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -337,8 +342,8 @@
     </div>
 
     <div class="faq-item fade-in delay-1">
-      <div class="faq-q"><h3>What happens if I fail a PoPC audit?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>Model A only:</strong> your SOST bond is automatically slashed — 50% goes to the PoPC Pool, 50% to the Gold Funding Vault. Your address is permanently blacklisted. No human can reverse the slash or remove the blacklist once triggered. SOST has no appeal mechanism.<br><br><strong>Model B:</strong> immutable escrow deposit — you recover 100% of your metals at maturity, with no slash risk.</div></div>
+      <div class="faq-q"><h3>How does the PoPC bond work?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">PoPC was redesigned to a <strong>single native-SOST bond</strong> (the older Model A self-custody / Model B escrow split, with its 50/50 slash redistribution to the PoPC Pool and Gold Funding Vault, is <strong>historical</strong>). PoPC is currently <strong>paused / legacy</strong> and superseded by DTD / DTD Jackpot, with <strong>zero emission since V15 (#25,000)</strong>, so there is no live bond, audit, or slash process running today.</div></div>
     </div>
   </div>
 </section>
@@ -353,7 +358,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>Can SOST change the rules?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> No entity — including SOST — can modify consensus rules after genesis. SOST has no DAO, no voting token, and no multisig with authority over consensus or monetary parameters. SOST can only execute a narrow set of operational actions (gold conversion, purchase pauses, PoPC management) under constitutional constraints and public attestation.</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Not unilaterally.</strong> There is no DAO, no voting token and no admin key over the chain: rules change only through openly published, height-activated hard forks (V2 … V15, V16 / V30000) that each node operator chooses to run — a node that does not upgrade simply keeps the old rules. The maximum supply and the emission curve have never changed; the coinbase split changed once, at V15 (#25,000), through such a fork. SOST has no multisig with authority over consensus or monetary parameters. SOST can only execute a narrow set of operational actions (gold conversion, purchase pauses, PoPC management) under constitutional constraints and public attestation.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -378,7 +383,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What consensus rules does SOST enforce?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Full validation includes rules R1-R14 (block structure), S1-S12 (script/signature), and CB1-CB10 (coinbase). All consensus arithmetic is 100% integer — zero floating-point in any consensus path. The emission schedule, coinbase split, and difficulty algorithm are immutable at genesis. 15 constitutional rules (C1-C15) define the boundaries.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Full validation includes rules R1-R14 (block structure), S1-S12 (script/signature), and CB1-CB10 (coinbase). All consensus arithmetic is 100% integer — zero floating-point in any consensus path. The emission curve and maximum supply have never changed since genesis; other rules (coinbase split, cASERT, DTD) evolve only through openly published, height-activated hard forks. 15 constitutional rules (C1-C15) define the boundaries.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -397,15 +402,65 @@
     </div>
   </div>
 
+    <!-- V15 / V16 / V30000 FAQ -->
+    <div class="section-header" style="margin-top:48px;">
+      <h2 class="section-title">V15, V16 &amp; <span class="accent">V30000</span></h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q"><h3>What is the DTD?</h3><span class="toggle">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>The <b>DTD (Deterministic Token Distribution)</b> is a consensus-run distribution of part of each block&rsquo;s value to eligible network participants. It is <b>deterministic</b> (the winner is computed by the rules, never chosen by anyone), <b>keyless</b> at the SOST layer and <b>supply-neutral</b> (it moves coins, it never mints them). Since V15 (#25,000) it receives <b>50% of every block</b>.</p>
+          <p>Anyone can audit it: same blocks + same rules = same result. Re-derive the eligible set and the winner from the public chain, or use the explorer&rsquo;s <code>getlotteryaudit</code>. See <a href="index.html#dtd">how the DTD works</a>.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><h3>What changed at block 25,000 (V15)?</h3><span class="toggle">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>The coinbase split became <b>50% miner / 50% DTD</b>. The Gold Funding Vault and PoPC Pool emission shares became <b>zero</b>: they keep what they received before #25,000, publicly auditable, but nothing new flows into them. The DTD is <b>permissionless</b> &mdash; no PoPC bond is required to be eligible.</p>
+          <p>Why: a network-funded gold reserve leaned on third-party custodians and tokenized-gold issuers. Returning that value on-chain to the people who secure the network removes custody, counterparty and regulatory risk. The gold pages stay online as the historical record.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><h3>What activates at block 30,000 (V16 / V30000)?</h3><span class="toggle">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          <ul>
+            <li><b>DTD eligibility tightens:</b> 288-block recency, conditional cooldown and anti-dominance.</li>
+            <li><b>DTD Jackpot V2:</b> an independent, node-gated, PoW-weighted draw. First V2 draw at <b>#30,186</b>.</li>
+            <li><b>Native-asset layer</b> (issue / transfer / burn with supply conservation), <b>tokenization</b> and the <b>SOST-layer DEX</b> &mdash; all behind the S14 admin gate (public access disabled at activation).</li>
+            <li><b>SACS V2:</b> deep forks after #30,000 are judged strictly by valid cumulative work.</li>
+          </ul>
+          <p>Activation is automatic by height. Operators must run the <b>V30000</b> release before #30,000 &mdash; see the <a href="sost-upgrade.html">upgrade guide</a>.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><h3>How long does a new node take to sync?</h3><span class="toggle">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>About <b>25 minutes</b> from genesis to the tip. Measured for the V30000 release: genesis &rarr; #28,077 in <b>25m06s</b>, with the tip hash and 5 checkpoint hashes matching the live chain. Checkpointed blocks skip only the full ConvergenceX recompute; <code>--full-verify</code> forces it for every block.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><h3>What is the SOST Price Reference?</h3><span class="toggle">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>No peg. One SOST is <b>initially referenced</b> to <b>0.8886707657 mg of gold</b> &mdash; a transparent unit of account and a proposed initial price for a first listing, not a guarantee and not redeemable. Once SOST trades, <b>the market sets its price</b>. See <a href="sost-reference.html">SOST Price Reference</a>.</p>
+        </div></div>
+      </div>
+    </div>
+
     <!-- V13 + Beacon + OTC FAQ -->
     <div class="section-header" style="margin-top:48px;">
       <h2 class="section-title">V13 &amp; <span class="accent">Beacon</span></h2>
     </div>
 
     <div class="faq-list">
-      <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-item">
         <div class="faq-q"><h3>What activates at block 12,000 (V13)?</h3><span class="toggle">+</span></div>
-        <div class="faq-a">
+        <div class="faq-a"><div class="faq-a-inner">
           <p>V13 is a coordinated hard fork that activates several non-controversial improvements at block <b>12,000</b>:</p>
           <ul>
             <li><b>Future-timestamp drift cap 60 s &rarr; 30 s.</b> Blocks more than 30 s ahead of validator time are rejected. NTP is strongly recommended (not consensus-mandatory).</li>
@@ -413,13 +468,13 @@
             <li><b>cASERT E7-H35</b> active (all 43 profiles) and <b>DTD lottery cooldown 5 &rarr; 6</b>.</li>
             <li><b>Beacon Phase II-A, II-B, and III</b> all activate at V13_HEIGHT (advisory only &mdash; see Beacon questions below).</li>
           </ul>
-          <p><b>NOT activated in V13:</b> PoPC automated lifecycle and Gold Vault spend-side governance &mdash; deferred to V14 / block 15,000.</p>
-        </div>
+          <p><b>NOT activated in V13:</b> PoPC automated lifecycle and Gold Vault spend-side governance. They were deferred at the time and are now <b>paused / legacy</b>, superseded by the DTD / DTD Jackpot architecture.</p>
+        </div></div>
       </div>
 
-      <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-item">
         <div class="faq-q"><h3>What is Beacon? Does it affect mining or block validity?</h3><span class="toggle">+</span></div>
-        <div class="faq-a">
+        <div class="faq-a"><div class="faq-a-inner">
           <p><b>Beacon is an advisory notice system.</b> It does <b>not</b> affect mining rewards, block validity, chain selection, transaction validation, wallet balances, PoPC, Gold Vault, or consensus.</p>
           <p>Beacon lets the operator publish signed advisory notices (upgrade reminders, operational warnings, etc.) that nodes and miners display in their banners. Invalid, expired, malformed, or unsigned Beacon notices are simply ignored by the node.</p>
           <ul>
@@ -427,12 +482,12 @@
             <li><b>Phase II-B.</b> Adds N-of-M threshold signatures (default 3-of-5), revocation, and an optional <code>mirror_url</code> metadata pointer (the node never fetches it).</li>
             <li><b>Phase III.</b> P2P gossip of valid signed notices. Active at V13_HEIGHT.</li>
           </ul>
-        </div>
+        </div></div>
       </div>
 
-      <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-item">
         <div class="faq-q"><h3>How does Beacon P2P actually work?</h3><span class="toggle">+</span></div>
-        <div class="faq-a">
+        <div class="faq-a"><div class="faq-a-inner">
           <p>Beacon P2P (Phase III) is gossip between SOST nodes &mdash; <b>not</b> users on Telegram. Each node receives <code>BCNN</code> messages and runs an ordered pipeline:</p>
           <ul>
             <li>Reject if the notice exceeds 4 KB (size cap).</li>
@@ -445,26 +500,26 @@
             <li>Otherwise: cache the notice ID and relay it to all other version-acked peers.</li>
           </ul>
           <p><b>Beacon P2P does not move coins, does not execute commands, does not fetch HTTP, does not restart software, and does not validate or invalidate blocks.</b> Full design: <code>docs/V13_BEACON_PHASE_III.md</code>.</p>
-        </div>
+        </div></div>
       </div>
 
-      <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-item">
         <div class="faq-q"><h3>What is the difference between Beacon P2P and the OTC / P2P Board?</h3><span class="toggle">+</span></div>
-        <div class="faq-a">
+        <div class="faq-a"><div class="faq-a-inner">
           <p>They share the letters &quot;P2P&quot; but are different things.</p>
           <ul>
             <li><b>Beacon P2P</b> &mdash; node-to-node gossip of signed advisory notices. Lives inside the SOST node software. Advisory only, no money movement.</li>
             <li><b>Community OTC / P2P Board</b> &mdash; user-to-user discussion room inside <a href="sost-talk.html">SOST Talk</a>. Users post voluntary buy/sell talk among themselves. <b>SOST does not intermediate, custody, escrow, or guarantee any trade posted there.</b> Users trade at their own risk.</li>
           </ul>
-        </div>
+        </div></div>
       </div>
 
-      <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-item">
         <div class="faq-q"><h3>Does SOST run an exchange, broker, or escrow service?</h3><span class="toggle">+</span></div>
-        <div class="faq-a">
-          <p><b>No.</b> SOST does not operate an exchange, broker, trading desk, market maker, escrow service, custody program, or official liquidity program. The OTC / P2P Board inside <a href="sost-talk.html">SOST Talk</a> is a community discussion board only &mdash; SOST never holds buyer or seller funds.</p>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p><b>No.</b> SOST does not operate an exchange, broker, trading desk, market maker, escrow service, custody program, or official liquidity program. The OTC / P2P Board inside <a href="sost-talk.html">SOST Talk</a> is a community discussion board only &mdash; SOST never holds buyer or seller funds. The <a href="sost-dex.html">Atomic Swap DEX</a> is non-custodial software: trades settle as atomic swaps between the two parties, and it never holds a seed, a private key or user funds.</p>
           <p>Admins never DM first. Anyone claiming &quot;official escrow&quot;, &quot;guaranteed buyer/seller&quot;, &quot;risk-free profit&quot;, or asking you to verify your wallet to trade is a scammer. Report and block. SOST Sentinel (the chat moderation bot) auto-flags these patterns.</p>
-        </div>
+        </div></div>
       </div>
     </div>
 </section>
@@ -486,17 +541,17 @@ document.querySelectorAll('.faq-q').forEach(function(q) {
 });
 </script>
 
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -506,16 +561,16 @@ document.querySelectorAll('.faq-q').forEach(function(q) {
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

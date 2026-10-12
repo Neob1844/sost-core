@@ -89,8 +89,8 @@ These are implemented and tested but activate later. Monitor — no action neede
 ### 2C. Bond Lock & Feature Activation — IMPLEMENTED
 
 - [x] Bond Lock activates at block 5000
-- [x] P2SH multisig activates at block 2000 (current height ~1900 — imminent)
-- [x] PSBT offline signing functional
+- [ ] ~~P2SH multisig activates at block 2000~~ — CORRECTED 2026-10-12: NOT ACTIVE. Library code + unit tests only; never wired into consensus/addresses/CLI/RPC (MULTISIG_ACTIVATION_HEIGHT=2000 is a dead constant)
+- [ ] ~~PSBT offline signing functional~~ — CORRECTED 2026-10-12: library code only, no CLI/RPC; offline signing today = single-key sost1 transactions moved manually
 - [x] All feature activation heights verified in params.h
 
 ---
@@ -103,7 +103,7 @@ These improve the protocol but are not required on launch day.
 
 - [ ] External security audit (planned when funding available)
 - [ ] Community bug bounty program published
-- [ ] Gold Vault multisig 2-of-3 migration (planned hard fork)
+- [ ] Gold Vault multisig 2-of-3 migration (planned hard fork — requires native multisig to first be activated as a new consensus feature; NOT ACTIVE today)
 - [ ] RPC authentication for write methods on public endpoint
 - [ ] nginx rate limiting on /rpc endpoint
 

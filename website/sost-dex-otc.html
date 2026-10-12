@@ -278,7 +278,7 @@
   /* === END NAV CSS === */
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
-<!-- V15: PoPC contract/position trading is disabled. PoPC is a non-tradeable native SOST bond.
+<!-- Current release (V30000): PoPC contract/position trading is disabled. PoPC is a non-tradeable native SOST bond.
      This single global flag gates all legacy PoPC position-trading UI (see popc-dex-gate.js).
      Must stay false. The Atomic Swap / OTC surface is unaffected. -->
 <script>window.POPC_DEX_ENABLED = false;</script>
@@ -300,10 +300,11 @@
 <script src="js/dex-ai-validator.js?v=v392"></script>
 <script src="js/dex-ai-compare.js?v=v392"></script>
 <script src="js/dex-ai-lifecycle.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v482" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
-<script>window.__SOST_GATE_CFG__={"surface": "DEX", "label": "SOST OTC Atomic Swap", "actionSelectors": ["[onclick*=\"openSv\"]", ".cta", "button[type=submit]"]};</script>
-<script src="js/tokenization-gate.js?v=v30000"></script>
+<style>/* remove native number spinners (clean amount inputs) */
+input[type=number]{appearance:textfield;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}</style>
 </head>
 <body>
 
@@ -326,7 +327,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomix Swap DEX" aria-label="Atomix Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIX<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -388,7 +389,7 @@
       <div style="color:var(--text-secondary)">Non-custodial swaps, OTC coordination, signed offers, and encrypted deal channels.</div>
       <div style="color:#fbbf24;font-weight:700;margin:8px 0 4px">&#9670; PoPC Bond Staking <span style="font-weight:400;color:var(--text-secondary)">(separate product)</span></div>
       <div style="color:var(--text-secondary)">Create, monitor, and claim native SOST bonds &mdash; <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</div>
-      <div style="color:#ffce54;margin-top:8px;font-size:12px">&#9216; <b>PoPC bonds are not tradeable in V15.</b> PoPC contract trading is disabled (<code>POPC_DEX_ENABLED=false</code>).</div>
+      <div style="color:#ffce54;margin-top:8px;font-size:12px">&#9216; <b>PoPC bonds are not tradeable in the current release (V30000).</b> PoPC contract trading is disabled (<code>POPC_DEX_ENABLED=false</code>). The signed-offer SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled.</div>
     </div>
     <div class="hero-actions fade-in delay-2">
       <a href="javascript:void(0)" class="hero-btn hero-btn-orange" onclick="var el=document.getElementById('trade-composer');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){var c=document.querySelector('[data-action=otc]');if(c)c.click();},500)"><span>&#9998;</span> OTC REQUEST</a>
@@ -404,7 +405,7 @@
         <span style="color:var(--gold);font-weight:700;text-align:right;">3.</span><span style="color:var(--text-secondary)">Verify terms and transaction IDs &mdash; confirm amounts, addresses and on-chain txids before acting</span>
         <span style="color:var(--gold);font-weight:700;text-align:right;">4.</span><span style="color:var(--text-secondary)">Execute or refund through the non-custodial atomic-swap flow &mdash; on-chain HTLC / smart-contract escrow, SOST never custodies funds</span>
       </div>
-      <p style="margin-top:16px;font-size:11px;color:var(--text-dim);line-height:1.7;font-style:italic;border-top:1px solid var(--border-dim);padding-top:12px;">This is the Atomic Swap / OTC surface. SOST does not custody funds, intermediate, settle, or arbitrate trades. PoPC Bond Staking is a separate product and PoPC bonds are not tradeable in V15.</p>
+      <p style="margin-top:16px;font-size:11px;color:var(--text-dim);line-height:1.7;font-style:italic;border-top:1px solid var(--border-dim);padding-top:12px;">This is the Atomic Swap / OTC surface. SOST does not custody funds, intermediate, settle, or arbitrate trades. PoPC Bond Staking is a separate product and PoPC bonds are not tradeable in the current release (V30000). The signed-offer SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled.</p>
     </div>
     <div class="hero-badges fade-in delay-4" style="margin-top:20px;">
       <span class="hero-badge" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">LIMITED ALPHA</span>
@@ -777,7 +778,7 @@
     </div>
     <div id="liveStatus" style="font-size:10px;color:var(--text-muted);margin-top:8px;text-align:right;"></div>
 
-    <!-- LEGACY PoPC position chart (Sepolia "SOSTEscrow V2"). DISABLED in V15: PoPC is a
+    <!-- LEGACY PoPC position chart (Sepolia "SOSTEscrow V2"). DISABLED in the current release (V30000): PoPC is a
          non-tradeable native SOST bond, there is no live PoPC position/escrow data here.
          Gated behind POPC_DEX_ENABLED=false (see popc-dex-gate.js); kept commented for reference.
     <div style="margin-top:24px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:24px;position:relative;overflow:hidden">
@@ -837,7 +838,7 @@
       which validates inputs and generates the exact <code>sost-cli</code> / MetaMask actions &mdash; it never holds keys,
       never signs, never broadcasts for you. <b>You</b> sign and broadcast every action.
     </p>
-    <div style="font-size:11px;color:#ffce54;margin-bottom:16px">&#9216; PoPC bonds are <b>not tradeable</b> in V15 — this surface is swaps / OTC only. For bonds see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</div>
+    <div style="font-size:11px;color:#ffce54;margin-bottom:16px">&#9216; PoPC bonds are <b>not tradeable</b> in the current release (V30000) — this surface is swaps / OTC only. For bonds see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
       <a href="atomic-swap-console.html#readiness" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
         <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 1 · READINESS</div>
@@ -921,7 +922,7 @@
         <div class="field-help" id="help-actions" style="margin-bottom:12px">
           <b>Coordinate a non-custodial swap / OTC deal:</b><br><br>
           <b>OTC Request:</b> Propose your terms (asset, amount, price, expiry) as a client-side signed offer and share it through an encrypted deal channel. You sign and settle every action yourself via on-chain HTLC / smart-contract escrow — SOST never custodies funds.<br><br>
-          <span style="color:#ffce54">&#9216; PoPC position/contract trading (buy/sell full position, sell reward right) is disabled in V15 — PoPC is a non-tradeable native SOST bond. See <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</span>
+          <span style="color:#ffce54">&#9216; PoPC position/contract trading (buy/sell full position, sell reward right) is disabled in the current release (V30000) — PoPC is a non-tradeable native SOST bond. See <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</span>
         </div>
         <div class="option-grid" id="actionOptions">
           <!-- LEGACY PoPC position-trade actions. DISABLED in V15 (POPC_DEX_ENABLED=false).
@@ -962,12 +963,12 @@
             <option value="">-- Select a position --</option>
             <option value="__new__">+ Create New (type ID below)</option>
           </select>
-          <input type="text" class="form-control" id="composerPositionCustom" placeholder="e.g. POS-2026-0001-XAUT-NeoB" oninput="customPositionInput()" style="margin-top:4px;">
+          <input type="text" class="form-control" id="composerPositionCustom" placeholder="e.g. POS-2026-0001-XAUT-Neob" oninput="customPositionInput()" style="margin-top:4px;">
           <div class="field-help" id="help-posid">
             <b>What is a Position ID?</b><br>
             A unique identifier for a gold-referenced position in the SOST system. Each position represents a PoPC commitment — gold locked in escrow that generates SOST rewards.<br><br>
             <b>Where do I find it?</b> If you already have a position, select it from the dropdown. If you're creating a new offer, type the position ID that the seller gave you.<br><br>
-            <b>Example:</b> <code>POS-2026-0001-XAUT-NeoB</code><br>
+            <b>Example:</b> <code>POS-2026-0001-XAUT-Neob</code><br>
             Format: POS-[year]-[number]-[gold type]-[owner name]
           </div>
         </div>
@@ -1037,7 +1038,7 @@
             <input type="text" class="form-control" id="paramPosId" placeholder="Auto-filled or type manually" oninput="updatePreview()">
             <div class="field-help" id="help-posid-pro">
               <b>Pro mode only.</b> The position ID is auto-filled from Step 2. Only change this if you know the exact ID and need to override.<br><br>
-              <b>Example:</b> <code>POS-2026-0001-XAUT-NeoB</code>
+              <b>Example:</b> <code>POS-2026-0001-XAUT-Neob</code>
             </div>
           </div>
         </div>
@@ -1550,7 +1551,7 @@ function populateComposerDropdown(data) {
 /* ── Render My Positions ── */
 function renderMyPositions(data) {
   var tbody = document.getElementById('myPosBody');
-  if (!tbody) return; // legacy PoPC position tab disabled in V15 (POPC_DEX_ENABLED=false)
+  if (!tbody) return; // legacy PoPC position tab disabled in the current release (V30000) (POPC_DEX_ENABLED=false)
   if (!data.positions || data.positions.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:40px 20px;">No positions found.</td></tr>';
     return;
@@ -1581,7 +1582,7 @@ function renderMyPositions(data) {
 /* ── Render Market ── */
 function renderMarket(data) {
   var tbody = document.getElementById('marketBody');
-  if (!tbody) return; // legacy PoPC market tab disabled in V15 (POPC_DEX_ENABLED=false)
+  if (!tbody) return; // legacy PoPC market tab disabled in the current release (V30000) (POPC_DEX_ENABLED=false)
   if (!data.positions || data.positions.length === 0) {
     tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:40px 20px;">No positions available on the market.</td></tr>';
     return;
@@ -1776,7 +1777,7 @@ setInterval(fetchAll, _refreshMs);
   checkVersion();
 })();
 </script>
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
@@ -1891,11 +1892,11 @@ setInterval(fetchAll, _refreshMs);
   }).catch(function(){});
 })();
 </script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -1905,16 +1906,16 @@ setInterval(fetchAll, _refreshMs);
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

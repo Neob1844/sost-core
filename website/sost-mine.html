@@ -21,7 +21,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mine SOST in 10 Minutes — Solo CPU Mining Guide</title>
 <meta name="description" content="Step-by-step guide to start mining SOST on a single CPU machine in about 10 minutes. Native PoW, solo-miner-first, pre-market testing.">
-<meta name="keywords" content="mine SOST, SOST mining, CPU mining, solo mining, ConvergenceX, install SOST, build SOST">
+<meta name="keywords" content="mine SOST, SOST mining, CPU mining, solo mining, ConvergenceX mining, Bitcoin ASIC SOST, install SOST, build SOST">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
@@ -124,8 +124,8 @@
   @keyframes dexBtnGlow { 0%,100% { box-shadow: 0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2); } 50% { box-shadow: 0 0 22px rgba(245,158,11,0.7),0 0 44px rgba(74,222,128,0.35); } }
 
 </style>
-<script src="js/nav-toggle.js?v=v392" defer></script>
-<script src="sost-search.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<script src="sost-search.js?v=v553" defer></script>
 <style>
 /* === Nav parity with sost-genesis: full-width logo bar + section links visible on
    desktop; collapse to hamburger only on mobile (<=768px). Scoped to <nav> so the
@@ -137,6 +137,7 @@ nav .nav-links { width: 100%; }
   nav .nav-hamburger { display: none !important; }
 }
 </style>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -156,7 +157,7 @@ nav .nav-links { width: 100%; }
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -203,7 +204,7 @@ nav .nav-links { width: 100%; }
 
 <header class="hero">
   <div class="container">
-    <div class="hero-label">MINE SOST &middot; v0.8 &middot; SOLO-MINER-FIRST</div>
+    <div class="hero-label">MINE SOST &middot; V30000 &middot; SOLO-MINER-FIRST</div>
     <h1>Mine <span>SOST</span> in 10 minutes.</h1>
     <p class="hero-sub">A native PoW chain. CPU-friendly, memory-hard. No pool required, no pool offered &mdash; SOST is experimenting with a solo-miner-first model. Pre-market testing only.</p>
     <div class="protocol-badge">
@@ -215,7 +216,7 @@ nav .nav-links { width: 100%; }
 </header>
 
 <div style="max-width:960px;margin:14px auto;padding:12px 16px;border:1px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.08);font-size:14px;line-height:1.6">
-<b style="color:#ffd166">Already running a node or a miner?</b> <b>SOST v16.3.0</b> is out &mdash; it changes <b>only the node</b> (full sync from genesis now works); your <b>miner &amp; CLI are byte-identical</b> to v16.2.3. Swap the node before #30,000 &mdash;
+<b style="color:#ffd166">Already running a node or a miner?</b> <b>SOST V30000</b> is out &mdash; <b>all three binaries changed</b> (node, miner and CLI; none byte-identical to v16.2.x). Re-download, verify and swap all three before #30,000 &mdash;
 <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">read the upgrade guide</a>.
 </div>
 <div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
@@ -229,7 +230,7 @@ nav .nav-links { width: 100%; }
      ══════════════════════════════════════════════════════════════════════ -->
 <div style="max-width:1000px;margin:20px auto;padding:18px 20px;border:1px solid rgba(57,255,20,.45);border-radius:10px;background:linear-gradient(150deg,rgba(57,255,20,.06),rgba(34,211,238,.04))">
   <div style="font-size:11px;letter-spacing:2px;color:#7b8794;margin-bottom:7px">FULL REFERENCE</div>
-  <div style="font-size:19px;font-weight:800;color:#39ff14;margin-bottom:8px">SOST V16 &mdash; Miner &amp; Node Guide</div>
+  <div style="font-size:19px;font-weight:800;color:#39ff14;margin-bottom:8px">SOST V30000 &mdash; Miner &amp; Node Guide</div>
   <div style="font-size:14px;line-height:1.7;color:#b9c6d4;margin-bottom:14px">
     This page gets you mining in ten minutes. The guide answers everything that comes after:
     where your RPC password comes from (<b>there is no universal one</b> &mdash; you create it),
@@ -245,11 +246,10 @@ nav .nav-links { width: 100%; }
     <a href="sost-upgrade.html#s8" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:7px 11px;border-radius:6px;text-decoration:none">Backups</a>
     <a href="sost-upgrade.html#s9" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:7px 11px;border-radius:6px;text-decoration:none">Troubleshooting</a>
   </div>
-  <div style="margin-top:13px;padding:10px 13px;border-left:3px solid #fb010d;background:rgba(251,1,13,.07);font-size:12.5px;line-height:1.65;color:#d7c2c2">
-    <b style="color:#ff6b6b">Before you build a node from scratch:</b> a full sync from the genesis block
-    currently stalls on 19 historical blocks (heights 4,160&ndash;5,410) that the published binaries cannot
-    re-validate. It is diagnosed and a bounded fix is designed, but <b>not deployed</b>. Start from a recent
-    <code>chain.json</code> instead. <a href="sost-upgrade.html#s11" style="color:#ff9f9f">Full status &rarr;</a>
+  <div style="margin-top:13px;padding:10px 13px;border-left:3px solid #2ecc71;background:rgba(46,204,113,.08);font-size:12.5px;line-height:1.65;color:#c2d7c8">
+    <b style="color:#5be58a">Building a node from scratch:</b> this is fixed in <b>V30000</b> &mdash; a V30000 node
+    completes a full sync from the genesis block, so a pre-seeded <code>chain.json</code> is no longer required.
+    <a href="sost-upgrade.html#s11" style="color:#9fe8b2">Full status &rarr;</a>
   </div>
 </div>
 
@@ -300,10 +300,13 @@ sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
 
 git clone https://github.com/Neob1844/sost-core.git
 cd sost-core
+git fetch --tags
+git checkout v30000
 mkdir -p build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build . -j$(nproc)</div>
+<div style="margin:12px 0;padding:12px 14px;border:1px solid #ffd166;border-left:3px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.07);font-size:13px;line-height:1.6;color:#d8c9a0"><b style="color:#ffd166">Important for block #30,000.</b> The V30000 release source is the <b>v30000 tag</b> (checked out above). Building the current <code>main</code> branch does <b>not</b> currently reproduce the V30000 release, so a node built from <code>main</code> would apply the old rules at #30,000 and fork off the network. New operators must build from the <b>v30000</b> tag &mdash; or use the published V30000 binaries.<div style="margin-top:6px">Prefer prebuilt V30000 binaries? See the <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">upgrade guide</a> &mdash; official release tag <b>v30000</b> with node / miner / cli SHA-256 (<code>SHA256SUMS</code>).</div></div>
   </div>
 </section>
 
@@ -402,6 +405,29 @@ Miner address: sost1...   (derived from wallet key)</div>
   </div>
 </section>
 
+<section id="asic-hashrate">
+  <div class="container">
+    <div class="section-id">ASIC RESISTANCE</div>
+    <h2 class="section-title">Why Bitcoin ASIC hashrate <span class="accent">does not transfer</span> to SOST</h2>
+    <p>A 4.8 TH/s SHA-256 Bitcoin miner does not become a 4.8 TH/s SOST miner. The two numbers describe fundamentally different workloads. A Bitcoin ASIC runs one fixed SHA-256d pipeline over 80-byte block headers. A SOST miner must run the complete ConvergenceX computation that consensus requires: about 8 GB of working memory, 100,000 sequential rounds whose results decide the next memory reads, a 32&times;32 integer system and a stability proof.</p>
+    <style>@media(max-width:600px){.asic-neq{flex-direction:column}.asic-neq>div{width:100%;max-width:none!important;flex:0 0 auto!important}}</style>
+    <div class="asic-neq" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;margin:18px 0">
+      <div style="flex:1 1 220px;max-width:300px;border:1px solid rgba(247,147,26,.5);border-radius:10px;padding:14px 16px;text-align:center;min-width:0">
+        <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.5px;color:#f7931a">BITCOIN</div>
+        <div style="font:800 22px/1.3 ui-monospace,monospace;margin-top:6px">4.8 TH/s</div>
+        <div style="font-size:12px;opacity:.8">SHA-256d</div>
+      </div>
+      <div style="font:800 34px/1 ui-monospace,monospace;color:#fb010d" aria-label="is not equal to">&ne;</div>
+      <div style="flex:1 1 220px;max-width:300px;border:1px solid rgba(57,255,20,.5);border-radius:10px;padding:14px 16px;text-align:center;min-width:0">
+        <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.5px;color:#39ff14">SOST</div>
+        <div style="font:800 22px/1.3 ui-monospace,monospace;margin-top:6px">4.8 TH/s</div>
+        <div style="font-size:12px;opacity:.8">ConvergenceX &mdash; not a meaningful unit</div>
+      </div>
+    </div>
+    <p>ConvergenceX performance should be compared in <b>valid attempts per second</b>, under the active <b>bitsQ</b> target and <b>Equalizer</b> profile &mdash; not in Bitcoin-equivalent TH/s. ConvergenceX is <b>ASIC-resistant by design</b>; that does not mean specialized hardware is impossible, only that a useful accelerator would have to implement the real memory-hard, sequential workload instead of reusing Bitcoin hashrate. Technical detail: <a href="sost-technology.html#asic-resistance">Technology &rarr; Strong ASIC resistance by design</a>.</p>
+  </div>
+</section>
+
 <section>
   <div class="container">
     <div class="section-id">EXPECTATIONS</div>
@@ -444,9 +470,9 @@ Miner address: sost1...   (derived from wallet key)</div>
     <details>
       <summary>Segfault or instability with many threads</summary>
       <div>
-        <p>Drop to 16, then 8 threads. ConvergenceX is bandwidth-bound; very wide thread counts (64+) on machines with lots of cores can stress the monitor path. The block-monitor race in v0.7 was fixed in v0.8 (commit <code>6680319</code>) &mdash; make sure you are on v0.8 or later:</p>
+        <p>Drop to 16, then 8 threads. ConvergenceX is bandwidth-bound; very wide thread counts (64+) on machines with lots of cores can stress the monitor path. Always run the current <b>V30000</b> miner (an early block-monitor race was fixed long ago):</p>
         <div class="code">./sost-miner --help | head -1
-<span class="c"># &rarr; "SOST Miner v0.8 (multi-threaded)"</span></div>
+<span class="c"># &rarr; prints the current miner version (multi-threaded)</span></div>
       </div>
     </details>
 
@@ -643,10 +669,10 @@ cmake --build . -j$(nproc)
 </footer>
 
 <script src="js/sost-music.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -656,16 +682,16 @@ cmake --build . -j$(nproc)
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

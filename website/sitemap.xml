@@ -25,6 +25,12 @@
         <priority>0.8</priority>
     </url>
     <url>
+        <loc>https://sostcore.com/sost-wsost-gold-vault.html</loc>
+        <lastmod>2026-10-12</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
         <loc>https://sostcore.com/sost-security.html</loc>
         <lastmod>2026-03-29</lastmod>
         <changefreq>monthly</changefreq>

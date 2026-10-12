@@ -4,6 +4,8 @@
 **Author:** NeoB (CTO)
 **Status:** Analysis document
 
+> **HISTORICAL SNAPSHOT (cASERT):** this document reflects the chain as of its date. Current mainnet rule: target 600 s; bitsQ Q16.16 recomputed every block (avg288 since #5,175; dead band ±15 s and 0.5/1.0/2.0/3.0% steps since #5,270); Equalizer 43 profiles E7–H35 (table since #5,750, ceiling H35 since #12,000) selected by the direct lag map since #5,323; anti-stall at 60 min; V12 triangular cascade since #7,350. The 40-profile E4–H35 range and the PID/EWMA selector are HISTORICAL.
+
 ---
 
 ## 1. How SOST Consensus Works Today
@@ -55,7 +57,7 @@ All changes so far use **height-gated flag days** — new rules activate at a sp
 |------|--------|------|--------|------|
 | Genesis | 0 | — | All constitutional rules | 2026-03-15 |
 | **cASERT V2** | 1450 | Hard fork (parameter) | Halflife 48h→24h, delta cap 6.25%→12.5% | ~2026-03-23 |
-| **Multisig P2SH** | 2000 | Hard fork (feature) | OP_CHECKMULTISIG, sost3 addresses | Pending |
+| ~~**Multisig P2SH**~~ | ~~2000~~ | Hard fork (feature) | OP_CHECKMULTISIG, sost3 addresses | NEVER ACTIVATED (corrected 2026-10-12: library code only, not wired into consensus; NOT active on mainnet) |
 | **Bond/Escrow/Capsule** | 5000 | Hard fork (feature) | BOND_LOCK, ESCROW_LOCK, Capsule Protocol v1 | Pending |
 
 ### How It Works in Code
@@ -212,7 +214,7 @@ These cost nothing to implement and prevent future hard fork complexity:
 | Phase | When | Action |
 |-------|------|--------|
 | **Now** | Block ~1900 | Document reserved types. Publish SIP format. Flag day works. |
-| **Block 2000** | ~April 2026 | Multisig activates. Announce on BTCTalk 2 weeks before. |
+| ~~**Block 2000**~~ | ~April 2026 | ~~Multisig activates.~~ HISTORICAL PLAN — did not happen; native multisig is NOT active on mainnet (corrected 2026-10-12). |
 | **Block 5000** | ~April 2026 | Bond/Escrow/Capsule activates. Major announcement. |
 | **First external miner** | 2026 | Implement P2P version exchange. Plan version-bit signaling. |
 | **10+ miners** | 2027? | Implement BIP9-style signaling (SIP-003). 75% threshold. |

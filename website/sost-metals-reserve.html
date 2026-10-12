@@ -186,7 +186,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -205,7 +206,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -279,7 +280,7 @@
     <div style="background:rgba(251,1,13,0.06);border:1px solid #fb010d;border-radius:8px;padding:20px 24px;">
       <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin-bottom:8px;">CURRENT STATE</div>
       <div style="font-size:15px;line-height:1.7;color:var(--text-primary);font-weight:500;">
-        The Gold Vault accumulates SOST today. Governed spending is not active. No SOST from the
+        The Gold Vault accumulated SOST until #25,000; it is no longer funded since V15. Governed spending is not active. No SOST from the
         vault is currently being sold or moved, and no tokenized-gold reserve has been created yet.
         The execution pipeline described below is the planned design, not something running today.
       </div>
@@ -356,7 +357,7 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Rule</th><th>Provision</th></tr>
-          <tr><td class="gold">G1</td><td class="value">Every valid block MUST pay the Gold Funding Vault exactly q = reward // 4. Otherwise invalid.</td></tr>
+          <tr><td class="gold">G1</td><td class="value"><b style="color:#f59e0b">HISTORICAL (blocks 0&ndash;24,999):</b> every valid block had to pay the Gold Funding Vault exactly q = reward // 4. Since V15 (#25,000) it receives 0; its balance is frozen for the DTD Jackpot.</td></tr>
           <tr><td class="gold">G2</td><td class="value">Two-vault separation: Gold Funding Vault is operational; Heritage Reserve is sealed storage.</td></tr>
           <tr><td class="gold">G&#8209;L</td><td class="value">Listing reserve: the Foundation reserves the right to allocate up to 50% of the Gold Funding Vault&rsquo;s SOST exclusively for future CEX-listing liquidity.</td></tr>
           <tr><td class="gold">G3</td><td class="value">Heritage Reserve deployed on Ethereum mainnet. Heritage sealed by default.</td></tr>
@@ -476,8 +477,8 @@ Type:  limit orders with explicit slippage tolerance
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Token</th><th>Issuer</th><th>Backing</th></tr>
-          <tr><td class="gold">XAUt</td><td class="value">Tether Gold</td><td class="value">Physical gold, London Good Delivery bars</td></tr>
-          <tr><td class="gold">PAXG</td><td class="value">Paxos Gold</td><td class="value">Physical gold, London Good Delivery bars</td></tr>
+          <tr><td class="gold"><img src="assets/coins/xaut.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">XAUt</td><td class="value">Tether Gold</td><td class="value">Physical gold, London Good Delivery bars</td></tr>
+          <tr><td class="gold"><img src="assets/coins/paxg.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">PAXG</td><td class="value">Paxos Gold</td><td class="value">Physical gold, London Good Delivery bars</td></tr>
         </table>
         <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.8;">Staging assets: USDC and USDT may be used strictly as temporary staging during execution (&le;72 hours). They are not reserve assets. Expanding to other metals (silver, platinum, palladium, rhodium, iridium) is a roadmap item, not a promise.</p>
       </div>
@@ -614,17 +615,17 @@ Type:  limit orders with explicit slippage tolerance
   setInterval(fetchPrices,60000);
 })();
 </script>
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -634,16 +635,16 @@ Type:  limit orders with explicit slippage tolerance
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

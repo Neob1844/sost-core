@@ -40,8 +40,8 @@ builder" (redeem-script + claim/refund/dispute spend paths) and expose the four 
 | Capability | Status | Where |
 |---|---|---|
 | HD wallet, `sost1` derivation, build/sign/broadcast tx, UTXO select, change | EXISTS | `website/sost-wallet.html`, `src/hd_wallet.cpp`, `src/tx_signer.cpp` |
-| Multisig P2SH (`sost3`, 2-of-3), PSBT offline signing | EXISTS | `website/sost-wallet.html`, `src/psbt.cpp`, `src/script.cpp` |
-| Script opcodes for HTLC: `OP_SHA256`, `OP_HASH160`, `OP_CHECKMULTISIG`, P2SH eval, CLTV via nSequence | EXISTS (consensus-valid) | `src/script.cpp`, `src/atomic_swap_btc.cpp` (BIP-199 redeem builder) |
+| Multisig P2SH (`sost3`, 2-of-3), PSBT offline signing | LIBRARY CODE ONLY — NOT ACTIVE on mainnet (not in consensus, addresses, CLI or RPC) | `website/sost-wallet.html`, `src/psbt.cpp`, `src/script.cpp` |
+| Script opcodes for HTLC: `OP_SHA256`, `OP_HASH160`, `OP_CHECKMULTISIG`, P2SH eval, CLTV via nSequence | LIBRARY CODE — NOT consensus-valid (script interpreter is not wired into tx validation; P2SH output type 0x30 is rejected and is reused by V16 OUT_NODE_PROTOCOL) | `src/script.cpp`, `src/atomic_swap_btc.cpp` (BIP-199 redeem builder) |
 | Sign-message for HOLD | EXISTS but **DISABLED** | `website/sost-wallet.html:6425` (`GEA_SIGN_ENABLED=false`) |
 | Access API (HOLD/PAY backend, flags OFF) | DEPLOYED OFF | `apps/access-api` (a separate project infra), console panel on VPS `/opt/ree-locator` |
 | EVM Atomic Swap HTLC (ETH/BNB/USDT/USDC/PAXG/XAUT) | LIVE V14 | `contracts/atomic-swap/src/AtomicSwapHTLC.sol` |
@@ -109,12 +109,14 @@ for the **mempool only** and `gettxout` for the UTXO set; there is no chain-hist
 
 ### 4.3 ESCROW — lock SOST as a guarantee (Engine 2, native P2SH)
 
-Native SOST escrow as a P2SH redeem script. **No new consensus** — reuses `OP_CHECKMULTISIG` /
-hashlock / CLTV already valid in `src/script.cpp`. Two canonical templates:
+Native SOST escrow as a P2SH redeem script. **CORRECTED 2026-10-12: this DOES require new consensus.**
+`OP_CHECKMULTISIG` / hashlock / CLTV exist only as library code in `src/script.cpp`; native multisig
+is NOT active or usable on SOST mainnet. A future native multisig would be a new, explicitly
+activated consensus feature (new unused output type, not 0x30). Two canonical templates (design only):
 
 - **2-of-3 with arbiter** (marketplace / data-room / B2B): `2 of {payer, beneficiary, arbiter}`,
   plus a CLTV refund-to-payer branch after `expiry`. Release = payer+beneficiary (happy path) or
-  arbiter+one party (dispute). This is the **wallet's existing sost3 multisig + a timelock branch**.
+  arbiter+one party (dispute). (Originally described as the "wallet's existing sost3 multisig + a timelock branch" — sost3 multisig is NOT live.)
 - **Hashlock + timelock HTLC** (when tied to an event/preimage, incl. the SWAP leg): beneficiary
   spends with preimage before `expiry`; payer refunds after.
 
@@ -125,8 +127,7 @@ expiry_height, release_condition, refund_condition, optional arbiter,
 status ∈ {draft, locked, released, refunded, expired, disputed}
 ```
 Wallet UX: **Lock**, **Release**, **Refund**, **Dispute** — built on PSBT so the parties co-sign
-offline. Claiming the hashlock branch is the one genuinely new wallet spend-path (the multisig
-release path already works).
+offline. (Correction: neither the multisig release path nor PSBT co-signing is usable on mainnet today.)
 
 Uses: marketplace of mines, opportunity reservation, data-room guarantee, B2B
 delivery-or-refund, **PoPC operator bond**.
@@ -136,8 +137,9 @@ delivery-or-refund, **PoPC operator bond**.
 Atomic Swap is the **liquidity bridge**, surfaced contextually ("Need SOST? Swap"), not the
 checkout. Pairs: SOST↔ETH, SOST↔BNB, then audited ERC-20 (USDC first; PAXG/XAUT last). BTC = V15.
 
-Reality check: the **EVM** HTLC is live (`AtomicSwapHTLC.sol`); the **SOST-native** HTLC leg is a
-**V15 stub** (`atomic_swap_btc_signing.cpp`). Therefore in V14, SWAP either (a) waits for V15
+Reality check (as originally written): the **EVM** HTLC is live (`AtomicSwapHTLC.sol`); the **SOST-native** HTLC leg is a
+**V15 stub** (`atomic_swap_btc_signing.cpp`). **Corrected 2026-10-12:** the EVM HTLC (v1/v2) is CODE COMPLETE but NOT
+DEPLOYED on any network; the SOST-native HTLC is consensus-active from block 16,000 (relay/policy 17,000), 0 mainnet swaps. Therefore in V14, SWAP either (a) waits for V15
 native HTLC, or (b) runs **assisted-OTC**: EVM side trustless via the contract, SOST side
 coordinated/manual. Recommended: ship SWAP as a **link/embed to the atomic-swap console** first,
 then in-wallet once V15 lands. PAXG/XAUT only after SafeERC20 + balance-delta + token-specific tests.
@@ -213,8 +215,8 @@ Model-A/Model-B split is superseded; the text below describes the unified design
 |---|---|---|
 | HOLD (sign + balance) | ✅ | — |
 | PAY (plain send + verify) | ✅ (needs PAY-verification decision §4.2) | — |
-| ESCROW native P2SH (multisig + CLTV refund) | ✅ (script already consensus-valid) | hashlock claim spend-path = new **wallet** code (not consensus) |
-| SWAP EVM leg (ETH/BNB/ERC-20) | ✅ contract live | — |
+| ESCROW native P2SH (multisig + CLTV refund) | ❌ NOT ACTIVE (script is library code only, not consensus-valid) | requires a new explicitly activated consensus feature (new output type, not 0x30) |
+| SWAP EVM leg (ETH/BNB/ERC-20) | ❌ CODE COMPLETE, NOT DEPLOYED on any network (corrected 2026-10-12) | — |
 | SWAP SOST-native HTLC leg | ❌ stub | ✅ V15 |
 | SWAP BTC | ❌ | ✅ V15 |
 | PoPC auto-slash / Gold Vault gates | tracking only | ✅ V15 (`DTD_POPC_*`) |

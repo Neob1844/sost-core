@@ -8,7 +8,7 @@
 
 | Fact | Evidence |
 |---|---|
-| EVM HTLC consensus gate is LIVE (finite, not sentinel) | `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = V14_5_HEIGHT` → mainnet `16000` (`include/sost/atomic_swap.h:143`, `include/sost/params.h:1052`). `IsAtomicSwapHtlcEnabled()` returns `!= INT64_MAX` → **true** (`src/atomic_swap_helpers.cpp:16`). |
+| SOST-side HTLC consensus gate is LIVE (finite, not sentinel) — corrected 2026-10-12: this is the SOST-native HTLC gate, NOT an EVM deployment; the EVM HTLC contracts (v1/v2) are CODE COMPLETE but NOT DEPLOYED on any network; 0 mainnet swaps to date | `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = V14_5_HEIGHT` → mainnet `16000` (`include/sost/atomic_swap.h:143`, `include/sost/params.h:1052`). `IsAtomicSwapHtlcEnabled()` returns `!= INT64_MAX` → **true** (`src/atomic_swap_helpers.cpp:16`). |
 | Relay/mempool gate is HIGHER (flag-day) | `ATOMIC_SWAP_RELAY_ACTIVATION_HEIGHT = V14_7_HEIGHT` → mainnet `17000` (`include/sost/atomic_swap.h:181`). Between 16000–17000 HTLC txs are consensus-valid but NON-relayable. |
 | BTC funding/claim/refund signing is compiled OFF | `IsBtcHtlcSigningEnabled()` returns **false unconditionally** — even with `SOST_BTC_HTLC_SIGNING=ON` the runtime toggle is absent (`src/atomic_swap_btc_signing.cpp:46-61`). All four legacy stubs return the disabled error unless `SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY` is defined. |
 | EVM Foundry suite | 57/57 pass (asserted by task; test source read: `contracts/atomic-swap/test/AtomicSwapHTLC.t.sol`, `OtcRehearsal.t.sol`). |
@@ -16,7 +16,7 @@
 
 ## Two material findings surfaced by this review
 
-1. **EVM asset-support over-claim (policy layer vs deployed contract).** `src/atomic_swap_policy.cpp:290-298,345-356` asserts the contract "now uses a SafeERC20 path (no-bool tolerant) + balance-delta accounting" and reports USDT/PAXG/XAUT as `Testing` (offerable). **The deployed contract does neither.** `AtomicSwapHTLC.sol:54` is a *minimal* `IERC20` and `lockERC20`/`claim` use `bool ok = ...transfer...; require(ok)` (`AtomicSwapHTLC.sol:194-195,229,257`). The tests prove the real behaviour: no-bool USDT **reverts at lock** (`AtomicSwapHTLC.t.sol:545-556`) and fee-on-transfer PAXG **locks-then-fails-claim** (`AtomicSwapHTLC.t.sol:567-582`). The contract fails *closed* (no theft), but the C++ policy comments/status are factually wrong and could steer a wallet into offering tokens that get stuck-until-refund. → `NEEDS_EXTERNAL_AUDIT` + fix the comment/status.
+1. **EVM asset-support over-claim (policy layer vs deployed contract).** `src/atomic_swap_policy.cpp:290-298,345-356` asserts the contract "now uses a SafeERC20 path (no-bool tolerant) + balance-delta accounting" and reports USDT/PAXG/XAUT as `Testing` (offerable). **The contract (v1; corrected 2026-10-12: NOT deployed on any network) does neither.** `AtomicSwapHTLC.sol:54` is a *minimal* `IERC20` and `lockERC20`/`claim` use `bool ok = ...transfer...; require(ok)` (`AtomicSwapHTLC.sol:194-195,229,257`). The tests prove the real behaviour: no-bool USDT **reverts at lock** (`AtomicSwapHTLC.t.sol:545-556`) and fee-on-transfer PAXG **locks-then-fails-claim** (`AtomicSwapHTLC.t.sol:567-582`). The contract fails *closed* (no theft), but the C++ policy comments/status are factually wrong and could steer a wallet into offering tokens that get stuck-until-refund. → `NEEDS_EXTERNAL_AUDIT` + fix the comment/status.
 
 2. **Dashboard advertises a stale activation height.** `website/atomic-swap-console.html` gates on block **15,000 / 15,010** (`:183,:237,:505-509`) while the live consensus gate is **16,000** and relay is **17,000**. A founder following the dashboard at height 15,010 would build a `createhtlclock` whose `OUT_HTLC_LOCK` is rejected (`atomic_swap_htlc_active_at(15010)==false`), and even at 16,000–16,999 the LOCK is non-relayable. No fund loss (tx simply fails) but the UI is misleading. → `ACCEPTED` (fails safe) with a UI-correction recommendation.
 
@@ -156,7 +156,7 @@ No invariant evaluates to a hard FAIL that permits theft. Invariant I is qualifi
 **What must change OFF→ON (do NOT do here):**
 1. Build with `-DSOST_BTC_HTLC_SIGNING=ON` (defines the macro + vendors/links libwally — `CMakeLists.txt:475-482`).
 2. Wire the currently-absent runtime acknowledgement so `IsBtcHtlcSigningEnabled()` can return true (`src/atomic_swap_btc_signing.cpp:51-57`).
-3. Separately, flip the **SOST consensus** BTC path (still governed by `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT`); the header notes BTC funding stays deferred to V15 even though EVM went live at V14.5 (`include/sost/atomic_swap.h:138`).
+3. Separately, flip the **SOST consensus** BTC path (still governed by `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT`); the header notes BTC funding stays deferred to V15 even though the header says EVM "went live" at V14.5 (`include/sost/atomic_swap.h:138`) — corrected 2026-10-12: what went live at V14.5 (16000) is the SOST-side HTLC consensus gate; no EVM HTLC contract has been deployed.
 4. External cryptographic review of the sighash/Bech32/witness code BEFORE the flip (`include/sost/atomic_swap_btc_signing.h:24-42`).
 
 **Rollback mechanism:** rebuild with the flag OFF (macro undefined → stubs fail closed) and/or leave the runtime toggle absent; no fork, no consensus change — the BTC path never touched consensus.

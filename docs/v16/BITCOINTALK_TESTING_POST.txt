@@ -161,7 +161,8 @@ Do not route funds through it today. Test it, try to break it, report what you f
 #5,000    V6   slew ±1, scale=2, Ahead Guard removed
 #5,050    V6 calibration: lag cap H ≤ lag, live lag, 60 min anti-stall
 #5,175    V6++ avg288 bitsQ (replaces the anchor exponential)
-#5,260    dynamic cap + median288 reality check
+#5,260    dynamic cap + median288 reality check (±30 s, historical)
+#5,270    dynamic cap ±15 s dead band, 0.5/1/2/3% steps; median removed (current)
 #5,323    direct lag mapping: profile = clamp(lag, 0, ceiling)
 #5,480    H11 ceiling
 #5,560    profile floor enforcement
@@ -169,7 +170,7 @@ Do not route funds through it today. Test it, try to break it, report what you f
 #5,750    H13 ceiling, E7 relief @605 s, E7–E5 added, margins recalibrated
 #7,000    V11 Phase 1  state-dependent dataset access + linear cascade
 #7,100    V11 Phase 2  SbPoW + DTD lottery (bootstrap 2-of-3)
-#7,350    V12          H20 ceiling, 4-tier Slingshot, capsules
+#7,350    V12          H20 ceiling, 5-tier Slingshot, triangular cascade cap 28, capsules
 #12,000   V13          cASERT E7–H35, DTD cooldown 6, drift cap 30 s, Beacon
 #12,100   DTD cadence  2-of-3 → 1-of-3
 #15,000   V14          hardening

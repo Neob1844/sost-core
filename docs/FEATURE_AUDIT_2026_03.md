@@ -31,6 +31,8 @@
 | 22 | Merkle tree | merkle.cpp | test_merkle_block | — | Y | — | Y | Y |
 | 23 | Build hardening (6 flags) | CMakeLists.txt | — | Y | — | Y | Y | Y |
 
+> **Correction (2026-10-12):** rows 4-5 record documentation coverage only. SOST-PSBT and native multisig exist as library code + unit tests; they are NOT wired into consensus, address handling, the CLI or the RPC, and are NOT usable on SOST mainnet.
+
 ## Gaps Identified and Fixed (This Audit)
 
 1. **README:** Added HD Wallet, PSBT, Multisig, Address Book, Treasury Policy, RBF, CPFP, Build Hardening, Capsule Protocol, cASERT V2 to Security Status table

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sostcore.com/schemas/geaspirit-sost-handoff/v1.json",
+  "title": "GeaSpirit -> SOST Asset Registry hand-off (v1)",
+  "description": "Decoupled, versioned data contract. GeaSpirit passes asset/evidence/intelligence references to SOST Asset Registry; SOST turns each into a claim with provenance.source_type=GEASPIRIT_ANALYSIS. No code/runtime dependency between projects.",
+  "type": "object",
+  "required": ["handoff_version", "source", "asset"],
+  "properties": {
+    "handoff_version": { "const": 1 },
+    "source": {
+      "type": "object",
+      "required": ["platform", "analysis_id"],
+      "properties": {
+        "platform": { "const": "geaspirit" },
+        "analysis_id": { "type": "string" },
+        "generated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "required": ["category"],
+      "properties": {
+        "external_ref": { "type": "string" },
+        "category": { "type": "string", "examples": ["mine_waste", "mining_concession", "tailings", "mineral_deposit"] },
+        "commodity": { "type": "array", "items": { "type": "string" } },
+        "location_general": { "type": "string", "description": "general only; precise coords stay private" }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "reference"],
+        "properties": {
+          "type": { "type": "string", "examples": ["public_dataset", "geaspirit_model", "technical_document"] },
+          "reference": { "type": "string" },
+          "hash": { "type": "string" },
+          "confidence": { "type": "integer", "minimum": 0, "maximum": 100 }
+        }
+      }
+    },
+    "intelligence": {
+      "type": "object",
+      "properties": {
+        "resource_estimate": { "type": "string" },
+        "valuation_range": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  },
+  "x-guardrails": [
+    "SOST maps every field to a claim with provenance.source_type=GEASPIRIT_ANALYSIS and verification.status=DECLARED unless independently verified.",
+    "GeaSpirit never custodies SOST/funds and never issues tokens.",
+    "This is a data contract only; not activated in production without explicit authorization."
+  ]
+}

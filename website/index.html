@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/sost-gold-reference.js?v=v400"></script>
+<script src="js/sost-gold-reference.js?v=v532c"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -208,6 +208,7 @@
   body.nav-collapsed nav a[onclick="openSv()"],
   body.nav-collapsed nav a[href="#dtd"],
   body.nav-collapsed nav .nav-links,
+  body.nav-collapsed nav #vcx-sost,
   body.nav-collapsed nav .nav-hamburger {
     display: none !important;
   }
@@ -683,7 +684,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}@keyframes dtdBtnGlow{0%,100%{box-shadow:0 0 14px rgba(57,255,20,.5),0 0 26px rgba(74,222,128,.28)}50%{box-shadow:0 0 30px rgba(57,255,20,1),0 0 60px rgba(74,222,128,.7),0 0 90px rgba(124,255,160,.45)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -699,14 +701,15 @@
 
 <!-- SPLASH — Red Matrix Rain -->
 <div id="sost-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;transition:opacity .5s ease;zoom:1.0">
-  <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+  <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1"></canvas>
+  <div id="splash-mask" style="position:absolute;inset:0;z-index:5;pointer-events:none;background:radial-gradient(ellipse 48% 66% at 50% 48%, rgba(0,0,0,.92) 24%, rgba(0,0,0,.66) 50%, rgba(0,0,0,0) 80%)"></div>
   <img id="splash-logo" src="sost-logo.png?v=v392" alt="SOST" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);width:225px;height:225px;opacity:0;transition:opacity 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(251,1,13,0));z-index:10;pointer-events:none">
-  <div id="splash-title" style="position:absolute;top:53%;left:50%;transform:translateX(-50%);font-size:56px;font-weight:700;letter-spacing:5px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap;z-index:10;pointer-events:none;text-align:center"></div>
-  <div id="spl-lines" style="position:absolute;top:64%;left:50%;transform:translateX(-50%);font-size:16px;min-height:100px;text-align:left;width:400px;font-family:'JetBrains Mono',monospace;z-index:10;pointer-events:none"></div>
+  <div id="splash-title" style="position:absolute;top:50%;left:50%;transform:translateX(-50%);font-size:98px;line-height:1;font-weight:700;letter-spacing:5px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap;z-index:10;pointer-events:none;text-align:center"></div>
+  <div id="spl-lines" style="position:absolute;top:69%;left:50%;transform:translateX(-50%);font-size:14px;min-height:84px;text-align:left;width:min(380px,86vw);background:rgba(0,0,0,.5);border:1px solid rgba(251,1,13,.20);border-radius:10px;padding:12px 16px;box-shadow:0 0 30px rgba(0,0,0,.6);box-sizing:border-box;font-family:'JetBrains Mono',monospace;z-index:10;pointer-events:none"></div>
   <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
 </div>
 <style>
-.spl-line{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #aa0000;width:0;line-height:2;font-family:'JetBrains Mono',monospace}
+.spl-line{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #aa0000;width:0;line-height:1.45;letter-spacing:.5px;text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.85);font-family:'JetBrains Mono',monospace}
 .spl-line.go{animation:splType 2.5s steps(35) forwards;opacity:1}
 @keyframes splType{from{width:0}to{width:100%}}
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
@@ -871,10 +874,10 @@
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
     </a>
-    <a href="#dtd" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:radial-gradient(circle at 50% 35%,#0f2417,#07120b);border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;animation:dtdBtnGlow 2s ease-in-out infinite;overflow:hidden;" title="DTD — Deterministic Token Distribution"><span style="color:#39ff14;font-size:30px;font-weight:900;letter-spacing:1px;text-shadow:0 0 14px rgba(57,255,20,.85)">DTD</span><span style="color:#7CFFA0;font-size:9.5px;font-weight:700;letter-spacing:.4px;text-align:center;margin-top:3px">TOKEN<br>DISTRIBUTION</span></a>
+    <a href="#dtd" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:radial-gradient(circle at 50% 35%,#0f2417,#07120b);border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;animation:dtdBtnGlow 2s ease-in-out infinite;overflow:hidden;" title="DTD — Deterministic Token Distribution"><span style="color:#39ff14;font-size:30px;font-weight:900;letter-spacing:1px;text-shadow:0 0 14px rgba(57,255,20,.85)">DTD</span><span style="color:#7CFFA0;font-size:9.5px;font-weight:700;letter-spacing:.4px;text-align:center;margin-top:3px">DETERMINISTIC<br>TOKEN<br>DISTRIBUTION</span></a>
     <!-- 4th nav icon: open the SOST 2-minute intro video in a modal.
          Sized to match home's larger 110×110 PoPC DEX (other pages use 72×72). -->
-    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+    <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-toggle" id="navToggleBtn" type="button" onclick="toggleNav()" title="Hide / show the top navigation">▲ HIDE NAV</button>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
@@ -892,6 +895,7 @@
       <a href="sost-whitepaper.html">Whitepaper</a>
       <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
       <a href="sost-network-status.html">Network</a>
+      <a href="sost-decentralization.html" style="color:var(--cyan-primary)">Decentralization</a>
       <a href="sost-mining-calculator.html">Calculator</a>
       <a href="sost-why-no-pools.html">Why No Pools</a>
       <a href="sost-getting-started.html">Getting Started</a>
@@ -917,8 +921,21 @@
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
+    <span id="vcx-sost" style="margin-left:auto;display:inline-flex;align-items:center"></span>
   </div>
 </nav>
+<details class="reward-research-update" style="margin:10px auto;max-width:1040px;background:rgba(215,255,0,.055);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:8px;padding:8px 14px;color:#e8ffb0">
+  <summary style="cursor:pointer;color:#d7ff00;font:800 12px ui-monospace;letter-spacing:.5px;text-shadow:0 0 8px rgba(215,255,0,.4);list-style:none">&#11042; RESEARCH NOTICE &mdash; #40,000 research horizon: reward evolution &middot; decentralization &middot; asset ecosystem (NOT consensus) &middot; click to expand</summary>
+  <div style="margin-top:9px;font-size:12px;line-height:1.7;text-shadow:0 0 6px rgba(215,255,0,.18)">
+    <b>#30,000 builds the foundation. #40,000 is the current target research horizon for the next coordinated upgrade</b> &mdash; <b style="color:#d7ff00">not an activation commitment</b>: nothing is scheduled until code, tests, external audit and a public announcement exist (if not ready, it moves later, e.g. #50,000). Three research pillars:
+    <div style="margin:7px 0 0 4px"><b style="color:#d7ff00">1 &middot; Reward evolution.</b> Most likely research scenario: <b style="color:#d7ff00">80% direct PoW miner reward / 15% normal DTD per block / 5% into the existing DTD Jackpot pool</b>. The 5% is <b>not a direct node payment</b>: it <b>accumulates in the DTD Jackpot pool V30000 already distributes</b>, and when jackpots are paid the existing eligibility framework (including node / NODE_BIND requirements) still applies. <b>No new supply</b> &mdash; all three come from existing block emission.</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">2 &middot; Decentralization.</b> Maximum practical protocol decentralization: peer persistence, independent seeds, address gossip and autonomous peer discovery (foundations already built and tested in the lab), plus more independent nodes, operators, providers, geographies and miners &mdash; no dependency on SOSTcore infrastructure for consensus.</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">3 &middot; Economic infrastructure.</b> Research target: mature the native-asset framework and build the <b>SOST Asset Market</b> (order book, price discovery, atomic settlement) together with deeper Asset Passport integration (economic rights, regulatory classification). The intended initial state is <b style="color:#d7ff00">technically functional but developer-gated</b>, with no public access until external audits, legal/regulatory integration and an explicit public-access decision.</div>
+    <div style="margin-top:7px"><b>Current consensus is unchanged</b> (50% miner / 50% DTD). At #30,000, V30000 adds a <b>restricted</b> native-asset framework &mdash; admin-gated, fail-closed, disabled for the public, no public activation date. Every #40,000 change above is a research candidate and would require a <b>future hard fork</b>.</div>
+    <div style="margin-top:8px"><a href="news.html#decentralization" style="color:#39ff14;font-weight:700;text-decoration:none;border-bottom:1px solid rgba(57,255,20,.5);text-shadow:0 0 6px rgba(57,255,20,.3)">&#8594; More decentralization information here</a></div>
+  </div>
+</details>
+
 
 
 
@@ -970,7 +987,6 @@
       <a href="sost-quickstart.html" class="dl-btn secondary">Quick Start</a>
       <a href="sost-getting-started.html" class="dl-btn secondary">Full Setup</a>
       <a href="sost-whitepaper.html" class="dl-btn secondary">Read Whitepaper</a>
-      <span id="vcx-sost" style="display:inline-flex;align-items:center"></span>
     </div>
 
     <!-- MOBILE APP ANNOUNCEMENT -->
@@ -1087,6 +1103,54 @@
       }
       update();
       setInterval(update,12000);
+    })();
+    </script>
+
+    <!-- PROTOCOL STATUS (section 12) — read from the single-source-of-truth
+         manifest protocol-status.json at runtime so release / activation /
+         status strings here can never contradict the explorer or the manifest. -->
+    <div style="margin-top:14px;text-align:center;">
+      <div id="protocolStatusLive" style="display:inline-block;background:#0d0d0d;border:1px solid #1c1c1c;border-radius:6px;padding:8px 20px;font-family:var(--font-mono);font-size:10px;letter-spacing:.5px;color:#777;">
+        <span style="color:#555">loading protocol status&hellip;</span>
+      </div>
+    </div>
+    <script>
+    // Reads website/protocol-status.json (the canonical manifest) and renders
+    // the release / activation / mode strings. A live getblockcount decides the
+    // PRE-ACTIVATION vs ACTIVE label; nothing here is hardcoded except the
+    // graceful fallback if the manifest cannot be fetched.
+    (function(){
+      var el=document.getElementById('protocolStatusLive');
+      if(!el) return;
+      function chip(label,val,clr){
+        return '<span style="color:#555">'+label+'</span> <span style="color:'+(clr||'#cfd8d2')+';font-weight:600">'+val+'</span>';
+      }
+      fetch('protocol-status.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(m){
+        if(!m){ el.innerHTML='<span style="color:#555">protocol status unavailable</span>'; return; }
+        var act=(m.activation_height!=null)?Number(m.activation_height):null;
+        function render(height){
+          var state='<span style="color:#555">activation state unknown</span>';
+          if(height!=null && act!=null){
+            if(height>=act) state=chip('STATE',(m.release||'V30000')+' ACTIVE','#00ff88');
+            else state=chip('STATE','PRE-ACTIVATION','#67e8f9');
+          }
+          var sep=' <span style="color:#2a2a2a">&middot;</span> ';
+          el.innerHTML=
+            chip('RELEASE',(m.release||'')+(m.release_tag?' ('+m.release_tag+')':''),'#ffd700')+sep+
+            chip('ACTIVATION',act!=null?('#'+act.toLocaleString('en-US')):'—')+sep+
+            state+sep+
+            chip('TOKENIZATION',m.tokenization_status||'—','#c084fc')+sep+
+            chip('PUBLIC TRADING',(m.public_trading===true)?'enabled':'disabled',(m.public_trading===true)?'#00ff88':'#fb923c')+sep+
+            chip('S14',m.S14||'—','#fbbf24')+sep+
+            chip('MODE',m.security_mode||'—','#67e8f9');
+        }
+        // Live height decides PRE vs ACTIVE. If the node is unreachable, still
+        // render the manifest strings with an unknown state (never guess).
+        fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getblockcount","params":[],"id":1}'})
+          .then(function(r){return r.json();})
+          .then(function(j){ var h=(j&&j.result!=null)?Number(j.result):null; render(h); })
+          .catch(function(){ render(null); });
+      }).catch(function(){ el.innerHTML='<span style="color:#555">protocol status unavailable</span>'; });
     })();
     </script>
 
@@ -1343,8 +1407,27 @@
       The <b style="color:#39ff14">DTD (Deterministic Token Distribution)</b> is a consensus-run, per-draw distribution of
       the block&rsquo;s value to eligible network participants &mdash; <b>deterministic</b> (the winner is computed by the
       rules, not chosen by anyone), <b>keyless</b> at SOST layer, and <b>supply-neutral</b> (it moves coins, it never
-      mints them). It runs today and intensifies at V15.
+      mints them). It runs today and intensified at V15 (#25,000), where the split became 50% miner / 50% DTD.
     </p>
+
+    <div class="fade-in delay-2" style="max-width:900px;margin:4px auto 22px;border:1px solid rgba(57,255,20,.35);border-left:4px solid #39ff14;border-radius:12px;background:rgba(57,255,20,.05);padding:18px 22px;text-align:left">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#39ff14;font-weight:800;margin-bottom:10px">How the DTD works &middot; deterministic &amp; auditable</div>
+      <p style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px">In plain terms, <b style="color:#eaf6ff">deterministic token distribution</b> means the split is computed from <b>fixed, reproducible rules</b> &mdash; never chosen by anyone.</p>
+      <div style="border-left:3px solid #22d3ee;background:rgba(34,211,238,.06);border-radius:0 8px 8px 0;padding:10px 14px;color:#d6f6ff;font-size:14px;line-height:1.6;margin:10px 0">If two people look at the <b>same blockchain data</b>, they must get <b>exactly the same result</b>.</div>
+      <p style="color:#c9d6e2;font-size:13px;line-height:1.7;margin:0 0 12px">It does <b>not</b> depend on who runs the calculation, which phone or computer, the browser, the internet speed, or any manual decision.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0">
+        <div style="border:1px solid rgba(57,255,20,.4);border-radius:10px;background:rgba(57,255,20,.04);padding:12px 14px">
+          <div style="color:#39ff14;font-weight:800;font-size:12px;margin-bottom:5px">&#10003; Deterministic</div>
+          <div style="color:#c9d6e2;font-size:12.5px;line-height:1.6">Rule: &ldquo;Distribute 100 SOST among every eligible address of the last 288 blocks by this exact formula.&rdquo; If there are <b style="color:#eaf6ff">193</b> eligible and the formula is fixed, <b>every</b> node that computes it gets the same <b style="color:#eaf6ff">193</b> eligible and the same split.</div>
+        </div>
+        <div style="border:1px solid rgba(251,1,13,.4);border-radius:10px;background:rgba(251,1,13,.04);padding:12px 14px">
+          <div style="color:#fb6a6a;font-weight:800;font-size:12px;margin-bottom:5px">&#10007; Not deterministic</div>
+          <div style="color:#c9d6e2;font-size:12.5px;line-height:1.6">Rule: &ldquo;If an RPC call fails, skip that block.&rdquo; A slow phone could skip more blocks than a laptop and read <b style="color:#fb6a6a">111</b> eligible while another reads <b style="color:#eaf6ff">193</b> &mdash; exactly the kind of defect SOST fixed.</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:#39ff14;background:#07120b;border:1px solid rgba(57,255,20,.3);border-radius:8px;padding:10px;margin:12px 0">same blocks + same rules + same state = same result</div>
+      <p style="color:#c9d6e2;font-size:13px;line-height:1.7;margin:0"><b style="color:#22d3ee">Auditable by anyone.</b> Because the outcome is pure consensus data, anyone can re-derive the eligible set and the winner straight from the public chain and confirm it matches &mdash; via the explorer&rsquo;s <code>getlotteryaudit</code> (per jackpot) or by recomputing the eligibility set over the last 288 blocks. You never have to trust a website or a person.</p>
+    </div>
 
     <!-- DIAGRAM 1 — emission split before / after V15 -->
     <div class="fade-in delay-2" style="max-width:900px;margin:0 auto 10px">
@@ -1376,16 +1459,22 @@
           At <b>V15 (#25,000)</b> it moves to <b style="color:#39ff14">3-of-3 &mdash; a draw on EVERY block</b>, permanently.
           Same total value, <b>3&times; more &amp; smaller payouts</b> &mdash; maximum decentralization. Eligibility is
           gated (recent-producer cooldown, anti-dominance) so payouts spread across many participants.<br><br>
-          <b style="color:#ffd166">At V16.1 (#30,000) the draw itself does not change</b> &mdash; still every block, still uniform,
+          <b style="color:#ffd166">At V16 (#30,000) the draw itself does not change</b> &mdash; still every block, still uniform,
           still never weighted by PoW, same seed, same 50/50 split &mdash; but <b style="color:#ffd166">who qualifies does</b>.
           See the gates below.
         </p>
+        <div style="margin-top:12px;border:1px solid #c084fc;border-radius:8px;background:rgba(192,132,252,.06);padding:12px 14px">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#c084fc;margin-bottom:7px">#30,000 ALSO ACTIVATES &mdash; ADMIN-GATED, PUBLIC ACCESS DISABLED</div>
+          <p class="four-pillar-body" style="margin:0;font-size:12.5px">
+            The same #30,000 activation brings on-chain a <b>native-asset layer</b> (asset genesis / issue / transfer / burn, conservation + supply-cap safety, reorg-safe index), <b>four tokenization modalities</b> (Tokenize, Auction, Draw, Project Funding) and a <b>SOST-layer DEX</b>. While <b>RESTRICTED DEVELOPER MODE (S14)</b> is in force, every native-asset operation must carry an admin-authorized input or the network rejects it at consensus, and <b>public access is disabled</b> &mdash; no CLI, RPC or browser bypass. Technical availability is not regulatory authorization; ordinary SOST transfers are unaffected.
+          </p>
+        </div>
         <div style="margin-top:12px;border:1px solid #2b7a3d;border-radius:8px;background:rgba(57,255,20,.05);padding:12px 14px">
           <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#39ff14;margin-bottom:7px">WHO IS ELIGIBLE TO WIN</div>
           <p class="four-pillar-body" style="margin:0;font-size:12.5px">
             The winner is drawn <b>deterministically and uniformly</b> from the set of addresses that pass <b>every</b> gate (any one excludes an address):<br><br>
             <b style="color:#39ff14">Active signed miner</b> — must be a real SbPoW-signed miner identity (its most recent block at height &ge; <b>#7,100</b>); enforced from #12,100. No signed identity, no eligibility.<br>
-            <b style="color:#39ff14">Active miner (recency)</b> — from #25,000, must have mined <b>&ge;1 block in the last 5,000 blocks</b>. <b style="color:#ffd166">From #30,000 (V16.1) this tightens to the last 288 blocks</b> (~2 days), at every height including jackpot heights; dormant addresses drop out until they mine again.<br>
+            <b style="color:#39ff14">Active miner (recency)</b> — from #25,000, must have mined <b>&ge;1 block in the last 5,000 blocks</b>. <b style="color:#ffd166">From #30,000 (V16) this tightens to the last 288 blocks</b> (~2 days), at every height including jackpot heights; dormant addresses drop out until they mine again.<br>
             <b style="color:#39ff14">Recent-producer cooldown</b> — excluded if it produced any of the previous <b>6 blocks</b> (5 before V13) — stops back-to-back wins. Note it keys on <b>having mined</b>, not on having won. <b style="color:#ffd166">From #30,000 it yields when applying it would leave the draw with nobody</b>.<br>
             <b style="color:#39ff14">Anti-dominance cap</b> — excluded if its share of the last <b>288 blocks is &ge; 10%</b> (from #12,100) — caps concentration. <b style="color:#ffd166">From #30,000 the gate is armed only when the window holds &ge;11 distinct miners</b>: below that it would exclude the very miners keeping the chain alive, so with a single active miner that miner can take 100% of the block (50% miner + 50% DTD).<br>
             <b style="color:#39ff14">Uniform &amp; keyless</b> — every eligible address has the <b>same probability</b>; the winner is computed from chain state by the rules — never weighted by balance, stake or any payment.<br><br>
@@ -1398,20 +1487,51 @@
         <div class="four-pillar-headline" style="font-size:22px">Every 288 blocks (~48h)</div>
         <p class="four-pillar-body">
           The DTD Jackpot returns the reserve <b>already accumulated</b> in the Gold Vault + PoPC addresses
-          (~<b>52,000 SOST</b> at V15) back to DTD winners &mdash; instead of leaving it locked in an off-chain-referenced vault.<br><br>
+          (~<b>52,000 SOST</b> at V15) back to the miners who run the network &mdash; instead of leaving it locked in an off-chain-referenced vault.<br><br>
           It fires on a <b>288-block cadence (~48 h)</b>, paying a jackpot of <b>base 100 / cap 500 SOST</b>, first at
           height <b>#25,290</b>, draining over <b>~3 years</b>. It is <b>supply-neutral</b> (it only moves coins that
           already exist) and <b>ends when the reserve is empty</b> &mdash; after which only the normal per-block DTD remains.
         </p>
         <div style="margin-top:12px;border:1px solid #2b7a3d;border-radius:8px;background:rgba(124,255,160,.05);padding:12px 14px">
-          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#7CFFA0;margin-bottom:7px">WHO IS ELIGIBLE TO WIN</div>
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#7CFFA0;margin-bottom:7px">WHO IS ELIGIBLE TO WIN &middot; FROM #30,000 (JACKPOT V2)</div>
           <p class="four-pillar-body" style="margin:0;font-size:12.5px">
-            The Jackpot winner <b>is</b> the DTD draw winner of that jackpot block — it reuses the <b>exact same eligibility set</b> as the base draw (signed miner + recent-winner cooldown + anti-dominance + uniform, keyless selection).<br><br>
-            <b style="color:#7CFFA0">No separate entry</b> — there is no ticket, no purchase, no fiat/$-amount rule and no new selection engine.<br>
-            <b style="color:#7CFFA0">Broad by design</b> — a jackpot candidate must have mined <b>&ge;1 block in the last 20,000 blocks</b> (~19 weeks) — a much wider window than the normal draw&rsquo;s 5,000. The DTD Jackpot returns the vault to ~the whole network, not a recent few.<br>
-            <b style="color:#7CFFA0">Must have an eligible winner</b> — if a jackpot block has no eligible address, <b>nothing is paid</b>: the prize rolls over to the next jackpot and the reserve is left untouched.
+            From block <b>#30,000</b> the Jackpot is an <b style="color:#7CFFA0">independent draw</b> with its own eligibility and its own winner:<br>
+            <b style="color:#7CFFA0">Active node</b> &mdash; the miner identity must have a confirmed <b>NODE_BIND</b> (mining key + node key) and the required <b>heartbeats</b> (none for the first draw, then one per completed 288-block epoch, ramping to 3 of the last 4 epochs).<br>
+            <b style="color:#7CFFA0">Real work</b> &mdash; at least <b>3 SbPoW blocks in the last 2,016</b>; the chance of winning is <b>linear in those blocks</b>.<br>
+            <b style="color:#7CFFA0">No cooldown and no anti-dominance</b> &mdash; those belong to the normal per-block DTD only.<br>
+            <b style="color:#7CFFA0">Must have an eligible winner</b> &mdash; with no eligible address <b>nothing is paid</b> and the pot rolls over to the next draw (cap 500 SOST).<br><br>
+            <span style="color:var(--text-dim)">Historical (#25,290&ndash;#29,898): the jackpot went to the DTD winner of the jackpot block, with a 20,000-block recency window.</span>
           </p>
         </div>
+      </div>
+    </div>
+
+    <!-- TWO DRAWS IN ONE BLOCK (normal DTD vs Jackpot V2) -->
+    <div class="fade-in delay-2" id="dtd-two-draws" style="max-width:940px;margin:22px auto 8px;border:1px solid #22d3ee;border-radius:10px;background:rgba(34,211,238,.05);padding:18px 22px;scroll-margin-top:90px">
+      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:#22d3ee;margin-bottom:8px">// TWO INDEPENDENT DRAWS &middot; ONE BLOCK</div>
+      <p style="margin:0 0 10px;color:var(--text-primary);font-size:14px;line-height:1.65">
+        The <b>normal DTD</b> runs in <b>every block</b>. The <b>DTD Jackpot V2</b> runs only at jackpot heights (every 288 blocks: #30,186, #30,474, &hellip;).
+        At a jackpot height <b>both draws happen in the same block</b>, and they are <b>independent</b>: different eligible sets, different rules, different winners.
+        One miner can win the normal DTD while another wins the Jackpot; the same miner can also win both if both draws select it.
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0">
+        <div style="border:1px solid #2b7a3d;border-radius:8px;padding:12px 14px;background:rgba(57,255,20,.04)">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.3px;color:#39ff14;margin-bottom:6px">NORMAL DTD &middot; EVERY BLOCK</div>
+          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: miners active in the recent window, minus the recent-producer <b>cooldown</b> (with a fallback when the cooldown would leave nobody) and the <b>anti-dominance</b> rule (applied when enough miners are active). Uniform pick. Pays 50% of the block subsidy.</div>
+        </div>
+        <div style="border:1px solid #7a6a1f;border-radius:8px;padding:12px 14px;background:rgba(255,209,102,.05)">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.3px;color:#ffd166;margin-bottom:6px">JACKPOT V2 &middot; EVERY 288 BLOCKS</div>
+          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: <b>NODE_BIND</b> + required <b>heartbeats</b> + &ge;3 SbPoW blocks in the last 2,016. Pick <b>weighted by PoW blocks</b>. <b>No cooldown, no anti-dominance.</b> Base 100 SOST, rollover up to 500.</div>
+        </div>
+      </div>
+      <p style="margin:0 0 10px;color:var(--text-dim);font-size:12.5px;line-height:1.65">
+        <b style="color:var(--text-primary)">Randomness.</b> Both draws read the same public entropy &mdash; the hashes of the 16 previous blocks and the height &mdash; but each hashes it under its own domain tag
+        (<code>SOST_LOTTERY_V11</code> for the normal DTD, <code>SOST_HIST_JACKPOT</code> for the Jackpot), so each gets its own seed and its own roll. Anyone can recompute both from the chain.
+      </p>
+      <div style="font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-dim);border-top:1px solid #17353f;padding-top:10px">
+        <b style="color:#22d3ee">Example &mdash; block #30,186</b> (first Jackpot V2 draw)<br>
+        Normal DTD: <b style="color:#39ff14">paid</b> to the block&rsquo;s DTD winner (3.9255 SOST).<br>
+        Jackpot V2: 2 PoW candidates, <b>0 eligible</b> (no NODE_BIND yet) &rarr; <b style="color:#f5b301">no winner, 0 SOST paid, +100 SOST rolled over</b> &rarr; next draw <b>#30,474</b> with a <b>200 SOST</b> pot.
       </div>
     </div>
 
@@ -1438,7 +1558,7 @@
     </div>
 
     <p class="fade-in delay-3" style="margin-top:22px;font-size:11.5px;color:var(--text-dim);text-align:center;font-family:var(--font-mono);letter-spacing:1.2px">
-      Deterministic Token Distribution &middot; activates at block #25,000 &middot; supply-neutral &middot; enforced by consensus &middot; any change needs a network-adopted upgrade
+      Deterministic Token Distribution &middot; active since block #25,000 &middot; supply-neutral &middot; enforced by consensus &middot; any change needs a network-adopted upgrade
     </p>
   </div>
 </section>
@@ -1464,7 +1584,7 @@
             <li>Consensus constants live in <code>include/sost/params.h</code> &mdash; the hard cap, and the emission split for each height range (<code>50/25/25</code> for blocks 0&ndash;24,999, <code>50/50</code> miner/DTD from #25,000)</li>
             <li>Observable gold reserve &mdash; <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a></li>
             <li>SbPoW miner-identity binding &mdash; every block from <code>#7,100</code> carries a Schnorr signature over its PoW commitment</li>
-            <li>V13 anti-dominance DTD gate at <code>#12,100</code> &mdash; addresses with &ge; 10 % share of the previous 288 blocks are excluded from the DTD lottery until their rolling share drops below 10 %, and only miners with an SbPoW-signed block (most recent block at height &ge; 7,100) are eligible; logic lives in <code>src/lottery.cpp::compute_lottery_eligibility_set</code> and <code>include/sost/params.h::is_dtd_dominant</code> / <code>is_sbpow_eligible</code></li>
+            <li>V13 anti-dominance DTD gate at <code>#12,100</code> &mdash; addresses with &ge; 10 % share of the previous 288 blocks are excluded from the DTD reward until their rolling share drops below 10 %, and only miners with an SbPoW-signed block (most recent block at height &ge; 7,100) are eligible; logic lives in <code>src/lottery.cpp::compute_lottery_eligibility_set</code> and <code>include/sost/params.h::is_dtd_dominant</code> / <code>is_sbpow_eligible</code></li>
             <li>Deterministic build &mdash; rebuild from <code>main</code> and the output hash matches the running binary</li>
             <li>Mainnet operation publicly logged &mdash; every incident in the BCT announcement thread</li>
           </ul>
@@ -1658,7 +1778,7 @@
     <div style="overflow-x:auto;margin:0 auto;max-width:880px">
     <table class="code-table" style="width:100%">
       <thead>
-        <tr><th>Component</th><th>SOST</th><th>Bitcoin Core</th></tr>
+        <tr><th>Component</th><th><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</th><th><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Core</th></tr>
       </thead>
       <tbody>
         <tr><td class="key">SOST &mdash; Blockchain core (C++ / protocol)</td><td class="val">36,740</td><td class="val">~280&ndash;310k</td></tr>
@@ -1930,7 +2050,7 @@
 var _sharedGold={xaut:0,paxg:0,avg:0,ts:''};
 
 (function(){
-  var GOLD_URL='https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
+  var GOLD_URL='/api/market-history?mode=spot&group=gold_ref';   // CoinGecko XAUT+PAXG via the SOST gateway
   var valEl=document.getElementById('goldPriceVal');
   var subEl=document.getElementById('goldPriceSub');
   function fmt(n){return '$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -2123,8 +2243,9 @@ function fetchGoldChart(){
   var statusEl=document.getElementById('goldChartStatus');
   if(statusEl)statusEl.textContent='loading...';
   Promise.all([
-    fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();}),
-    fetch('https://api.coingecko.com/api/v3/coins/pax-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();})
+    // CoinGecko market_chart (days=1) through the SOST gateway: same series, shared cache, {prices:[...]}
+    fetch('/api/market-history?asset=tether-gold&vs=usd&days=1').then(function(r){return r.json();}),
+    fetch('/api/market-history?asset=pax-gold&vs=usd&days=1').then(function(r){return r.json();})
   ]).then(function(res){
     var xautPrices=res[0].prices||[];
     var paxgPrices=res[1].prices||[];
@@ -2181,15 +2302,15 @@ function fetchSostChart(){
   if(statusEl)statusEl.textContent='$'+cur.toFixed(4)+' gold reference (not a market price) \u00b7 monthly 2019\u20132026';
 }
 </script>
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <!-- CRT effects -->
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/sost-music.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -2199,12 +2320,12 @@ function fetchSostChart(){
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
-        <button class="sv-card sv-card-mech" type="button" onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')"><span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span><span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span></button>
+        <button class="sv-card sv-card-mech" type="button" onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')"><span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span><span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span></button>
       </div>
     </div>
 
@@ -2347,7 +2468,13 @@ function fetchSostChart(){
     host.style.setProperty('--vcx-ac',o.accent); host.style.setProperty('--vcx-bd',o.border);
     host.style.setProperty('--vcx-bg',o.bg); host.style.setProperty('--vcx-mut',o.mut);
     var sk='vcx_'+o.site, hit=!sessionStorage.getItem(sk);
-    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} fetch(o.base+'?site='+encodeURIComponent(o.site)+'&hit=1').catch(function(){}); }
+    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} }
+    // ONE request on load: registers the visit (first page of the session) and returns the real count,
+    // so the odometer rolls ONCE, straight to the live number. seed is only a fallback if /counter is down.
+    var real=null, shown=false;
+    var ready=fetch(o.base+'?site='+encodeURIComponent(o.site)+(hit?'&hit=1':'')).then(function(r){return r.json();}).then(function(d){
+      if(d&&typeof d.count==='number') real=d.count;
+    }).catch(function(){});
     var btn=document.createElement('button'); btn.type='button'; btn.className='vcx-btn'; btn.textContent=o.btn;
     var box=document.createElement('span'); box.className='vcx'; box.style.display='none';
     var dot=document.createElement('span'); dot.className='vcx-dot';
@@ -2355,11 +2482,11 @@ function fetchSostChart(){
     var lbl=document.createElement('span'); lbl.className='vcx-lbl'; lbl.textContent=o.label;
     box.appendChild(dot); box.appendChild(num); box.appendChild(lbl);
     host.appendChild(btn); host.appendChild(box);
+    function show(){ if(shown) return; shown=true; build(num, real!==null?real:o.seed); }
     btn.addEventListener('click',function(){
-      btn.style.display='none'; box.style.display='inline-flex'; build(num,o.seed);
-      fetch(o.base+'?site='+encodeURIComponent(o.site)).then(function(r){return r.json();}).then(function(d){
-        if(d&&typeof d.count==='number') build(num,d.count);
-      }).catch(function(){});
+      btn.style.display='none'; box.style.display='inline-flex';
+      if(real!==null){ show(); return; }
+      num.textContent='\u2026'; ready.then(show); setTimeout(show,4000);
     });
   }
   mount({id:'vcx-sost',site:'sostcore',seed:3375,base:'/counter',btn:'▸ site visits',

@@ -645,7 +645,8 @@
 </style>
 
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -664,7 +665,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -721,12 +722,12 @@
 <div id="wpRevisionBanner" style="max-width:1400px;margin:16px auto 0;padding:0 24px;">
   <div style="background:rgba(103,232,249,0.06);border-left:3px solid #67e8f9;padding:12px 18px;font-family:var(--code,monospace);font-size:11.5px;color:#67e8f9;line-height:1.7;">
     <b>⚠ V13 / V14 SCOPE UPDATE — REVISION TO v4.6 IN PROGRESS.</b>
-    Whitepaper <b>v4.5</b> below describes SOST's <b>base</b> architecture as of March 2026 (consensus, monetary policy, four pillars). It predates the 2026-05-18 V13 scope decisions and predates the V13 RC1 release. <b>For the canonical current scope</b>, read <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_PUBLIC_SCOPE_UPDATE.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_PUBLIC_SCOPE_UPDATE.md</a>, <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</a>, <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</a> and <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_DTD_FLIP_12100_AUTOMATIC.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_DTD_FLIP_12100_AUTOMATIC.md</a>. The four critical updates relative to v4.5 are:
+    Whitepaper <b>v4.6</b>: the current-state summary above and the correction banners are current (October 2026); the sections below remain the <b>v4.5</b> base architecture (March 2026, consensus, monetary policy, four pillars), with each delta noted inline. It predates the 2026-05-18 V13 scope decisions and predates the V13 RC1 release. <b>For the canonical current scope</b>, read <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_PUBLIC_SCOPE_UPDATE.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_PUBLIC_SCOPE_UPDATE.md</a>, <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</a>, <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</a> and <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_DTD_FLIP_12100_AUTOMATIC.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_DTD_FLIP_12100_AUTOMATIC.md</a>. The four critical updates relative to v4.5 are:
     <ol style="margin:8px 0 0 18px;padding:0;color:var(--text-primary,#e7e7ea);font-family:var(--code,monospace);font-size:11.5px;line-height:1.7;">
-      <li><b style="color:#22c55e">V13 confirmed at block 12,000</b> — full cASERT equalizer range <b>E7-H35</b> (not the H20 ceiling described in §PILLAR 1 below), DTD lottery cooldown 5 → 6, future-timestamp drift cap 60 s → 30 s (<b>NTP synchronisation strongly recommended post-V13</b>), Beacon Phase II-A. RC1 metadata is signed (release_status = <code>signed_metadata_only</code>); binaries upload is the next manual operator step.</li>
+      <li><b style="color:#22c55e">V13 confirmed at block 12,000</b> — full cASERT equalizer range <b>E7-H35</b> (not the H20 ceiling described in §PILLAR 1 below), DTD reward cooldown 5 → 6, future-timestamp drift cap 60 s → 30 s (<b>NTP synchronisation strongly recommended post-V13</b>), Beacon Phase II-A. RC1 metadata is signed (release_status = <code>signed_metadata_only</code>); binaries upload is the next manual operator step.</li>
       <li><b style="color:#22c55e">V13 verified automatic flip at block 12,100</b> — the V11 Phase 2 lottery cadence transitions from 2-of-3 bootstrap to 1-of-3 permanent without any operator action, restart, RPC, Beacon notice or config flag. Six audit gates GREEN on main.</li>
-      <li><b style="color:#22c55e">V13 anti-dominance DTD gate at block 12,100</b> — bundled with the cadence flip, any miner whose share of the previous <b>288 blocks is ≥ 10 %</b> is automatically excluded from the DTD lottery eligibility set until their rolling share drops below 10 %. A companion <b>SbPoW-activity gate</b> admits only miners that have produced at least one SbPoW-signed block (most recent block at height ≥ 7,100), excluding dormant pre-SbPoW addresses. Dominant miners keep their 50 % miner share on every block they produce; they only miss the redistributed 25 % + 25 % network-side share on DTD-triggered blocks. The exclusion is reversible per-block, no admin authority, no slash, no permanent ban. Independent of the recent-winner cooldown (which continues to apply). See <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_DTD_DOMINANCE_GATE.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_DTD_DOMINANCE_GATE.md</a>.</li>
-      <li><b style="color:#22c55e">V14 at block 15,000 — Phase I governance + PoPC automation block</b> — target ~2026-06-27, retractable without public drama if testnet fails. <b>Activates:</b> Gold Vault Phase I governance (90 % miner approval over a 67-block window + 10 % quality boost or single-signer veto from developer / genesis, silence = accept, single destination = genesis miner, cap 1,000 SOST per spend / 5,000 SOST per rolling 1,008-block week); the single-model PoPC bond migrated out of <code>popc_registry.json</code> into deterministic chain-state (<b style="color:#c084fc">note:</b> the PoPC redesign moved the base single-bond model activation to <b>V15 / block 25,000</b>, <b style="color:#f59e0b">&mdash; superseded: the DTD does NOT require a PoPC bond at any height. The mainnet gate ships deactivated (<code>DTD_POPC_GATE_CONSENSUS_ACTIVE = false</code>) and the lottery is permissionless</b>; the native SOST bond is the only collateral and the only slashable asset, slashed only on a consensus-defined bond failure); Beacon II-A real operator pubkey replaces the placeholder (canonical fingerprint <code>bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b</code> = sha256 of the lowercase uncompressed pubkey hex; recompute against <code>src/beacon.cpp</code> to detect a substituted key); threshold sync 95 % → 90 %. <b>Conditional in V14:</b> atomic swap HTLC activates only if the libwally-core sprint + end-to-end testnet pass before block 15,000 (otherwise the gate stays at <code>INT64_MAX</code>, defer to V15); <b style="color:#c084fc">&#9888; historical:</b> the former PoPC Model B (gold escrow via an Ethereum SOSTEscrow contract, including any "supervised mode") is <b>superseded</b> by the single native SOST bond &mdash; there is no gold-escrow PoPC in the current design; gold is an optional reward boost only, never collateral, never escrow, never slashed.</li>
+      <li><b style="color:#22c55e">V13 anti-dominance DTD gate at block 12,100</b> — bundled with the cadence flip, any miner whose share of the previous <b>288 blocks is ≥ 10 %</b> is automatically excluded from the DTD reward eligibility set until their rolling share drops below 10 %. A companion <b>SbPoW-activity gate</b> admits only miners that have produced at least one SbPoW-signed block (most recent block at height ≥ 7,100), excluding dormant pre-SbPoW addresses. Dominant miners keep their 50 % miner share on every block they produce; they only miss the redistributed 25 % + 25 % network-side share on DTD-triggered blocks. The exclusion is reversible per-block, no admin authority, no slash, no permanent ban. Independent of the recent-winner cooldown (which continues to apply). See <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_DTD_DOMINANCE_GATE.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_DTD_DOMINANCE_GATE.md</a>.</li>
+      <li><b style="color:#22c55e">V14 at block 15,000 — Phase I governance + PoPC automation block</b> — activated at block 15,000 (now live on mainnet). <b>Activates:</b> Gold Vault Phase I governance (90 % miner approval over a 67-block window + 10 % quality boost or single-signer veto from developer / genesis, silence = accept, single destination = genesis miner, cap 1,000 SOST per spend / 5,000 SOST per rolling 1,008-block week); the single-model PoPC bond migrated out of <code>popc_registry.json</code> into deterministic chain-state (<b style="color:#c084fc">note:</b> the PoPC redesign moved the base single-bond model activation to <b>V15 / block 25,000</b>, <b style="color:#f59e0b">&mdash; superseded: the DTD does NOT require a PoPC bond at any height. The mainnet gate ships deactivated (<code>DTD_POPC_GATE_CONSENSUS_ACTIVE = false</code>) and the lottery is permissionless</b>; the native SOST bond is the only collateral and the only slashable asset, slashed only on a consensus-defined bond failure); Beacon II-A real operator pubkey replaces the placeholder (canonical fingerprint <code>bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b</code> = sha256 of the lowercase uncompressed pubkey hex; recompute against <code>src/beacon.cpp</code> to detect a substituted key); threshold sync 95 % → 90 %. <b>Conditional in V14:</b> atomic swap HTLC activates only if the libwally-core sprint + end-to-end testnet pass before block 15,000 (this ultimately activated at V14.5 / #16,000; relay/policy flag-day #17,000); <b style="color:#c084fc">&#9888; historical:</b> the former PoPC Model B (gold escrow via an Ethereum SOSTEscrow contract, including any "supervised mode") is <b>superseded</b> by the single native SOST bond &mdash; there is no gold-escrow PoPC in the current design; gold is an optional reward boost only, never collateral, never escrow, never slashed.</li>
       <li><b style="color:#fbbf24">Threshold revised: 75 % → 95 % → 90 %</b> — the Gold Vault miner-signaling supermajority finalised at <b>≥90 %</b> over a 67-block window (~12 h, ceil = 61 blocks). The live normative threshold in §Protocol Summary and §Decentralization now reads ≥90 %; any "≥95 %" that remains there is shown only as historical context (the V6-era V14-deferred design). PDF v4.6 regeneration is an operator step.</li>
     </ol>
     Memory-Lock per-instance, mentioned in earlier drafts as a second anti-pool defense, was <b>rejected outright</b> after numerical analysis (penalises small miners proportionally more than large rigs). SbPoW (active since block 7,100) remains SOST's only anti-pool defense.
@@ -743,9 +744,64 @@ This whitepaper still describes the <b>original</b> gold/PoPC economics in sever
 <ul style="margin:8px 0 0 18px">
 <li><b>Block reward split: 50% miner / 50% DTD</b> since <b>V15, block #25,000</b>. The Gold Funding Vault and the PoPC Pool receive <b>no new emission</b> &mdash; their historical balances stay on chain and auditable, but nothing new flows in.</li>
 <li><b>The DTD is permissionless.</b> No PoPC bond, no whitelist, no registration: mining one valid block is what makes an address eligible. From <b>#30,000</b> (V16) eligibility additionally requires having mined within the last <b>288</b> blocks.</li>
-<li><b>#30,000</b> activates V16: DTD-normal eligibility changes and the <b>DTD Jackpot V2</b> becomes an independent, node-gated, PoW-weighted draw. First V2 draw <b>#30,186</b>. It is <b>one</b> activation, automatic, by block height.</li>
+<li><b>#30,000</b> activates V16: DTD-normal eligibility changes and the <b>DTD Accumulated Reward V2</b> becomes an independent, node-gated, PoW-weighted draw (first V2 draw <b>#30,186</b>). The same activation brings on-chain the <b>native-asset layer</b> (asset genesis / issue / transfer / burn, conservation + supply-cap safety, reorg-safe index), <b>four tokenization modalities</b> (Tokenize, Auction, Draw, Project Funding) and a <b>SOST-layer DEX</b> &mdash; all <b>admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled</b> (technical availability is not regulatory authorization; ordinary SOST transfers are unaffected). It is <b>one</b> activation, automatic, by block height. Current release: <b>V30000</b> (tag v30000) &mdash; all three binaries (node, miner, cli) changed.</li>
 <li><b>SOST is not backed by gold.</b> The metals reserve is a Foundation-held reserve with published policy; it is not a peg, not a redemption right and not a claim on the protocol. <a href="sost-gold-reserve.html" style="color:#22d3ee">Reserve status</a>.</li>
 </ul>
+    <div style="max-width:900px;margin:4px auto 22px;border:1px solid rgba(57,255,20,.35);border-left:4px solid #39ff14;border-radius:12px;background:rgba(57,255,20,.05);padding:18px 22px;text-align:left">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#39ff14;font-weight:800;margin-bottom:10px">How the DTD works &middot; deterministic &amp; auditable</div>
+      <p style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px">In plain terms, <b style="color:#eaf6ff">deterministic token distribution</b> means the split is computed from <b>fixed, reproducible rules</b> &mdash; never chosen by anyone.</p>
+      <div style="border-left:3px solid #22d3ee;background:rgba(34,211,238,.06);border-radius:0 8px 8px 0;padding:10px 14px;color:#d6f6ff;font-size:14px;line-height:1.6;margin:10px 0">If two people look at the <b>same blockchain data</b>, they must get <b>exactly the same result</b>.</div>
+      <p style="color:#c9d6e2;font-size:13px;line-height:1.7;margin:0 0 12px">It does <b>not</b> depend on who runs the calculation, which phone or computer, the browser, the internet speed, or any manual decision.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0">
+        <div style="border:1px solid rgba(57,255,20,.4);border-radius:10px;background:rgba(57,255,20,.04);padding:12px 14px">
+          <div style="color:#39ff14;font-weight:800;font-size:12px;margin-bottom:5px">&#10003; Deterministic</div>
+          <div style="color:#c9d6e2;font-size:12.5px;line-height:1.6">Rule: &ldquo;Distribute 100 SOST among every eligible address of the last 288 blocks by this exact formula.&rdquo; If there are <b style="color:#eaf6ff">193</b> eligible and the formula is fixed, <b>every</b> node that computes it gets the same <b style="color:#eaf6ff">193</b> eligible and the same split.</div>
+        </div>
+        <div style="border:1px solid rgba(251,1,13,.4);border-radius:10px;background:rgba(251,1,13,.04);padding:12px 14px">
+          <div style="color:#fb6a6a;font-weight:800;font-size:12px;margin-bottom:5px">&#10007; Not deterministic</div>
+          <div style="color:#c9d6e2;font-size:12.5px;line-height:1.6">Rule: &ldquo;If an RPC call fails, skip that block.&rdquo; A slow phone could skip more blocks than a laptop and read <b style="color:#fb6a6a">111</b> eligible while another reads <b style="color:#eaf6ff">193</b> &mdash; exactly the kind of defect SOST fixed.</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:#39ff14;background:#07120b;border:1px solid rgba(57,255,20,.3);border-radius:8px;padding:10px;margin:12px 0">same blocks + same rules + same state = same result</div>
+      <p style="color:#c9d6e2;font-size:13px;line-height:1.7;margin:0"><b style="color:#22d3ee">Auditable by anyone.</b> Because the outcome is pure consensus data, anyone can re-derive the eligible set and the winner straight from the public chain and confirm it matches &mdash; via the explorer&rsquo;s <code>getlotteryaudit</code> (per jackpot) or by recomputing the eligibility set over the last 288 blocks. You never have to trust a website or a person.</p>
+    </div>
+    <div id="adaptive-node-participation" style="max-width:900px;margin:4px auto 22px;border:1px solid rgba(34,211,238,.4);border-left:4px solid #22d3ee;border-radius:12px;background:rgba(34,211,238,.05);padding:18px 22px;text-align:left">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#22d3ee;font-weight:800;margin-bottom:6px">Adaptive Node Participation for Normal DTD &mdash; Future Design</div>
+      <div style="font:800 11px ui-monospace,monospace;color:#fbbf24;margin-bottom:12px">DESIGN PROPOSAL &middot; NOT ACTIVE &middot; NO THRESHOLD &middot; NO ACTIVATION HEIGHT &middot; NO CONSENSUS CHANGE</div>
+      <p style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px"><b style="color:#eaf6ff">Rationale.</b> Independent validating nodes are what make the chain hard to censor and hard to mislead. Jackpot V2 already makes a <b>bound node identity</b> (NODE_BIND + heartbeats) a condition for the jackpot. Extending that condition to the normal DTD would convert more miners into node operators, but applying it while the network is small would raise the cost of entry for new miners. The proposal is therefore <b>adaptive</b>: the requirement could appear only once the network is demonstrably mature.</p>
+      <div style="color:#22d3ee;font-weight:800;font-size:13px;letter-spacing:.5px;margin:16px 0 6px">Current state (V30000, unchanged by this note)</div>
+      <div style="font:12.5px/1.65 ui-monospace,Menlo,monospace;color:#d6f6ff;background:#07090e;border:1px solid rgba(34,211,238,.3);border-radius:8px;padding:12px 14px;margin:10px 0;white-space:pre;overflow-x:auto">MINER REWARD   valid mining; never depends on NODE_BIND
+DTD NORMAL     every block; mined within the last 288 blocks;
+               recent-producer cooldown (producers of the previous 6 blocks
+               skipped), dropped by a fallback if it would leave the set empty; anti-dominance (share of the
+               last 288 blocks &ge; 10% excluded) only when &ge; 11 distinct miners are
+               active; uniform pick; NO NODE_BIND; NO heartbeats
+DTD JACKPOT V2 every 288 blocks, independent draw (separate domain-tagged seed);
+               &ge; 3 SbPoW blocks in the last 2,016; NODE_BIND; heartbeats
+               (ramping to 3 of the last 4 epochs); pick weighted by PoW blocks</div>
+      <div style="color:#22d3ee;font-weight:800;font-size:13px;letter-spacing:.5px;margin:16px 0 6px">Proposed transition</div>
+      <div style="font:12.5px/1.65 ui-monospace,Menlo,monospace;color:#d6f6ff;background:#07090e;border:1px solid rgba(34,211,238,.3);border-radius:8px;padding:12px 14px;margin:10px 0;white-space:pre;overflow-x:auto">EARLY NETWORK   normal DTD open to recent miners; NODE_BIND optional for it
+MATURE NETWORK  normal DTD MAY additionally require an active bound node identity,
+                only after objective maturity conditions are satisfied
+ALWAYS          the gate affects DTD eligibility only -- never block validity,
+                never the miner's base block reward</div>
+      <div style="color:#22d3ee;font-weight:800;font-size:13px;letter-spacing:.5px;margin:16px 0 6px">Measuring maturity</div>
+      <p style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px">Not by NODE_BIND count alone. Candidate inputs: distinct active miners; distinct active bound node identities; the share of active miners with an active bound node; persistence over time; network stability; observable node diversity; a minimum duration before activation; protection against temporary spikes. <b>Thresholds are TBD</b> and must come from simulation and incentive analysis &mdash; no number is proposed here.</p>
+      <div style="color:#22d3ee;font-weight:800;font-size:13px;letter-spacing:.5px;margin:16px 0 6px">Manipulation risk and required properties</div>
+      <p style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px">If activation depended only on a simple count of miners with a bound node, a miner could rationally decline NODE_BIND to keep the stricter gate from activating. A naive single-threshold rule is therefore ruled out. Any concrete design must provide:</p>
+      <ul style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px;margin:0 0 10px 18px">
+        <li><b>Hysteresis</b> &mdash; distinct activation and deactivation thresholds (higher to turn ON, lower to turn OFF).</li>
+        <li><b>Persistence</b> &mdash; the condition holds across multiple consecutive windows before it counts.</li>
+        <li><b>Delayed activation</b> &mdash; detection schedules activation at a known later height; it never switches immediately.</li>
+        <li><b>No oscillation</b> &mdash; the gate cannot flip ON/OFF within short horizons.</li>
+        <li><b>Incentive compatibility</b> &mdash; a miner must never gain by deliberately refusing NODE_BIND.</li>
+      </ul>
+      <div style="color:#22d3ee;font-weight:800;font-size:13px;letter-spacing:.5px;margin:16px 0 6px">Prerequisite: node UX</div>
+      <p style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px">Before the requirement is extended, running a node should be close to one action for users (design direction, not a shipped feature): run node &middot; run miner &middot; create NODE_BIND &middot; automatic heartbeats &middot; Jackpot eligibility.</p>
+      <div style="color:#22d3ee;font-weight:800;font-size:13px;letter-spacing:.5px;margin:16px 0 6px">Path to consensus</div>
+      <p style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px">Activation would require, in order: an implementation; simulation of the maturity metric and of the incentive effects; tests; review and external audit; a public notice; and an explicit, height-gated activation rule. This proposal is <b>not</b> tied to the planned #40,000 reward split (80% miner / 15% DTD normal / 5% DTD Jackpot); the two are separate decisions.</p>
+      <p style="color:#8aa3b5;font-size:12px;line-height:1.6;margin:0"><b>Terminology.</b> NODE_BIND binds a mining key to a node key with two signatures. It proves a cryptographic link &mdash; a bound node identity, verified node participation &mdash; not the uniqueness of a physical machine.</p>
+    </div>
 Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">upgrade guide</a> &middot; <a href="sost-quickstart.html" style="color:#39ff14">quick start</a> &middot; <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a>.
 </div>
 <section class="hero">
@@ -758,12 +814,12 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
     <p class="hero-sub fade-in delay-2">
       SOST: Proof of Irreversible Convergence. The complete technical specification
       covering ConvergenceX consensus, monetary policy, Gold Reserve, PoPC, governance
-      model, security analysis, and constitutional rules. Version 4.5.
+      model, security analysis, and constitutional rules. Version 4.6.
     </p>
     <div class="protocol-badge fade-in delay-3">
-      <span class="tag">v4.5</span>
+      <span class="tag">v4.6</span>
       <span class="sep">|</span>
-      <span class="val">March 2026 &middot; No ICO &middot; No Premine &middot; No VCs</span>
+      <span class="val">October 2026 &middot; No ICO &middot; No Premine &middot; No VCs</span>
     </div>
     <div class="protocol-badge fade-in delay-3" style="margin-top:10px;">
       <span class="tag" style="background:#0f3d2a;color:#37d67a;">&#10003; SLIP-0044</span>
@@ -850,7 +906,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
           rounds of integer-only gradient descent and proving the solution sits in a stable basin of
           attraction (<i>Proof of Irreversible Convergence</i>).
           Memory-hard: <b>4 GB dataset</b> (SplitMix64-indexed, state-dependent access from V11 Phase 1)
-          plus <b>4 GB scratchpad</b> per mining thread &mdash; 8 GB total. Per-block 256-op program
+          plus a <b>4 GB scratchpad</b> shared by all mining threads &mdash; 8 GB total (the dataset is rebuilt every block from the previous block hash; the scratchpad once per emission epoch). Per-block 256-op program
           changes every block. Verifiers reconstruct sampled rounds with ~500 MB of RAM in ~0.2 ms.
           See section 3.
         </p>
@@ -877,7 +933,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
         <div class="wp-pillar-tag" style="color:#d4af37">◈ PILLAR 4 &mdash; STORE-OF-VALUE ARCHITECTURE</div>
         <div class="wp-pillar-headline">Up to 50% supply &rarr; gold reserve</div>
         <p class="wp-pillar-body">
-          Every block coinbase is split <code>50&nbsp;/&nbsp;25&nbsp;/&nbsp;25</code> by consensus
+          <b style="color:#f59e0b">HISTORICAL (blocks 0&ndash;24,999; since #25,000 the split is 50% miner / 50% DTD and the vault receives nothing new):</b> every block coinbase was split <code>50&nbsp;/&nbsp;25&nbsp;/&nbsp;25</code> by consensus
           (PoW miner / Gold Funding Vault / PoPC Pool). Over the full emission curve this directs <b>up
           to 50% of total supply</b> into two gold-reserve channels:
           <br><br>
@@ -893,8 +949,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
           collateral and the only slashable asset. <b>Gold is an optional reward boost only</b> &mdash;
           never collateral, never escrow, never slashed; if gold cannot be verified the user simply
           receives no boost (never a lock, penalty, or slash). Gold Boost is deferred / off on mainnet
-          until a continuous gold-verification pipeline exists. The base single-bond model activates at
-          <b>V15 / block 25,000</b>. See section 6.
+          until a continuous gold-verification pipeline exists. The base single-bond model reached its V15 / block 25,000 height; on mainnet the DTD eligibility gate ships <b>deactivated</b> (<code>DTD_POPC_GATE_CONSENSUS_ACTIVE = false</code>) and the DTD is <b>permissionless</b> &mdash; no PoPC bond is required at any height. See section 6.
           <br><br>
           <span style="color:var(--text-dim);font-size:12px"><b style="color:#c084fc">&#9888; Historical:</b> earlier drafts described two PoPC models &mdash; Model A (self-custody bonds) and Model B (gold escrow timelock via an Ethereum contract). Both are <b>superseded</b> by the single native SOST bond above; gold is no longer collateral, escrow, or slashable.</span>
           <br><br>
@@ -909,6 +964,106 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
     <p class="fade-in delay-3" style="margin-top:24px;font-size:11.5px;color:var(--text-dim);font-family:var(--font-mono);letter-spacing:1.5px;text-align:center">
       Hardcoded at genesis &middot; enforced by the current consensus rules &middot; any change needs a network-adopted upgrade
     </p>
+  </div>
+</section>
+
+<section class="section" id="pow-control">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">CONVERGENCEX &middot; cASERT</div>
+      <h2 class="section-title">One Proof of Work, <span class="accent">two dials</span></h2>
+    </div>
+<!-- ============ CX3 · POW CONTROL IN THREE LAYERS (2026-10-12) ============ -->
+<style>
+.cx3{min-width:0;max-width:100%;--cx-bg:#07090e;--cx-line:rgba(255,255,255,.1);--cx-gold:#ffd166;--cx-cyan:#22d3ee;--cx-green:#39ff14;--cx-red:#ff5a5f;--cx-txt:#c9d6e2;--cx-dim:#8b9aab;color:var(--cx-txt);font-size:14px;line-height:1.72}
+.cx3 h3{font-size:19px;margin:22px 0 6px;color:#eaf2fb;line-height:1.3}
+.cx3 h4{font:800 11.5px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1.4px;color:var(--cx-gold);margin:18px 0 6px;text-transform:uppercase}
+.cx3 p{margin:7px 0}
+.cx3 b{color:#fff}
+.cx3 .cx-pre{font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#d8e6f0;background:var(--cx-bg);border:1px solid var(--cx-line);border-radius:8px;padding:12px 14px;margin:10px 0;white-space:pre;overflow-x:auto;max-width:min(100%,calc(100vw - 24px))}
+.cx3 .g{color:var(--cx-gold)}.cx3 .c{color:var(--cx-cyan)}.cx3 .k{color:var(--cx-green)}.cx3 .r{color:var(--cx-red)}.cx3 .d{color:#6b7a8c}
+.cx3 .cx-box{border-left:3px solid var(--cx-gold);background:rgba(255,209,102,.05);border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0}
+.cx3 .cx-box.cyan{border-color:var(--cx-cyan);background:rgba(34,211,238,.05)}
+.cx3 .cx-box.green{border-color:var(--cx-green);background:rgba(57,255,20,.04)}
+.cx3 .cx-box.red{border-color:var(--cx-red);background:rgba(255,90,95,.05)}
+.cx3 .cx-t{font:800 10.5px ui-monospace,monospace;letter-spacing:1.6px;color:var(--cx-gold);margin-bottom:4px}
+.cx3 .cx-box.cyan .cx-t{color:var(--cx-cyan)}.cx3 .cx-box.green .cx-t{color:var(--cx-green)}.cx3 .cx-box.red .cx-t{color:var(--cx-red)}
+.cx3 .cx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
+.cx3 .cx-card{border:1px solid var(--cx-line);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.02)}
+.cx3 .cx-card .cx-h{font:800 12px ui-monospace,monospace;letter-spacing:1.2px;margin-bottom:6px}
+.cx3 .cx-tw{overflow-x:auto;margin:10px 0;max-width:min(100%,calc(100vw - 24px))}
+.cx3 table{border-collapse:collapse;width:100%;min-width:560px;font-size:12.5px}
+.cx3 th{font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:var(--cx-dim);text-align:left;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.18)}
+.cx3 td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top}
+.cx3 td:first-child{color:var(--cx-dim);white-space:nowrap}
+.cx3 ul{margin:6px 0 6px 18px;padding:0}.cx3 li{margin:3px 0}
+@media(max-width:560px){.cx3{font-size:13.5px}.cx3 .cx-pre{font-size:10.5px;padding:10px}}
+</style>
+<div class="cx3" id="pow-control-three-layers">
+<div class="cx-t" style="color:#22d3ee">CURRENT MAINNET RULE &middot; VERIFIED AGAINST THE NODE SOURCE</div>
+<h3>One Proof of Work, two dials: ConvergenceX + bitsQ + Equalizer</h3>
+<p>SOST keeps blocks at about <b>600 seconds</b> with two independent controls acting on the same Proof of Work. One decides <b>how rare a winning result must be</b>; the other decides <b>how demanding each attempt is</b>. Every node recomputes both and rejects a block that declares anything else.</p>
+<div class="cx-pre">                    <span class="g">CONVERGENCEX</span>
+             the work of every attempt
+   ~8 GB (4 GB dataset + 4 GB scratchpad) &middot; 100,000 rounds
+     32&times;32 integer problem &middot; state-dependent memory
+         per-block program &middot; chained SHA-256
+                         │
+          ┌──────────────┴──────────────┐
+          │                             │
+        <span class="c">bitsQ</span>                       <span class="k">EQUALIZER</span>
+   numeric difficulty           structural hardness
+          │                             │
+  how rare must the            which ConvergenceX profile
+  commit be to win?            must each attempt pass?
+  commit &le; target(bitsQ)       E7 &hellip; B0 &hellip; H35  (43 profiles)
+          │                             │
+          └──────────────┬──────────────┘
+                         ▼
+                 <span class="g">TARGET &asymp; 600 s</span></div>
+<div class="cx-grid">
+ <div class="cx-card"><div class="cx-h" style="color:#ffd166">CONVERGENCEX</div>Decides <b>what work</b> a miner must run: about 8 GB of memory, 100,000 sequential rounds over a 32&times;32 integer problem, memory reads that depend on the running state, a program generated for each block, and a stability check. The result is a 32-byte <b>commit</b>.</div>
+ <div class="cx-card"><div class="cx-h" style="color:#22d3ee">bitsQ</div>Decides <b>how exceptional</b> the commit must be. A block is valid only if <code>commit &le; target(bitsQ)</code>. Blocks too fast &rarr; bitsQ up, target down, harder. Too slow &rarr; bitsQ down, target up, easier. Q16.16 fixed point, integer-only.</div>
+ <div class="cx-card"><div class="cx-h" style="color:#39ff14">EQUALIZER</div>Does <b>not</b> touch the target. It selects one of 43 profiles (E7 easing &hellip; B0 normal &hellip; H35 maximum hardening) that sets the stability parameters every ConvergenceX attempt must satisfy.</div>
+</div>
+<div class="cx-box green"><div class="cx-t">THE IDEA THAT MATTERS</div>SOST keeps two different things apart: the <b>difficulty of hitting</b> a winning result (bitsQ) and the <b>cost of making one attempt</b> (Equalizer). Bitcoin has only the first: one SHA-256d attempt always costs the same, and only the target moves. This does not make SOST "better than Bitcoin" by itself; it is a richer control architecture for a young network.</div>
+<h4>bitsQ &mdash; the exact current rule (block 5,270+)</h4>
+<div class="cx-pre">avg = average of the last 288 block intervals          <span class="d">(each clamped to 1 s … 1 day)</span>
+dev = avg - 600 s
+
+|dev| &le; 15 s        no change                <span class="d">dead band</span>
+|dev| &le; 60 s        at most 0.5 % per block
+|dev| &le; 120 s       at most 1 %
+|dev| &le; 240 s       at most 2 %
+|dev| &gt; 240 s       at most &asymp;3.03 %   <span class="d">(prev / 33)</span>
+inside the cap the step is proportional:  prev &times; (|dev| - 15) / 2400
+
+Slingshot (block 7,350+), same block, if the previous block was slow:
+  &gt;20 min -6.5 % &middot; &gt;30 min -12.5 % &middot; &gt;1 h -25 % &middot; &gt;2 h -37.5 % &middot; &gt;3 h -50 %</div>
+<h4>Equalizer &mdash; the exact current rule (direct lag map, block 5,323+)</h4>
+<div class="cx-pre">lag = (h - 1) - floor((prev.time - genesis) / 600)      <span class="d">positive = chain AHEAD of schedule</span>
+
+lag &le; 0   &rarr;  at most B0          <span class="d">never harden when behind schedule</span>
+lag &gt; 0   &rarr;  H(lag), up to H35   <span class="d">up immediately; down by at most max(1, elapsed/600) levels per block</span>
+
+Easing profiles (E1…E7) come only from:
+  V12 cascade (block 7,350+): this block already took &ge; 540 s
+      drop 1 · 3 · 6 · 10 · 15 · 21 · 28 levels at 540 · 600 · 660 · 720 · 780 · 840 · &ge;900 s
+  anti-stall: no block for 60 min &rarr; step down toward B0, then toward E7 after 6 more hours
+
+The Equalizer changes only stab_scale / stab_steps / stab_k / stab_margin &mdash; never bitsQ.
+Validators recompute the profile; the block's declared profile must match exactly.</div>
+<h4>Worked example</h4>
+<div class="cx-pre"><span class="d">1.</span> The chain is 4 blocks ahead of the 600 s schedule        &rarr; lag = 4 &rarr; profile <span class="k">H4</span>
+   Each attempt must pass stricter stability parameters. bitsQ is unchanged.
+<span class="d">2.</span> The next block has already taken 11 minutes (660 s)       &rarr; cascade drops 6 levels
+   H4 &rarr; <span class="k">E2</span> for this block only: the attempt becomes cheaper, the chain catches up.
+<span class="d">3.</span> The last 288 blocks averaged 640 s                         &rarr; dev = +40 s
+   proportional step = 25/2400 &asymp; 1.04 %, capped at <span class="c">0.5 %</span> &rarr; target slightly easier.</div>
+<div class="cx-box cyan"><div class="cx-t">IN SIMPLE TERMS</div>ConvergenceX is the exam. bitsQ is the pass mark. The Equalizer is how long and hard each exam paper is. If students finish too fast, SOST can raise the pass mark (bitsQ) and, when the class is clearly ahead of schedule, hand out a harder paper (Equalizer). If they are late, the paper gets easier first, and the pass mark follows the 288-block average.</div>
+<p style="font-size:12.5px;color:#8b9aab">Historical designs &mdash; the five-signal PID/EWMA equalizer used before block 5,323, the H13/H20 ceilings of earlier versions, and the pre-genesis "L1&ndash;L6" level concept &mdash; are <b>not</b> current rules. They are kept for reference in the historical appendix only.</p>
+</div>
+
   </div>
 </section>
 
@@ -938,7 +1093,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
         <table class="code-table">
           <tr><td class="key">Title</td><td class="val">SOST: Proof of Irreversible Convergence</td></tr>
           <tr><td class="key">Version</td><td class="val"><code>v4.5</code> &mdash; March 2026</td></tr>
-          <tr><td class="key">Authors</td><td class="val">NeoB (SOST)</td></tr>
+          <tr><td class="key">Authors</td><td class="val">Neob (SOST)</td></tr>
           <tr><td class="key">Format</td><td class="val">PDF</td></tr>
           <tr><td class="key">Status</td><td class="val">Production (mainnet)</td></tr>
         </table>
@@ -1018,7 +1173,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
       </div>
       <div class="spec-body">
         <table class="code-table">
-          <tr><td class="key">Name / Symbol</td><td class="val"><code>SOST</code></td></tr>
+          <tr><td class="key">Name / Symbol</td><td class="val"><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;"><code>SOST</code></td></tr>
           <tr><td class="key">Genesis</td><td class="val"><code>2026-03-15 18:00:00 UTC</code></td></tr>
           <tr><td class="key">Algorithm</td><td class="val"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> (4GB, 100k rounds, sequential)</td></tr>
           <tr><td class="key">Block time</td><td class="val"><code>600</code> seconds target</td></tr>
@@ -1026,11 +1181,11 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
           <tr><td class="key">Min unit</td><td class="val">1 stock = 0.00000001 SOST</td></tr>
           <tr><td class="key">Epoch</td><td class="val"><code>131,553</code> blocks (~2.5 years, Feigenbaum &alpha;)</td></tr>
           <tr><td class="key">Initial reward</td><td class="val"><code>7.85100863</code> SOST/block</td></tr>
-          <tr><td class="key">Coinbase split</td><td class="val">50% miner / 25% gold / 25% PoPC</td></tr>
+          <tr><td class="key">Coinbase split</td><td class="val">50% miner / 50% DTD since V15 (#25,000) &middot; historical 50% miner / 25% gold / 25% PoPC for blocks 0&ndash;24,999</td></tr>
           <tr><td class="key">Annual decay</td><td class="val">~9.03% (smooth, no halvings)</td></tr>
-          <tr><td class="key">Difficulty</td><td class="val">cASERT bitsQ Q16.16, per-block; V5 (block 5,175+): avg288-based, dynamic cap (0%&ndash;3.0%); relief valve V8 single E7 cliff at 605&nbsp;s (block 5,750+) &rarr; V9 staged drop 3/60&nbsp;s from 540&nbsp;s (block 6,550+) &rarr; V10 granular drop 1/60&nbsp;s from 600&nbsp;s (block 6,700+); historical: 24h half-life</td></tr>
+          <tr><td class="key">Difficulty</td><td class="val">cASERT bitsQ Q16.16, per-block; V5 (block 5,175+): avg288-based, dynamic cap (block 5,270+: &plusmn;15&nbsp;s dead band, then 0.5/1.0/2.0/&asymp;3.03%); Equalizer 43 profiles E7&ndash;H35, direct lag map (block 5,323+), anti-stall 60&nbsp;min; relief: current V12 triangular cascade (block 7,350+, up to 28 levels, floor E7) &mdash; HISTORICAL: V8 single E7 cliff at 605&nbsp;s (block 5,750+) &rarr; V9 staged drop 3/60&nbsp;s from 540&nbsp;s (block 6,550+) &rarr; V10 granular drop 1/60&nbsp;s from 600&nbsp;s (block 6,700+) &rarr; V11 linear (7,000) / triangular cap 21 (7,100); historical: 48h then 24h half-life</td></tr>
           <tr><td class="key">Reserve</td><td class="val">Heritage (sealed by default), Ethereum mainnet</td></tr>
-          <tr><td class="key">Emergency</td><td class="val">&ge;90% block-based miner signaling over 67-block window (ceil = 61 blocks) + 5-defense Gold Vault model + Transitional Guardian with 10-block pronouncement window and auto-disconnect at block 25,000. <b style="color:#fbbf24">Target V14 / block 15,000</b> (deferred from the original V6 / block 10,000 / ≥95 % design); see V13 scope update.</td></tr>
+          <tr><td class="key">Emergency</td><td class="val">&ge;90% block-based miner signaling over 67-block window (ceil = 61 blocks) + 5-defense Gold Vault model + Transitional Guardian with 10-block pronouncement window and auto-disconnect at block 25,000. <b style="color:#fbbf24">V14 height reached (#15,000)</b>; emergency-governance / Gold-Vault spend gates remain <b>deferred on mainnet</b> (no activation height). Historical: original V6 / block 10,000 / ≥95 % design. See V13 scope update.</td></tr>
           <tr><td class="key">Premine / ICO</td><td class="val"><code>0</code> &mdash; none</td></tr>
           <tr><td class="key">Consensus governance</td><td class="val">None &mdash; immutable at genesis</td></tr>
         </table>
@@ -1055,7 +1210,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
     <div style="overflow-x:auto;margin:0 auto;max-width:880px">
     <table class="code-table" style="width:100%">
       <thead>
-        <tr><th>Component</th><th>SOST</th><th>Bitcoin Core</th></tr>
+        <tr><th>Component</th><th><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</th><th><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Core</th></tr>
       </thead>
       <tbody>
         <tr><td class="key">Blockchain core (C++ / protocol)</td><td class="val">36,740</td><td class="val">~280&ndash;310k</td></tr>
@@ -1101,7 +1256,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
     <ul style="margin:0 0 12px 20px;padding:0;line-height:1.7">
       <li><b>Client-side ED25519-signed offers.</b> The offer payload (action, position-id, maker SOST address, maker ETH address, SOST amount, gold amount, price, expiry) is signed in the user's browser. The signing key is encrypted with Argon2id from the user's passphrase and never leaves the device.</li>
       <li><b>End-to-end encrypted relay.</b> X25519 envelopes carry the signed offers between users. The relay server transports bytes but cannot read the cleartext, cannot alter the payload (MAC verified client-side), and cannot impersonate either party.</li>
-      <li><b>On-chain Ethereum escrow.</b> Where gold tokens move (XAUT, PAXG), they sit in the audited <code>SOSTEscrow.sol</code> smart contract. <b>SOST holds no keys to that contract.</b> Releases happen by on-chain logic the two parties trigger themselves &mdash; no admin, no operator, no oracle.</li>
+      <li><b>On-chain Ethereum escrow.</b> Where gold tokens move (XAUT, PAXG), they sit in the experimental <code>SOSTEscrow.sol</code> contract. <b>SOST holds no keys to that contract.</b> Releases happen by on-chain logic the two parties trigger themselves &mdash; no admin, no operator, no oracle.</li>
     </ul>
     <p style="margin-bottom:0">SOST cannot reverse trades, cannot recover funds sent to a wrong address, cannot compel delivery, and cannot verify off-chain promises. <b>That was the design.</b> What it did instead: enforced structural integrity of every signed payload, anchored every trade in cryptographic primitives, and surfaced 26 known scam patterns via the client-side Sentinel chat layer.</p>
     </div>
@@ -1110,11 +1265,11 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
     <p>The community OTC / P2P Board hosts user-to-user trades against seven counterparty assets: <b>BTC, ETH, USDT, USDC, BNB, PAXG, XAUT</b>. The intended settlement mechanism is the <b>atomic swap HTLC</b> (Hashed Time-Locked Contract): cryptography enforces that <b>either both parties receive their funds, or both refund</b> &mdash; no intermediate state exists in which one side walks away with everything. No SOST escrow, no admin custody, no first-mover risk, no protocol authority.</p>
     <p>The implementation status (as of this revision) is:</p>
     <ul style="margin:0 0 12px 20px;padding:0;line-height:1.7">
-      <li><b>SOST-side consensus</b> &mdash; <b style="color:#22c55e">code-complete and unit-tested</b>. HTLC_LOCK (R17), HTLC_CLAIM (R19-R22), HTLC_REFUND (R23-R24) validation rules are in <code>src/tx_validation.cpp</code>, gated by <code>ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT</code>.</li>
-      <li><b>Wallet, RPC, and CLI</b> &mdash; <b style="color:#22c55e">scaffolding complete</b>. <code>createhtlclock</code>, <code>claimhtlc</code>, <code>refundhtlc</code>, <code>decodehtlc</code>, <code>gethtlcstatus</code> exist as gated helpers.</li>
-      <li><b>Counterparty legs (BTC Script, EVM contract)</b> &mdash; <b style="color:#f59e0b">pending Phase 4</b>. Required before any swap can settle.</li>
-      <li><b>External cryptographic + economic review</b> &mdash; <b style="color:#f59e0b">pending Phase 5</b>. Required before the gate flips.</li>
-      <li><b>Activation</b> &mdash; the gate stays at <code>INT64_MAX</code> (sentinel OFF). Target flip: <b>V14 / block 15,000</b>, conditional on Phase 4 + 5 sign-off.</li>
+      <li><b>SOST-side consensus</b> &mdash; <b style="color:#22c55e">LIVE since #16,000 (V14.5); relay/policy flag-day #17,000 (V14.7)</b>. HTLC_LOCK (R17), HTLC_CLAIM (R19-R22), HTLC_REFUND (R23-R24) validation rules are in <code>src/tx_validation.cpp</code>; nodes have accepted HTLC transactions since #16,000.</li>
+      <li><b>Wallet, RPC, and CLI</b> &mdash; <b style="color:#22c55e">complete</b>. <code>createhtlclock</code>, <code>claimhtlc</code>, <code>refundhtlc</code>, <code>decodehtlc</code>, <code>gethtlcstatus</code> are available.</li>
+      <li><b>EVM counterparty leg</b> &mdash; <b style="color:#22c55e">lab-verified</b> (AtomicSwapHTLC.sol, 57 Foundry tests + full end-to-end run on a local Anvil node); <b>not deployed on mainnet</b>.</li>
+      <li><b>BTC counterparty leg</b> &mdash; <b style="color:#22c55e">lab-verified</b> on Bitcoin Core <code>regtest</code> (P2WSH funding, preimage claim, refund, reorg test); BTC signing is <b>OFF by default</b> (CMake flag) and <b>not compiled into the official binaries</b>.</li>
+      <li><b>Public use</b> &mdash; real cross-chain swaps remain <b style="color:#f59e0b">founder-testing only</b>, pending an external cryptographic + economic review. The community OTC board can coordinate swaps, but the protocol provides no escrow, custody or dispute resolution.</li>
     </ul>
     <p>The trust profile of the seven assets splits into two categories. <b>Trust-minimized (BTC, ETH, BNB)</b>: no token-issuer freeze risk; cryptographic atomicity holds on both sides. <b>Issuer-risk (USDT, USDC, PAXG, XAUT)</b>: the underlying token can be frozen by its issuer (Tether, Circle, Paxos, TG Commodities); if that happens mid-swap, the SOST side still refunds correctly but the counterparty side may become uncollectible. The DEX UI labels these four explicitly and recommends small amounts for them; larger amounts should stick to Category A.</p>
 
@@ -1135,6 +1290,39 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
   </div>
 </section>
 
+<section class="section" id="sec-sacs">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// AUTONOMOUS CHAIN SAFETY &middot; updated 2026-09-29</div>
+      <h2 class="section-title">Autonomous Chain Safety <span class="accent">(SACS)</span></h2>
+    </div>
+    <div style="max-width:820px;margin:0 auto;font-size:14px;line-height:1.85;color:var(--text-secondary);">
+      <p>SOST is an open Proof-of-Work chain: every node independently verifies blocks and follows the chain with the <b>highest cumulative verified work</b> (not the longest, and never a peer's self-reported work). SOST does <b>not</b> use ChainLocks, masternodes, validator quorums, miner votes or a developer-selected chain. It therefore offers <b>probabilistic PoW security</b>, not mathematically irreversible finality: a sufficiently powerful adversary that produces a <i>valid</i> higher-work chain cannot be excluded by software alone.</p>
+      <p><b>SACS</b> (SOST Autonomous Chain Safety) is a safety layer with two clearly separated parts:</p>
+      <ul>
+        <li><b>Current mainnet.</b> Best-chain-by-cumulative-work selection; atomic reorg with full rollback; <b>MAX_REORG_DEPTH = 500 blocks (~3.5 days)</b> — a reorg-depth rule enforced in code: a reorg at/below the cap converges to the most-work chain, a reorg deeper than the cap is rejected (the node keeps its chain even against more valid work — confirmed in a scaled devnet lab), which bounds deep reorgs but can prevent automatic convergence after a very long partition; hard checkpoints (≤ height 3,554) reject a contradicting chain; 1,000-block coinbase maturity. The 500-block rule bounds deep reorgs but, after a long partition, can prevent automatic convergence to a valid higher-work chain (confirmed in a scaled devnet lab: at/below the cap converges, above it splits persistently). Resolving that safely — treating the depth as an alert plus full re-verification — is the devnet-only deep-reorg research, post-fork.</li>
+        <li><b>SACS Core — LAB VERIFIED (V16-compatible, not yet deployed).</b> Fork/reorg monitoring, structured chain-safety events, a read-only <code>getchainsafety</code> RPC, a transaction-safety state machine (CONFIRMED → REORGED → REENTERED_MEMPOOL → CONFLICTED) and reconciliation for the wallet, Explorer, DEX and exchanges, plus recovery/persistence hardening. This is observability and application protection — <b>it changes no consensus rule</b>: a SACS alert can make an application wait or pause, never turn a valid block invalid, never halt honest mining. Blockchain truth outranks any local database or UI.</li>
+        <li><b>SACS Deep-Reorg Recovery — FUTURE RESEARCH (devnet only).</b> Studies treating the 500-block depth as an <b>operational alert</b> rather than an automatic rejection, so that after a long partition a node can fully re-verify the alternative branch (work, UTXO, emission, difficulty), protect sensitive operations, and converge on the valid higher-work chain. Any such change is consensus-affecting and would require a future coordinated upgrade — it is <b>not</b> part of the V16 fork at block #30,000.</li>
+      </ul>
+      <p style="color:var(--text-muted,#64748b)"><b>Status:</b> SACS Core is code-complete and lab-verified on a research branch; it is <b>not</b> live on mainnet and no node binary is swapped before #30,000. SACS provides autonomous detection, recovery support and transaction-safety signals — it does not provide absolute, irreversible finality.</p>
+      <div class="reward-research-update" style="margin-top:12px;background:rgba(215,255,0,.06);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:10px;padding:14px 16px;color:#e8ffb0;text-shadow:0 0 8px rgba(215,255,0,.22)">
+        <div style="color:#d7ff00;font:900 12px/1.2 ui-monospace;letter-spacing:.8px;margin-bottom:8px;text-shadow:0 0 10px rgba(215,255,0,.5)">&#11042; MOST LIKELY CURRENT RESEARCH SCENARIO &mdash; NOT CONSENSUS</div>
+        <p style="font-size:12.5px;line-height:1.7;margin:0 0 7px;color:#e8ffb0">The current leading scenario under study is a future activation around <b style="color:#d7ff00">block #40,000 or #50,000</b>, subject to network maturity, miner distribution and further simulation. <b style="color:#d7ff00">80/15/5 supersedes 75/20/5 as the current leading research scenario.</b></p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">
+          <div style="flex:1 1 150px;border:1px solid #7a8a00;border-radius:8px;padding:9px 11px;background:rgba(215,255,0,.04)"><div style="font:900 18px ui-monospace;color:#d7ff00;text-shadow:0 0 8px rgba(215,255,0,.4)">80%</div><div style="font-size:10.5px;color:#cfe88a">direct PoW miner reward</div></div>
+          <div style="flex:1 1 150px;border:1px solid #7a8a00;border-radius:8px;padding:9px 11px;background:rgba(215,255,0,.04)"><div style="font:900 18px ui-monospace;color:#d7ff00;text-shadow:0 0 8px rgba(215,255,0,.4)">15%</div><div style="font-size:10.5px;color:#cfe88a">normal DTD per block</div></div>
+          <div style="flex:1 1 150px;border:1px solid #7a8a00;border-radius:8px;padding:9px 11px;background:rgba(215,255,0,.04)"><div style="font:900 18px ui-monospace;color:#d7ff00;text-shadow:0 0 8px rgba(215,255,0,.4)">5%</div><div style="font-size:10.5px;color:#cfe88a">into the existing DTD Jackpot pool</div></div>
+        </div>
+        <p style="font-size:12px;line-height:1.7;margin:0 0 6px;color:#e8ffb0"><b style="color:#d7ff00">80% &mdash; direct PoW miner reward.</b> Miners contribute measurable hashpower, valid block production and computational/economic chain security.<br><b style="color:#d7ff00">15% &mdash; normal DTD distribution</b> continues per block.<br><b style="color:#d7ff00">5% &mdash; into the existing DTD Jackpot pool.</b> This 5% <b>accumulates in the DTD Jackpot pool that V30000 already distributes</b> &mdash; it is <b>NOT a direct 5% node payment per block</b>. When jackpots are paid, the existing V30000 DTD Jackpot eligibility framework remains applicable, <b>including the node / NODE_BIND eligibility requirements</b>.</p>
+        <p style="font-size:12px;line-height:1.7;margin:0 0 6px;color:#e8ffb0">This gives <b>two complementary incentives</b>: (1) a <b>direct PoW incentive</b> for the miners securing the chain, and (2) an <b>accumulated Jackpot incentive</b> for eligible network participants that maintain the required network infrastructure.</p>
+        <div style="font:700 12px/1.9 ui-monospace;color:#d7ff00;margin:8px 0;text-shadow:0 0 6px rgba(215,255,0,.3)">80% &rarr; direct PoW miner reward (chain security)<br>15% &rarr; continuous normal DTD per block<br>5% &rarr; accumulates in the existing DTD Jackpot pool (not a direct node payment)</div>
+        <p style="font-size:11.5px;line-height:1.7;margin:6px 0 0;color:#cfe88a"><b style="color:#d7ff00">No new supply.</b> All three allocations come from the <b>existing block emission</b>. <b style="color:#d7ff00">Not consensus.</b> Blocks #40,000 and #50,000 are the two most likely activation scenarios &mdash; <b>neither height is final</b>. The <b>80/15/5</b> structure is the <b>leading research candidate, not active consensus</b> (current consensus is unchanged: 50% miner / 50% DTD) and supersedes 75/20/5 as the leading scenario. Any implementation would require explicit consensus rules and a <b>future hard fork</b>. <b style="color:#d7ff00">SOST is also actively pursuing full decentralization of the system as soon as possible.</b></p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <section class="section" id="sec-decentralization">
   <div class="container">
     <div class="section-header">
@@ -1146,12 +1334,12 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
       <p style="margin-top:16px;">However, two economic custody components are still temporarily centralized during Phase I (until governance activates — originally targeted for V6 / block 10,000, deferred to <b style="color:#fbbf24">V14 / block 15,000</b> after the 2026-05-18 scope review; see banner above and <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code>):</p>
       <ul style="margin:12px 0 12px 24px;color:var(--text-primary);">
         <li><strong style="color:var(--gold);">Gold Vault</strong> (25% of every block reward (until #25,000; 0 since)): the 5-defense governance model once targeted for V14 / block 15,000 was <b>deferred and never activated</b> and is now <b style="color:#fbbf24">paused indefinitely / legacy</b>. From <b>V15 (block 25,000)</b> the accumulated reserve is redistributed on-chain to miners via the <b>DTD / DTD Jackpot</b> architecture (supply-neutral). Historical audit at <code>docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</code>.</li>
-        <li><strong style="color:var(--cyan);">PoPC Pool</strong> (25% of every block reward <b style="color:#f59e0b">until block #25,000 &mdash; 0% since</b>): developer-held custody of what it already received. The single-model PoPC bond (native SOST bond only &mdash; gold is an optional reward boost, never PoPC collateral, never escrow, never slashed) is <b>not operational</b>. <b style="color:#4ade80">Correction:</b> an earlier draft of this paragraph said the DTD lottery would require an active PoPC bond from block 30,000. <b>It does not.</b> On mainnet the PoPC eligibility gate ships deactivated (<code>DTD_POPC_GATE_CONSENSUS_ACTIVE = false</code>): <b>the DTD is permissionless &mdash; mining one valid block is the only requirement</b>, and V16 at #30,000 changes which miners qualify, not whether a bond is needed. The Gold Vault / Metals Reserve (the other 25%) is a separate channel and is <b>not</b> the PoPC reward source. Full audit at <code>docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</code></li>
+        <li><strong style="color:var(--cyan);">PoPC Pool</strong> (25% of every block reward <b style="color:#f59e0b">until block #25,000 &mdash; 0% since</b>): developer-held custody of what it already received. The single-model PoPC bond (native SOST bond only &mdash; gold is an optional reward boost, never PoPC collateral, never escrow, never slashed) is <b>not operational</b>. <b style="color:#4ade80">Correction:</b> an earlier draft of this paragraph said the DTD reward would require an active PoPC bond from block 30,000. <b>It does not.</b> On mainnet the PoPC eligibility gate ships deactivated (<code>DTD_POPC_GATE_CONSENSUS_ACTIVE = false</code>): <b>the DTD is permissionless &mdash; mining one valid block is the only requirement</b>, and V16 at #30,000 changes which miners qualify, not whether a bond is needed. The Gold Vault / Metals Reserve (the other 25%) is a separate channel and is <b>not</b> the PoPC reward source. Full audit at <code>docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</code></li>
       </ul>
       <p>SOST developer cannot change the constitutional 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000), because it is hardcoded at genesis. What remains centralized during Phase I is <em>custody</em>, not the emission rule itself.</p>
       <p style="margin-top:16px;"><strong>Custody transition roadmap:</strong></p>
       <ul style="margin:12px 0 12px 24px;">
-        <li><strong>Block 15,000 (V14 hard fork):</strong> H3/H4 consensus hardening. The <b>Gold Vault governance</b> model (5-defense: purpose restriction, dual destination whitelists, per-spend cap, rate limiting, &ge;90 % miner signaling over a 67-block window, plus the Transitional Guardian role) and the <b>PoPC single-bond</b> once proposed for enforcement here / at V15 were <b>deferred and never activated</b>. Both are now <b style="color:#fbbf24">paused indefinitely / legacy</b>, superseded by the <b>DTD / DTD Jackpot</b> architecture: from V15 (block 25,000) the accumulated Gold Vault + PoPC reserve is redistributed to miners on-chain (supply-neutral), and from V16 (block 30,000) the DTD Jackpot V2 becomes an independent node-gated draw. Governance threshold history retained for reference: 75 % (original whitepaper) → 95 % (V6 internal review) → 90 % (V13 review).</li>
+        <li><strong>Block 15,000 (V14 hard fork):</strong> H3/H4 consensus hardening. The <b>Gold Vault governance</b> model (5-defense: purpose restriction, dual destination whitelists, per-spend cap, rate limiting, &ge;90 % miner signaling over a 67-block window, plus the Transitional Guardian role) and the <b>PoPC single-bond</b> once proposed for enforcement here / at V15 were <b>deferred and never activated</b>. Both are now <b style="color:#fbbf24">paused indefinitely / legacy</b>, superseded by the <b>DTD / DTD Jackpot</b> architecture: from V15 (block 25,000) the accumulated Gold Vault + PoPC reserve is redistributed to miners on-chain (supply-neutral), and from V16 (block 30,000) the DTD Accumulated Reward V2 becomes an independent node-gated draw. Governance threshold history retained for reference: 75 % (original whitepaper) → 95 % (V6 internal review) → 90 % (V13 review).</li>
         <li>Gold reserve purchases become externally verifiable on Ethereum (already started: 1.2 oz committed)</li>
         <li><strong>Phase III (12&ndash;24 months):</strong> Migration from tokenized gold (XAUT/PAXG) to physical gold custody in a regulated vault. No bridges, no wSOST, no cross-chain attack surface.</li>
       </ul>
@@ -1176,6 +1364,143 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
   .pos-cross{color:#fb010d;font-weight:700}
   .pos-partial{color:#fbbf24;font-weight:700}
 </style>
+<section class="section" id="btc-eth-sost">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECURITY &amp; INCENTIVES</div>
+      <h2 class="section-title">SOST vs Bitcoin vs <span class="accent">Ethereum</span></h2>
+    </div>
+<!-- ============ CX3 · SOST vs BITCOIN vs ETHEREUM (2026-10-12) ============ -->
+<div class="cx3" id="sost-vs-btc-eth">
+<div class="cx-t" style="color:#ffd166">SECURITY MODELS &middot; SIMPLE COMPARISON WITH EXAMPLES</div>
+<h3>SOST vs Bitcoin vs Ethereum: who secures the chain, and how are they paid?</h3>
+<p>Two different questions are mixed up all the time: <b>how a protocol is designed</b>, and <b>how decentralized its real network is</b>. Bitcoin and Ethereum are remarkable not only for their design but because thousands of independent people and organisations run them, verify them and have real money at stake, year after year. SOST shares the design principles of permissionless consensus; it does not yet have that maturity.</p>
+<div class="cx-grid">
+ <div class="cx-card"><div class="cx-h" style="color:#f7931a">BITCOIN &middot; WORK</div>
+ SHA-256d Proof of Work on specialised ASICs. A block about every 10 minutes; difficulty retargets every 2,016 blocks. The block finder (in practice usually a pool) takes the whole subsidy &mdash; 3.125 BTC since the 2024 halving &mdash; plus fees. Full nodes are not paid, but each one verifies every rule on its own.
+ <div class="cx-pre" style="margin-bottom:0">ASIC + electricity &rarr; SHA-256d attempts
+&rarr; hash &lt; target &rarr; block &rarr; BTC</div></div>
+ <div class="cx-card"><div class="cx-h" style="color:#8c8dfc">ETHEREUM &middot; STAKE</div>
+ Proof of Stake since 2022. A solo validator deposits <b>32 ETH</b>. Time runs in 12-second slots; 32 slots = one epoch (6.4 min). Validators vote (attest) about once per epoch and are occasionally chosen to propose a block. Rewards come from issuance plus, for proposers, priority fees and MEV; the base fee is burned. Equivocation is slashed.
+ <div class="cx-pre" style="margin-bottom:0">32 ETH deposit &rarr; validator
+&rarr; votes + occasional block &rarr; ETH</div></div>
+ <div class="cx-card"><div class="cx-h" style="color:#ff5a5f">SOST &middot; WORK + PARTICIPATION</div>
+ ConvergenceX Proof of Work on ordinary CPUs and RAM. A block about every 10 minutes; bitsQ and the Equalizer adjust every block. The block reward is split 50% to the finder and 50% to the DTD draw among recent miners. A separate Jackpot every 288 blocks rewards miners who also run a bound node.
+ <div class="cx-pre" style="margin-bottom:0">CPU + RAM + electricity &rarr; ConvergenceX
+&rarr; commit &le; target &rarr; block &rarr; 50% + DTD</div></div>
+</div>
+
+<h4>The same day, three ways &mdash; worked examples</h4>
+<div class="cx-pre"><span class="g">BITCOIN</span>   A miner with 1 % of the network hashrate finds on average
+          1 % of ~144 daily blocks &asymp; 1.4 blocks/day, each worth 3.125 BTC + fees.
+          Nothing else. Running a node earns nothing, but it lets you reject
+          any block that breaks the rules &mdash; even one from the largest pool.
+
+<span class="c">ETHEREUM</span>  A validator with 32 ETH attests roughly once every 6.4 minutes
+          and, now and then, is selected to propose a block (bigger reward).
+          The yearly rate is a few percent and moves with the total amount staked.
+          Offline: small penalties, not slashing. Signing two conflicting
+          blocks or votes: slashed &mdash; part of the 32 ETH is destroyed.
+
+<span class="r">SOST</span>      Epoch-0 subsidy is 7.85100863 SOST per block. Miner A finds a block
+          with no fees:
+            A, the finder, receives          <span class="g">3.92550432 SOST</span>   (odd stock goes to the miner)
+            DTD half                         <span class="g">3.92550431 SOST</span>
+          The DTD half goes to ONE eligible recent miner drawn uniformly &mdash;
+          it may be A, or it may be B, a much smaller miner.
+          Every 288 blocks the DTD Jackpot (100 SOST base, up to 500 with
+          rollover, paid from the frozen historical reserve, no new coins)
+          goes to a miner who has &ge; 3 PoW blocks in the last 2,016, an active
+          NODE_BIND and the heartbeat history; the draw is weighted by PoW blocks.</div>
+
+<h4>Side by side</h4>
+<div class="cx-tw"><table>
+<tr><th></th><th>Bitcoin</th><th>Ethereum</th><th>SOST</th></tr>
+<tr><td>Security</td><td>Proof of Work (SHA-256d)</td><td>Proof of Stake</td><td>Proof of Work (ConvergenceX)</td></tr>
+<tr><td>What you commit</td><td>ASICs + energy</td><td>32 ETH (solo validator)</td><td>CPU + RAM + energy; no deposit</td></tr>
+<tr><td>Block producer</td><td>whoever finds the PoW</td><td>validator selected per slot</td><td>whoever finds the PoW</td></tr>
+<tr><td>Votes / attestations</td><td>no</td><td>yes</td><td>no</td></tr>
+<tr><td>Slashing</td><td>no</td><td>yes</td><td>no</td></tr>
+<tr><td>Direct reward</td><td>100% subsidy + fees to the finder</td><td>issuance; proposer also gets fees/MEV</td><td>50% of subsidy + fees to the finder</td></tr>
+<tr><td>Extra reward</td><td>&mdash;</td><td>occasional block proposal</td><td>DTD every block &middot; Jackpot every 288 blocks</td></tr>
+<tr><td>Are nodes paid?</td><td>no</td><td>only as validators</td><td>no &mdash; a bound node is a Jackpot <i>condition</i>, never a multiplier</td></tr>
+<tr><td>Sybil resistance</td><td>hashrate</td><td>staked ETH</td><td>real PoW blocks (SbPoW-signed identities)</td></tr>
+<tr><td>Coins locked to take part</td><td>no</td><td>yes</td><td>no</td></tr>
+<tr><td>Finality</td><td>probabilistic (more blocks = safer)</td><td>explicit, after ~2 epochs (~13 min)</td><td>probabilistic</td></tr>
+<tr><td>Difficulty adjustment</td><td>every 2,016 blocks</td><td>n/a</td><td>every block: bitsQ + Equalizer</td></tr>
+<tr><td>Long-term security budget</td><td>fees after the last halving</td><td>issuance + fees</td><td>fees only after the cap (no tail emission); under current rules half of fees also go to DTD</td></tr>
+</table></div>
+
+<h4>Why SOST does not pay nodes simply for existing</h4>
+<p>Paying every node invites a Sybil attack: one person rents 10,000 cheap servers and claims 10,000 rewards. The Internet cannot tell 100 IPs that are 100 people from 100 IPs that are one person. Jackpot V2 therefore uses the node only as a <b>door</b>, and real PoW as the <b>weight</b>:</p>
+<div class="cx-pre">1 miner &middot; 100 nodes &middot; 100 PoW blocks   &rarr; weight <span class="g">100</span>
+1 miner &middot;   1 node  &middot; 100 PoW blocks   &rarr; weight <span class="g">100</span>
+1 miner &middot;   5 nodes &middot;   2 PoW blocks   &rarr; <span class="r">not eligible</span> (minimum 3)
+Creating nodes adds nothing. Doing work does.</div>
+<p><b>Normal DTD</b> today: an address must have mined in the last 288 blocks; addresses that mined any of the previous 6 blocks are skipped (with a fallback if that would leave nobody); the draw is uniform among the eligible, not proportional to hashrate. An anti-dominance rule (an address with &ge;10% of the last 288 blocks is skipped) exists but switches on only when at least 11 distinct miners are active &mdash; so with today's small miner set it is not in effect. Jackpot V2 has no cooldown and no anti-dominance.</p>
+
+<h4>The honest test of decentralization: what can you switch off?</h4>
+<div class="cx-grid">
+ <div class="cx-card"><div class="cx-h" style="color:#f7931a">BITCOIN</div>Switch off bitcoin.org, the largest exchanges, the largest pool, GitHub and a thousand nodes: blocks keep coming. That is the standard.</div>
+ <div class="cx-card"><div class="cx-h" style="color:#8c8dfc">ETHEREUM</div>Switch off ethereum.org, the Foundation, a large RPC provider, a major staking service or one client implementation: with enough remaining validators, the chain continues.</div>
+ <div class="cx-card"><div class="cx-h" style="color:#ff5a5f">SOST TODAY</div>The project still provides key infrastructure (seed nodes, the public explorer and RPC, release distribution), only a few independent operators exist, and two addresses produced the last 288 blocks. The goal is that switching off everything run by SOSTCore changes nothing for the chain. We are not there yet.</div>
+</div>
+<div class="cx-tw"><table>
+<tr><th>Property</th><th>Bitcoin</th><th>Ethereum</th><th>SOST (goal, if reached)</th></tr>
+<tr><td>Permissionless consensus</td><td>yes</td><td>yes</td><td>yes (today too)</td></tr>
+<tr><td>Your own node verifies all rules</td><td>yes</td><td>yes</td><td>yes (today too)</td></tr>
+<tr><td>Home hardware competitive in block production</td><td>no (ASICs)</td><td>node yes; validating needs 32 ETH</td><td>the design goal &mdash; not yet proven under adversaries</td></tr>
+<tr><td>Client diversity</td><td>moderate</td><td>very high</td><td>one implementation today</td></tr>
+<tr><td>Independent operators</td><td>enormous</td><td>enormous</td><td>must grow a lot</td></tr>
+<tr><td>Years under attack</td><td>~17</td><td>~11</td><td>months</td></tr>
+<tr><td>Dependence on the creator</td><td>none</td><td>very low</td><td>goal: none</td></tr>
+</table></div>
+<div class="cx-box"><div class="cx-t">IN ONE SENTENCE EACH</div><b>Bitcoin</b> is minimalist decentralized money: it does few things and does them with extraordinary resistance. <b>Ethereum</b> is decentralized computation: it accepts much more complexity to run programs, tokens and markets. <b>SOST</b> aims to be Proof-of-Work money on a Bitcoin-like base (UTXO, 10-minute blocks), with ConvergenceX for broad CPU mining, per-block difficulty control, and DTD incentives that reward work and node participation &mdash; without turning into a staking chain. There is no "lock SOST and earn" product, by design.</div>
+<div class="cx-box red"><div class="cx-t">WHAT CANNOT BE WRITTEN IN C++</div>ConvergenceX, bitsQ and the Equalizer can build a good architecture. The final decentralization is not in the code: it comes from independent people running that code without needing us. ASIC resistance by memory hardness is a design goal that has to survive years of adversaries; it is not a proven fact.</div>
+</div>
+
+  </div>
+</section>
+
+<section class="section" id="research-horizon">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">RESEARCH HORIZON #40,000</div>
+      <h2 class="section-title">wSOST, Gold Reserve V2 <span class="accent">&amp; governance</span></h2>
+    </div>
+<div class="cx3" id="research-wsost-grv2">
+<div class="cx-t" style="color:#22d3ee">RESEARCH / DESIGN &middot; NOT DEPLOYED &middot; NO CONSENSUS CHANGE</div>
+<h3>wSOST, Gold Reserve V2 and on-chain governance (#40,000 research horizon)</h3>
+<p>Designed, not deployed: no bridge, no Ethereum contract and no Gold Reserve V2 funds exist, and current consensus (50% miner / 50% DTD) is unchanged. #40,000 is a research horizon, <b>not an activation commitment</b>. Full public explanation: <a href="sost-wsost-gold-vault.html" style="color:#ffd166">wSOST &amp; Gold Vault</a>.</p>
+<h4>Three invariants</h4>
+<div class="cx-pre">1 wSOST = 1 native SOST locked in the Bridge Vault      (only wSOST is ever burned)
+Gold never mints wSOST                                   (Gold Reserve V2 is a separate reserve)
+Native SOST is never burned</div>
+<h4>Five accounts, never combined</h4>
+<div class="cx-pre">1 native SOST · 2 bridge-locked SOST · 3 wSOST (= box 2) · 4 Gold Reserve V2 (XAUT; PAXG gated)
+5 historical Gold Vault + PoPC (frozen since #25,000, committed to the DTD Jackpot)</div>
+<h4>Bridge trust model</h4>
+<p>Native multisig is not active on mainnet, so the pilot would be a <b>capped operator bridge</b>: one cold single-key Bridge Vault (sost1) with a hard exposure cap and offline signing, deposits carrying the Ethereum recipient in a capsule (<code>WSOST:0x…</code>), 2-of-3 EIP-712 observer attestations (an operator quorum, not decentralized), 30 confirmations as a provisional policy (a 1-block reorg was observed at #30,297), and full proof-of-reserves reconciliation (BALANCED / PENDING / CRITICAL; <code>totalSupply ≤ backing</code> is necessary but not sufficient). Target: a future native multisig consensus upgrade.</p>
+<h4>Gold Reserve V2 powers</h4>
+<div class="cx-pre">withdraw(address)                         does not exist
+pause                     2-of-5          moves nothing
+critical rescue           4-of-5          only to the predefined Quarantine Vault
+final migration           4-of-5 guardians + YES ≥ ceil(2/3 × full eligible census)
+                          + timelock + exact successor vault named in the frozen proposal</div>
+<h4>Governance constitution</h4>
+<div class="cx-pre">census     eligible identities at the snapshot (mining + NODE_BIND + heartbeats); one identity = one vote
+vote       self-transfer from the identity with capsule  SOSTGOV1|&lt;proposal&gt;|S&lt;snapshot&gt;|YES|NO|ABSTAIN
+           (28 of 80 bytes); last valid vote confirmed before the close counts
+approval   YES ≥ ceil(2/3 × TOTAL census) — not of those who voted; ABSTAIN is never YES
+example    census 12 → 8 YES needed · 8/2/2 approved · 7 YES + 5 no vote → not approved
+finality   result final only after the close block is buried
+phase      advisory first; binding only after objective maturity criteria (under research)</div>
+<p style="font-size:12.5px;color:#8b9aab">SOST votes do not execute Ethereum state: guardians do. Ignoring a valid vote would be publicly provable, not technically impossible &mdash; hence four layers: guardians, vote, timelock and destination-restricted contract. The Gold &rarr; wSOST desk (selling existing treasury wSOST for XAUT at auction/TWAP prices) is designed and gated off. Wording never used: gold-backed, peg, floor, redeemable.</p>
+</div>
+
+  </div>
+</section>
+
 <section class="section" id="sec-positioning">
   <div class="container pos-section">
     <div class="section-header">
@@ -1191,7 +1516,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
     </p>
 
     <p class="pos-snapshot">
-      Snapshot below is <b>historical</b> (frozen 2026-05-08 UTC) and is not refreshed on every page load. Block heights and schedule drift change every minute; <b>see the live explorer at <a href="sost-explorer.html" style="color:#67e8f9;text-decoration:underline;">sost-explorer.html</a></b> for the current SOST height. Sources for the comparison columns: Blockchain.info (BTC), BlockCypher (LTC, DOGE), localmonero.co (XMR), Blockchair (BCH, ZEC).
+      Snapshot refreshed <b>2026-10-06 UTC</b> &mdash; a point-in-time reading, not updated on every page load. The SOST row is live from the explorer; the six comparison chains are current heights as of that date. Drift = current height &minus; expected, where <b>expected = (now &minus; chain genesis) &divide; canonical target spacing</b> (computed two-phase for Monero and Zcash, which changed target). Block heights and schedule drift change every minute; <b>see the live explorer at <a href="sost-explorer.html" style="color:#67e8f9;text-decoration:underline;">sost-explorer.html</a></b> for the current SOST height. Sources for the comparison columns: Blockchain.info (BTC), Blockchair (LTC, DOGE, BCH, ZEC), moneroblocks.info (XMR).
     </p>
 
     <!-- TABLE 1 — Schedule -->
@@ -1208,13 +1533,13 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
         </tr>
       </thead>
       <tbody>
-        <tr><td>Bitcoin</td>      <td>600&nbsp;s (10&nbsp;min)</td>            <td class="num">948,511</td>   <td class="num">~912,200</td>   <td class="num">+36,300</td> <td>Ahead ~250 days</td></tr>
-        <tr><td>Litecoin</td>     <td>150&nbsp;s (2.5&nbsp;min)</td>           <td class="num">3,103,448</td> <td class="num">~3,063,000</td> <td class="num">+40,400</td> <td>Ahead ~70 days</td></tr>
-        <tr><td>Dogecoin</td>     <td>60&nbsp;s (1&nbsp;min)</td>              <td class="num">6,198,544</td> <td class="num">~6,531,800</td> <td class="num">&minus;333,300</td> <td>Behind ~232 days</td></tr>
-        <tr><td>Monero</td>       <td>120&nbsp;s (60&nbsp;s before 2016)</td>  <td class="num">3,669,797</td> <td class="num">~3,672,000</td> <td class="num">&minus;2,200</td>  <td>Essentially on time</td></tr>
-        <tr><td>Bitcoin Cash</td> <td>600&nbsp;s</td>                          <td class="num">950,193</td>   <td class="num">~938,800</td>   <td class="num">+11,400</td> <td>Ahead ~80 days</td></tr>
-        <tr><td>Zcash</td>        <td>75&nbsp;s (150&nbsp;s pre-Blossom)</td>  <td class="num">3,335,642</td> <td class="num">~3,349,000</td> <td class="num">&minus;13,000</td> <td>Essentially on time</td></tr>
-        <tr class="sost-row"><td>SOST</td> <td>600&nbsp;s</td>                 <td class="num">7,713</td>     <td class="num">~7,700</td>     <td class="num">+11&hellip;13</td> <td>Essentially on time</td></tr>
+        <tr><td><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</td>      <td>600&nbsp;s (10&nbsp;min)</td>            <td class="num">970,202</td>   <td class="num">~933,800</td>   <td class="num">+36,400</td> <td>Ahead ~253 days</td></tr>
+        <tr><td><img src="assets/coins/ltc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Litecoin</td>     <td>150&nbsp;s (2.5&nbsp;min)</td>           <td class="num">3,190,417</td> <td class="num">~3,155,500</td> <td class="num">+34,900</td> <td>Ahead ~61 days</td></tr>
+        <tr><td><img src="assets/coins/doge.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Dogecoin</td>     <td>60&nbsp;s (1&nbsp;min)</td>              <td class="num">6,546,187</td> <td class="num">~6,749,600</td> <td class="num">&minus;203,500</td> <td>Behind ~141 days</td></tr>
+        <tr><td><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Monero</td>       <td>120&nbsp;s (60&nbsp;s before 2016)</td>  <td class="num">3,778,247</td> <td class="num">~3,781,100</td> <td class="num">&minus;2,900</td>  <td>Essentially on time</td></tr>
+        <tr><td><img src="assets/coins/bch.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Cash</td> <td>600&nbsp;s</td>                          <td class="num">971,773</td>   <td class="num">~933,800</td>   <td class="num">+37,900</td> <td>Ahead ~264 days</td></tr>
+        <tr><td><img src="assets/coins/zec.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Zcash</td>        <td>75&nbsp;s (150&nbsp;s pre-Blossom)</td>  <td class="num">3,508,520</td> <td class="num">~3,526,300</td> <td class="num">&minus;17,800</td> <td>Behind ~15 days</td></tr>
+        <tr class="sost-row"><td><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</td> <td>600&nbsp;s</td>                 <td class="num">29,530</td>    <td class="num">~29,511</td>    <td class="num">+19</td> <td>Essentially on time</td></tr>
       </tbody>
     </table>
 
@@ -1226,6 +1551,16 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
       to produce blocks slower than its 1-minute target. Monero, Zcash and SOST track their
       schedule within a fraction of a day &mdash; the property delivered by per-block retarget.
     </p>
+
+    <div class="scw" style="margin:22px 0 10px"><style>.scw{font-family:var(--font-display)}.scw-card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:12px;padding:17px 19px;margin:14px 0;transition:border-color .3s}.scw-card:hover{border-color:var(--border-med)}.scw-h{display:flex;align-items:center;gap:9px;margin:0 0 4px;font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--text-primary)}.scw-dot{width:8px;height:8px;border-radius:2px;flex:0 0 auto}.scw-tag{margin-left:auto;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid;border-radius:4px}.scw-p{font-family:var(--font-display);font-weight:300;font-size:13.5px;line-height:1.75;color:var(--text-secondary);margin:9px 0}.scw-lbl{font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;margin:15px 0 2px}.scw-pre{font-family:var(--font-mono);font-size:12px;line-height:1.7;background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:8px;padding:13px 15px;margin:11px 0;overflow-x:auto;white-space:pre;color:#9fe8ff}.scw-tw{overflow-x:auto;max-width:100%;margin:12px 0}.scw-t{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px;min-width:560px}.scw-t th{padding:11px 14px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);border-bottom:2px solid var(--border-med);background:var(--bg-panel)}.scw-t td{padding:9px 14px;border-bottom:1px solid var(--border-dim);color:var(--text-secondary);font-weight:300;vertical-align:top}.scw-t tr:last-child td{border-bottom:none}.scw-t tr:hover td{background:var(--bg-hover)}.scw-t td:first-child{color:var(--text-primary);font-weight:500;white-space:nowrap}.scw-note{border-left:3px solid;border-radius:0 8px 8px 0;padding:10px 14px;font-family:var(--font-display);font-size:13px;line-height:1.6;font-weight:300;margin:11px 0}.scw-src{color:var(--text-muted);font-family:var(--font-mono);font-size:10px;line-height:1.7;margin:14px 0 0}.scw-t code,.scw-p code{color:var(--green-primary);background:rgba(34,197,94,.08);padding:1px 6px;border-radius:3px;font-family:var(--font-mono)}</style><div style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#fbbf24;margin-bottom:4px">Capacity &amp; Scalability</div><h3 style="font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--text-primary);margin:0 0 2px">Transaction capacity &amp; scalability</h3><p class="scw-p" style="margin-top:2px">Why <b style="color:var(--green-primary)">~7 TPS</b> does <b style="color:#fbbf24">not</b> mean 7 transactions per block.</p><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--green-primary);box-shadow:0 0 7px var(--green-primary)66"></span><span>Why ~7 TPS &ne; 7 transactions per block</span><span class="scw-tag" style="color:var(--green-primary);border-color:var(--green-primary)55">VERIFIED PARAMS</span></div><p class="scw-p">SOST is a Proof-of-Work, UTXO blockchain. Throughput comes from three verifiable consensus parameters: <b style='color:var(--text-primary)'>block size &asymp; 1 MB</b> (<code>MAX_BLOCK_BYTES_CONSENSUS = 1,000,000</code>), <b style='color:var(--text-primary)'>target spacing &asymp; 600 s</b> (<code>TARGET_SPACING = 600</code>), and a UTXO transaction whose serialized size varies with its inputs/outputs/data (a minimal 1-in / 1-out transfer &asymp; <b style='color:var(--cyan-primary)'>170 bytes</b>). A block may hold up to 65,536 tx by consensus; the default miner template caps selection at 4,096.</p><p class="scw-p"><b style='color:var(--green-primary)'>~7 TPS does not mean each block has 7 transactions.</b> It means: thousands of transactions fit in one block &divide; ~600 seconds &asymp; average sustained TPS.</p><div class="scw-lbl" style="color:#a78bfa">The formula</div><pre class="scw-pre">TX_per_block  &asymp;  usable_block_bytes / average_TX_bytes
+TPS           &asymp;  TX_per_block / target_block_spacing</pre><p class="scw-p">Worked example &mdash; if an average simple transaction were ~250 bytes:</p><pre class="scw-pre">1,000,000 bytes / 250 bytes  &asymp;  4,000 transactions / block
+4,000 / 600 seconds          &asymp;  6.7 TPS</pre></div><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--cyan-primary);box-shadow:0 0 7px var(--cyan-primary)66"></span><span>Capacity by transaction size</span><span class="scw-tag" style="color:var(--cyan-primary);border-color:var(--cyan-primary)55">APPROXIMATE</span></div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:#fbbf24">Average TX size</th><th style="color:var(--cyan-primary)">Approx TX / block</th><th style="color:var(--green-primary)">Approx TPS</th></tr></thead><tbody><tr><td>170 bytes</td><td>~5,800</td><td><b style='color:var(--green-primary)'>~9.7</b></td></tr><tr><td>200 bytes</td><td>~5,000</td><td>~8.3</td></tr><tr><td>250 bytes</td><td>~4,000</td><td>~6.7</td></tr><tr><td>300 bytes</td><td>~3,300</td><td>~5.5</td></tr><tr><td>500 bytes</td><td>~2,000</td><td>~3.3</td></tr></tbody></table></div><p class="scw-p"><span style='color:#fbbf24'>Approximations, not a guaranteed maximum</span> &mdash; they ignore header/coinbase overhead; transactions with more inputs/outputs or payload are larger. SOST can include several thousand ordinary transactions per block.</p></div><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--cyan-primary);box-shadow:0 0 7px var(--cyan-primary)66"></span><span>The mempool &amp; daily capacity</span><span class="scw-tag" style="color:var(--cyan-primary);border-color:var(--cyan-primary)55">THROUGHPUT</span></div><p class="scw-p">A full block does not drop transactions &mdash; the surplus waits in the mempool for the next blocks (fee-rate ordered, policy-limited):</p><pre class="scw-pre">10,000 transactions waiting
+        &darr;
+  <span style='color:var(--green-primary)'>BLOCK 1</span>  ~4,000 TX   &rarr;  ~6,000 remain
+        &darr;
+  <span style='color:var(--green-primary)'>BLOCK 2</span>  ~4,000 TX   &rarr;  ~2,000 remain
+        &darr;
+  <span style='color:var(--green-primary)'>BLOCK 3</span>  remaining TX</pre><div class="scw-lbl" style="color:#f59e0b">Daily capacity (illustrative)</div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:#f59e0b">Sustained TPS</th><th style="color:var(--text-secondary)">Transactions / day</th></tr></thead><tbody><tr><td>5 TPS</td><td>&asymp; 432,000</td></tr><tr><td>7 TPS</td><td>&asymp; 604,800</td></tr><tr><td>10 TPS</td><td>&asymp; 864,000</td></tr></tbody></table></div><p class="scw-p"><span style='color:#fbbf24'>Theoretical/sustained illustrations &mdash; not current usage.</span> One UTXO transaction can also pay many destinations at once (batching), so economic throughput can exceed one-payment-per-transaction.</p></div><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--red-primary);box-shadow:0 0 7px var(--red-primary)66"></span><span>Is 1 MB too small? What scaling would cost</span><span class="scw-tag" style="color:var(--red-primary);border-color:var(--red-primary)55">TRADE-OFFS</span></div><p class="scw-p">For a young PoW network, ~1 MB is a conservative choice: low bandwidth, fast propagation, slow disk growth, cheap/accessible full nodes &mdash; all favouring decentralization.</p><div class="scw-note" style="border-color:#d4af37;background:rgba(212,175,55,.07);color:#e9eef5">Unused block capacity has no value by itself. The question is how much throughput the network actually needs while keeping node operation accessible and independently verifiable.</div><div class="scw-lbl" style="color:#f59e0b">What a bigger block would cost (&asymp;250-byte TX)</div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:#f59e0b">Block size</th><th style="color:var(--green-primary)">Approx TPS</th><th style="color:var(--red-bright)">Chain growth (full blocks)</th></tr></thead><tbody><tr><td>1 MB</td><td>~6.7 TPS</td><td>~52&ndash;53 GB/yr</td></tr><tr><td>2 MB</td><td>~13.3 TPS</td><td>~105 GB/yr</td></tr><tr><td>4 MB</td><td>~26.7 TPS</td><td>~210 GB/yr</td></tr><tr><td>8 MB</td><td>~53 TPS</td><td>~420 GB/yr</td></tr></tbody></table></div><p class="scw-p">Growth figures are maxima if blocks were continuously full (~52,560 blocks/yr). Bigger blocks &rarr; more bandwidth, storage and propagation time, higher stale/orphan risk, costlier nodes, centralization pressure.</p><div class="scw-lbl" style="color:#ff5ccd">And a shorter block time?</div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:#ff5ccd">Block time</th><th style="color:var(--green-primary)">Approx TPS (1 MB)</th><th style="color:var(--cyan-primary)">A 288-block window is&hellip;</th></tr></thead><tbody><tr><td>600 s <span style='color:var(--text-muted)'>(now)</span></td><td>~6.7 TPS</td><td>288 blk &asymp; 2 days</td></tr><tr><td>300 s</td><td>~13.3 TPS</td><td>288 blk &asymp; 1 day</td></tr><tr><td>120 s</td><td>~33 TPS</td><td>288 blk &asymp; 9.6 h</td></tr><tr><td>60 s</td><td>~67 TPS</td><td>288 blk &asymp; 4.8 h</td></tr></tbody></table></div><div class="scw-note" style="border-color:var(--red-primary);background:rgba(251,1,13,.09);color:#e9eef5"><b>Changing block time is not a simple performance switch.</b> It would ripple through cASERT/difficulty, propagation, stale/orphan behaviour, forks/reorgs, SACS, DTD &amp; Jackpot windows, emission timing, timestamps, wallets, miners, explorer math &mdash; and every rule expressed in block counts. It would require a hard fork plus a serious redesign and test.</div></div><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--cyan-primary);box-shadow:0 0 7px var(--cyan-primary)66"></span><span>Honest comparison &mdash; top 10 PoW + non-PoW contrast</span><span class="scw-tag" style="color:var(--cyan-primary);border-color:var(--cyan-primary)55">SOURCED &amp; LABELLED</span></div><div class="scw-note" style="border-color:var(--red-primary);background:rgba(251,1,13,.07);color:#e9eef5"><b style='color:var(--red-bright)'>TPS figures across blockchains are not directly comparable.</b> Transaction complexity differs (UTXO vs account), smart-contract execution differs, vote/consensus transactions may be counted differently, block/slot architectures differ, and theoretical, benchmarked and observed TPS are different metrics. This is not a marketing leaderboard.</div><div class="scw-lbl" style="color:var(--green-primary)">Top Proof-of-Work chains (SOST&rsquo;s camp)</div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:var(--green-primary)">Network</th><th style="color:var(--text-muted)">Consensus / model</th><th style="color:var(--text-muted)">Block / slot</th><th style="color:var(--cyan-primary)">Approx TPS</th><th style="color:var(--text-muted)">How measured</th><th style="color:var(--text-muted)">Trade-off</th></tr></thead><tbody><tr><td><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;"><b style='color:var(--green-primary)'>SOST</b></td><td>PoW &middot; ConvergenceX (CPU) &middot; UTXO</td><td>~1 MB / ~600 s</td><td><b>~5&ndash;10</b></td><td>protocol-capacity estimate &mdash; <b>not</b> benchmarked</td><td>security + decentralization</td></tr><tr><td><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</td><td>PoW &middot; SHA-256d &middot; UTXO</td><td>~1&ndash;4 MB wt / ~600 s</td><td>~7 (up to ~27 batched)</td><td>practical, weight-dependent</td><td>maximum security; ASIC</td></tr><tr><td><img src="assets/coins/ltc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Litecoin</td><td>PoW &middot; Scrypt &middot; UTXO</td><td>~1 MB / ~150 s</td><td>~56 (capacity)</td><td>capacity (faster blocks)</td><td>faster settlement; ASIC</td></tr><tr><td><img src="assets/coins/doge.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Dogecoin</td><td>PoW &middot; Scrypt (merged) &middot; UTXO</td><td>~1 MB / ~60 s</td><td>~33 (capacity)</td><td>capacity</td><td>fast/cheap; merge-mined</td></tr><tr><td><img src="assets/coins/bch.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Cash</td><td>PoW &middot; SHA-256d &middot; UTXO</td><td>~32 MB / ~600 s</td><td>~100&ndash;200+ (capacity)</td><td>capacity (big blocks)</td><td>throughput &rarr; heavier nodes</td></tr><tr><td><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Monero</td><td>PoW &middot; RandomX (CPU)</td><td>dynamic / ~120 s</td><td>~a few (flexible)</td><td>dynamic block + privacy</td><td>privacy + CPU mining</td></tr><tr><td><img src="assets/coins/etc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ethereum Classic</td><td>PoW &middot; Etchash &middot; EVM</td><td>gas-limited / ~13 s</td><td>~15 (gas-limited)</td><td>gas-limited</td><td>EVM + PoW</td></tr><tr><td><img src="assets/coins/zec.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Zcash</td><td>PoW &middot; Equihash &middot; shielded</td><td>~2 MB / ~75 s</td><td>~27 (capacity)</td><td>capacity (shielded heavier)</td><td>zk privacy</td></tr><tr><td><img src="assets/coins/dash.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Dash</td><td>PoW &middot; X11 &middot; UTXO</td><td>~2 MB / ~150 s</td><td>~28&ndash;56 (InstantSend)</td><td>capacity / InstantSend</td><td>instant &amp; private send</td></tr><tr><td><img src="assets/coins/kas.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Kaspa</td><td>PoW &middot; kHeavyHash &middot; BlockDAG</td><td>~1 block/s</td><td>~hundreds&ndash;1,000s</td><td>high block rate (GHOSTDAG)</td><td>high PoW TPS &rarr; heavier bandwidth</td></tr><tr><td><img src="assets/coins/rvn.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ravencoin</td><td>PoW &middot; KAWPOW &middot; UTXO</td><td>~1 min</td><td>~tens (capacity)</td><td>capacity</td><td>asset issuance</td></tr></tbody></table></div><div class="scw-lbl" style="color:#a78bfa">For contrast &mdash; high-throughput non-PoW</div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:#a78bfa">Network</th><th style="color:var(--text-muted)">Consensus / model</th><th style="color:var(--cyan-primary)">Approx TPS</th><th style="color:var(--text-muted)">How measured</th><th style="color:var(--text-muted)">Trade-off</th></tr></thead><tbody><tr><td><img src="assets/coins/eth.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ethereum (L1)</td><td>PoS &middot; account/EVM</td><td>~15 (L1)</td><td>gas-limited; scales on L2</td><td>decentralized, L1-limited</td></tr><tr><td><img src="assets/coins/trx.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">TRON</td><td>DPoS (27 super reps)</td><td>~2,000 <b style='color:#fbbf24'>(claimed)</b></td><td>claimed; real throughput <b>questioned lower</b></td><td>few producers &rarr; more centralized</td></tr><tr><td><img src="assets/coins/sol.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Solana</td><td>PoH + PoS &middot; parallel</td><td>~65,000 theo. / ~1&ndash;3k real</td><td>theoretical vs observed non-vote</td><td>very high TPS; high-spec validators</td></tr></tbody></table></div><p class="scw-p">The high-TPS chains reach those numbers with a very different, more centralized architecture. <b style='color:var(--green-primary)'>SOST deliberately sits in the Bitcoin camp</b> &mdash; trading raw throughput for security, decentralization and CPU-fair mining anyone can verify.</p></div><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--red-primary);box-shadow:0 0 7px var(--red-primary)66"></span><span>Where SOST stands &amp; future research</span><span class="scw-tag" style="color:var(--red-primary);border-color:var(--red-primary)55">FUTURE &middot; NOT CONSENSUS</span></div><div class="scw-note" style="border-color:var(--green-primary);background:rgba(74,222,128,.08);color:#e9eef5">The objective is not the highest TPS number &mdash; it is the highest <b>useful</b> throughput SOST can safely support without compromising the ability to run and independently verify the network.</div><p class="scw-p">Current priority order: <b style='color:var(--text-primary)'>security &rarr; decentralization &rarr; node accessibility &rarr; reliability</b>, before raw TPS.</p><div class="scw-note" style="border-color:#fbbf24;background:rgba(251,191,36,.05);color:#e9eef5"><b style='color:#fbbf24'>Future scalability is RESEARCH, not consensus.</b> No announced change, no activation height, no commitment to larger blocks or shorter block times. Possible research: transaction batching, more efficient serialization, UTXO consolidation, native-asset efficiency, and block-size / block-time lab experiments measuring sustained &amp; peak TPS, propagation p50/p95/p99, CPU, RAM, disk, bandwidth, mempool, stale/orphan rate, sync and the effect on low-resource and distant nodes.</div></div><p class="scw-src">Verified from source: <code>consensus_constants.h</code> (1,000,000 B), <code>params.h</code> (600 s), <code>transaction.cpp</code> (input 133 B, output 30 B+), <code>mempool.h</code> (template 4,096). External figures are approximate and labelled by how measured; capacity &ne; current utilization, theoretical &ne; benchmarked. Sources: ethereum.org; TRON network-claimed ~2,000 TPS (real throughput questioned in public reporting); Solana docs/explorers (~65,000 theoretical vs ~1,000&ndash;3,000 real non-vote); other PoW figures are approximate protocol capacities.</p></div>
 
     <!-- TABLE 2 — Emission -->
     <h3 style="font-size:15px;color:var(--text-primary);margin:30px 0 10px">2. Emission and supply</h3>
@@ -1240,13 +1575,13 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
         </tr>
       </thead>
       <tbody>
-        <tr><td>Bitcoin</td>      <td>3.125 BTC</td>            <td>2028 &rarr; 1.5625</td> <td>21,000,000 BTC</td> <td>Halvings every 210k blocks (~4 yr)</td></tr>
-        <tr><td>Litecoin</td>     <td>6.25 LTC</td>             <td>~2027 &rarr; 3.125</td> <td>84,000,000 LTC</td> <td>Halvings every 840k blocks (~4 yr)</td></tr>
-        <tr><td>Dogecoin</td>     <td>10,000 DOGE (fixed)</td>  <td>never</td>              <td>No cap</td>          <td>Perpetual inflation, ~5.26 B DOGE / yr</td></tr>
-        <tr><td>Monero</td>       <td>~0.6 XMR (tail)</td>      <td>fixed since 2022</td>   <td>~18.4 M + tail</td>  <td>Tail emission 0.6 XMR/block forever from June 2022</td></tr>
-        <tr><td>Bitcoin Cash</td> <td>3.125 BCH</td>            <td>2028 &rarr; 1.5625</td> <td>21,000,000 BCH</td> <td>Inherited BTC&rsquo;s halving calendar at the 2017 fork</td></tr>
-        <tr><td>Zcash</td>        <td>1.5625 ZEC</td>           <td>2028 &rarr; 0.78125</td><td>21,000,000 ZEC</td> <td>Halvings every 4 yr</td></tr>
-        <tr class="sost-row"><td>SOST</td> <td><b>7.85100863 SOST</b> (epoch 0)</td> <td>block 131,553 (~2.5 yr)</td> <td><b>4,669,201 SOST</b></td> <td>Continuous decay <code>q = e<sup>&minus;1/4</sup> &asymp; 0.7788</code> per epoch</td></tr>
+        <tr><td><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</td>      <td>3.125 BTC</td>            <td>2028 &rarr; 1.5625</td> <td>21,000,000 BTC</td> <td>Halvings every 210k blocks (~4 yr)</td></tr>
+        <tr><td><img src="assets/coins/ltc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Litecoin</td>     <td>6.25 LTC</td>             <td>~2027 &rarr; 3.125</td> <td>84,000,000 LTC</td> <td>Halvings every 840k blocks (~4 yr)</td></tr>
+        <tr><td><img src="assets/coins/doge.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Dogecoin</td>     <td>10,000 DOGE (fixed)</td>  <td>never</td>              <td>No cap</td>          <td>Perpetual inflation, ~5.26 B DOGE / yr</td></tr>
+        <tr><td><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Monero</td>       <td>~0.6 XMR (tail)</td>      <td>fixed since 2022</td>   <td>~18.4 M + tail</td>  <td>Tail emission 0.6 XMR/block forever from June 2022</td></tr>
+        <tr><td><img src="assets/coins/bch.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Cash</td> <td>3.125 BCH</td>            <td>2028 &rarr; 1.5625</td> <td>21,000,000 BCH</td> <td>Inherited BTC&rsquo;s halving calendar at the 2017 fork</td></tr>
+        <tr><td><img src="assets/coins/zec.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Zcash</td>        <td>1.5625 ZEC</td>           <td>2028 &rarr; 0.78125</td><td>21,000,000 ZEC</td> <td>Halvings every 4 yr</td></tr>
+        <tr class="sost-row"><td><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</td> <td><b>7.85100863 SOST</b> (epoch 0)</td> <td>block 131,553 (~2.5 yr)</td> <td><b>4,669,201 SOST</b></td> <td>Continuous decay <code>q = e<sup>&minus;1/4</sup> &asymp; 0.7788</code> per epoch</td></tr>
       </tbody>
     </table>
 
@@ -1269,13 +1604,13 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
         </tr>
       </thead>
       <tbody>
-        <tr><td>Bitcoin</td>      <td>SHA-256d (double SHA-256)</td>             <td>ASIC</td>          <td>Bulk every 2,016 blocks (~14 d)</td>     <td>The original. Stateless flat hash.</td></tr>
-        <tr><td>Litecoin</td>     <td>Scrypt</td>                                <td>ASIC</td>          <td>Bulk every 2,016 blocks (~3.5 d)</td>     <td>Scrypt holds a 128 KB working buffer; ASIC-friendly since 2014.</td></tr>
-        <tr><td>Dogecoin</td>     <td>Scrypt (merge-mineable with LTC)</td>      <td>ASIC via LTC</td>  <td>DigiShield (per-block) since Feb 2014</td><td>Security tied to Litecoin&rsquo;s merge-mined hashrate.</td></tr>
-        <tr><td>Monero</td>       <td>RandomX</td>                                <td>CPU (deliberate)</td><td>LWMA (per-block, 720-block window)</td>  <td>CPU-oriented VM with JIT execution of randomised bytecode programs and a multi-MB-class dataset/cache plus per-execution scratchpads. ASIC-hostile by construction.</td></tr>
-        <tr><td>Bitcoin Cash</td> <td>SHA-256d (same as BTC)</td>                <td>ASIC</td>          <td>ASERT (per-block) since Nov 2020</td>     <td>Per-block since the post-fork DAA bug of 2017.</td></tr>
-        <tr><td>Zcash</td>        <td>Equihash &lang;200, 9&rang;</td>           <td>ASIC (since 2018)</td> <td>DigiShield-like (per-block, EMA)</td>  <td>Originally GPU-friendly memory-hard; ASICs reached the chain by mid-2018.</td></tr>
-        <tr class="sost-row"><td>SOST</td> <td><b>ConvergenceX</b></td>          <td><b>CPU + 8 GB RAM</b></td> <td><b>cASERT</b> (per-block, avg288 + E/B/H equalizer profiles)</td> <td>Native, original algorithm &mdash; not a fork. Solves a 32&times;32 SPD linear system across 100k sequential rounds of integer-only gradient descent and proves the solution sits in a stable basin (<i>Proof of Irreversible Convergence</i>). 256-op per-block program. 4 GB dataset + 4 GB scratchpad per mining thread.</td></tr>
+        <tr><td><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</td>      <td>SHA-256d (double SHA-256)</td>             <td>ASIC</td>          <td>Bulk every 2,016 blocks (~14 d)</td>     <td>The original. Stateless flat hash.</td></tr>
+        <tr><td><img src="assets/coins/ltc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Litecoin</td>     <td>Scrypt</td>                                <td>ASIC</td>          <td>Bulk every 2,016 blocks (~3.5 d)</td>     <td>Scrypt holds a 128 KB working buffer; ASIC-friendly since 2014.</td></tr>
+        <tr><td><img src="assets/coins/doge.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Dogecoin</td>     <td>Scrypt (merge-mineable with LTC)</td>      <td>ASIC via LTC</td>  <td>DigiShield (per-block) since Feb 2014</td><td>Security tied to Litecoin&rsquo;s merge-mined hashrate.</td></tr>
+        <tr><td><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Monero</td>       <td>RandomX</td>                                <td>CPU (deliberate)</td><td>LWMA (per-block, 720-block window)</td>  <td>CPU-oriented VM with JIT execution of randomised bytecode programs and a multi-MB-class dataset/cache plus per-execution scratchpads. ASIC-hostile by construction.</td></tr>
+        <tr><td><img src="assets/coins/bch.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Cash</td> <td>SHA-256d (same as BTC)</td>                <td>ASIC</td>          <td>ASERT (per-block) since Nov 2020</td>     <td>Per-block since the post-fork DAA bug of 2017.</td></tr>
+        <tr><td><img src="assets/coins/zec.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Zcash</td>        <td>Equihash &lang;200, 9&rang;</td>           <td>ASIC (since 2018)</td> <td>DigiShield-like (per-block, EMA)</td>  <td>Originally GPU-friendly memory-hard; ASICs reached the chain by mid-2018.</td></tr>
+        <tr class="sost-row"><td><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</td> <td><b>ConvergenceX</b></td>          <td><b>CPU + 8 GB RAM</b></td> <td><b>cASERT</b> (per-block, avg288 + E/B/H equalizer profiles)</td> <td>Native, original algorithm &mdash; not a fork. Solves a 32&times;32 SPD linear system across 100k sequential rounds of integer-only gradient descent and proves the solution sits in a stable basin (<i>Proof of Irreversible Convergence</i>). 256-op per-block program. 4 GB dataset + 4 GB scratchpad per mining thread.</td></tr>
       </tbody>
     </table>
 
@@ -1285,13 +1620,13 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
       <thead>
         <tr>
           <th>Property</th>
-          <th style="text-align:center">BTC</th>
-          <th style="text-align:center">LTC</th>
-          <th style="text-align:center">DOGE</th>
-          <th style="text-align:center">XMR</th>
-          <th style="text-align:center">BCH</th>
-          <th style="text-align:center">ZEC</th>
-          <th style="text-align:center;color:#fb010d">SOST</th>
+          <th style="text-align:center"><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">BTC</th>
+          <th style="text-align:center"><img src="assets/coins/ltc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">LTC</th>
+          <th style="text-align:center"><img src="assets/coins/doge.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">DOGE</th>
+          <th style="text-align:center"><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">XMR</th>
+          <th style="text-align:center"><img src="assets/coins/bch.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">BCH</th>
+          <th style="text-align:center"><img src="assets/coins/zec.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">ZEC</th>
+          <th style="text-align:center;color:#fb010d"><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</th>
         </tr>
       </thead>
       <tbody>
@@ -1383,9 +1718,9 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
     <ol style="font-size:13.5px;line-height:1.7;color:var(--text-secondary);margin:0 0 16px 24px">
       <li>The only PoW algorithm in this table that is genuinely native and not derived. SHA-256d was Bitcoin&rsquo;s original; Scrypt comes from Tarsnap; Equihash from Wagner&rsquo;s generalised birthday. Monero&rsquo;s RandomX is the closest other example of an originally designed algorithm, but it carries CryptoNight ancestry. ConvergenceX shares no core structure with any of these.</li>
       <li>The only hard cap in this table derived from a universal mathematical constant (Feigenbaum&rsquo;s &delta;). The other caps are round numbers chosen for marketing alignment.</li>
-      <li>The only chain in this table with a <b>consensus-level allocation toward gold-linked reserves and custody mechanisms</b>: 25% Perpetual Gold Vault one-way TWAP purchases, plus 25% PoPC. <em>This is not a peg, not a redemption claim, not a stablecoin mechanic.</em> The reserve ratio is observable on-chain, not contracted.</li>
+      <li>The only chain in this table with a <b>consensus-level allocation toward gold-linked reserves and custody mechanisms</b> in its history: 25% Gold Vault plus 25% PoPC until block 24,999 (now frozen and funding the DTD Jackpot; 0% of new emission since V15). <em>This is not a peg, not a redemption claim, not a stablecoin mechanic.</em> The reserve ratio is observable on-chain, not contracted.</li>
       <li>Among the chains in this table, SOST combines per-block retarget with the largest mining-RAM footprint (8 GB) of any production CPU-oriented design. Monero is the only direct competitor on the CPU-friendly axis but uses a smaller working set.</li>
-      <li>Tightest schedule alignment in the comparison: SOST is currently within ~13 blocks of its target, helped by cASERT&rsquo;s 288-block average and dynamic delta cap (0% / 0.5% / 1.5% / 2.5% / 3% by deviation).</li>
+      <li>Tightest schedule alignment in the comparison: SOST is currently within ~13 blocks of its target, helped by cASERT&rsquo;s 288-block average and dynamic delta cap (0% within &plusmn;15&nbsp;s, then 0.5% / 1% / 2% / 3% by deviation).</li>
       <li>Hard cap lower than the major PoW comparables in this table. With 4.67M coins capped, SOST&rsquo;s long-run scarcity is steeper than BTC, LTC, BCH, or ZEC. Whether that matters in market terms is a separate question.</li>
     </ol>
 
@@ -1434,17 +1769,17 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 });
 </script>
 
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -1454,16 +1789,16 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

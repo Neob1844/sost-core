@@ -19,14 +19,14 @@
 <link rel="icon" type="image/png" href="sost-logo.png?v=v392">
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST — Upgrade your node to v16.3.0 (node fix · full sync from genesis)</title>
-<meta name="description" content="How to update an already-running SOST node to v16.3.0. Only the node changed (full sync from genesis now works); the miner and CLI are byte-identical to v16.2.3, so you just swap the node. You keep your coins, wallet, keys and payout address.">
+<title>SOST — Upgrade to V30000 (node, miner &amp; CLI · #30,000 network upgrade)</title>
+<meta name="description" content="How to update an already-running SOST node, miner and CLI to V30000 before the #30,000 network upgrade. All three binaries changed &mdash; re-download, verify and swap all three. You keep your coins, wallet, keys and payout address.">
 <meta name="keywords" content="SOST quickstart, how to mine SOST, SOST setup, build SOST, run SOST node, SOST mining guide">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SOST V16.3.0 — Upgrade your node (node fix)">
-<meta property="og:description" content="v16.3.0 changes only the node (full sync from genesis); miner and CLI byte-identical to v16.2.3. Verified commands for manual, systemd and WSL setups.">
+<meta property="og:title" content="SOST V30000 — Upgrade node, miner &amp; CLI (#30,000)">
+<meta property="og:description" content="V30000 changes all three binaries (node, miner and CLI); none byte-identical to v16.2.x. Verified commands for manual, systemd and WSL setups.">
 <meta property="og:url" content="https://sostcore.com/sost-upgrade.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
@@ -190,7 +190,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -211,7 +212,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -257,7 +258,7 @@
 </nav>
 
 <style>
-/* ── Guía de mineros V16.3.0 ─────────────────────────────────────────────
+/* ── Guía de mineros V30000 ─────────────────────────────────────────────
    Secciones plegables nativas (<details>): funcionan sin JavaScript, así que
    la guía sigue siendo legible si el script falla o el navegador lo bloquea.
    Nada aquí depende del estado de la sesión del Explorer.                */
@@ -308,8 +309,8 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
 
 <section class="hero">
   <div class="container">
-    <h1 style="font-family:var(--font-display);letter-spacing:2px">SOST V16 &mdash; <span style="color:var(--red-primary)">MINER &amp; NODE GUIDE</span></h1>
-    <p style="font-size:17px;max-width:860px">Everything you need to install, configure and run SOST V16.3.0 &mdash; and to decide whether you want to enter the DTD Jackpot V2 draw. Written for someone who has never run a node before, with the exact commands for someone who has.</p>
+    <h1 style="font-family:var(--font-display);letter-spacing:2px">SOST V30000 &mdash; <span style="color:var(--red-primary)">MINER &amp; NODE GUIDE</span></h1>
+    <p style="font-size:17px;max-width:860px">Everything you need to install, configure and run SOST V30000 &mdash; and to decide whether you want to enter the DTD Jackpot V2 draw. Written for someone who has never run a node before, with the exact commands for someone who has.</p>
   </div>
 </section>
 
@@ -320,7 +321,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
     <div style="font-size:11px;letter-spacing:2px;color:var(--text3,#7b8794);margin-bottom:8px">WHERE THE CHAIN IS RIGHT NOW</div>
     <div id="mgBadge" class="mg-badge" style="border-color:#7b8794;color:#9fb6c4">reading the chain&hellip;</div>
     <div id="mgLine" style="font-size:13.5px;line-height:1.7;margin-top:10px;color:var(--text2,#cbd5e1)">
-      V16 activates at block <b>#30,000</b>, automatically by block height. <b>v16.3.0</b> changes only the node (full sync from genesis now works); the miner and CLI are byte-identical to v16.2.3, so you just <b>swap the node</b> &mdash; before #30,000 if you are still on pre-V16 software.
+      V30000 activates at block <b>#30,000</b>, automatically by block height. <b>V30000 changes all three binaries</b> (node, miner and CLI; none byte-identical to v16.2.x) &mdash; <b>re-download, verify and swap all three</b> before #30,000. You may install any time before #30,000 &mdash; you do not need to wait; the window <b>#29,900 &rarr; #30,000</b> is the recommended <b>final verification window</b> (a last check that your node and miner are running V30000), not the only valid time to install.
     </div>
     <div style="font-size:12px;color:var(--text3,#7b8794);margin-top:9px;line-height:1.6">
       Three different things, often confused:
@@ -337,33 +338,74 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
     <a href="#s5"><b>4 &middot; Start node &amp; miner</b>Verified commands</a>
     <a href="#s6"><b>5 &middot; Encryption</b>Three separate things</a>
     <a href="#s7"><b>6 &middot; DTD vs Jackpot V2</b>What you get without doing anything</a>
-    <a href="#s8"><b>7 &middot; NODE_BIND</b>Optional, and only after #30,000</a>
+    <a href="#s8"><b>7 &middot; NODE_BIND</b>Optional &middot; open now</a>
     <a href="#s9"><b>8 &middot; Backups &amp; mistakes</b>What to keep, what leaks</a>
     <a href="#s10"><b>9 &middot; Troubleshooting</b>The messages you will actually see</a>
     <a href="#s11"><b>10 &middot; Network status</b>What is not fixed yet</a>
   </div>
 
   <div class="mg-note mg-ok">
-    <b>Already running v16.2.x? Update your NODE to v16.3.0.</b>
-      v16.3.0 changes only <code>sost-node</code> (it makes a full sync from genesis complete). <code>sost-miner</code>
-      and <code>sost-cli</code> are <b>byte-identical</b> to v16.2.3 &mdash; the same SHA-256, nothing to change there.
-      So the upgrade is one binary: swap <code>sost-node</code>, and your miner keeps running.
+    <b>V30000 FINAL SECURITY BUILD &mdash; NODE + MINER + CLI UPDATE REQUIRED before #30,000.</b>
+      All three binaries changed following the final pre-activation security hardening.
+      <b>Do not install or keep using earlier V30000 / RC / emergency builds</b> &mdash; they are superseded and may
+      diverge from the chain at #30,000. The verified SHA-256 values are in section 1 below.
+      On mainnet, #30,000 activates DTD Jackpot V2 only: <b>Native Assets are DEFERRED / FAIL-CLOSED</b>,
+      <b>SACS V2 is DEFERRED</b>, the monetary rule stays <b>50% Miner / 50% DTD</b>, and <b>SOST has no burn mechanism</b>.
   </div>
 
   <!-- ═══ 2 · DOWNLOAD ════════════════════════════════════════════════ -->
   <details class="mg" id="s2"><summary>1 &middot; Download the official binaries and verify them</summary><div class="mg-in">
-    <p>Everything is published in one place:
-      <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v16.3.0</a>.
-      Download <code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code> and <code>SHA256SUMS</code>.</p>
+    <div class="mg-note mg-warn">
+      <b>Download the V30000 FINAL SECURITY BUILD:</b>
+      <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v30000-final</a>
+      (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>; source commit <code>3acd952bd2c3</code>).
+      The earlier v30000, v30000-rc1 and emergency builds are <b>SUPERSEDED</b> &mdash; do not install them.<br>
+      <b>Optional node-only hardening (v30000-final.1):</b>
+      <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final.1" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v30000-final.1</a>
+      &mdash; replaces only <code>sost-node</code> (fail-closed chain replay, safe failed-reorg recovery, no chain-file writes during a reorg).
+      <b>No consensus change</b>; <code>sost-miner</code> and <code>sost-cli</code> are identical, so miners do not recompile. Either node hash below is valid.
+    </div>
 
+    <div class="mg-note mg-warn"><b>MANDATORY: every node and every miner must restart on the FINAL build between #29,900 and #30,000</b>, or risk a chain split and miss the new protocol rules.</div>
+    <h4>HOW TO DO IT &mdash; 4 SIMPLE STEPS (do steps 3 and 4 between #29,900 and #30,000)</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre># 1. GET THE NEW BINARIES  (A: recompile  -or-  B: download)
+#    A) recompile (Ubuntu/Debian/WSL2):
+sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
+git clone https://github.com/Neob1844/sost-core.git sost-final &amp;&amp; cd sost-final
+git checkout v30000-final
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+cd build
+#    B) or download the official binaries:
+#    for f in sost-node sost-miner sost-cli SHA256SUMS; do wget -q https://github.com/Neob1844/sost-core/releases/download/v30000-final/$f; done; chmod +x sost-*
+
+# 2. VERIFY  (must match exactly)
+sha256sum sost-node sost-miner sost-cli
+#   ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd  sost-node
+#   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75  sost-miner
+#   09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b  sost-cli
+
+# 3. RESTART THE NODE on the new sost-node   (between #29,900 and #30,000)
+#    systemd:  sudo systemctl stop sost-node
+#              sudo install -m 0755 sost-node /path/to/your/sost-node
+#              sudo systemctl start sost-node
+#    by hand:  stop the old node (Ctrl+C) and start the NEW ./sost-node with your usual flags
+
+# 4. RESTART THE MINER on the new sost-miner   (between #29,900 and #30,000)
+#    stop the old miner (Ctrl+C), then start the NEW one with your usual flags, e.g.:
+./sost-miner --wallet ~/sost-keys/my-wallet.json --mining-key-label "my-mining-key" \
+  --genesis genesis_block.json --rpc 127.0.0.1:18232 --rpc-user &lt;user&gt; --rpc-pass-file ~/.sost/rpc.pass \
+  --blocks 999999 --max-nonce 500000 --profile mainnet --realtime --threads &lt;N&gt;
+#    (--realtime is mandatory. Your chain data is kept: no resync.)</pre></div>
     <h4>Verify before you run anything</h4>
     <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>sha256sum -c SHA256SUMS</pre></div>
     <p>Or check them one by one against the published values:</p>
     <table>
       <tr><th>File</th><th>SHA-256</th></tr>
-      <tr><td><code>sost-node</code></td><td class="mg-hash">304d056d504960b4179543672f14bee28146788b985363a5e95d476cc6b1492e</td></tr>
-      <tr><td><code>sost-miner</code></td><td class="mg-hash">2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2</td></tr>
-      <tr><td><code>sost-cli</code></td><td class="mg-hash">489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07</td></tr>
+      <tr><td><code>sost-node</code></td><td class="mg-hash">ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd</td></tr>
+      <tr><td><code>sost-node</code> (v30000-final.1, optional hardening)</td><td class="mg-hash">7ca5ea630a50f45d70cedd073c1bbb239abd69ac6f2e30c316236121c601b736</td></tr>
+      <tr><td><code>sost-miner</code></td><td class="mg-hash">53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75</td></tr>
+      <tr><td><code>sost-cli</code></td><td class="mg-hash">09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b</td></tr>
     </table>
     <div class="mg-note mg-warn">
       <b>If the hash does not match, stop.</b> Downloading a file from the right URL does not make it the right file.
@@ -434,7 +476,7 @@ chmod 600 ~/.sost/rpc.pass</pre></div>
 
   <!-- ═══ 5 · START ═══════════════════════════════════════════════════ -->
   <details class="mg" id="s5"><summary>4 &middot; Starting your node and your miner</summary><div class="mg-in">
-    <p>Every option below was checked against <code>--help</code> on the published v16.3.0 binaries. Paths, labels and users
+    <p>Every option below was checked against <code>--help</code> on the published V30000 binaries. Paths, labels and users
       are placeholders &mdash; replace them with yours.</p>
 
     <h4>Start a node</h4>
@@ -549,13 +591,13 @@ chmod 600 ~/.sost/rpc.pass</pre></div>
   </div></details>
 
   <!-- ═══ 8 · NODE_BIND ═══════════════════════════════════════════════ -->
-  <details class="mg" id="s8"><summary>7 &middot; NODE_BIND &mdash; optional, and not before #30,000</summary><div class="mg-in">
+  <details class="mg" id="s8"><summary>7 &middot; NODE_BIND &mdash; optional &middot; open now</summary><div class="mg-in">
     <div class="mg-note mg-info">
       <b>You do not need this to mine.</b> Mining and normal DTD work without it. NODE_BIND exists for one reason: to enter
       the Jackpot V2 draw.
     </div>
     <h4>Preparing is not registering</h4>
-    <p>You can <b>create and protect the key today</b>. You <b>cannot register it</b> until V16 is live at #30,000 &mdash; the
+    <p>You can <b>create and protect the key today</b>. You <b>cannot register it</b> until V30000 is live at #30,000 &mdash; the
       transaction type does not exist before that height, and broadcasting it early achieves nothing.</p>
     <h4>Now: create the node key</h4>
     <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>umask 077
@@ -564,6 +606,7 @@ chmod 600 ~/.sost/node.key</pre></div>
     <p>This is a <b>different key</b> from your mining key and from your wallet. It identifies your node. It cannot move
       coins &mdash; but whoever holds it can impersonate your node's heartbeats, so treat it as a secret and back it up
       (see the next section).</p>
+    <div class="mg-note mg-info"><b>&#10004; NODE_BIND is open (go-ahead given 11 Oct 2026).</b> The first two-signature NODE_BIND confirmed in block <b>#30,194</b>, its first automatic NODE_HEARTBEAT in <b>#30,196</b>, and the chain has kept building on both. Use the <b>V30000 FINAL</b> CLI below: since #30,000 a bind carries the two-signature ownership rule (mining key + node key). Your node and miner must be on V30000 FINAL.</div>
     <h4>After #30,000: build the transaction</h4>
     <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>./sost-cli --wallet ~/sost-keys/my-wallet.json \
   --mining-key-label "my-mining-key" \
@@ -574,6 +617,18 @@ chmod 600 ~/.sost/node.key</pre></div>
     <div class="mg-note mg-warn">
       There is an older form, <code>createnodebind 1 &lt;hex&gt;</code>, that takes the private key on the command line.
       It still works and the tool warns you: it leaves your node key visible in <code>ps</code>. Use <code>--node-key-file</code>.
+    </div>
+    <div class="mg-note mg-warn">
+      <b>Right after your NODE_BIND confirms: check that it is yours.</b>
+      <ol style="margin:6px 0 4px 18px">
+        <li>Verify that the registered owner/address of your node key is <b>your</b> intended mining address.</li>
+        <li>Verify that the following heartbeats are associated with that node.</li>
+        <li>If the registered owner is not yours, stop relying on Jackpot eligibility and report it to the SOST developers.</li>
+      </ol>
+      NODE_BIND affects <b>Jackpot eligibility only</b>: it does <b>not</b> give anyone access to your wallet, does <b>not</b>
+      let anyone spend your SOST, and can <b>not</b> create or burn SOST. From #30,000 the FINAL build enforces a stronger ownership rule:
+      a NODE_BIND must be signed by <b>both</b> your mining key and your <b>node key</b> (the CLI does both from the command above),
+      so only the holder of a node key can bind it and a bind cannot be copied to another miner.
     </div>
     <h4>Then: broadcast it and check it landed</h4>
     <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>curl -s -X POST https://sostcore.com/rpc/public \
@@ -587,7 +642,7 @@ chmod 600 ~/.sost/node.key</pre></div>
       <h4>Keeping the heartbeats alive</h4>
       <p>Once the node runs with <code>--node-key-file</code>, it does the heartbeats <b>by itself</b>: a thread
         signs and broadcasts <b>one NODE_HEARTBEAT per epoch</b> &mdash; an epoch is <b>288 blocks (~48&nbsp;h)</b>,
-        the same cadence as the jackpot &mdash; but only once the node is bound and V16 is live (#30,000). You do
+        the same cadence as the jackpot &mdash; but only once the node is bound and V30000 is live (#30,000). You do
         not run <code>nodeheartbeat</code> by hand; that command exists only for unusual setups where the signing
         node is not the one you want emitting.</p>
       <p>What you actually have to do is <b>keep the node up</b>. Miss an epoch (node down, key removed) and that
@@ -659,7 +714,7 @@ chmod 600 ~/.sost/node.key</pre></div>
     <p><b>No.</b> Activation is automatic. Install the binaries in the window, and then leave your node alone. The only later
       restart is optional: adding <code>--node-key-file</code> for the Jackpot.</p>
     <h4>"What if I stay on the old version?"</h4>
-    <p>Before #30,000, nothing happens. From #30,000 a pre-V16 node applies the old rules and will reject blocks the network
+    <p>Before #30,000, nothing happens. From #30,000 a pre-V30000 node applies the old rules and will reject blocks the network
       accepts &mdash; it follows a chain nobody else is on. Your coins are safe; your node is not useful.</p>
   </div></details>
 
@@ -683,14 +738,14 @@ chmod 600 ~/.sost/node.key</pre></div>
           0 rejects, all 66 exceptions used once each.</li>
       </ul>
         <div class="mg-note mg-ok">
-          <b>This is fixed and downloadable in v16.3.0</b> (the binaries at the top of this page). A node from
-          v16.3.0 completes a full sync from genesis; you no longer need a pre-seeded <code>chain.json</code>.
-          <b>v16.2.3 does NOT contain the fix</b> &mdash; if you downloaded v16.2.3 and have not synced, update the
-          node binary to v16.3.0. Only <code>sost-node</code> changed; <code>sost-miner</code> and
-          <code>sost-cli</code> are the same binaries as v16.2.3.
+          <b>This is fixed and downloadable in V30000</b> (the binaries at the top of this page). A node from
+          V30000 completes a full sync from genesis; you no longer need a pre-seeded <code>chain.json</code>.
+          <b>Older versions do NOT contain the fix</b> &mdash; update to V30000. All three binaries
+          (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>) changed in V30000 and are
+          <b>not</b> byte-identical to v16.2.x; re-download and verify all three.
         </div>
         <p>We describe as <i>done</i> only what is proven: the fix is <b>merged in GitHub</b>, <b>running on the
-          production node</b>, and <b>published as a signed binary release (v16.3.0)</b> whose downloaded artifacts
+          production node</b>, and <b>published as a signed binary release (V30000)</b> whose downloaded artifacts
           were re-verified against their SHA-256. No external security audit of this software has been performed.</p></div></details>
 
   <p style="margin-top:34px;font-size:13.5px;color:var(--text3,#7b8794);line-height:1.75">
@@ -731,20 +786,20 @@ function mgFallback(txt,done){
      var b=document.getElementById('mgBadge'), l=document.getElementById('mgLine');
      if(!b||!l) return;
      if(h>=V16){
-       b.textContent='V16 ACTIVE · chain at #'+fc(h);
+       b.textContent='V30000 ACTIVE · chain at #'+fc(h);
        b.style.borderColor='#39ff14'; b.style.color='#39ff14';
-       l.innerHTML='V16 activated at block <b>#30,000</b>. The first DTD Jackpot V2 draw is <b>#'+fc(FIRST)+'</b>'+
+       l.innerHTML='V30000 activated at block <b>#30,000</b>. The first DTD Jackpot V2 draw is <b>#'+fc(FIRST)+'</b>'+
          (h>=FIRST?' and has already taken place.':' — '+fc(FIRST-h)+' blocks away.');
      } else if(h>=WIN){
        b.textContent='UPDATE YOUR NODE · chain at #'+fc(h);
        b.style.borderColor='#fb010d'; b.style.color='#ff6b6b';
-       l.innerHTML='<b>Swap the node now.</b> V16 activates at <b>#30,000</b> — '+fc(V16-h)+
-         ' blocks away. v16.3.0 changes only the node; the miner and CLI are byte-identical to v16.2.3.';
+       l.innerHTML='<b>Swap the node now.</b> V30000 activates at <b>#30,000</b> — '+fc(V16-h)+
+         ' blocks away. V30000 changes all three binaries; re-download and swap node, miner and cli.';
      } else {
        b.textContent='NOT YET ACTIVE · chain at #'+fc(h)+' · '+fc(V16-h)+' blocks to go';
        b.style.borderColor='#fbbf24'; b.style.color='#fbbf24';
-       l.innerHTML='Download and verify <b>v16.3.0</b> now, and swap the node <b>before #'+fc(V16)+'</b> — '+
-         fc(V16-h)+' blocks away. Only the node changed; the miner and CLI are byte-identical to v16.2.3.';
+       l.innerHTML='Download and verify <b>V30000</b> now, and swap node, miner and cli <b>before #'+fc(V16)+'</b> — '+
+         fc(V16-h)+' blocks away. All three binaries changed; swap node, miner and cli.';
      }
    }).catch(function(){});
 })();
@@ -782,17 +837,17 @@ function showOS(os) {
   }
 }
 </script>
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -802,16 +857,16 @@ function showOS(os) {
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

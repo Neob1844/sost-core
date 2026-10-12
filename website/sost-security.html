@@ -20,19 +20,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Security — 20 Implemented Security Features | Encryption, Multisig, P2P</title>
-<meta name="description" content="20 production security features: AES-256-GCM encryption, multisig 2-of-3, P2P encryption, PSBT offline signing, HD wallet BIP39, wallet policy controls.">
+<meta name="description" content="SOST security features: AES-256-GCM encryption, P2P encryption, HD wallet BIP39, wallet policy controls.">
 <meta name="keywords" content="SOST security, blockchain security, multisig, AES-256, PSBT, offline signing, P2P encryption, wallet security, HD wallet">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST Security — 20 Implemented Security Features">
-<meta property="og:description" content="20 production security features: AES-256-GCM encryption, multisig 2-of-3, P2P encryption, PSBT offline signing, HD wallet BIP39, wallet policy controls.">
+<meta property="og:description" content="SOST security features: AES-256-GCM encryption, P2P encryption, HD wallet BIP39, wallet policy controls.">
 <meta property="og:url" content="https://sostcore.com/sost-security.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Security — 20 Implemented Security Features">
-<meta name="twitter:description" content="20 production security features: AES-256-GCM encryption, multisig 2-of-3, P2P encryption, PSBT offline signing, HD wallet BIP39, wallet policy controls.">
+<meta name="twitter:description" content="SOST security features: AES-256-GCM encryption, P2P encryption, HD wallet BIP39, wallet policy controls.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -159,7 +159,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -178,7 +179,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -292,11 +293,34 @@
           <tr><td class="label">Chain selection</td><td class="highlight">Highest cumulative work (NOT longest chain)</td></tr>
           <tr><td class="label">Block work formula</td><td class="value"><code>floor(2^256 / (target + 1))</code></td></tr>
           <tr><td class="label">Fork resolution</td><td class="green">Atomic &mdash; full rollback on failure</td></tr>
-          <tr><td class="label">Max reorg depth</td><td class="value">500 blocks (~3.5 days)</td></tr>
+          <tr><td class="label">Max reorg depth</td><td class="value">500 blocks (~3.5 days). Confirmed on the real code path (scaled devnet lab): a reorg at/below the cap converges to the most-work chain; a reorg deeper than the cap is REJECTED &mdash; the node keeps its own chain even against more valid work, producing a persistent split (restart-stable). This bounds deep reorgs but can prevent automatic convergence after a very long partition &mdash; the <a href="#sacs" style="color:var(--cyan-primary)">deep-reorg recovery</a> for that case is devnet research, post-fork. Not a finality guarantee.</td></tr>
           <tr><td class="label">Orphan vs fork</td><td class="value">Separated: orphans (parent unknown) vs fork candidates (parent known)</td></tr>
           <tr><td class="label">Mempool recovery</td><td class="value">Valid non-coinbase txs returned to mempool after reorg; conflicts discarded</td></tr>
         </table>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- SACS — SOST AUTONOMOUS CHAIN SAFETY -->
+<section class="section" id="sacs">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// autonomous chain safety</div>
+      <h2 class="section-title">SOST Autonomous Chain Safety <span class="accent">(SACS)</span> &mdash; <span style="color:var(--amber-primary,#f59e0b)">LAB VERIFIED · RESEARCH</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;" class="fade-in">SOST nodes independently verify Proof-of-Work and chain validity. <b>SACS</b> is an autonomous safety layer that detects forks and reorganizations, protects affected transactions and applications, and supports autonomous recovery &mdash; <b>without masternodes, privileged validators, quorums or a developer-selected chain</b>. It is <b>not</b> a finality guarantee and does <b>not</b> make blocks irreversible against an adversary able to produce a valid higher-work chain.</p>
+    <div class="spec-body">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table class="code-table">
+        <tr><td class="label">Chain selection</td><td class="highlight">Highest cumulative VERIFIED work (never height, never peer-reported work)</td></tr>
+        <tr><td class="label">SACS Core (V16-compatible)</td><td class="value">Fork/reorg monitor, structured events, <code>getchainsafety</code> RPC, transaction-safety states (CONFIRMED→REORGED→REENTERED_MEMPOOL→CONFLICTED), wallet/DEX/exchange reconciliation, recovery/persistence &mdash; <b>observability &amp; application safety, no consensus change</b></td></tr>
+        <tr><td class="label">Status (Core)</td><td class="value">LAB VERIFIED on the research branch; <b>not yet deployed to mainnet</b> (no node binary swapped before the #30,000 fork)</td></tr>
+        <tr><td class="label">Deep-reorg model</td><td class="value">Research only (devnet): whether the 500-block cap should become an <b>operational alert</b> (a valid higher-work chain adopted after re-verification) rather than an automatic rejection. <b>Would require a future coordinated upgrade — never auto-added to V16.</b></td></tr>
+        <tr><td class="label">Mainnet today</td><td class="value">Unchanged: MAX_REORG_DEPTH = 500, hard checkpoints (≤3,554), atomic reorg with rollback</td></tr>
+      </table>
+      </div>
+      <p style="color:var(--text-secondary);line-height:1.8;margin-top:16px;">Principle: <b>consensus decides valid/invalid; SACS observes and protects</b>. A SACS alert can make a wallet, the DEX or an exchange wait for more confirmations or pause a sensitive credit &mdash; it can never, by itself, turn a valid block into an invalid one, nor halt honest mining. Blockchain truth always outranks any local database or UI.</p>
     </div>
   </div>
 </section>
@@ -308,6 +332,8 @@
       <div class="section-id"></div>
       <h2 class="section-title">Bond <span class="accent">Deterrence</span></h2>
     </div>
+
+    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-left:3px solid #fbbf24;padding:14px 16px;border-radius:4px;margin-bottom:20px;font-size:13px;color:var(--text-secondary);line-height:1.8;" class="fade-in"><strong style="color:#fbbf24;">HISTORICAL / SUPERSEDED.</strong> The multi-layer gold-custody bond mechanics described below (30% of gold value, redistribution to PoPC Pool / Gold Vault, star track-record) belong to the retired PoPC gold-custody design. PoPC was redesigned to a <strong>single native-SOST bond</strong> and is now <strong>paused / legacy</strong>, superseded by DTD / DTD Jackpot, with zero emission since V15 (#25,000). This section is retained for historical reference.</div>
 
     <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">The bond does not make fraud impossible — it makes it costly. Four layers of deterrence combine to make large-scale systematic fraud economically irrational.</p>
 
@@ -343,6 +369,8 @@
       <div class="section-id"></div>
       <h2 class="section-title">Audit &amp; Oracle <span class="accent">Resistance</span></h2>
     </div>
+
+    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-left:3px solid #fbbf24;padding:14px 16px;border-radius:4px;margin-bottom:20px;font-size:13px;color:var(--text-secondary);line-height:1.8;" class="fade-in"><strong style="color:#fbbf24;">HISTORICAL / SUPERSEDED.</strong> The ConvergenceX entropy-audit and bond-pricing mechanics below describe the retired PoPC gold-custody design. PoPC is now a <strong>single native-SOST bond</strong>, <strong>paused / legacy</strong> (superseded by DTD / DTD Jackpot), with zero emission since V15 (#25,000). Retained for historical reference.</div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
@@ -413,15 +441,15 @@
         </table>
         <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.8;">Relaxed stability is only available when the chain needs help (hashrate dropped), never when an attacker is dominating. This is the correct security trade-off.</p>
         <table class="code-table" style="margin-top:16px">
-          <tr><th>Parameter</th><th>V1 (&lt;1450)</th><th>V2 (&ge;1450)</th><th>V3 (&ge;4100)</th><th>V3.1 (&ge;4110)</th><th>V4 (&ge;4200)</th><th>V6 (&ge;5000)</th></tr>
-          <tr><td class="label">Halflife</td><td class="value">48h</td><td class="green">24h</td><td class="green">24h</td><td class="green">24h</td><td class="green">24h</td><td class="green">24h</td></tr>
-          <tr><td class="label">Delta cap</td><td class="value">6.25%</td><td class="green">12.5%</td><td class="green">12.5%</td><td class="green">12.5%</td><td class="cyan">1.56% when ahead*</td><td class="cyan">1.56% when ahead*</td></tr>
-          <tr><td class="label">Slew rate</td><td class="value">&plusmn;1</td><td class="value">&plusmn;1</td><td class="green">&plusmn;3</td><td class="green">&plusmn;3 (stored)</td><td class="green">&plusmn;3 (stored)</td><td class="cyan">&plusmn;1</td></tr>
-          <tr><td class="label">H10/H11 scale</td><td class="value" colspan="5">3</td><td class="cyan">2 (smoothed)</td></tr>
-          <tr><td class="label">Anti-stall</td><td class="value" colspan="2">max(lag&times;600, 7200s)</td><td class="value">max(lag&times;600, 7200s)</td><td class="green">Always 7,200s</td><td class="green">Always 7,200s</td><td class="green">Always 7,200s</td></tr>
-          <tr><td class="label">Ahead Guard</td><td class="value" colspan="4">&mdash;</td><td class="cyan">Enter &ge;16, exit &le;8</td><td class="cyan">Enter &ge;16, exit &le;8</td></tr>
+          <tr><th>Parameter (HISTORICAL)</th><th>V1 (&lt;1450)</th><th>V2 (&ge;1450)</th><th>V3 (&ge;4100)</th><th>V3.1 (&ge;4110)</th><th>V4 (&ge;4170)</th><th>V5 (&ge;4300)</th><th>V6 (&ge;5000)</th></tr>
+          <tr><td class="label">Halflife</td><td class="value">48h</td><td class="green">24h</td><td class="green">24h</td><td class="green">24h</td><td class="green">24h</td><td class="green">24h</td><td class="green">24h</td></tr>
+          <tr><td class="label">Delta cap</td><td class="value">6.25%</td><td class="green">12.5%</td><td class="green">12.5%</td><td class="green">12.5%</td><td class="cyan">1.56% down when ahead*</td><td class="cyan">1.56% down when ahead*</td><td class="green">12.5%</td></tr>
+          <tr><td class="label">Slew rate</td><td class="value">&plusmn;1</td><td class="value">&plusmn;1</td><td class="green">&plusmn;3</td><td class="green">&plusmn;3 (stored)</td><td class="green">&plusmn;3 (stored)</td><td class="green">&plusmn;3 (stored)</td><td class="cyan">&plusmn;1</td></tr>
+          <tr><td class="label">H10/H11 scale</td><td class="value" colspan="6">3</td><td class="cyan">2 (smoothed)</td></tr>
+          <tr><td class="label">Anti-stall</td><td class="value" colspan="2">max(lag&times;600, 7200s)</td><td class="value">max(lag&times;600, 7200s)</td><td class="green">Always 7,200s</td><td class="green">Always 7,200s</td><td class="cyan">3,600s</td><td class="cyan">3,600s</td></tr>
+          <tr><td class="label">Ahead Guard</td><td class="value" colspan="4">&mdash;</td><td class="cyan">Enter &ge;16, exit &le;8</td><td class="cyan">Enter &ge;16, exit &le;8</td><td class="value">&mdash; (ended #4,999)</td></tr>
         </table>
-        <p style="color:var(--text-dim);font-size:12px;margin-top:8px;line-height:1.8;">All forks are forward-only (no regenesis). *V4 Ahead Guard: when chain &ge;16 blocks ahead and profile &ge;H8, bitsQ downward delta clamped to 1/64 (&asymp;1.56%) per block, preventing oscillation between bitsQ and equalizer.</p>
+        <p style="color:var(--text-dim);font-size:12px;margin-top:8px;line-height:1.8;">All forks are forward-only (no regenesis). This table is HISTORICAL (blocks &lt; 5,175). *V4 Ahead Guard (active #4,170&ndash;#4,999 only): when chain &ge;16 blocks ahead, bitsQ downward delta clamped to 1/64 (&asymp;1.56%) per block. <b>CURRENT MAINNET RULE:</b> bitsQ avg288 (#5,175+) with dead band &plusmn;15 s and 0.5/1.0/2.0/&asymp;3.03% steps (#5,270+); Equalizer 43 profiles E7&ndash;H35 via direct lag map (#5,323+), anti-stall at 3,600 s (60 min), V12 triangular cascade (#7,350+).</p>
       </div>
     </div>
   </div>
@@ -525,8 +553,8 @@
           <tr><td class="label">Treasury safety profile</td><td class="green">Complete — daily limits, per-TX limits, vault mode, policy file (~/.sost/wallet_policy.json)</td></tr>
           <tr><td class="label">RBF (Replace-by-Fee)</td><td class="green">Complete — full RBF mempool policy, higher fee-rate replacement, no consensus change</td></tr>
           <tr><td class="label">CPFP (Child-Pays-for-Parent)</td><td class="green">Complete — package fee-rate aware block template builder, miner policy only</td></tr>
-          <tr><td class="label">SOST-PSBT offline signing</td><td class="green">Complete — JSON+base64 format, create/sign/combine/finalize/broadcast</td></tr>
-          <tr><td class="label">Native multisig (sost3)</td><td class="green">Complete — redeemScript-hash M-of-N CHECKMULTISIG, 2-of-3 treasury support</td></tr>
+          <tr><td class="label">SOST-PSBT offline signing</td><td style="color:#f5b301">LIBRARY ONLY — JSON+base64 format in code with unit tests; multisig finalize is a stub; no CLI or RPC command. Not usable on mainnet today (offline signing = single-key raw transaction moved by hand).</td></tr>
+          <tr><td class="label">Native multisig (sost3)</td><td style="color:#f5b301">NOT ACTIVE ON MAINNET — M-of-N CHECKMULTISIG exists as library code with unit tests only; not in consensus, addresses, CLI or RPC. A future native multisig is a separate, explicitly activated upgrade.</td></tr>
           <tr><td class="label">HD wallet (BIP39)</td><td class="green">Complete — 12-word seed phrases, CLI + web wallet compatible</td></tr>
         </table>
       </div>
@@ -572,6 +600,7 @@
           <tr><td class="label">RBF (Replace-by-Fee) mempool policy</td><td class="green">Complete</td></tr>
           <tr><td class="label">CPFP (Child-Pays-for-Parent) miner policy</td><td class="green">Complete</td></tr>
           <tr><td class="label">HD wallet (BIP39 seed phrases)</td><td class="green">Complete — web + CLI compatible</td></tr>
+          <tr><td class="label">SEC2 (V30000) — RPC hardening: getblockhash/getblock crash fixes (dispatch try/catch, JSON parser delimiter-advance, nested-array cap)</td><td class="green">Complete</td></tr>
         </table>
       </div>
     </div>
@@ -587,28 +616,28 @@
     <!-- POST-QUANTUM CRYPTOGRAPHY -->
     <div class="section-header fade-in">
       <div class="section-id">POST-QUANTUM</div>
-      <h2 class="section-title">Quantum <span class="accent">Resistance</span> Roadmap</h2>
+      <h2 class="section-title">Post-Quantum <span class="accent">Research</span> Track</h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:20px" class="fade-in delay-1">SOST uses secp256k1 ECDSA (same as Bitcoin) for transaction signatures. While no practical quantum threat exists today, SOST has a constitutional migration plan to post-quantum cryptography.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:20px" class="fade-in delay-1">SOST uses secp256k1 ECDSA (same as Bitcoin) for transaction signatures, and ECDSA remains the active signing scheme. Post-quantum cryptography is an <strong>open research track</strong> &mdash; it is <strong>not active</strong>, has <strong>no activation height or date</strong>, and makes no quantum-resistance claim. The notes below record the direction of that research, not a committed deployment schedule.</p>
 
     <table class="spec-table fade-in delay-2" style="margin-bottom:20px">
-      <tr><td class="label">Current scheme</td><td class="value">ECDSA secp256k1 (libsecp256k1) — 64-byte signatures</td></tr>
-      <tr><td class="label">Selected PQC algorithm</td><td class="value" style="color:var(--green-primary)">ML-DSA (NIST FIPS 204; formerly CRYSTALS-Dilithium)</td></tr>
+      <tr><td class="label">Current scheme</td><td class="value">ECDSA secp256k1 (libsecp256k1) — 64-byte signatures — active</td></tr>
+      <tr><td class="label">PQC algorithm under study</td><td class="value">ML-DSA (NIST FIPS 204; formerly CRYSTALS-Dilithium) — candidate, not adopted</td></tr>
       <tr><td class="label">PQC signature size</td><td class="value">2,420 bytes (Level 3)</td></tr>
-      <tr><td class="label">PQC address prefix</td><td class="value" style="color:var(--cyan-primary)">sost2 (reserved)</td></tr>
-      <tr><td class="label">SHA-256 status</td><td class="value" style="color:var(--green-primary)">Safe — Grover reduces to 128-bit, still sufficient</td></tr>
-      <tr><td class="label">Quantum threat timeline</td><td class="value">~4,000 logical qubits needed — estimated 10-15 years away</td></tr>
+      <tr><td class="label">PQC address prefix</td><td class="value">sost2 — reserved, not active</td></tr>
+      <tr><td class="label">SHA-256 status</td><td class="value">Grover reduces to 128-bit, still sufficient</td></tr>
     </table>
 
     <div style="background:var(--bg-card,#0a0a0a);border:1px solid var(--border-dim,#1a1a1a);border-left:3px solid var(--cyan-primary,#22d3ee);padding:16px 20px;margin-bottom:24px;border-radius:0 6px 6px 0" class="fade-in delay-3">
-      <div style="font-size:11px;color:var(--cyan-primary);letter-spacing:1px;font-weight:600;margin-bottom:8px">MIGRATION TIMELINE</div>
+      <div style="font-size:11px;color:var(--cyan-primary);letter-spacing:1px;font-weight:600;margin-bottom:8px">RESEARCH TRACK — NO ACTIVATION HEIGHT OR DATE</div>
       <div style="font-size:12px;color:var(--text-secondary);line-height:1.8">
-        <b style="color:var(--green-primary)">Phase 1 (COMPLETED)</b> — Algorithm selected: ML-DSA<br>
-        <b>Phase 2 (2027)</b> — liboqs prototype integration<br>
-        <b>Phase 3 (2028 Q1)</b> — Dual signatures on testnet (sost1 + sost2)<br>
-        <b>Phase 4 (2028 Q3)</b> — Mainnet activation of sost2 addresses<br>
-        <b>Phase 5 (2030+)</b> — ECDSA deprecation via 75% miner vote
+        This is a research direction only. There is <b>no committed activation height, date, or quarter</b>, and nothing below is scheduled or deployed:<br>
+        &bull; Evaluate PQC candidates (ML-DSA under study)<br>
+        &bull; Prototype integration (liboqs)<br>
+        &bull; Dual-signature experiments on testnet (sost1 + sost2)<br>
+        &bull; Any eventual mainnet adoption would require a future announced fork and miner consent<br>
+        ECDSA remains the active signing scheme until and unless that happens.
       </div>
     </div>
 
@@ -688,7 +717,7 @@ in the project&rsquo;s Security Hall of Fame.</pre>
     </div>
 
     <div class="notice fade-in delay-4" style="border-left-color:var(--cyan-primary);">
-      <strong>License:</strong> SOST uses the MIT License — fully open source<a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan-primary);">LICENSE</a> file for full terms.
+      <strong>License:</strong> SOST uses the MIT License — fully open source. See the <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan-primary);">LICENSE</a> file for full terms.
     </div>
   </div>
 </section>
@@ -702,7 +731,7 @@ in the project&rsquo;s Security Hall of Fame.</pre>
   </div>
 </footer>
 
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
@@ -729,16 +758,16 @@ var D={
 'ban':'<b>Ban System</b> — Misbehaving peers accumulate penalty points. At 100 points, the peer is banned for 24 hours. Invalid blocks = 100 pts (instant ban). Double-spend attempts = 50 pts. Protects against DoS and eclipse attacks.',
 'RPC auth':'<b>RPC Authentication</b> — The JSON-RPC interface requires username/password (HTTP Basic Auth). Bound to localhost by default. Prevents unauthorized remote access to node control.',
 'BIP39':'<b>BIP39 Seed Phrases</b> — Your wallet generates a 12-word mnemonic from 128 bits of entropy. These 12 words can recover all your private keys on any device. Uses PBKDF2-HMAC-SHA512 with 2048 iterations.',
-'PSBT':'<b>SOST-PSBT</b> — Partially Signed Bitcoin Transaction format adapted for SOST. Create transactions on an online computer, sign them on an air-gapped offline computer. Private keys never touch the internet.',
-'multisig':'<b>Multisig (M-of-N)</b> — Requires multiple signatures to spend funds. A 2-of-3 setup means any 2 of 3 keyholders must approve. Used for treasury protection. Addresses start with sost3.',
-'OP_CHECKMULTISIG':'<b>OP_CHECKMULTISIG</b> — Script opcode that verifies M-of-N signatures against N public keys. Supports up to 15 keys. Activates at block height 2000.',
+'PSBT':'<b>SOST-PSBT</b> — Partially Signed Bitcoin Transaction format adapted for SOST. Create transactions on an online computer, sign them on an air-gapped offline computer. Private keys never touch the internet. In SOST this format exists as library code only; no CLI/RPC command uses it yet.',
+'multisig':'<b>Multisig (M-of-N)</b> — Requires multiple signatures to spend funds. A 2-of-3 setup means any 2 of 3 keyholders must approve. Addresses would start with sost3. NOT active on SOST mainnet today (library code only).',
+'OP_CHECKMULTISIG':'<b>OP_CHECKMULTISIG</b> — Script opcode that verifies M-of-N signatures against N public keys. Supports up to 15 keys. In SOST it exists in library code only; the planned block-2000 activation never took effect in consensus.',
 'RBF':'<b>Replace-by-Fee</b> — If your transaction is stuck in the mempool, you can replace it with a new version that pays a higher fee. The original transaction is dropped. Mempool policy only — no consensus change.',
 'CPFP':'<b>Child-Pays-for-Parent</b> — A new transaction (child) that spends an output from a stuck transaction (parent) can pay enough fees to make both attractive to miners. Package fee-rate optimization.',
 'treasury':'<b>Treasury Safety Profile</b> — Configurable spending limits: daily send limit, per-transaction limit, vault mode (only trusted addresses). Even if someone accesses your wallet, they cannot drain it all at once.',
 'address book':'<b>Trusted Address Book</b> — Save addresses with labels and trust levels (Trusted, Known, Blocked, Unknown). Blocked addresses cannot receive funds. Unknown addresses trigger a first-time send warning.',
 'coinbase maturity':'<b>Coinbase Maturity</b> — Mining rewards cannot be spent until 1,000 blocks (~7 days) after they are mined. Prevents spending coins from blocks that might be orphaned during a chain reorganization.',
-'checkpoints':'<b>Checkpoints</b> — Hardcoded block hashes at known heights. The node rejects any chain that disagrees with these checkpoints. MAX_REORG_DEPTH = 500 blocks (~3.5 days) limits how far back a reorganization can go.',
-'cASERT':'<b>cASERT</b> — Cascading Absolute Schedule Exponential Rising Targets. Unified difficulty adjustment system. V1: 48h/6.25%. V2 (1450+): 24h/12.5%. V3 (4100+): slew &plusmn;3, lag floor. V3.1 (4110+): stored profile_index, anti-stall always 7200s. V4 (4200+): Ahead Guard clamps bitsQ relaxation to 1.56%/block when &ge;16 ahead. V6 (5000+): slew &plusmn;1, H10/H11 scale=2. Current (5175+): avg288 bitsQ (avg of last 288 intervals vs 600s). Dynamic cap (5260+): 0%/0.5%/1.5%/2.5%/3.0% by deviation, median288 check. Equalizer: emergency-only, height-gated ceiling. Pre-V12 (#5,750..#7,349): H13 ceiling, 21 active E7-H13, 22 reserved H14-H35. V12 (#7,350..#11,999): H20 ceiling, 28 active E7-H20, 15 reserved H21-H35. V13 (#12,000+): H35 ceiling, 43 active E7-H35, 0 reserved (full range live). H10+ margin=115.',
+'checkpoints':'<b>Checkpoints</b> — Two distinct things. <b>Hard checkpoints</b> are hardcoded (last at height 3,554); the node rejects any chain that disagrees with them (a trust assumption for early history, not a mere optimisation). <b>assumevalid</b> only skips re-running the expensive PoW/signature recomputation for already-trusted history; it does NOT gate chain selection, subsidy, UTXO or difficulty. On the production node the dynamic checkpoint updater is NOT running (no checkpoint.json is imposed). Separately, MAX_REORG_DEPTH = 500 blocks (~3.5 days) is the reorg-depth rule; a deeper reorg is rejected even with more work — a trade-off SACS research studies.',
+'cASERT':'<b>cASERT</b> — Cascading Absolute Schedule Exponential Rising Targets. Unified difficulty adjustment system. V1: 48h/6.25%. V2 (1450+): 24h/12.5%. V3 (4100+): slew &plusmn;3, lag floor. V3.1 (4110+): stored profile_index, anti-stall 7200s. V4 (4170&ndash;4999): Ahead Guard clamps bitsQ relaxation to 1.56%/block when &ge;16 ahead. V5 (4300+): anti-stall 3600s (60 min, current). V6 (5000+): slew &plusmn;1, H10/H11 scale 2. Current (5175+): avg288 bitsQ (avg of last 288 intervals vs 600s). Dynamic cap (5270+): dead band &plusmn;15s, then 0.5%/1.0%/2.0%/&asymp;3.03% by deviation (HISTORICAL 5260&ndash;5269: &plusmn;30s, 0.5/1.5/2.5/3%, median288 check). Equalizer: direct lag map (5323+), V12 triangular cascade (7350+), height-gated ceiling. Pre-V12 (#5,750..#7,349): H13 ceiling, 21 active E7-H13, 22 reserved H14-H35. V12 (#7,350..#11,999): H20 ceiling, 28 active E7-H20, 15 reserved H21-H35. V13 (#12,000+): H35 ceiling, 43 active E7-H35, 0 reserved (full range live). H10+ margin=115.',
 'ConvergenceX':'<b>ConvergenceX</b> — CPU-friendly, memory-hard Proof-of-Work. Each attempt: 32×32 linear system, 100K sequential rounds, 8GB RAM (4GB dataset + 4GB scratchpad). Sequential dependency and tight memory coupling raise the cost of a competitive ASIC port; no claim is made that one is impossible. Node verification: ~500MB, ~0.2ms.',
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata embedded in transaction outputs. 12-byte header + up to 243-byte body. Enables on-chain attestation and proof-of-discovery. Activates at mainnet height 5000.',
 'FORTIFY_SOURCE':'<b>Build Hardening</b> — 6 compiler/linker security flags: stack protector, stack clash protection, PIE (ASLR), full RELRO, FORTIFY_SOURCE, -O2. Prevents buffer overflow, stack smashing, and return-oriented programming attacks.',
@@ -786,11 +815,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else init();
 })();
 </script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -800,16 +829,16 @@ else init();
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

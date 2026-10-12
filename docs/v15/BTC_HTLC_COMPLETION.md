@@ -51,5 +51,7 @@ the heavy validation). Until that runs, treat the byte-order/sighash of the
 signed spending path as **unvalidated against a live network** — which is exactly
 why BTC stays gated OFF. This is `OPTION B: CODE READY, NOT ACTIVATED`.
 
+> **Update (2026-10-12):** a real bitcoind-regtest run (funding+claim, refund, reorg, and a SOST devnet <-> BTC regtest swap) was later executed in the lab on branch `feat/btc-atomic-swap-complete` / `feat/asset-passport-onchain-devnet` (evidence `docs/security/ATOMIC_SWAP_E2E_LAB.md` on that branch); that code is not merged to main and BTC signing remains DISABLED on mainnet.
+
 See `BTC_ATOMIC_SWAP_RUNBOOK.md` for how to configure + run the regtest
 validation and how to (eventually) enable BTC.

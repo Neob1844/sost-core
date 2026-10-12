@@ -90,8 +90,8 @@
   @keyframes dexBtnGlow { 0%,100% { box-shadow: 0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2); } 50% { box-shadow: 0 0 22px rgba(245,158,11,0.7),0 0 44px rgba(74,222,128,0.35); } }
 
 </style>
-<script src="js/nav-toggle.js?v=v392" defer></script>
-<script src="sost-search.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<script src="sost-search.js?v=v553" defer></script>
 <style>
 /* === Nav parity with sost-genesis: full-width logo bar + section links visible on
    desktop; collapse to hamburger only on mobile (<=768px). Scoped to <nav> so the
@@ -103,6 +103,7 @@ nav .nav-links { width: 100%; }
   nav .nav-hamburger { display: none !important; }
 }
 </style>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -121,7 +122,7 @@ nav .nav-links { width: 100%; }
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -181,6 +182,7 @@ nav .nav-links { width: 100%; }
     <p>Pools are a powerful coordination mechanism. They smooth out variance for individual miners and make participation easier for people with small hashrate. They are also, historically, the single biggest source of centralization in proof-of-work networks. Two or three pools controlling 60-80% of block production is the norm, not the exception.</p>
     <p>SOST's choice during pre-market testing is to <b>not run an official pool and not ship pool-friendly tooling</b>. That is a deliberate experiment, not a permanent rule.</p>
     <div class="pull">Decentralization is easier to keep than to recover.</div>
+    <p style="margin-top:14px"><b>Current reward context.</b> Since block #25,000 (V15) the split is <b>50% miner / 50% DTD</b>. The DTD distributes the non-miner half of every block to active miners on-chain, deterministically and independently of any mining pool &mdash; so the non-miner share reaches participants without a pool operator. This does not by itself make pools impossible; it changes who the block value flows to.</p>
   </div>
 </section>
 
@@ -238,7 +240,7 @@ nav .nav-links { width: 100%; }
   <div class="container">
     <div class="section-id">FUTURE</div>
     <h2 class="section-title">What might change</h2>
-    <p>Solo-miner-first is a stance for the trial window, not a forever rule. After block 10,000 the data on distribution, propagation and fork rate will inform whether the network needs additional measures &mdash; for example latency-bound PoW, miner-address-bound challenge, or non-outsourceable mining (today these are research notes, not commitments). Any consensus change of that scale would only graduate to a real fork after public spec, tests, audit and coordinated activation.</p>
+    <p>Solo-miner-first is a stance for the trial window, not a forever rule. The data gathered since the early trial window informs whether the network needs additional measures &mdash; for example latency-bound PoW, miner-address-bound challenge, or non-outsourceable mining (today these are research notes, not commitments). Any consensus change of that scale would only graduate to a real fork after public spec, tests, audit and coordinated activation.</p>
     <p>If the network proves it can sustain decentralised solo mining, this stance keeps. If it doesn't, the design space is on the record and the community can decide.</p>
   </div>
 </section>
@@ -250,10 +252,10 @@ nav .nav-links { width: 100%; }
 </footer>
 
 <script src="js/sost-music.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -263,16 +265,16 @@ nav .nav-links { width: 100%; }
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

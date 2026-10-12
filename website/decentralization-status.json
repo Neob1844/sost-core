@@ -1,0 +1,114 @@
+{
+  "_about": "SOST decentralization status \u2014 canonical machine-readable source. Internal engineering measurements, not an independent third-party audit.",
+  "_labels": {
+    "OBSERVED": "directly measured now from this node / chain state",
+    "KNOWN": "a documented fact about project-operated infrastructure",
+    "INFERRED": "reasoned from observed data; not a direct measurement",
+    "UNKNOWN": "not evidenced; deliberately not asserted"
+  },
+  "timestamp": "2026-10-03T11:12:22Z",
+  "consensus_architecture": {
+    "value": "Permissionless Proof-of-Work",
+    "label": "KNOWN",
+    "note": "ConvergenceX / SbPoW Phase-2 + cASERT; operational decentralization is ongoing"
+  },
+  "chain_tip": {
+    "value": 29071,
+    "label": "OBSERVED"
+  },
+  "active_288": {
+    "value": 2,
+    "label": "OBSERVED",
+    "note": "distinct block producers in the last 288 blocks (from geteligibleminers)"
+  },
+  "distinct_recent_miners": {
+    "value": 2,
+    "label": "OBSERVED",
+    "note": "same as active_288"
+  },
+  "producers_since_genesis": {
+    "value": 230,
+    "label": "OBSERVED",
+    "note": "unique addresses that have ever produced a block"
+  },
+  "producers_in_window_from_7100": {
+    "value": 195,
+    "label": "OBSERVED",
+    "note": "unique producers since Phase-2 window start (block 7100)"
+  },
+  "largest_observed_miner_share": {
+    "value": null,
+    "label": "INFERRED",
+    "note": "not exposed by a single RPC method; active_288=2 implies recent production is concentrated among very few addresses"
+  },
+  "observed_connected_peers": {
+    "value": 2,
+    "label": "OBSERVED",
+    "note": "peers THIS node is connected to; a peer/IP is not evidence of an independent operator"
+  },
+  "known_independent_nodes": {
+    "value": null,
+    "label": "UNKNOWN",
+    "note": "independent ownership is not verifiable from peer IPs; not asserted"
+  },
+  "known_countries_independent_operators": {
+    "value": null,
+    "label": "UNKNOWN",
+    "note": "geolocation of a peer IP does not establish an independent operator"
+  },
+  "infrastructure_nodes_project_operated": {
+    "value": {
+      "germany": {
+        "status": "active",
+        "label": "KNOWN"
+      },
+      "singapore": {
+        "status": "planned",
+        "label": "PLANNED"
+      }
+    },
+    "note": "project-operated infrastructure; historical deployments up to 11 nodes do not equal 11 independent operators"
+  },
+  "bootstrap_dependencies": {
+    "value": [
+      "seed-eu.sostcore.com",
+      "seed-apac.sostcore.com",
+      "seed-us.sostcore.com",
+      "seed.sostcore.com (alias)"
+    ],
+    "label": "KNOWN",
+    "note": "all default seeds are under one domain (sostcore.com) \u2014 a single DNS/domain dependency; see docs/decentralization/BOOTSTRAP_AUDIT.md"
+  },
+  "public_rpc_instances": {
+    "value": 1,
+    "label": "KNOWN",
+    "note": "sostcore.com/rpc/public (project-operated; read + broadcast, admin/wallet methods auth-gated)"
+  },
+  "explorer_instances": {
+    "value": 1,
+    "label": "KNOWN",
+    "note": "sostcore.com/sost-explorer.html (project-operated)"
+  },
+  "release_distribution_sources": {
+    "value": [
+      "github.com/Neob1844/sost-core/releases"
+    ],
+    "label": "KNOWN",
+    "note": "single primary source today (GitHub); reproducible build recipe published (docs/decentralization/REPRODUCIBLE_BUILD.md + Dockerfile.reproducible) for independent hash verification"
+  },
+  "persistent_peer_recovery": {
+    "value": "not found in audited code",
+    "label": "KNOWN",
+    "note": "Bootstrap audit (docs/decentralization/BOOTSTRAP_AUDIT.md) finds no persistent peer store and no ADDR/GETADDR gossip in src/sost-node.cpp; automatic redial covers only --connect peers, not seed-only nodes. Earlier 'implemented/lab-verified' wording is not supported by the current code and is being corrected."
+  },
+  "infrastructure_independence_test_24h": {
+    "value": "planned",
+    "label": "PLANNED",
+    "note": "not executed; see docs/decentralization/INFRA_INDEPENDENCE_TEST_PLAN.md"
+  },
+  "external_security_audit": {
+    "value": "not_completed",
+    "label": "KNOWN"
+  },
+  "disclaimer": "These are internal engineering measurements, not an independent third-party audit. A peer/IP is never reported as an independent operator without evidence."
+}

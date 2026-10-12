@@ -1,0 +1,19 @@
+[Unit]
+Description=SOST address earnings indexer (read-only; lifetime mining / DTD normal / DTD jackpot per address -> /api/address_earnings.json)
+After=network-online.target sost-rpc-proxy.service
+Wants=sost-rpc-proxy.service
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/sost/ops/address-earnings-indexer.py --rpc http://127.0.0.1:18299/ --state /var/lib/sost-earnings/state.json --out /var/www/sost-website/website/api/address_earnings.json
+Restart=always
+RestartSec=10
+StateDirectory=sost-earnings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/sost-website/website/api /var/lib/sost-earnings
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

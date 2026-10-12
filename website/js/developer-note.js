@@ -37,7 +37,7 @@
     '    <p>For that reason, we are walking an unknown path together.</p>',
     '    <p><span style="color:#fb010d">SOST</span> may never obtain market value. It may never be listed. It may fail. This must be clear to everyone so that no false expectations are created.</p>',
     '    <p>Mine, run a node, test, and participate only if you understand that this is an experimental project.</p>',
-    '    <p class="sost-devnote-sig">&mdash; NeoB</p>',
+    '    <p class="sost-devnote-sig">&mdash; Neob</p>',
     '  </div>',
     '</div>'
   ].join('\n');

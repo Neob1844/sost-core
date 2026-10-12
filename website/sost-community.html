@@ -170,7 +170,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -189,7 +190,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -282,14 +283,14 @@
         <span class="card-url">BTCTalk ANN thread</span>
       </a>
 
-      <a href="https://t.me/sostprotocol" target="_blank" rel="noopener" class="link-card">
+      <a href="https://t.me/SOSTProtocolOfficial" target="_blank" rel="noopener" class="link-card">
         <span class="card-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">COMMUNITY</span>
         <span class="card-icon" style="color:var(--cyan-primary);">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </span>
         <h3>Telegram</h3>
         <p>Join the official SOST community channel. News, mining support, PoPC updates, and direct access to the development team.</p>
-        <span class="card-url">t.me/sostprotocol</span>
+        <span class="card-url">t.me/SOSTProtocolOfficial</span>
       </a>
 
       <a href="sost-talk.html" class="link-card">
@@ -323,7 +324,7 @@
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">MINE</div>
         <h3 style="color:var(--red-primary)">Run a Miner</h3>
-        <p>CPU-friendly, memory-hard ConvergenceX mining. 8 GB RAM required per thread (4 GB dataset + 4 GB scratchpad). The reference miner is CPU-oriented; SOST does not enforce CPU-only at consensus level. Build from source and start mining with <code style="color:var(--cyan-primary)">sost-miner</code>. Every block you mine allocates 25% to the Gold Reserve automatically.</p>
+        <p>CPU-friendly, memory-hard ConvergenceX mining. 8 GB RAM required per thread (4 GB dataset + 4 GB scratchpad). The reference miner is CPU-oriented; SOST does not enforce CPU-only at consensus level. Build from source and start mining with <code style="color:var(--cyan-primary)">sost-miner</code>. (Historical: blocks mined before #25,000 allocated 25% to the Gold Reserve automatically; since V15 that share is 0 and the per-block split is 50% miner / 50% DTD.)</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">NODE</div>
@@ -337,8 +338,8 @@
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:#b8860b33;color:#b8860b;">PoPC</div>
-        <h3 style="color:#b8860b">Prove Gold Custody</h3>
-        <p>When PoPC activates (target: April 2027), prove custody of XAUT/PAXG and earn rewards from the PoPC Pool. Model A (self-custody bonds) or Model B (timelocked escrow).</p>
+        <h3 style="color:#b8860b">PoPC (Legacy)</h3>
+        <p>PoPC was redesigned to a single native-SOST bond and is now <strong>paused / legacy</strong>, superseded by DTD / DTD Jackpot (zero emission since V15, #25,000). The earlier Model A / Model B gold-custody design is historical; there is no active custody program to join today.</p>
       </div>
     </div>
   </div>
@@ -370,7 +371,7 @@
     </div>
 
     <div class="notice fade-in delay-2">
-      For security disclosures, use GitHub's private vulnerability reporting.
+      For security disclosures, use the private Security Vulnerability Report form at <a href="sost-contact.html" style="color:var(--cyan-primary);text-decoration:none;">sost-contact.html</a> (do NOT open a public GitHub issue).
     </div>
   </div>
 </section>
@@ -398,7 +399,7 @@
           <tr><td class="label">Open source</td><td class="green">MIT license — use, modify, distribute freely</td></tr>
           <tr><td class="label">No ongoing parameter governance</td><td class="green">Monetary rules immutable at genesis — no DAO, no voting</td></tr>
           <tr><td class="label">CPU-friendly</td><td class="green">ConvergenceX resists ASIC and GPU concentration</td></tr>
-          <tr><td class="label">Constitutional reserves</td><td class="green">25% Gold Funding Vault + 25% PoPC Pool — hardcoded, immutable</td></tr>
+          <tr><td class="label">Constitutional reserves</td><td class="green">None since V15 (#25,000): 50% miner / 50% DTD. HISTORICAL (blocks 0&ndash;24,999): 25% Gold Funding Vault + 25% PoPC Pool &mdash; balances now frozen, they fund the DTD Jackpot</td></tr>
           <tr><td class="label">Fair launch</td><td class="green">No premine, no ICO, no VC allocation, no insider tokens</td></tr>
         </table>
       </div>
@@ -435,17 +436,17 @@
   </div>
 </footer>
 
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -455,16 +456,16 @@
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

@@ -645,7 +645,8 @@
 </style>
 
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -668,7 +669,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -754,9 +755,9 @@
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; Documented publicly</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; RPC interfaces ready (create / monitor / claim)</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold,#f59e0b);">&#9679; PAUSED INDEFINITELY &middot; superseded by DTD / DTD Jackpot</span>
-        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Activates at V15 / block 25,000</span>
+        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Legacy &mdash; #25,000 (V15) is past; PoPC remains paused / superseded by DTD</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Gold Boost disabled on mainnet</span>
-        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Not tradeable in V15 (no contract/position trading)</span>
+        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Not tradeable in the current release (V30000) (no contract/position trading)</span>
       </div>
     </div>
   </div>
@@ -875,8 +876,8 @@ r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
         The <strong>Model A / Model B</strong> design and the Ethereum <strong>SOSTEscrow</strong> contract below are
         <strong style="color:#c084fc">historical</strong>. PoPC has been redesigned into a <strong style="color:var(--text-primary)">single native SOST bond</strong>
         (the only collateral, the only thing slashable). <strong>Gold is an optional reward boost</strong> &mdash; never collateral,
-        never slashed &mdash; and is <strong>disabled on mainnet</strong>. There is no PoPC contract trading and no SOSTEscrow-based PoPC product in V15.
-        The sections below are kept for reference only; the live behaviour is the single-bond model that activates at <strong>V15 / block 25,000</strong>.
+        never slashed &mdash; and is <strong>disabled on mainnet</strong>. There is no PoPC contract trading and no SOSTEscrow-based PoPC product in the current release (V30000).
+        The sections below are kept for reference only; the single-bond model (whose <strong>V15 / #25,000</strong> activation height is now past) is itself <strong>paused / superseded by DTD</strong>.
       </p>
     </div>
   </div>
@@ -1299,7 +1300,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
       <div class="spec-body">
         <p class="spec-desc"><strong style="color:#fbbf24">Legacy design &mdash; PoPC is paused indefinitely; the schedule below is NOT in effect.</strong> It documents the activation conditions envisaged for the earlier PoPC-gated design, retained for reference. DTD and DTD Jackpot do not depend on any of it.</p>
         <table class="code-table">
-          <tr><td class="key">Block height &ge; 25,000 (V15)</td><td class="val">PoPC subsystem activation. Tied to the V15 protocol milestone; will not occur before this threshold.</td></tr>
+          <tr><td class="key">Block height &ge; 25,000 (V15)</td><td class="val">PoPC subsystem activation was tied to the V15 protocol milestone (#25,000, now past); PoPC was nonetheless not activated and remains paused / superseded by DTD.</td></tr>
           <tr><td class="key">Block height &ge; 30,000 (legacy note)</td><td class="val"><strong style="color:#fbbf24">Not in effect.</strong> DTD and DTD Jackpot eligibility do <strong>not</strong> require a PoPC contract. From block 30,000 the <strong>DTD Jackpot V2</strong> activates and uses <strong>node participation + linear PoW weight</strong> (not PoPC) &mdash; see the Explorer.</td></tr>
           <tr><td class="key">Sustained network stability</td><td class="val">Consistent block production, stable sync across nodes, no critical consensus or networking issues.</td></tr>
           <tr><td class="key">Sufficient participation</td><td class="val">Minimum level of independent nodes and active miners to ensure reliable operation.</td></tr>
@@ -1442,7 +1443,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
       <div style="background:var(--bg-panel);border:1px solid var(--border-med);border-left:3px solid var(--gold, #DAA520);padding:18px 20px;border-radius:4px;">
         <h3 style="font-family:var(--font-display);font-size:16px;color:#DAA520;margin-bottom:8px;">Model B roadmap <span style="font-size:11px;color:#c084fc;">(historical)</span></h3>
         <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Historical roadmap for the Ethereum escrow smart contract that the old Model B required. Kept for reference only.</p>
-        <p style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;">Status: <strong style="color:#c084fc;">historical / superseded</strong> — replaced by the single native SOST bond model (activates at V15 / block 25,000). The SOSTEscrow / Model B path is not part of V15.</p>
+        <p style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;">Status: <strong style="color:#c084fc;">historical / superseded</strong> — replaced by the single native SOST bond model (whose V15 / #25,000 activation height is now past; the bond model is itself paused / superseded by DTD). The SOSTEscrow / Model B path is not part of V15.</p>
         <a href="https://github.com/Neob1844/sost-core/blob/main/docs/popc_model_b_roadmap.md" target="_blank" rel="noopener" style="display:inline-block;color:var(--cyan-primary);text-decoration:none;font-size:12px;border:1px solid var(--cyan-primary);padding:6px 12px;border-radius:2px;margin-top:4px;">Read the roadmap on GitHub &rarr;</a>
       </div>
 
@@ -1483,17 +1484,17 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 });
 </script>
 
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -1503,16 +1504,16 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>

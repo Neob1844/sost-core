@@ -175,7 +175,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v557" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -194,7 +195,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -340,7 +341,7 @@
           <tr><td class="label">Purchase pause</td><td class="value">May pause gold purchases without consensus. Disclosed via batch reports.</td></tr>
           <tr><td class="label">CEX-listing reserve</td><td class="value">May allocate up to 50% of the Gold Vault&rsquo;s SOST exclusively for future CEX listings.</td></tr>
           <tr><td class="label">Purchase redirection</td><td class="value">Redirect future purchases between issuers (e.g., if issuer risk increases).</td></tr>
-          <tr><td class="label">PoPC contract management</td><td class="value">May pause new PoPC contracts for critical bugs. Existing contracts unaffected.</td></tr>
+          <tr><td class="label">PoPC contract management <em style="color:#c084fc;">(historical / superseded)</em></td><td class="value">May pause new PoPC contracts for critical bugs. Existing contracts unaffected. <em style="color:#c084fc;">Historical: PoPC is paused/superseded by DTD; single native-SOST bond model.</em></td></tr>
           <tr><td class="label">Dissolution declaration</td><td class="value">Only after dead-man switch triggers (90 days zero blocks). 60-day public timelock.</td></tr>
         </table>
       </div>
@@ -357,8 +358,8 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Source</th><th>Rate</th><th>Use</th></tr>
-          <tr><td class="label">Model A consensus fee</td><td class="value">3% of reward</td><td class="value">Infrastructure, watcher, security audits, development</td></tr>
-          <tr><td class="label">Model B network fee</td><td class="value">8% of reward</td><td class="value">Same destination, higher rate due to greater operational burden</td></tr>
+          <tr><td class="label">Model A consensus fee <em style="color:#c084fc;">(historical / superseded)</em></td><td class="value">3% of reward</td><td class="value">Infrastructure, watcher, security audits, development</td></tr>
+          <tr><td class="label">Model B network fee <em style="color:#c084fc;">(historical / superseded)</em></td><td class="value">8% of reward</td><td class="value">Same destination, higher rate due to greater operational burden</td></tr>
           <tr><td class="label">Fee destination</td><td class="green">Protocol operational wallet (<a href="sost-explorer.html" onclick="sessionStorage.setItem('sost_search','sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33')" target="_blank" style="color:var(--green-primary);text-decoration:underline">publicly auditable</a>)</td><td class="label"></td></tr>
           <tr><td class="label">Fee changes</td><td class="value">30-day advance public notice, apply only to new contracts</td><td class="label"></td></tr>
         </table>
@@ -375,25 +376,29 @@
       <h2 class="section-title">Protocol <span class="accent">PoPC Commitments</span></h2>
     </div>
 
+    <div class="notice fade-in" style="border-left-color:#c084fc;margin-bottom:24px;">
+      <strong style="color:#c084fc;">HISTORICAL / SUPERSEDED.</strong> The commitments below describe the earlier Model A &ldquo;autocustody&rdquo; design (an XAUT/PAXG custody commitment backed by a bond). PoPC has since been redesigned to a <strong>single native-SOST bond</strong> &mdash; gold is <strong>never collateral and never slashable</strong> &mdash; and is itself paused/superseded by DTD. This section is retained for reference only.
+    </div>
+
     <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">SOST is the first PoPC participant &mdash; a consensus validation commitment to demonstrate the system end-to-end before opening to external participants. Same rules apply. No exceptions.</p>
 
     <div class="notice fade-in delay-1" style="border-left-color:var(--cyan-primary);">
-      <strong>Equal treatment:</strong> SOST pays the standard network fee on all PoPC commitments (3% Model A, 8% Model B) &mdash; the same rate as any third-party participant. No exceptions.
+      <strong>Equal treatment:</strong> SOST pays the standard network fee on all PoPC commitments (3% Model A, 8% Model B) &mdash; the same rate as any third-party participant. No exceptions. <em>(Historical / superseded &mdash; Model A/B naming no longer applies under the single native-SOST bond.)</em>
     </div>
 
     <div class="spec-block fade-in delay-2">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon green"></div>
-          <span class="spec-label">Active Commitments</span>
+          <span class="spec-label">Commitments (historical)</span>
         </div>
-        <span class="spec-tag">MODEL A &mdash; AUTOCUSTODY</span>
+        <span class="spec-tag">HISTORICAL / SUPERSEDED &mdash; MODEL A AUTOCUSTODY</span>
       </div>
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Field</th><th>FOUND-001</th><th>FOUND-002</th></tr>
           <tr><td class="label">Model</td><td class="value">A (bond + audit)</td><td class="value">A (bond + audit)</td></tr>
-          <tr><td class="label">Asset</td><td class="highlight">XAUT</td><td class="highlight">PAXG</td></tr>
+          <tr><td class="label">Asset</td><td class="highlight"><img src="assets/coins/xaut.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">XAUT</td><td class="highlight"><img src="assets/coins/paxg.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">PAXG</td></tr>
           <tr><td class="label">Amount</td><td class="value">0.5 oz</td><td class="value">0.5 oz</td></tr>
           <tr><td class="label">Duration</td><td class="value">3 months</td><td class="value">3 months</td></tr>
           <tr><td class="label">Start</td><td class="value">2026-05-28</td><td class="value">2026-05-28</td></tr>
@@ -401,8 +406,8 @@
           <tr><td class="label">Protocol fee</td><td class="value">3% (Model A)</td><td class="value">3% (Model A)</td></tr>
           <tr>
             <td class="label">Status</td>
-            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-001">PENDING</span></td>
-            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-002">PENDING</span></td>
+            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-001">SUPERSEDED</span></td>
+            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-002">SUPERSEDED</span></td>
           </tr>
         </table>
       </div>
@@ -495,14 +500,14 @@
         <table class="code-table">
           <tr><th>Rule</th><th>Provision</th></tr>
           <tr><td class="highlight">C1</td><td class="value">Total supply upper-bounded by ~4,669,201 SOST by construction. Only issuance is subsidy(height).</td></tr>
-          <tr><td class="highlight">C2</td><td class="value">Coinbase split immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc.</td></tr>
+          <tr><td class="highlight">C2</td><td class="value">Coinbase split immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc. <em style="color:#c084fc;">Historical (superseded since V15 / #25,000): the gold and PoPC shares ended at #25,000; the split is now 50% miner / 50% DTD.</em></td></tr>
           <tr><td class="highlight">C3</td><td class="value">Gold Funding Vault destination immutable. Heritage Reserve sealed. Emergency dual gate only.</td></tr>
           <tr><td class="highlight">C4</td><td class="value">Reserve shall not be sold except under Emergency Catastrophe (E2) or Dissolution.</td></tr>
           <tr><td class="highlight">C5</td><td class="value">Dissolution requires 90 days zero blocks + 60-day public timelock.</td></tr>
           <tr><td class="highlight">C6</td><td class="value">Dissolution is one-way and irreversible.</td></tr>
           <tr><td class="highlight">C7</td><td class="value">Slash is automatic. No human can override once triggered.</td></tr>
-          <tr><td class="highlight">C8</td><td class="value">Slash split 50/50 (PoPC Pool / Gold Funding Vault). No burn. Immutable.</td></tr>
-          <tr><td class="highlight">C9</td><td class="value">Dynamic bond table: 12% to 30% based on SOST/gold ratio.</td></tr>
+          <tr><td class="highlight">C8</td><td class="value">Slash split 50/50 (PoPC Pool / Gold Funding Vault). No burn. Immutable. <em style="color:#c084fc;">Historical (superseded since V15): PoPC slash/pool mechanics belong to the earlier design; the single native-SOST bond model applies now.</em></td></tr>
+          <tr><td class="highlight">C9</td><td class="value">Dynamic bond table: 12% to 30% based on SOST/gold ratio. <em style="color:#c084fc;">Historical (superseded since V15): the single native-SOST bond model applies now; gold is never collateral.</em></td></tr>
           <tr><td class="highlight">C10</td><td class="value">No admin key, pause function, or upgrade proxy on PoW chain.</td></tr>
           <tr><td class="highlight">C11</td><td class="value">ConvergenceX parameters fixed at genesis for epoch 0.</td></tr>
           <tr><td class="highlight">C12</td><td class="value">All consensus arithmetic is integer-only. Zero floating-point.</td></tr>
@@ -625,17 +630,17 @@
   </div>
 </footer>
 
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
   <div class="sv-content" onclick="event.stopPropagation()">
@@ -645,16 +650,16 @@
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; V15')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">SOST &middot; V15</span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
-          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST Mechanisms</span>
-          <span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
         </button>
       </div>
     </div>
