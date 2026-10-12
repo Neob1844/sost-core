@@ -1,0 +1,14 @@
+[profile.default]
+src = "src"
+out = "out"
+test = "test"
+libs = ["../atomic-swap/lib"]
+remappings = ["forge-std/=../atomic-swap/lib/forge-std/src/"]
+solc = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+fuzz = { runs = 512 }
+invariant = { runs = 64, depth = 64 }
+
+# Stage 1 (research / devnet). No RPC endpoints on purpose: NO mainnet or testnet deployment
+# from this config. Any deployment beyond a local Anvil is a separate, explicitly authorised step.
