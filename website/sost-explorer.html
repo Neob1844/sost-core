@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-12-v546-eligibility-guide">
+<meta name="explorer-html-version" content="2026-10-12-v547-elig-pulse">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -560,7 +560,13 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 @media (prefers-reduced-motion:reduce){.sx-tile,.sx-tile:hover{transition:none;transform:none}}
 /* v545 Jackpot V2 eligibility inspector */
 .elig-btn{margin-top:8px;font:800 9px var(--code);letter-spacing:1.4px;color:#ffd166;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.45);border-radius:999px;padding:5px 11px;cursor:pointer;transition:box-shadow .15s,background .15s}
-.elig-btn:hover{background:rgba(255,209,102,.16);box-shadow:0 0 14px rgba(255,209,102,.4)}
+.elig-btn{animation:eligGlow 3.2s ease-in-out infinite}
+.elig-btn:hover{background:rgba(255,209,102,.18)}
+/* slow pulse: very intense golden glow fading to a soft one, and back */
+@keyframes eligGlow{
+  0%,100%{box-shadow:0 0 10px rgba(255,214,110,1),0 0 26px rgba(255,209,102,.95),0 0 52px rgba(255,190,60,.75),0 0 90px rgba(255,170,40,.5),inset 0 0 14px rgba(255,209,102,.55);border-color:#ffe08c;background:rgba(255,209,102,.24);text-shadow:0 0 10px rgba(255,220,130,1);color:#fff7d6}
+  50%{box-shadow:0 0 3px rgba(255,214,110,.35),0 0 8px rgba(255,209,102,.18),0 0 14px rgba(255,190,60,.06),0 0 20px rgba(255,170,40,0),inset 0 0 0 rgba(255,209,102,0);border-color:rgba(255,209,102,.45);background:rgba(255,209,102,.06);text-shadow:none;color:#ffd166}}
+@media (prefers-reduced-motion:reduce){.elig-btn{animation:none;box-shadow:0 0 12px rgba(255,209,102,.5)}}
 .eli-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 12px}
 .eli-box{position:relative;width:min(720px,100%);box-sizing:border-box;border-radius:16px;border:1px solid #2a2733;padding:20px 20px 16px;font-family:var(--code);color:var(--text);
   background:radial-gradient(120% 90% at 0% 0%,rgba(255,209,102,.08),transparent 55%),radial-gradient(120% 90% at 100% 100%,rgba(57,255,20,.05),transparent 55%),linear-gradient(180deg,#111017,#08080a);box-shadow:0 20px 60px rgba(0,0,0,.7)}
@@ -834,7 +840,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-12-v546-eligibility-guide';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-12-v547-elig-pulse';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
