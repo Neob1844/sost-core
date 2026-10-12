@@ -325,14 +325,15 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
 
 
 Wallet::CoinSelection Wallet::select_coins(const std::vector<WalletUTXO>& unspent, int64_t needed,
-        const PubKeyHash* from_pkh, int64_t chain_height, int64_t fee_rate) const {
+        const PubKeyHash* from_pkh, int64_t chain_height, int64_t fee_rate, bool watch_only) const {
+    if (watch_only && !from_pkh) return {};                          // watch-only needs an explicit source
     static const std::string GOLD = "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d";
     static const std::string POPC = "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f";
     std::vector<int64_t> amts; std::vector<size_t> orig;
     amts.reserve(unspent.size()); orig.reserve(unspent.size());
     for (size_t i = 0; i < unspent.size(); ++i) {
         const auto& u = unspent[i];
-        if (!find_key_by_pkh(u.pkh)) continue;                       // spendable by us
+        if (!watch_only && !find_key_by_pkh(u.pkh)) continue;        // spendable by us
         if (from_pkh && u.pkh != *from_pkh) continue;                // --from pin
         std::string a = address_encode(u.pkh);
         if (a == GOLD || a == POPC) continue;                        // constitutional, never spent
@@ -365,7 +366,9 @@ bool Wallet::create_transaction(
     bool mark_spent,
     const PubKeyHash* from_pkh,
     const std::vector<Byte>* popc_carrier_payload,
-    int64_t fee_rate)
+    int64_t fee_rate,
+    bool sign,
+    std::vector<SpentOutput>* out_spent)
 {
     if (amount <= 0) {
         if (err) *err = "amount must be positive";
@@ -391,7 +394,7 @@ bool Wallet::create_transaction(
     int64_t total_in = 0;
 
     {  // UNIFIED coin selection (BnB + largest-effective-first + constraints)
-        auto _cs = select_coins(unspent, needed, from_pkh, chain_height, fee_rate);
+        auto _cs = select_coins(unspent, needed, from_pkh, chain_height, fee_rate, /*watch_only=*/!sign);
         selected = _cs.selected;
         total_in = _cs.total_in;
     }
@@ -533,31 +536,35 @@ bool Wallet::create_transaction(
     if (change > 0) {
         const PubKeyHash& change_pkh = from_pkh ? *from_pkh
                                                 : unspent[selected[0]].pkh;
-        const WalletKey* change_key = find_key_by_pkh(change_pkh);
-        if (!change_key) {
-            if (err) *err = "internal error: no key for change address";
-            return false;
+        if (sign) {
+            const WalletKey* change_key = find_key_by_pkh(change_pkh);
+            if (!change_key) {
+                if (err) *err = "internal error: no key for change address";
+                return false;
+            }
         }
         TxOutput out{};
         out.amount = change;
         out.type = 0x00;
-        out.pubkey_hash = change_key->pkh;
+        out.pubkey_hash = change_pkh;
         out_tx.outputs.push_back(out);
     }
 
-    // Sign each input
+    if (out_spent) out_spent->clear();
+    // Sign each input (skipped for an unsigned offline build)
     for (size_t i = 0; i < selected.size(); ++i) {
         const auto& u = unspent[selected[i]];
+        SpentOutput spent;
+        spent.amount = u.amount;
+        spent.type = u.output_type;
+        if (out_spent) out_spent->push_back(spent);
+        if (!sign) continue;
+
         const WalletKey* key = find_key_by_pkh(u.pkh);
         if (!key) {
             if (err) *err = "no private key for UTXO";
             return false;
         }
-
-        SpentOutput spent;
-        spent.amount = u.amount;
-        spent.type = u.output_type;
-
         if (!SignTransactionInput(out_tx, i, spent, genesis_hash, key->privkey, err)) {
             return false;
         }

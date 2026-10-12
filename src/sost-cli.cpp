@@ -61,6 +61,9 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <set>
+#include <fstream>
+#include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -1092,6 +1095,10 @@ static void print_usage() {
     printf("  createtx <to> <amt>    Create and sign a transaction (auto fee)\n");
     printf("  send <to> <amt>        Create, sign and broadcast to node (auto fee)\n");
     printf("  sendrawtransaction <hex>  Broadcast an already-signed tx hex (no wallet/sign)\n");
+    printf("  buildtx <to> <amt> --out tx.json  ONLINE, watch-only: build an UNSIGNED tx (needs --from-address;\n");
+    printf("                         accepts --capsule-*; --network mainnet|testnet|dev). No wallet, no key.\n");
+    printf("  signtx tx.json [--out signed.hex]  OFFLINE: review + sign with --wallet (v1 or encrypted v2;\n");
+    printf("                         --passphrase-file / --passphrase-fd). No network. Then sendrawtransaction.\n");
     printf("  create-bond <amt> <blocks>  Create BOND_LOCK (timelocked to self)\n");
     printf("  create-escrow <amt> <blocks> <beneficiary>  Create ESCROW_LOCK\n");
     printf("  list-bonds             List active bond/escrow UTXOs\n");
@@ -1532,6 +1539,251 @@ int main(int argc, char** argv) {
         // rpc_call returns the full HTTP response; print only the JSON body.
         auto hb = resp.find("\r\n\r\n");
         printf("%s\n", (hb != std::string::npos ? resp.substr(hb + 4) : resp).c_str());
+        return 0;
+    }
+
+    // =====================================================================
+    // Offline signing (no consensus change):
+    //   ONLINE   sost-cli [--from-address A] [--capsule-*] buildtx <to> <amount> --out tx.json [--network N]
+    //            watch-only: needs no wallet and no private key; queries UTXOs + height.
+    //   OFFLINE  sost-cli --wallet cold.json signtx tx.json [--out signed.hex] [--network N]
+    //            [--passphrase-fd n | --passphrase-file p]   (no network access)
+    //            shows inputs, outputs, fee, capsule; signs; verifies every signature.
+    //   ONLINE   sost-cli sendrawtransaction <signed hex>
+    // The sighash commits to every input amount/type and every output (capsule
+    // payload included), so a tampered tx.json can only yield an invalid signature.
+    // =====================================================================
+    if (cmd == "buildtx" || cmd == "signtx") {
+        std::string out_path, network = "mainnet", pass_file;
+        int pass_fd = -1;
+        std::vector<std::string> pos;
+        for (int i = arg_start + 1; i < argc; ++i) {
+            std::string a = argv[i];
+            if (a == "--out" && i + 1 < argc) out_path = argv[++i];
+            else if (a == "--network" && i + 1 < argc) network = argv[++i];
+            else if (a == "--passphrase-fd" && i + 1 < argc) pass_fd = atoi(argv[++i]);
+            else if (a == "--passphrase-file" && i + 1 < argc) pass_file = argv[++i];
+            else if (a == "--yes" || a == "-y") g_yes_flag = true;
+            else if (!a.empty() && a[0] == '-') { fprintf(stderr, "Error: unknown %s option %s\n", cmd.c_str(), a.c_str()); return 1; }
+            else pos.push_back(a);
+        }
+        if (network != "mainnet" && network != "testnet" && network != "dev") {
+            fprintf(stderr, "Error: --network must be mainnet, testnet or dev\n"); return 1;
+        }
+        const std::string kGenesis = "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37";
+        const sost::Hash256 genesis_hash = sost::from_hex(kGenesis);
+
+        if (cmd == "buildtx") {
+            if (pos.size() != 2 || out_path.empty() || g_from_address.empty()) {
+                fprintf(stderr, "Usage: sost-cli --from-address <sost1..> [--capsule-mode ...] buildtx <to> <amount> --out tx.json [--network mainnet|testnet|dev]\n");
+                return 1;
+            }
+            const std::string to_addr = pos[0];
+            g_send_to = to_addr;
+            sost::PubKeyHash to_pkh{}, from_pkh{};
+            if (!sost::address_decode(to_addr, to_pkh)) { fprintf(stderr, "Error: invalid destination address\n"); return 1; }
+            if (!sost::address_decode(g_from_address, from_pkh)) { fprintf(stderr, "Error: invalid --from-address\n"); return 1; }
+            int64_t amount = parse_amount(pos[1].c_str());
+            if (amount <= 0) { fprintf(stderr, "Error: amount must be positive\n"); return 1; }
+
+            std::vector<sost::Byte> capsule_payload;
+            if (!build_capsule_for_mode(capsule_payload)) return 1;
+            if (!capsule_payload.empty()) {
+                auto v = sost::ValidateCapsulePolicy(capsule_payload);
+                if (!v.ok) { fprintf(stderr, "ERROR: capsule failed local policy validation: %s\n", v.message.c_str()); return 1; }
+            }
+            const std::vector<sost::Byte>* cap_ptr = capsule_payload.empty() ? nullptr : &capsule_payload;
+
+            int64_t chain_height = query_chain_height();
+            if (chain_height < 0) { fprintf(stderr, "Error: cannot connect to node at %s:%d\n", g_node_host.c_str(), g_node_port); return 1; }
+            if (cap_ptr && chain_height < (int64_t)sost::V12_HEIGHT) {
+                fprintf(stderr, "ERROR: capsule attach requires chain height >= V12_HEIGHT (%lld); tip is %lld\n",
+                        (long long)sost::V12_HEIGHT, (long long)chain_height);
+                return 1;
+            }
+            const bool sealed = (g_capsule_mode == "sealed-note" || g_capsule_mode == "sealed-doc-ref" || g_capsule_mode == "sealed-structured");
+            if (cap_ptr && sealed && chain_height < (int64_t)sost::V13_HEIGHT) {
+                fprintf(stderr, "ERROR: Sealed Capsule is available from block %lld (V13)\n", (long long)sost::V13_HEIGHT); return 1;
+            }
+
+            sost::Wallet watch;                                    // watch-only: no keys at all
+            if (sync_wallet_utxos_from_node(watch, g_from_address) <= 0) {
+                fprintf(stderr, "Error: no spendable UTXOs found for %s\n", g_from_address.c_str()); return 1;
+            }
+            sost::Transaction tx;
+            std::vector<sost::SpentOutput> spent;
+            std::vector<sost::Byte> raw;
+            std::string err;
+            int64_t fee = MIN_FEE_STOCKS;
+            for (int pass = 0; pass < 4; ++pass) {                 // same fee convergence as `send`
+                if (!watch.create_transaction(to_addr, amount, fee, genesis_hash, tx, chain_height, &err, cap_ptr,
+                                              /*mark_spent=*/false, &from_pkh, nullptr, g_fee_rate,
+                                              /*sign=*/false, &spent)) {
+                    fprintf(stderr, "Error: %s\n", err.c_str()); return 1;
+                }
+                raw.clear();
+                if (!tx.Serialize(raw, &err)) { fprintf(stderr, "Error serializing: %s\n", err.c_str()); return 1; }
+                // the signed tx carries a 64-byte signature + 33-byte pubkey per input in place of the
+                // zero bytes already counted, so the unsigned size equals the signed size.
+                int64_t need = calculate_fee((int64_t)raw.size());
+                if (need <= fee) break;
+                fee = need;
+            }
+            int64_t sum_in = 0, sum_out = 0;
+            for (const auto& s : spent) sum_in += s.amount;
+            for (const auto& o : tx.outputs) sum_out += o.amount;
+
+            std::string j = "{\n  \"format\": \"sost-unsigned-tx-v1\",\n";
+            j += "  \"network\": \"" + network + "\",\n";
+            j += "  \"genesis\": \"" + kGenesis + "\",\n";
+            j += "  \"chain_height\": " + std::to_string(chain_height) + ",\n";
+            j += "  \"from\": \"" + g_from_address + "\",\n";
+            j += "  \"to\": \"" + to_addr + "\",\n";
+            j += "  \"amount\": " + std::to_string(amount) + ",\n";
+            j += "  \"fee\": " + std::to_string(sum_in - sum_out) + ",\n";
+            j += "  \"capsule_mode\": \"" + (cap_ptr ? g_capsule_mode : std::string("none")) + "\",\n";
+            j += "  \"capsule_hex\": \"" + (cap_ptr ? to_hex(capsule_payload.data(), capsule_payload.size()) : std::string()) + "\",\n";
+            j += "  \"inputs\": [\n";
+            for (size_t i = 0; i < tx.inputs.size(); ++i) {
+                j += "    {\"txid\": \"" + to_hex(tx.inputs[i].prev_txid.data(), 32) + "\", \"vout\": " + std::to_string(tx.inputs[i].prev_index)
+                   + ", \"amount\": " + std::to_string(spent[i].amount) + ", \"output_type\": " + std::to_string((int)spent[i].type)
+                   + ", \"address\": \"" + g_from_address + "\"}" + (i + 1 < tx.inputs.size() ? "," : "") + "\n";
+            }
+            j += "  ],\n  \"unsigned_hex\": \"" + to_hex(raw.data(), raw.size()) + "\"\n}\n";
+            FILE* f = fopen(out_path.c_str(), "wx");                // never overwrite an existing file
+            if (!f) { fprintf(stderr, "Error: cannot create %s (does it already exist?)\n", out_path.c_str()); return 1; }
+            fwrite(j.data(), 1, j.size(), f); fclose(f);
+            printf("Unsigned transaction written to %s\n", out_path.c_str());
+            printf("  network %s · height %lld · %zu input(s) · %zu output(s)\n", network.c_str(), (long long)chain_height, tx.inputs.size(), tx.outputs.size());
+            printf("  pay %s SOST to %s · fee %s SOST · capsule %s\n", format_sost(amount).c_str(), to_addr.c_str(),
+                   format_sost(sum_in - sum_out).c_str(), cap_ptr ? g_capsule_mode.c_str() : "none");
+            printf("Move it to the offline machine and run: sost-cli --wallet <cold wallet> signtx %s --out signed.hex\n", out_path.c_str());
+            return 0;
+        }
+
+        // -------------------------------------------------------------- signtx (offline)
+        if (pos.size() != 1) {
+            fprintf(stderr, "Usage: sost-cli --wallet <wallet> signtx tx.json [--out signed.hex] [--network N] [--passphrase-fd n | --passphrase-file p] [--yes]\n");
+            return 1;
+        }
+        std::string text;
+        { std::ifstream in(pos[0]); if (!in) { fprintf(stderr, "Error: cannot read %s\n", pos[0].c_str()); return 1; }
+          text.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()); }
+        sost::json::Value d; std::string perr;
+        if (text.size() > 1024 * 1024 || !sost::json::parse(text, d, &perr) || !d.is_obj()) {
+            fprintf(stderr, "Error: %s is not a valid unsigned transaction file\n", pos[0].c_str()); return 1;
+        }
+        std::string fmt, net, gen, hex;
+        int64_t declared_fee = -1;
+        d.get_str("format", fmt); d.get_str("network", net); d.get_str("genesis", gen); d.get_str("unsigned_hex", hex);
+        d.get_int("fee", declared_fee);
+        if (fmt != "sost-unsigned-tx-v1") { fprintf(stderr, "Error: unknown file format '%s'\n", fmt.c_str()); return 1; }
+        if (net != network) { fprintf(stderr, "Error: network mismatch — file is for '%s', signer is '%s' (use --network)\n", net.c_str(), network.c_str()); return 1; }
+        if (gen != kGenesis) { fprintf(stderr, "Error: genesis mismatch — refusing to sign\n"); return 1; }
+
+        std::vector<sost::Byte> raw;
+        if (hex.empty() || hex.size() % 2 || hex.find_first_not_of("0123456789abcdef") != std::string::npos) {
+            fprintf(stderr, "Error: unsigned_hex is not lowercase hex\n"); return 1;
+        }
+        for (size_t i = 0; i < hex.size(); i += 2) raw.push_back((sost::Byte)std::stoi(hex.substr(i, 2), nullptr, 16));
+        sost::Transaction tx; std::string err;
+        if (!sost::Transaction::Deserialize(raw, tx, &err)) { fprintf(stderr, "Error: cannot decode transaction: %s\n", err.c_str()); return 1; }
+        if (tx.tx_type != sost::TX_TYPE_STANDARD) { fprintf(stderr, "Error: only standard transfers are supported by signtx\n"); return 1; }
+
+        const sost::json::Value* ins = d.find("inputs");
+        if (!ins || !ins->is_arr() || ins->a.size() != tx.inputs.size() || tx.inputs.empty()) {
+            fprintf(stderr, "Error: input list does not match the transaction\n"); return 1;
+        }
+        std::vector<sost::SpentOutput> spent(tx.inputs.size());
+        std::vector<std::string> signer(tx.inputs.size());
+        std::set<std::string> seen;
+        int64_t sum_in = 0, sum_out = 0;
+        for (size_t i = 0; i < tx.inputs.size(); ++i) {
+            const auto& e = ins->a[i];
+            std::string txid; int64_t vout = -1, amt = -1, typ = -1;
+            if (!e.get_str("txid", txid) || !e.get_int("vout", vout) || !e.get_int("amount", amt)
+                || !e.get_int("output_type", typ) || !e.get_str("address", signer[i]) || amt <= 0 || typ < 0 || typ > 255) {
+                fprintf(stderr, "Error: input %zu is incomplete\n", i); return 1;
+            }
+            if (txid != to_hex(tx.inputs[i].prev_txid.data(), 32) || vout != (int64_t)tx.inputs[i].prev_index) {
+                fprintf(stderr, "Error: input %zu does not match the transaction bytes\n", i); return 1;
+            }
+            if (!seen.insert(txid + ":" + std::to_string(vout)).second) { fprintf(stderr, "Error: duplicate input %zu\n", i); return 1; }
+            for (auto b : tx.inputs[i].signature) if (b) { fprintf(stderr, "Error: input %zu is already signed\n", i); return 1; }
+            if (typ != 0x00 && typ != 0x01 && typ != 0x04) {   // transfer, coinbase miner, coinbase lottery payout
+                fprintf(stderr, "Error: input %zu spends output type 0x%02x, which signtx does not sign\n", i, (int)typ); return 1;
+            }
+            spent[i].amount = amt; spent[i].type = (uint8_t)typ;
+            if (__builtin_add_overflow(sum_in, amt, &sum_in)) { fprintf(stderr, "Error: amount overflow\n"); return 1; }
+        }
+        for (const auto& o : tx.outputs) {
+            if (o.type != sost::OUT_TRANSFER || o.amount < 0) { fprintf(stderr, "Error: unsupported output type in transaction\n"); return 1; }
+            sum_out += o.amount;
+        }
+        const int64_t fee = sum_in - sum_out;
+        if (fee < 0) { fprintf(stderr, "Error: outputs exceed inputs\n"); return 1; }
+        if (fee != declared_fee) { fprintf(stderr, "Error: fee in file (%lld) does not match the transaction (%lld)\n", (long long)declared_fee, (long long)fee); return 1; }
+
+        // ---- wallet (plain v1 or encrypted v2), offline
+        sost::Wallet w;
+        {
+            bool encrypted = false; std::string eerr;
+            if (!sost::wallet_file_is_encrypted(wallet_path, encrypted, &eerr)) { fprintf(stderr, "Error: %s\n", eerr.c_str()); return 1; }
+            if (encrypted) {
+                sost::Secret pass; std::string serr;
+                bool okp = !pass_file.empty() ? sost::read_secret_file(pass_file, pass, &serr)
+                         : pass_fd >= 0      ? sost::read_secret_fd(pass_fd, pass, &serr)
+                                             : sost::read_secret_tty("Wallet passphrase: ", pass, &serr);
+                if (!okp) { fprintf(stderr, "Error: %s\n", serr.c_str()); return 1; }
+                if (!w.load_encrypted(wallet_path, pass.str(), &eerr)) { fprintf(stderr, "Error: %s\n", eerr.c_str()); return 1; }
+            } else if (!w.load(wallet_path, &eerr)) { fprintf(stderr, "Error loading wallet: %s\n", eerr.c_str()); return 1; }
+        }
+        for (size_t i = 0; i < signer.size(); ++i)
+            if (!w.find_key(signer[i])) { fprintf(stderr, "Error: this wallet has no key for input %zu (%s)\n", i, signer[i].c_str()); return 1; }
+
+        // ---- show EVERYTHING before signing
+        printf("\n=== OFFLINE SIGNING — REVIEW CAREFULLY ===\n");
+        printf("Network:  %s (genesis %s…)\n", network.c_str(), kGenesis.substr(0, 16).c_str());
+        for (size_t i = 0; i < tx.inputs.size(); ++i)
+            printf("Input  %zu: %s:%u  %s SOST  from %s\n", i, to_hex(tx.inputs[i].prev_txid.data(), 32).c_str(),
+                   tx.inputs[i].prev_index, format_sost(spent[i].amount).c_str(), signer[i].c_str());
+        for (size_t i = 0; i < tx.outputs.size(); ++i) {
+            const auto& o = tx.outputs[i];
+            printf("Output %zu: %s SOST  to %s%s\n", i, format_sost(o.amount).c_str(), sost::address_encode(o.pubkey_hash).c_str(),
+                   w.find_key(sost::address_encode(o.pubkey_hash)) ? "  (change, this wallet)" : "");
+            if (!o.payload.empty()) {
+                sost::CapsuleHeader ch; std::string cerr;
+                bool okh = sost::DecodeCapsuleHeader(o.payload, ch, &cerr);
+                auto dg = sost::sha256(o.payload);
+                std::string body;
+                for (size_t k = (okh ? 12 : 0); k < o.payload.size(); ++k) { char c = (char)o.payload[k]; body += (c >= 32 && c < 127) ? c : '.'; }
+                printf("          capsule: %zu bytes, type %d, sha256 %s\n          text: \"%s\"\n", o.payload.size(),
+                       okh ? (int)ch.capsule_type : -1, to_hex(dg.data(), dg.size()).c_str(), body.c_str());
+            }
+        }
+        printf("Fee:      %s SOST\n", format_sost(fee).c_str());
+        if (!g_yes_flag) {
+            printf("\nSign this transaction? Type 'yes' to continue: ");
+            fflush(stdout);
+            std::string ans; if (!std::getline(std::cin, ans) || ans != "yes") { fprintf(stderr, "Not signed.\n"); return 1; }
+        }
+        for (size_t i = 0; i < tx.inputs.size(); ++i) {
+            const sost::WalletKey* k = w.find_key(signer[i]);
+            if (!sost::SignTransactionInput(tx, i, spent[i], genesis_hash, k->privkey, &err)) { fprintf(stderr, "Error signing input %zu: %s\n", i, err.c_str()); return 1; }
+            if (!sost::VerifyTransactionInput(tx, i, spent[i], genesis_hash, k->pkh, &err)) { fprintf(stderr, "Error: signature self-check failed on input %zu: %s\n", i, err.c_str()); return 1; }
+        }
+        std::vector<sost::Byte> signed_raw;
+        if (!tx.Serialize(signed_raw, &err)) { fprintf(stderr, "Error serializing: %s\n", err.c_str()); return 1; }
+        const std::string sh = to_hex(signed_raw.data(), signed_raw.size());
+        if (!out_path.empty()) {
+            FILE* f = fopen(out_path.c_str(), "wx");
+            if (!f) { fprintf(stderr, "Error: cannot create %s (does it already exist?)\n", out_path.c_str()); return 1; }
+            fprintf(f, "%s\n", sh.c_str()); fclose(f);
+            printf("\nSigned transaction written to %s\n", out_path.c_str());
+        } else {
+            printf("\n%s\n", sh.c_str());
+        }
+        printf("txid %s\nBroadcast it from an online machine: sost-cli sendrawtransaction <hex>\n", tx.ComputeTxIdHex().c_str());
         return 0;
     }
 

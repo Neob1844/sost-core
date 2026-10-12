@@ -118,7 +118,10 @@ public:
     struct CoinSelection { std::vector<size_t> selected; int64_t total_in{0}; bool ok{false}; };
     CoinSelection select_coins(const std::vector<WalletUTXO>& unspent, int64_t needed,
                                const PubKeyHash* from_pkh, int64_t chain_height,
-                               int64_t fee_rate = 10) const;
+                               int64_t fee_rate = 10,
+                               // watch_only (offline buildtx): coins of *from_pkh are selectable
+                               // without the private key. Requires from_pkh; never used to sign.
+                               bool watch_only = false) const;
 
     bool create_transaction(
         const std::string& to_addr,
@@ -132,7 +135,13 @@ public:
         bool mark_spent = true,
         const PubKeyHash* from_pkh = nullptr,
         const std::vector<Byte>* popc_carrier_payload = nullptr,
-        int64_t fee_rate = 10);   // per-byte rate for the economic/dust heuristic (NOT the fee itself)
+        int64_t fee_rate = 10,    // per-byte rate for the economic/dust heuristic (NOT the fee itself)
+        // Offline signing (buildtx): sign=false builds the identical transaction but leaves
+        // every input unsigned and needs no private key (watch-only wallet; change goes to
+        // from_pkh or the first input's pkh). out_spent receives the {amount,type} of each
+        // input in order — exactly what the signer must commit to in the sighash.
+        bool sign = true,
+        std::vector<SpentOutput>* out_spent = nullptr);
 
     // sendmany: single TRANSFER tx with N outputs (one per recipient).
     // Caller passes a vector of (address, amount) pairs. Change (if any)

@@ -671,6 +671,11 @@ add_executable(test-casert-meta-window tests/test_casert_meta_window.cpp)
 target_link_libraries(test-casert-meta-window PRIVATE sost-core)
 add_test(NAME casert-meta-window COMMAND test-casert-meta-window)
 
+# Offline build (buildtx/signtx) == wallet-signed transaction, byte for byte
+add_executable(test-offline-build tests/test_offline_build.cpp)
+target_link_libraries(test-offline-build PRIVATE sost-core)
+add_test(NAME offline-build COMMAND test-offline-build)
+
 # V11 Phase 1 — component A (extended cASERT cascade)
 add_executable(test-casert-v11 tests/test_casert_v11.cpp)
 target_link_libraries(test-casert-v11 PRIVATE sost-core)
