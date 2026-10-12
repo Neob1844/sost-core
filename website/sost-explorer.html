@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-12-v545-eligibility">
+<meta name="explorer-html-version" content="2026-10-12-v546-eligibility-guide">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -582,6 +582,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .eli-na{color:#8f8ca0} .eli-unk{color:#fbbf24}
 .eli-why{margin-top:12px;border-top:1px solid #1d1b24;padding-top:10px;font-size:10.5px;color:#a7a3b8;line-height:1.7}
 .eli-why summary{cursor:pointer;color:#ffd166;font-weight:800;letter-spacing:1.4px;font-size:10px}
+.eli-pend{color:#22d3ee}.eli-sm{font-size:10px}.eli-big{color:#ffd166;font-size:20px;text-shadow:0 0 14px rgba(255,209,102,.45)}
+.eli-ep{padding:4px 0 4px 10px;border-left:2px solid #2a2733;margin:4px 0;font-size:10.5px}
+.eli-warn{margin:0 0 12px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.07);color:#ffd166;font-size:11px;font-weight:700}
+.eli-me{border:1px solid #26232f;border-radius:12px;padding:12px;margin-bottom:12px;background:rgba(0,0,0,.25)}
+.eli-form{display:flex;gap:6px;margin:6px 0}.eli-form input{flex:1;min-width:0;background:#0b0a0f;border:1px solid #3a3645;border-radius:8px;color:#e6e4ee;font:11px var(--code);padding:8px 10px;outline:none}
+.eli-form input:focus{border-color:#ffd166;box-shadow:0 0 10px rgba(255,209,102,.3)}.eli-form button{font:800 10px var(--code);letter-spacing:1.4px;color:#050505;background:#ffd166;border:0;border-radius:8px;padding:0 14px;cursor:pointer}
+.eli-g{margin-top:6px}.eli-tb{border-collapse:collapse;margin:6px 0;font-size:10.5px}.eli-tb td{padding:3px 12px 3px 0;border-bottom:1px solid #1d1b24}
+.eli-simple{margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(57,255,20,.05);border:1px solid rgba(57,255,20,.2);font-size:10.5px;line-height:1.7;color:#c9f7c0}
 @media(max-width:560px){.eli-box{padding:16px 12px}.eli-sum,.eli-hd{grid-template-columns:minmax(0,1.3fr) repeat(4,minmax(0,.8fr));font-size:10px}.eli-k{grid-template-columns:118px 1fr}}
 /* v540: rest of the page in the same language */
 #networkMosaicCard,#convxCR,#producerDistSection,.stats-code{position:relative;border-radius:14px!important;border:1px solid #24212d!important;
@@ -826,7 +834,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-12-v545-eligibility';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-12-v546-eligibility-guide';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -11011,63 +11019,107 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
 </script>
 <script>
 /* Jackpot V2 ELIGIBILITY INSPECTOR — presentation only. Every verdict is the node's getjackpotv2audit;
-   reasons, per-epoch heartbeat status and the earliest still-reachable draw are computed server-side by
-   ops/node-participation-indexer.py from the chain and published in /api/node_participation.json. */
+   reasons, per-epoch status, the ramp, the worked example and the earliest still-reachable draw are computed
+   server-side by ops/node-participation-indexer.py and published in /api/node_participation.json. */
 (function(){
   function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);});}
-  function n(v){return (v==null?'\u2014':Number(v).toLocaleString('en-US'));}
-  function sh(a){a=String(a||'');return a.length>20?a.slice(0,13)+'\u2026'+a.slice(-4):a;}
-  var ICON={pass:'<span class="eli-yes">\u2705 PASS</span>',fail:'<span class="eli-no">\u274C FAIL</span>',not_required:'<span class="eli-na">\u25CB NOT REQUIRED</span>',unknown:'<span class="eli-unk">? UNKNOWN</span>'};
-  var EP={confirmed:'<span class="eli-yes">\u2705 confirmed</span>',missing:'<span class="eli-no">\u274C missing</span>',before_bind:'<span class="eli-no">\u274C before NODE_BIND</span>',pending:'<span class="eli-na">\u25CB pending (epoch still open or future)</span>'};
-  function chk(c){return ICON[(c&&c.result)||'unknown']||ICON.unknown;}
-  function mark(c){var r=(c&&c.result)||'unknown';return r==='pass'?'<span class="eli-yes">\u2705</span>':r==='fail'?'<span class="eli-no">\u274C</span>':r==='not_required'?'<span class="eli-na">\u25CB</span>':'<span class="eli-unk">?</span>';}
-  function epochs(list){return (list||[]).map(function(e){return '<div>Epoch '+e.epoch+' &middot; #'+n(e.range[0])+'\u2013#'+n(e.range[1])+' &nbsp; '+(EP[e.status]||'<span class="eli-unk">? unknown</span>')+'</div>';}).join('')||'<div class="eli-na">\u25CB no completed epoch is required for this draw</div>';}
-  function detail(c,j){
-    var h='<div class="eli-k">'+
-      '<span>Address</span><b style="color:#22d3ee;word-break:break-all;cursor:pointer" onclick="window.showAddress&&showAddress(\''+esc(c.address)+'\')">'+esc(c.address)+'</b>'+
-      '<span>PoW \u2265'+j.min_pow_blocks+' / '+n(j.pow_window)+'</span><b>'+chk(c.checks.pow)+' &nbsp;'+n(c.pow_blocks)+'</b>'+
-      '<span>NODE_BIND</span><b>'+chk(c.checks.node_bind)+' &nbsp;'+esc(c.checks.node_bind.value)+(c.bind_height?' <span class="eli-na">(bound #'+n(c.bind_height)+', epoch '+c.bind_epoch+')</span>':'')+'</b>'+
-      '<span>Heartbeats</span><b>'+chk(c.checks.heartbeats)+' &nbsp;'+esc(c.checks.heartbeats.value)+'</b>'+
-      '<span>Eligible</span><b>'+(c.eligible?'<span class="eli-yes">\u2705 YES</span>':'<span class="eli-no">\u274C NO</span>')+'</b>'+
-      '<span>Weight</span><b>'+n(c.weight)+(c.eligible&&c.share!=null?' <span class="eli-na">\u00b7 '+n(c.weight)+' / '+n(j.total_weight)+' = '+(100*c.share).toFixed(2)+'%</span>':'')+'</b></div>';
-    if(c.eligible) h+='<div class="eli-na" style="font-size:10px">Share of the current eligible draw weight \u2014 not a guaranteed payout: the eligible set can change before #'+n(j.height)+'.</div>';
-    h+='<div class="eli-t">HEARTBEAT STATUS \u00b7 required '+esc(c.heartbeats_required)+(j.heartbeat_window?' of the last '+j.heartbeat_window:'')+' completed epoch'+(j.heartbeat_window===1?'':'s')+'</div>'+epochs(c.epochs);
+  function n(v){return (v==null?'—':Number(v).toLocaleString('en-US'));}
+  function sh(a){a=String(a||'');return a.length>20?a.slice(0,13)+'…'+a.slice(-4):a;}
+  var CK={pass:'<span class="eli-yes">✅ PASS</span>',fail:'<span class="eli-no">❌ FAIL</span>',not_required:'<span class="eli-na">○ NOT REQUIRED</span>',pending:'<span class="eli-pend">⏳ PENDING</span>',unknown:'<span class="eli-unk">? UNKNOWN</span>'};
+  function chk(c){return CK[(c&&c.result)||'unknown']||CK.unknown;}
+  function mark(c){var r=(c&&c.result)||'unknown';return r==='pass'?'<span class="eli-yes">✅</span>':r==='fail'?'<span class="eli-no">❌</span>':r==='not_required'?'<span class="eli-na">○</span>':'<span class="eli-unk">?</span>';}
+  function ep(e){
+    var lab={confirmed:'<span class="eli-yes">✅ HEARTBEAT CONFIRMED</span>'+(e.heartbeat_height?' <span class="eli-na">included at #'+n(e.heartbeat_height)+'</span>':''),
+      missing:'<span class="eli-no">❌ MISSING COMPLETED EPOCH</span> <span class="eli-na">bound during the epoch, no heartbeat confirmed</span>',
+      before_bind:'<span class="eli-na">○ BEFORE NODE_BIND</span> <span class="eli-na">not a node failure</span>',
+      pending:'<span class="eli-pend">⏳ PENDING</span> <span class="eli-na">epoch still open or in the future</span>'}[e.status]||'<span class="eli-unk">? UNKNOWN</span>';
+    return '<div class="eli-ep"><b>Epoch '+e.epoch+'</b> <span class="eli-na">#'+n(e.range[0])+'–#'+n(e.range[1])+'</span><br>'+lab+'</div>';
+  }
+  function eps(list){return (list&&list.length)?list.map(ep).join(''):'<div class="eli-na">○ no completed epoch is required for this draw</div>';}
+  function detail(c,j,noAddr){
+    var bound=c.checks.node_bind.result==='pass';
+    var h='<div class="eli-k">'+(noAddr?'':
+      '<span>Address</span><b style="color:#22d3ee;word-break:break-all;cursor:pointer" onclick="window.showAddress&&showAddress(\''+esc(c.address)+'\')">'+esc(c.address)+'</b>')+
+      '<span>Mining activity</span><b>'+chk(c.checks.pow)+' &nbsp;'+n(c.pow_blocks)+' blocks / minimum '+j.min_pow_blocks+' <span class="eli-na">(previous '+n(j.pow_window)+')</span></b>'+
+      '<span>NODE_BIND</span><b>'+chk(c.checks.node_bind)+' &nbsp;'+(bound&&c.bind_height?'active from block #'+n(c.bind_height)+' <span class="eli-na">(epoch '+c.bind_epoch+')</span>':esc(c.checks.node_bind.value))+'</b>'+
+      '<span>Heartbeats for #'+n(j.height)+'</span><b>'+(c.checks.heartbeats.result==='fail'?'<span class="eli-no">❌ NOT SATISFIED</span>':chk(c.checks.heartbeats))+' &nbsp;'+esc(c.checks.heartbeats.value)+'</b>'+
+      '<span>Status</span><b>'+(c.eligible?'<span class="eli-yes">✅ ELIGIBLE</span>':'<span class="eli-no">NOT YET ELIGIBLE</span>')+'</b>'+
+      '<span>Draw weight</span><b>'+n(c.weight)+(c.eligible&&c.share!=null?' <span class="eli-na">· '+n(c.weight)+' / '+n(j.total_weight)+' = '+(100*c.share).toFixed(2)+'% of the current eligible set</span>':'')+'</b></div>';
+    if(c.eligible) h+='<div class="eli-na eli-sm">This share is for the eligible set as it stands now — not a guaranteed payout: if the eligible set changes before #'+n(j.height)+', the percentage changes.</div>';
+    h+='<div class="eli-t">EPOCH BREAKDOWN</div>'+eps(c.epochs);
     if(c.reasons&&c.reasons.length) h+='<div class="eli-t">REASON</div>'+c.reasons.map(function(r){return '<div>'+esc(r)+'</div>';}).join('');
-    if(c.checks.heartbeats.result==='fail') h+='<div class="eli-na" style="font-size:10px">A missing heartbeat in a CLOSED epoch does not mean the node is offline now; it only means none was confirmed on chain for that epoch.</div>';
+    if(!c.eligible) h+='<div class="eli-na eli-sm">This is not a penalty and not an anti-dominance rule: Jackpot V2 has none.</div>';
     var e=c.earliest||{};
-    h+='<div class="eli-t">NEXT POSSIBLE ELIGIBILITY</div>';
-    if(e.status==='eligible_now') h+='<div class="eli-yes">Eligible for #'+n(e.height)+' (subject to the state at that block).</div>';
-    else if(e.status==='possible') h+='<div>Earliest possible draw: <b style="color:#ffd166">#'+n(e.height)+'</b></div><div class="eli-na" style="font-size:10px">Requirements before then:</div>'+epochs(e.epochs)+'<div class="eli-na" style="font-size:10px">Assumes '+esc(e.assumes)+'.</div>';
-    else h+='<div class="eli-unk">? Cannot determine yet'+(e.status==='cannot_determine'?' \u2014 this address has no active NODE_BIND.':'.')+'</div>';
+    h+='<div class="eli-t">EARLIEST POSSIBLE ELIGIBILITY</div>';
+    if(e.status==='eligible_now') h+='<div class="eli-yes">#'+n(e.height)+' — eligible for this draw as of now</div><div class="eli-na eli-sm">Subject to the state at that block.</div>';
+    else if(e.height){
+      h+='<div><b class="eli-big">#'+n(e.height)+'</b></div><div class="eli-na eli-sm">The earliest possible jackpot, not a guarantee. What you still need:</div>'+eps(e.epochs);
+      h+='<div class="eli-sm">'+(c.checks.node_bind.result==='pass'?'✓ NODE_BIND active · keep it active':'✗ NODE_BIND needed')+'<br>'+(c.checks.pow.result==='pass'?'✓ PoW requirement currently satisfied · keep ≥'+j.min_pow_blocks+' SbPoW blocks in the '+n(j.pow_window)+' before that draw':'✗ '+esc(e.why_pow||'PoW requirement not met'))+'</div>';
+    } else { h+='<div class="eli-unk">? Cannot determine exactly yet</div><div class="eli-na eli-sm">'+esc(e.why||e.why_pow||'Future PoW, heartbeat and NODE_BIND state decide it.')+'</div>';
+      if(e.node_condition_from) h+='<div class="eli-na eli-sm">The node/heartbeat condition alone could be met from #'+n(e.node_condition_from)+'.</div>'; }
     return h;
   }
+  function row(c,j,open){
+    return '<div class="eli-row'+(open?' open':'')+'" data-a="'+esc(c.address)+'"><div class="eli-sum" onclick="this.parentNode.classList.toggle(\'open\')">'+
+      '<span class="ad" title="'+esc(c.address)+'">'+esc(sh(c.address))+'</span><span>'+mark(c.checks.pow)+' '+n(c.pow_blocks)+'</span><span>'+mark(c.checks.node_bind)+'</span>'+
+      '<span title="'+esc(c.heartbeats+' of '+c.heartbeats_required+' required completed epochs are satisfied. This does not necessarily mean the node is offline. Open details to see whether the epoch was missing or occurred before NODE_BIND.')+'">'+mark(c.checks.heartbeats)+' '+esc(c.heartbeats)+'/'+esc(c.heartbeats_required)+'</span>'+
+      '<span>'+(c.eligible?'<span class="eli-yes">YES</span>':'<span class="eli-no">NO</span>')+'</span></div><div class="eli-det">'+detail(c,j)+'</div></div>';
+  }
+  var DATA=null;
+  function lookup(addr){
+    var j=DATA&&DATA.jackpot, out=document.getElementById('eliMine'); if(!out) return;
+    addr=String(addr||'').trim().toLowerCase();
+    if(!/^sost1[0-9a-f]{40}$/.test(addr)){ out.innerHTML='<div class="eli-no">That is not a valid SOST address (sost1 followed by 40 hex characters). Only a public address is needed — never a seed or private key.</div>'; return; }
+    try{ var u=new URL(location.href); u.searchParams.set('eligibility',addr); history.replaceState(null,'',u); }catch(e){}
+    if(!j){ out.innerHTML='<div class="eli-unk">? Eligibility data unavailable right now.</div>'; return; }
+    var c=(j.candidates||[]).concat(j.lookup||[]).filter(function(x){return x.address===addr;})[0];
+    var head='<div class="eli-k"><span>Address</span><b style="word-break:break-all">'+esc(addr)+'</b><span>Next jackpot</span><b>#'+n(j.height)+'</b>';
+    if(c){ out.innerHTML=head+'<span>Current status</span><b>'+(c.eligible?'<span class="eli-yes">✅ ELIGIBLE</span>':'<span class="eli-no">❌ NOT YET ELIGIBLE</span>')+'</b></div>'+(c.source?'<div class="eli-na eli-sm">'+esc(c.source)+'</div>':'')+'<div class="eli-row open">'+'<div class="eli-det" style="display:block">'+detail(c,j,true)+'</div></div>'; return; }
+    out.innerHTML=head+'<span>Current status</span><b class="eli-no">❌ NOT YET ELIGIBLE</b></div>'+
+      '<div class="eli-k" style="margin-top:6px"><span>Mining activity</span><b>'+CK.fail+' &nbsp;0 blocks / minimum '+j.min_pow_blocks+'</b><span>NODE_BIND</span><b>'+CK.fail+' &nbsp;none found on chain</b><span>Heartbeats</span><b>'+CK.unknown+' &nbsp;not applicable without a NODE_BIND</b></div>'+
+      '<div class="eli-t">WHY?</div><div>The node’s audit for #'+n(j.height)+' lists no SbPoW block from this address in the previous '+n(j.pow_window)+' blocks, and the chain index has no NODE_BIND for it.</div>'+
+      '<div class="eli-t">EARLIEST POSSIBLE ELIGIBILITY</div><div class="eli-unk">? Cannot determine exactly yet</div><div class="eli-na eli-sm">It needs ≥'+j.min_pow_blocks+' SbPoW blocks in the window, an active NODE_BIND and the heartbeat history of the draw; future activity decides when.</div>';
+  }
+  function guide(j){
+    var ramp=(j.ramp||[]).map(function(r,i,a){return '<tr><td>#'+n(r.height)+(i===a.length-1?' onward':'')+'</td><td>'+(r.window>=4?r.required+' of the last '+r.window+' completed epochs':r.required+' of '+r.window+' required')+'</td></tr>';}).join('');
+    var cal=(j.calendar||[]).slice(0,5).map(function(e){return '<tr><td>Epoch '+e.epoch+'</td><td>#'+n(e.range[0])+' – #'+n(e.range[1])+'</td></tr>';}).join('');
+    var ex=j.example||{}, exr=(ex.draws||[]).map(function(d){return '<tr><td>#'+n(d.height)+'</td><td>needs '+d.required+' of epochs '+d.window.join(', ')+'</td><td>'+(d.eligible_by_heartbeats?'<span class="eli-yes">YES</span>':'<span class="eli-no">NO</span>')+'</td></tr>';}).join('');
+    function sec(t,b,o){return '<details class="eli-why"'+(o?' open':'')+'><summary>'+t+'</summary><div class="eli-g">'+b+'</div></details>';}
+    return sec('HOW ELIGIBILITY WORKS','To enter a DTD Jackpot V2 draw, a miner must satisfy <b>all three</b> conditions:<br>1. <b>MINING ACTIVITY</b> — at least '+j.min_pow_blocks+' valid SbPoW blocks in the previous '+n(j.pow_window)+' blocks.<br>2. <b>NODE_BIND</b> — the mining identity has an active NODE_BIND linking it to a node key.<br>3. <b>HEARTBEATS</b> — the bound node has confirmed heartbeats in the required completed epochs.<br><br><b>A heartbeat is not required every block.</b> One valid heartbeat per epoch is enough. Each epoch lasts '+n(DATA.epoch_length)+' blocks, about 48 hours at the 10-minute target.')+
+      sec('HEARTBEAT RAMP','<table class="eli-tb">'+ramp+'</table>After the bootstrap period a miner does <b>not</b> need perfect 4/4 continuity: the steady-state rule is <b>3 valid epochs out of the last 4</b>.')+
+      sec('WHAT IS AN EPOCH','<table class="eli-tb">'+cal+'</table>A heartbeat must be confirmed inside its own epoch. Once an epoch has closed it cannot be filled retroactively — this prevents backdating node participation.<br><br><b>Epoch states</b><br><span class="eli-yes">✅ CONFIRMED</span> a valid heartbeat exists for this epoch.<br><span class="eli-no">❌ MISSING</span> the miner was already bound during the epoch but no valid heartbeat was confirmed.<br><span class="eli-na">○ BEFORE NODE_BIND</span> the NODE_BIND was not active yet; a heartbeat was impossible for that period. This does not mean the node failed.<br><span class="eli-pend">⏳ PENDING</span> the epoch is still open or in the future.<br><span class="eli-unk">? UNKNOWN</span> the data source cannot determine the state right now.')+
+      sec('EXAMPLE','A miner creates its NODE_BIND during epoch '+ex.bind_epoch+' and then confirms heartbeats in epochs '+(ex.heartbeat_epochs||[]).join(', ')+'. Epoch 0 was impossible — it was not bound yet.<table class="eli-tb">'+exr+'</table>Computed by the same index code that explains the live candidates.')+
+      sec('DOES MINING TOO MUCH EXCLUDE ME?','<b>No — not in Jackpot V2.</b> There is no recent-winner cooldown and no DTD anti-dominance exclusion. Once eligible, <b>draw weight = valid PoW blocks</b> in the previous '+n(j.pow_window)+'.<br>Example: miner A 1,300 blocks, miner B 545 blocks; if both are eligible, A weighs 1,300 and B 545. The larger miner has more weight; it is never excluded for being dominant. (DTD NORMAL is a different mechanism with its own rules.)')+
+      sec('DO I HAVE TO SEND HEARTBEATS MANUALLY?','Normally, no. If the node is running, uses the same node key registered by its NODE_BIND and has automatic heartbeat enabled, it sends one heartbeat during each epoch by itself. There is no need to send one every few hours: the requirement is at least one valid confirmed heartbeat per relevant epoch.')+
+      sec('WHY DOES JACKPOT V2 REQUIRE HEARTBEATS?','The Jackpot rewards both real mining and verified node participation. PoW sets a miner’s weight; NODE_BIND and heartbeats decide whether that miner is eligible. This stops an old or inactive node identity from staying eligible forever.')+
+      '<div class="eli-simple"><b>IN SIMPLE TERMS</b><br>Mining proves work. NODE_BIND proves the mining identity is linked to a node key. Heartbeats prove continued node participation over time.<br>You do not need a heartbeat every block — one valid heartbeat per epoch is enough. After the bootstrap period the rule stabilizes at 3 valid heartbeat epochs out of the last 4.</div>';
+  }
   function render(d,focus){
-    var j=d&&d.jackpot, b=document.getElementById('eliBody');
+    DATA=d; var j=d&&d.jackpot, b=document.getElementById('eliBody');
     if(!b) return;
     if(!j){ b.innerHTML='<div class="eli-unk">? Eligibility data unavailable right now.</div>'; return; }
     document.getElementById('eliTitle').innerHTML='JACKPOT V2 ELIGIBILITY &middot; NEXT DRAW #'+n(j.height);
-    document.getElementById('eliSub').innerHTML='Verdicts from the node (getjackpotv2audit) &middot; explained from the chain index at tip #'+n(d.tip)+' &middot; eligible '+n(j.eligible_count)+' &middot; total draw weight '+n(j.total_weight)+' &middot; PoW window '+n(j.pow_window)+' blocks &middot; heartbeats '+n(j.heartbeat_required)+' of '+n(j.heartbeat_window);
+    document.getElementById('eliSub').innerHTML='Eligibility is based on three independent requirements: PoW activity, an active NODE_BIND, and the required heartbeat history.<br><span class="eli-na">Verdicts: the node’s getjackpotv2audit · explanations: chain index at tip #'+n(d.tip)+' · eligible '+n(j.eligible_count)+' · total draw weight '+n(j.total_weight)+'</span>';
     b.innerHTML='<div class="eli-hd"><span>ADDRESS</span><span>POW</span><span>NODE</span><span>HB</span><span>ELIGIBLE</span></div>'+
-      (j.candidates.length?j.candidates.map(function(c,i){
-        return '<div class="eli-row'+(focus&&c.address===focus?' open':'')+'" data-a="'+esc(c.address)+'"><div class="eli-sum" onclick="this.parentNode.classList.toggle(\'open\')">'+
-          '<span class="ad" title="'+esc(c.address)+'">'+esc(sh(c.address))+'</span><span>'+mark(c.checks.pow)+' '+n(c.pow_blocks)+'</span><span>'+mark(c.checks.node_bind)+'</span><span>'+mark(c.checks.heartbeats)+' '+esc(c.heartbeats)+'/'+esc(c.heartbeats_required)+'</span>'+
-          '<span>'+(c.eligible?'<span class="eli-yes">YES</span>':'<span class="eli-no">NO</span>')+'</span></div><div class="eli-det">'+detail(c,j)+'</div></div>';
-      }).join(''):'<div class="eli-na">No PoW candidates in the '+n(j.pow_window)+'-block window.</div>');
-    if(focus){ var r=b.querySelector('.eli-row.open'); if(r) r.scrollIntoView({block:'center'}); }
+      ((j.candidates||[]).length?j.candidates.map(function(c){return row(c,j,focus&&c.address===focus);}).join(''):'<div class="eli-na">No PoW candidates in the '+n(j.pow_window)+'-block window.</div>')+guide(j);
+    if(focus){ var inp=document.getElementById('eliIn'); if(inp) inp.value=focus; lookup(focus); var r=b.querySelector('.eli-row.open'); if(r) r.scrollIntoView({block:'center'}); }
   }
-  function close(){ var o=document.getElementById('eliOv'); if(o) o.remove(); document.removeEventListener('keydown',esc_); }
-  function esc_(e){ if(e.key==='Escape') close(); }
+  function close(){ var o=document.getElementById('eliOv'); if(o) o.remove(); document.removeEventListener('keydown',kd);
+    try{ var u=new URL(location.href); if(u.searchParams.has('eligibility')){ u.searchParams.delete('eligibility'); history.replaceState(null,'',u); } }catch(e){} }
+  function kd(e){ if(e.key==='Escape') close(); }
   window.SostElig={ open:function(addr){
     close();
     var o=document.createElement('div'); o.className='eli-ov'; o.id='eliOv';
-    o.innerHTML='<div class="eli-box" onclick="event.stopPropagation()"><button class="eli-x" type="button">\u2715</button><div class="eli-h" id="eliTitle">JACKPOT V2 ELIGIBILITY</div><div class="eli-s" id="eliSub">loading\u2026</div><div id="eliBody"><div class="eli-na">loading\u2026</div></div>'+
-      '<details class="eli-why"><summary>WHY?</summary><div style="margin-top:6px">Jackpot V2 requires: <b>\u2265 3 SbPoW blocks</b> in the previous <b>2,016</b> &middot; an <b>active NODE_BIND</b> &middot; the required <b>completed-epoch heartbeats</b> (epochs of 288 blocks from #30,000; ramp 0/0 \u2192 1/1 \u2192 2/2 \u2192 3/3, then 3 of the last 4).<br>'+
-      'Jackpot V2 does <b>not</b> use the recent-producer cooldown or the DTD anti-dominance rule: a large miner is <b>not</b> excluded for its size.<br>Once eligible, <b>draw weight = PoW blocks</b> in the previous 2,016.<br>'+
-      'A heartbeat counts for the epoch it is mined in, only after that epoch has closed; a closed epoch is never back-filled. A valid heartbeat proves control of the bound node key and that it followed the canonical chain at that time, not one physical machine.</div></details></div>';
+    o.innerHTML='<div class="eli-box" onclick="event.stopPropagation()"><button class="eli-x" type="button">✕</button><div class="eli-h" id="eliTitle">JACKPOT V2 ELIGIBILITY</div><div class="eli-s" id="eliSub">loading…</div>'+
+      '<div class="eli-warn">Not eligible does not mean penalized. Open the details to see which historical requirement is missing.</div>'+
+      '<div class="eli-me"><div class="eli-t" style="margin-top:0">CHECK MY ELIGIBILITY</div><form id="eliForm" class="eli-form"><input id="eliIn" placeholder="Enter SOST mining address (sost1…)" autocomplete="off" spellcheck="false"><button type="submit">CHECK</button></form><div id="eliMine"></div></div>'+
+      '<div id="eliBody"><div class="eli-na">loading…</div></div></div>';
     o.addEventListener('click',close); o.querySelector('.eli-x').addEventListener('click',close);
-    document.body.appendChild(o); document.addEventListener('keydown',esc_);
+    o.querySelector('#eliForm').addEventListener('submit',function(e){e.preventDefault();lookup(document.getElementById('eliIn').value);});
+    document.body.appendChild(o); document.addEventListener('keydown',kd);
     fetch('api/node_participation.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(d){render(d,addr);}).catch(function(){render(null);});
   }};
+  try{ var q=new URL(location.href).searchParams.get('eligibility'); if(q) setTimeout(function(){window.SostElig.open(q.toLowerCase());},1500); }catch(e){}
 })();
 </script>
 </body>
