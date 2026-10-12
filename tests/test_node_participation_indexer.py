@@ -157,6 +157,42 @@ class T(unittest.TestCase):
         ix.refresh_audit()
         self.assertFalse(ix.document()['nodes'][0]['audit']['match'])
 
+    def test_eligibility_explained_like_mainnet_30301(self):
+        """Mainnet at #30,301: A bound in epoch 0 with heartbeats in epochs 0 and 1; B (dominant PoW) bound at
+        #30,289 (epoch 1) with a heartbeat in epoch 1. Node audit for #30,474: A eligible, B 0/1."""
+        c = FakeChain(npi.A)
+        ma, na, mb, nb = pub(1), pub(2), pub(3), pub(4)
+        while c.start + len(c.blocks) < 30194:
+            c.add()
+        c.add([bind_hex(ma, na, 1)])                                   # #30,194
+        c.add(); c.add([hb_hex(na, 0)])                                # #30,196
+        while c.start + len(c.blocks) < 30288:
+            c.add()
+        c.add([hb_hex(na, 1)])                                         # #30,288
+        c.add([bind_hex(mb, nb, 1)])                                   # #30,289
+        c.add(); c.add(); c.add([hb_hex(nb, 1)])                       # #30,292
+        while c.start + len(c.blocks) <= 30301:
+            c.add()
+        A_, B_ = npi.address_of_pubkey(ma), npi.address_of_pubkey(mb)
+        c.audit = {"height": 30474, "completed_epochs": 1, "heartbeat_required": 1, "heartbeat_window": 1, "total_weight": 545,
+                   "eligible_count": 1, "candidates": [
+                       {"address": B_, "pow_blocks": 1299, "node_bound": True, "heartbeats": 0, "heartbeats_required": 1, "eligible": False, "weight": 0},
+                       {"address": A_, "pow_blocks": 545, "node_bound": True, "heartbeats": 1, "heartbeats_required": 1, "eligible": True, "weight": 545}]}
+        ix = make(c)
+        ix.step()
+        ix.refresh_audit()
+        j = ix.document()["jackpot"]
+        a, b = j["candidates"]
+        self.assertEqual((a["address"], a["eligible"], a["share"]), (A_, True, 1.0))
+        self.assertEqual(a["earliest"]["status"], "eligible_now")
+        self.assertEqual(b["checks"]["pow"]["result"], "pass")
+        self.assertEqual(b["checks"]["heartbeats"]["result"], "fail")
+        self.assertEqual(b["epochs"][0]["status"], "before_bind")
+        self.assertEqual(b["earliest"]["height"], 31338)                   # 3 of epochs 0-3, epoch 0 impossible
+        self.assertEqual([e["status"] for e in b["earliest"]["epochs"]], ["before_bind", "confirmed", "pending", "pending"])
+        self.assertTrue(any("cannot carry a heartbeat" in r for r in b["reasons"]))
+        self.assertFalse(any("dominan" in r.lower() for r in b["reasons"]))
+
     def test_state_roundtrip(self):
         c = FakeChain(npi.A)
         c.add([bind_hex(pub(1), pub(2), 1)])

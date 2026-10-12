@@ -35,6 +35,8 @@ A = 30000                 # HIST_JACKPOT_V2_HEIGHT (mainnet, owner-locked)
 L = 288                   # NODE_EPOCH_LENGTH
 JP_FIRST, JP_STEP = 25290, 288
 HB_WINDOW, HB_REQUIRED = 4, 3
+POW_WINDOW, MIN_POW = 2016, 3            # JACKPOT_V2 PoW window / minimum (also echoed by the node audit)
+LOOKAHEAD = 12                           # draws scanned for the earliest possible eligibility
 TX_BIND, TX_HEARTBEAT, OUT_NODE_PROTOCOL = 0x20, 0x21, 0x30
 SCHEMA = 1
 REORG_WALK = 2000
@@ -161,6 +163,74 @@ def next_jackpot_after(h):
     if h < JP_FIRST:
         return JP_FIRST
     return JP_FIRST + ((h - JP_FIRST) // JP_STEP + 1) * JP_STEP
+
+
+
+def epoch_range(e):
+    return [A + e * L, A + e * L + L - 1]
+
+
+def draw_window(J):
+    c = completed_before(J)
+    w, req = min(c, HB_WINDOW), min(c, HB_REQUIRED)
+    return list(range(c - w, c)), req
+
+
+def explain_candidate(c, b, eps, tip, J):
+    """One audit candidate -> per-check status, per-epoch heartbeat status, reasons and the earliest draw
+    whose NODE condition is still reachable. `c` is the node's own getjackpotv2audit row (the eligibility
+    verdict is ALWAYS the node's); the chain index only explains it."""
+    cur_ep = epoch_of(tip)
+    done = (tip + 1 - A) // L if tip >= A else 0
+    win, req = draw_window(J)
+    b_ep = epoch_of(b["h"]) if b else None
+
+    def ep_status(e):
+        if e in eps:
+            return "confirmed"
+        if b_ep is None or e < b_ep:
+            return "before_bind"          # no active binding yet: a heartbeat for this epoch was impossible
+        if e < done:
+            return "missing"
+        return "pending"                  # current/future epoch: can still be confirmed
+    epochs = [{"epoch": e, "range": epoch_range(e), "status": ep_status(e)} for e in win]
+    pow_ok = (c.get("pow_blocks") or 0) >= MIN_POW
+    reasons = []
+    if not pow_ok:
+        reasons.append(f"Fewer than {MIN_POW} SbPoW blocks in the previous {POW_WINDOW:,} (has {c.get('pow_blocks') or 0}).")
+    if not c.get("node_bound"):
+        reasons.append("No active NODE_BIND for this mining address.")
+    hb = c.get("heartbeats") or 0
+    hreq = c.get("heartbeats_required") or 0
+    if c.get("node_bound") and hb < hreq:
+        miss = [x for x in epochs if x["status"] in ("missing", "before_bind")]
+        txt = ", ".join(f"epoch {x['epoch']} (#{x['range'][0]:,}–#{x['range'][1]:,})" for x in miss) or "required epochs"
+        reasons.append(f"Missing required heartbeat in completed {txt}: has {hb} of {hreq}.")
+        if any(x["status"] == "before_bind" for x in miss) and b:
+            reasons.append(f"NODE_BIND was confirmed at #{b['h']:,} (epoch {b_ep}); an epoch that ended before the bind cannot carry a heartbeat, and closed epochs are never back-filled.")
+    earliest = None
+    if c.get("eligible"):
+        earliest = {"height": J, "status": "eligible_now", "epochs": epochs}
+    elif b is not None:
+        for k in range(LOOKAHEAD + 1):
+            Jk = J + k * JP_STEP
+            wk, rk = draw_window(Jk)
+            st = [{"epoch": e, "range": epoch_range(e), "status": ep_status(e)} for e in wk]
+            reachable = sum(1 for x in st if x["status"] in ("confirmed", "pending"))
+            if reachable >= rk:
+                earliest = {"height": Jk, "status": "possible", "epochs": st,
+                            "assumes": f"a heartbeat confirmed in every pending epoch, and >= {MIN_POW} SbPoW blocks in the {POW_WINDOW:,} blocks before #{Jk:,}"}
+                break
+    def chk(ok, val):
+        return {"result": "pass" if ok else "fail", "value": val}
+    return {
+        "address": c.get("address"), "pow_blocks": c.get("pow_blocks"), "node_bound": bool(c.get("node_bound")),
+        "heartbeats": hb, "heartbeats_required": hreq, "eligible": bool(c.get("eligible")), "weight": c.get("weight") or 0,
+        "checks": {"pow": chk(pow_ok, c.get("pow_blocks")), "node_bind": chk(bool(c.get("node_bound")), "bound" if c.get("node_bound") else "not bound"),
+                   "heartbeats": ({"result": "not_required", "value": "0 / 0"} if hreq == 0 else chk(hb >= hreq, f"{hb} / {hreq}"))},
+        "bind_height": b["h"] if b else None, "bind_epoch": b_ep, "epochs": epochs, "reasons": reasons,
+        "earliest": earliest if earliest else {"height": None, "status": "cannot_determine" if b is None else "beyond_lookahead"},
+    }
 
 
 def atomic_write(path, text, mode=0o644):
@@ -311,6 +381,21 @@ class Indexer:
                 "epochs": sorted(eps),
             })
         nodes.sort(key=lambda n: (n["status"] != "ACTIVE", -n["streak"], n["bind_height"]))
+        jackpot = None
+        if self.audit and isinstance(self.audit.get("candidates"), list):
+            cands = [explain_candidate(c, bind.get(c.get("address")), hb.get(c.get("address"), {}), tip, J)
+                     for c in self.audit["candidates"]]
+            tw = self.audit.get("total_weight") or 0
+            for c in cands:
+                c["share"] = (c["weight"] / tw) if (tw and c["eligible"]) else None
+            cands.sort(key=lambda c: (not c["eligible"], -(c["pow_blocks"] or 0)))
+            jackpot = {"height": self.audit.get("height", J), "completed_epochs": self.audit.get("completed_epochs"),
+                       "heartbeat_required": self.audit.get("heartbeat_required"), "heartbeat_window": self.audit.get("heartbeat_window"),
+                       "window_epochs": [{"epoch": e, "range": epoch_range(e)} for e in win],
+                       "pow_window": self.audit.get("pow_window", POW_WINDOW), "min_pow_blocks": self.audit.get("min_pow_blocks", MIN_POW),
+                       "eligible_count": self.audit.get("eligible_count"), "total_weight": tw,
+                       "current_pot_stocks": self.audit.get("current_pot_stocks"), "candidates": cands,
+                       "source": "getjackpotv2audit(#%d) read at tip #%d; eligibility verdict = the node's" % (J, tip)}
         return {"schema": SCHEMA, "updated_at": int(time.time()), "tip": tip,
                 "tip_hash": self.rows[-1][1] if self.rows else None,
                 "activation_height": A, "epoch_length": L, "current_epoch": cur_ep, "completed_epochs": done,
@@ -319,7 +404,7 @@ class Indexer:
                            "bind_txs": n_binds, "heartbeat_txs": n_hbs},
                 "next_jackpot": {"height": J, "window_epochs": win, "required": req,
                                  "audit_read": self.audit is not None},
-                "nodes": nodes, "reorgs_observed": self.reorgs,
+                "nodes": nodes, "jackpot": jackpot, "reorgs_observed": self.reorgs,
                 "note": "A bound node is a node key bound on chain to a mining address. A valid heartbeat proves "
                         "control of that key and that it followed the canonical chain at that time; it does not "
                         "prove one unique physical machine.",
