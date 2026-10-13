@@ -21,7 +21,8 @@ Build (devnet profile, separate build dir):
 Run:
   python3 tests/p2p/run_deep_fork_devnet.py --bin <build> --work <new empty dir> [--only s1,s2]
 
-Ports: P2P base..base+19, RPC base+100.., isolated P2P base+200.. (default base 21100).
+Ports: P2P base..base+19, RPC base+100.., isolated P2P base+200.. (default base 21100;
+any base with base..base+300 inside 21000-25999 is accepted).
 Every process this script starts is stopped by its recorded PID (argv[0] checked).
 """
 import argparse
@@ -113,7 +114,7 @@ class Node:
     def addr(self):
         return f"{self.ip}:{self.p2p}"
 
-    def start(self, connect=(), isolated=False, keep_peers=False):
+    def start(self, connect=(), isolated=False, keep_peers=False, extra=()):
         assert self.proc is None
         if not keep_peers:
             try:
@@ -126,6 +127,7 @@ class Node:
                 "--rpc-port", str(self.rpcport), "--rpc-noauth", "--noseed", "--p2p-bind", self.ip]
         for c in connect:
             argv += ["--connect", c]
+        argv += list(extra)
         with open(self.logf, "a") as f:
             f.write(f"\n===== start {'isolated' if isolated else 'network'} connect={list(connect)} t={time.time():.0f}\n")
         self.proc = spawn(argv, self.dir, self.logf)
@@ -249,8 +251,9 @@ def block_id(j):
 class FakePeer:
     """Minimal plaintext SOST P2P peer (VERS/VACK/GETB/BLCK/DONE/PING)."""
 
-    def __init__(self, src_ip, target, height, serve=None, reverse=False):
+    def __init__(self, src_ip, target, height, serve=None, reverse=False, mute=False):
         self.serve = serve or {}            # height -> raw block json
+        self.mute = mute                    # never answer GETB (a peer that just relays)
         self.reverse = reverse
         self.height = height
         self.getb = []
@@ -297,6 +300,8 @@ class FakePeer:
                     self.ready.set()
                 elif cmd == "PING":
                     self.send("PONG")
+                elif cmd == "GETB" and self.mute:
+                    pass
                 elif cmd == "GETB":
                     frm, = struct.unpack("<q", pl[:8])
                     self.getb.append(frm)
@@ -565,6 +570,247 @@ def scn_orphan_flood(scn, base):
     a.stop()
 
 
+
+# ----------------------------------------------------------------------------- fork PoW validation
+FULL = ["--full-verify"]          # verify ConvergenceX on every block (devnet heights sit below
+                                  # the assumevalid height, where the default fast sync skips it)
+
+
+def relink(blocks, h0, mutate):
+    """Copy of a branch where block h0 is changed by `mutate(j)` and every block from h0 up gets
+    a self-consistent id (descendants re-pointed at the new parent). The ids are honest hashes of
+    the new bodies, so only real validation (PoW / CX / SbPoW) can tell these blocks are bad."""
+    out, prev_new = dict(blocks), None
+    for h in sorted(blocks):
+        if h < h0:
+            continue
+        j = json.loads(blocks[h])
+        if h == h0:
+            mutate(j)
+        else:
+            j["prev_hash"] = prev_new
+        j["block_id"] = block_id(j)
+        prev_new = j["block_id"]
+        out[h] = json.dumps(j, separators=(",", ":"))
+    return out
+
+
+def same_id_mutation(raw, mutate):
+    """Copy of a block with an uncommitted field changed and the ORIGINAL block_id kept."""
+    j = json.loads(raw)
+    mutate(j)
+    return json.dumps(j, separators=(",", ":"))
+
+
+def flip_hex(s, i=0):
+    return s[:i] + ("0" if s[i] != "0" else "1") + s[i + 1:]
+
+
+def mut_witness(j):                                # ConvergenceX round witness: dataset value
+    j["round_witnesses"][0]["dv"] = int(j["round_witnesses"][0]["dv"]) ^ 1
+
+
+def reorg_attempted(node):
+    return "[REORG] Disconnecting" in node.logtext()
+
+
+def bad_branch_then_honest(scn, base, mutate_h, mutate, same_id, full, expect_storage_reject,
+                           a_n=2, b_n=4):
+    """A (own branch) is offered a heavier branch whose block mutate_h is bad, then the honest
+    branch (same ids where same_id) on the SAME running node."""
+    d, a, b, info = make_fork(scn, base, a_n, b_n)
+    h = info["fork_h"] + mutate_h
+    if same_id:
+        bad = dict(info["b_blocks"]); bad[h] = same_id_mutation(bad[h], mutate)
+    else:
+        bad = relink(info["b_blocks"], h, mutate)
+    a.start(isolated=True, extra=FULL if full else ())
+    a_tip = a.tip()
+    evil = "127.0.0.61"
+    fp = FakePeer(evil, (a.ip, a.iso_p2p), info["b_h"], serve=bad)
+    time.sleep(12)
+    check(scn, "A did not adopt the invalid heavier branch (kept its own tip)", a.tip() == a_tip,
+          f"A h={a.height()} tip {a.tip()[:16]}")
+    if expect_storage_reject:
+        check(scn, "bad block refused BEFORE storage (no reorg attempted onto it)",
+              "REJECTED before storage" in a.logtext() and not reorg_attempted(a),
+              "; ".join(sorted(set(re.findall(r"REJECTED before storage: ([^\n]*)", a.logtext()))))[:200])
+    else:
+        lt = a.logtext()
+        check(scn, "bad block caught at connect time by full validation; reorg rolled back",
+              reorg_attempted(a) and "Rolled back to original tip" in lt,
+              "; ".join(sorted(set(re.findall(r"\[REORG\] (?:Evicted|Marked)[^\n]*", lt))))[:240])
+    log(f"  (malicious peer penalties: {penalties(a, evil)})")
+    fp.close()
+    honest = "127.0.0.62"
+    fp2 = FakePeer(honest, (a.ip, a.iso_p2p), info["b_h"], serve=info["b_blocks"])
+    ok = wait_for(lambda: a.tip() == info["b_tip"], 90)
+    check(scn, "same running node then adopts the honest branch" + (" (same block ids)" if same_id else ""),
+          ok, f"A h={a.height()} tip {a.tip()[:16]} GETB from {fp2.getb}")
+    pen = penalties(a, honest)
+    check(scn, "no misbehaviour recorded against the honest peer", not pen, "; ".join(pen)[:200])
+    fp2.close()
+    a.stop()
+
+
+def scn_valid_ooo_fullverify(scn, base):
+    log(f"\n=== {scn}: valid fork served in REVERSE order, A verifies ConvergenceX on every block ===")
+    d, a, b, info = make_fork(scn, base, 2, 4)
+    a.start(isolated=True, extra=FULL)
+    fp = FakePeer("127.0.0.63", (a.ip, a.iso_p2p), info["b_h"], serve=info["b_blocks"], reverse=True)
+    ok = wait_for(lambda: a.tip() == info["b_tip"], 90)
+    check(scn, "A converged to the valid out-of-order branch (orphans + forks pre-checked, CX verified)",
+          ok, f"A h={a.height()} GETB from {fp.getb}")
+    lt = a.logtext()
+    check(scn, "no genuine block refused by the storage pre-check", "REJECTED before storage" not in lt)
+    check(scn, "CX transcript verified on connect", "CX Transcript V2 verified" in lt)
+    pen = penalties(a, "127.0.0.63")
+    check(scn, "no misbehaviour recorded against the honest peer", not pen, "; ".join(pen)[:200])
+    fp.close()
+    a.stop()
+
+
+def scn_delayed_parent(scn, base):
+    log(f"\n=== {scn}: children first (orphans), parent delivered later; A verifies CX ===")
+    d, a, b, info = make_fork(scn, base, 2, 4)
+    a.start(isolated=True, extra=FULL)
+    a_tip = a.tip()
+    fh = info["fork_h"]
+    # First peer relays the children only and goes away (it never had the parent).
+    fp = FakePeer("127.0.0.64", (a.ip, a.iso_p2p), info["a_h"], mute=True)
+    fp.push([info["b_blocks"][h] for h in sorted(info["b_blocks"]) if h > fh + 1], gap=0.3)
+    time.sleep(0.5)
+    fp.close()
+    time.sleep(4)
+    check(scn, "children kept as orphans while the parent is missing (no reorg yet)",
+          a.tip() == a_tip and "orphans total" in a.logtext() and not reorg_attempted(a))
+    # Much later a second peer relays just the missing parent (unsolicited, no GETB served).
+    time.sleep(6)
+    fp2 = FakePeer("127.0.0.67", (a.ip, a.iso_p2p), info["a_h"], mute=True)
+    fp2.push([info["b_blocks"][fh + 1]])
+    ok = wait_for(lambda: a.tip() == info["b_tip"], 60)
+    check(scn, "reorg completed from the stored orphans once the delayed parent arrived", ok,
+          f"A h={a.height()}")
+    pen = penalties(a, "127.0.0.64") + penalties(a, "127.0.0.67")
+    check(scn, "no misbehaviour recorded against either honest peer", not pen, "; ".join(pen)[:200])
+    fp2.close()
+    a.stop()
+
+
+BLOCKID_MUTATIONS = [
+    # (field, mutate, committed-by)
+    ("nonce (control: header)", lambda j: j.update(nonce=int(j["nonce"]) ^ 1), "header"),
+    ("timestamp (control: header)", lambda j: j.update(timestamp=int(j["timestamp"]) + 1), "header"),
+    ("commit (control: id preimage)", lambda j: j.update(commit=flip_hex(j["commit"])), "id"),
+    ("transactions (drop all)", lambda j: j.pop("transactions"), "merkle"),
+    ("height", lambda j: j.update(height=int(j["height"]) + 1), "-"),
+    ("subsidy", lambda j: j.update(subsidy=int(j["subsidy"]) + 1), "-"),
+    ("miner", lambda j: j.update(miner=int(j["miner"]) + 1), "-"),
+    ("gold_vault", lambda j: j.update(gold_vault=int(j["gold_vault"]) + 1), "-"),
+    ("popc_pool", lambda j: j.update(popc_pool=int(j["popc_pool"]) + 1), "-"),
+    ("profile_index", lambda j: j.update(profile_index=int(j["profile_index"]) - 1), "commit"),
+    ("profile_index (removed)", lambda j: j.pop("profile_index"), "commit"),
+    ("stability_metric", lambda j: j.update(stability_metric=int(j["stability_metric"]) + 1), "commit"),
+    ("x_bytes", lambda j: j.update(x_bytes=flip_hex(j["x_bytes"])), "commit"),
+    ("final_state", lambda j: j.update(final_state=flip_hex(j["final_state"])), "commit"),
+    ("segments_root", lambda j: j.update(segments_root=flip_hex(j["segments_root"])), "commit"),
+    ("checkpoint_leaves[0]", lambda j: j["checkpoint_leaves"].__setitem__(0, flip_hex(j["checkpoint_leaves"][0])), "checkpoints_root"),
+    ("segment_proofs[0].ss", lambda j: j["segment_proofs"][0].update(ss=flip_hex(j["segment_proofs"][0]["ss"])), "segments_root"),
+    ("round_witnesses[0].dv", mut_witness, "commit+challenges"),
+    ("stab_scale", lambda j: j.update(stab_scale=int(j.get("stab_scale", 0)) + 1), "-"),
+    ("stab_k/margin/steps/lr_shift", lambda j: j.update(stab_k=int(j.get("stab_k", 0)) + 1, stab_margin=int(j.get("stab_margin", 0)) + 1,
+                                                         stab_steps=int(j.get("stab_steps", 0)) + 1, stab_lr_shift=int(j.get("stab_lr_shift", 0)) + 1), "-"),
+    ("unknown extra field", lambda j: j.update(zz_extra="x"), "-"),
+]
+
+
+def scn_blockid_mutation(scn, base):
+    """TASK B: mutate each block JSON field of a real devnet block while keeping its block_id,
+    and record what the node does with it - on the tip-extending path (submitblock) and on the
+    fork-storage / relay path - with the default fast sync and with --full-verify."""
+    log(f"\n=== {scn}: same-id mutations of every block JSON field ===")
+    d, a, b, info = make_fork(scn, base, 2, 4)
+    fh = info["fork_h"]
+    genuine = info["b_blocks"][fh + 1]
+    gj = json.loads(genuine)
+    log("  block fields: " + ", ".join(sorted(gj)))
+    snap_a = os.path.join(d, "A_snap")                 # A's own branch (2 blocks above the fork)
+    shutil.copytree(a.dir, snap_a, ignore=shutil.ignore_patterns("peers.txt"))
+    tip_node = Node(2, "T", d)                          # node whose tip IS the fork point
+    for f in os.listdir(base["dir"]):
+        shutil.copy2(os.path.join(base["dir"], f), os.path.join(tip_node.dir, f))
+    snap_t = os.path.join(d, "T_snap")
+    shutil.copytree(tip_node.dir, snap_t)
+
+    def reset(node, snap):
+        shutil.rmtree(node.dir)
+        shutil.copytree(snap, node.dir)
+
+    table = []
+    for mode, extra in (("default", ()), ("full-verify", FULL)):
+        tip_node.start(isolated=True, extra=extra)
+        dirty = False
+        for name, fn, _ in BLOCKID_MUTATIONS:
+            if dirty:
+                tip_node.stop(); reset(tip_node, snap_t); tip_node.start(isolated=True, extra=extra); dirty = False
+            raw = same_id_mutation(genuine, fn)
+            try:
+                tip_node.rpc("submitblock", [raw]); acc = True
+            except Exception:
+                acc = False
+            stored_same = None
+            if acc and tip_node.height() == fh + 1:
+                stored = json.loads(tip_node.raw(gj["block_id"]))
+                stored_same = (stored == gj)
+                dirty = True
+            elif acc:
+                dirty = True
+            table.append((mode, "tip", name, "ACCEPTED" + ("" if stored_same is None else
+                          (" (stored body == genuine)" if stored_same else " (MUTATED body stored)")) if acc else "rejected"))
+        # the genuine block is still accepted after all the rejected copies
+        if dirty:
+            tip_node.stop(); reset(tip_node, snap_t); tip_node.start(isolated=True, extra=extra)
+        try:
+            tip_node.rpc("submitblock", [genuine]); g_ok = True
+        except Exception:
+            g_ok = False
+        check(scn, f"[{mode}] genuine block accepted on the tip path after the mutated copies", g_ok)
+        tip_node.stop(); reset(tip_node, snap_t)
+
+    # Relay / fork-storage path: the mutated copy (same id) arrives first as a FORK block from a
+    # malicious peer; then the honest peer serves the whole genuine heavier branch (same ids).
+    poison_fail = []
+    for mode, extra in (("default", ()), ("full-verify", FULL)):
+        for name, fn, _ in BLOCKID_MUTATIONS[3:]:
+            reset(a, snap_a)
+            a.start(isolated=True, extra=extra)
+            raw = same_id_mutation(genuine, fn)
+            fp = FakePeer("127.0.0.65", (a.ip, a.iso_p2p), info["a_h"])
+            fp.push([raw])
+            time.sleep(1.5)
+            lt = a.logtext()
+            m = re.search(r"REJECTED before storage: ([^\n]*)", lt)
+            fate = ("refused before storage: " + m.group(1)) if m else (
+                "stored as fork" if "Fork stored" in lt or "orphans total" in lt else "rejected/ignored")
+            fp.close()
+            fp2 = FakePeer("127.0.0.66", (a.ip, a.iso_p2p), info["b_h"], serve=info["b_blocks"])
+            ok = wait_for(lambda: a.tip() == info["b_tip"], 60)
+            pen = penalties(a, "127.0.0.66")
+            same = ok and json.loads(a.raw(gj["block_id"])) == gj
+            table.append((mode, "relay", name, f"{fate}; honest branch adopted={ok}; "
+                          f"canonical body genuine={same}; honest penalties={len(pen)}"))
+            if not ok or pen:
+                poison_fail.append(f"{mode}/{name}")
+            fp2.close()
+            a.stop()
+    check(scn, "relay path: no same-id mutated copy prevents the genuine branch or gets the honest "
+               "peer penalised", not poison_fail, ", ".join(poison_fail)[:300])
+    log("\n  ---- block_id mutation table ----")
+    for row in table:
+        log("  %-12s %-5s %-30s %s" % row)
+    with open(os.path.join(A.work, "blockid_mutation_table.json"), "w") as f:
+        json.dump(table, f, indent=1)
+
 # ----------------------------------------------------------------------------- main
 def build_base(name, height):
     d = os.path.join(A.work, "_" + name)
@@ -607,8 +853,8 @@ def main():
     ap.add_argument("--only", default="")
     A = ap.parse_args()
     A.bin, A.work = os.path.abspath(A.bin), os.path.abspath(A.work)
-    if not 21000 <= A.base <= 21999 - 300:
-        sys.exit("--base must keep every port inside 21000-21999")
+    if not (21000 <= A.base and A.base + 300 <= 25999):
+        sys.exit("--base must keep every port (base..base+300) inside 21000-25999")
     if os.path.exists(A.work) and os.listdir(A.work):
         sys.exit(f"{A.work} is not empty")
     os.makedirs(A.work, exist_ok=True)
@@ -639,6 +885,26 @@ def main():
             ("s11_reconnect", lambda s: scn_reconnect(s, base)),
             ("s12_orphan_flood", lambda s: scn_orphan_flood(s, base)),
             ("s13_reconnect_after_orphans", lambda s: scn_reconnect_after_orphans(s, base)),
+            # fork / orphan PoW validation (fork_block_precheck + full validation at connect)
+            ("s14_valid_ooo_fullverify", lambda s: scn_valid_ooo_fullverify(s, base)),
+            ("s15_invalid_pow_parent", lambda s: bad_branch_then_honest(
+                s, base, 1, lambda j: j.update(commit="ff" * 32), same_id=False, full=False,
+                expect_storage_reject=True)),
+            ("s16_invalid_pow_child", lambda s: bad_branch_then_honest(
+                s, base, 2, lambda j: j.update(commit="ff" * 32), same_id=False, full=False,
+                expect_storage_reject=True)),
+            ("s17_invalid_cx_witness", lambda s: bad_branch_then_honest(
+                s, base, 2, mut_witness, same_id=True, full=False, expect_storage_reject=False)),
+            ("s18_invalid_cx_witness_fullverify", lambda s: bad_branch_then_honest(
+                s, base, 2, mut_witness, same_id=True, full=True, expect_storage_reject=True)),
+            ("s19_invalid_longer_fork", lambda s: bad_branch_then_honest(
+                s, base, 1, lambda j: j.update(commit="00" * 32), same_id=False, full=False,
+                expect_storage_reject=False)),
+            ("s20_invalid_longer_fork_fullverify", lambda s: bad_branch_then_honest(
+                s, base, 1, lambda j: j.update(commit="00" * 32), same_id=False, full=True,
+                expect_storage_reject=True)),
+            ("s21_delayed_parent", lambda s: scn_delayed_parent(s, base)),
+            ("s22_blockid_mutation", lambda s: scn_blockid_mutation(s, base)),
         ]
         for name, fn in plan:
             if want(name):

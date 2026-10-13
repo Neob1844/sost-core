@@ -145,6 +145,10 @@ static std::string    g_escrow_registry_path = "escrow_registry.json";
 static int32_t      g_last_accepted_profile = 0; // last block's declared cASERT profile index
 static std::recursive_mutex g_chain_mu; // recursive: process_block→try_reorganize→process_block
 static bool g_in_reorg = false;        // guard against recursive reorg
+// True only while try_reorganize connects a branch that contains the assumevalid anchor block
+// (exact height + id). process_block grants the fast-sync trust shortcuts to reorg-connected
+// blocks only under this flag.
+static bool g_reorg_trust_anchored = false;
 
 #ifdef SOST_DEVNET_FORKS
 // DEV/test-only one-shot reorg-connect failpoint. -1 = disarmed (default; and the ONLY
@@ -6400,30 +6404,231 @@ static bool historic_param_id_matches(const HistoricParamException* e, const Byt
     return to_hex(computed_bid.data(), 32) == std::string(e->block_id_hex);
 }
 
-// P2P hygiene for blocks that do NOT extend the active tip (fork candidates and orphans),
-// which are stored before full validation. Recomputes the block id from the body exactly as
-// process_block does further down (txs -> merkle root -> header -> id) and compares it with
-// the claimed "block_id". A body that does not hash to its id is a mutated copy: storing it
-// would occupy that id in the known-set and the fork index, so the genuine block with the
-// same id would later be dropped as a duplicate, and a failed reorg would mark the genuine id
-// INVALID (and reject its descendants). Not a consensus rule: process_block rejects such a
-// body anyway when it is connected. Returns 1 = id matches, 0 = mismatch / malformed,
-// -1 = not checkable (header-only block without transactions; left to the existing path).
-static int fork_block_id_check(const std::string& block_json) {
+// Transcript V2 witness parsers. Moved verbatim out of process_block so the fork/orphan
+// pre-check (fork_block_precheck) parses the witness exactly as the connect path does.
+static std::vector<Bytes32> parse_checkpoint_leaves_json(const std::string& block_json) {
+    std::vector<Bytes32> checkpoint_leaves_vec;
+    {
+        // Simple JSON array parser for checkpoint_leaves
+        auto cl_start = block_json.find("\"checkpoint_leaves\"");
+        if (cl_start != std::string::npos) {
+            auto arr_start = block_json.find('[', cl_start);
+            auto arr_end = block_json.find(']', arr_start);
+            if (arr_start != std::string::npos && arr_end != std::string::npos) {
+                std::string arr = block_json.substr(arr_start + 1, arr_end - arr_start - 1);
+                size_t pos = 0;
+                while (pos < arr.size()) {
+                    auto q1 = arr.find('"', pos);
+                    if (q1 == std::string::npos) break;
+                    auto q2 = arr.find('"', q1 + 1);
+                    if (q2 == std::string::npos) break;
+                    std::string leaf_hex = arr.substr(q1 + 1, q2 - q1 - 1);
+                    if (leaf_hex.size() == 64)
+                        checkpoint_leaves_vec.push_back(from_hex(leaf_hex));
+                    pos = q2 + 1;
+                }
+            }
+        }
+    }
+    return checkpoint_leaves_vec;
+}
+
+static std::vector<SegmentProof> parse_segment_proofs_json(const std::string& block_json) {
+    std::vector<SegmentProof> seg_proofs_vec;
+    {
+        auto sp_start = block_json.find("\"segment_proofs\"");
+        if (sp_start != std::string::npos) {
+            auto arr_s = block_json.find('[', sp_start);
+            if (arr_s != std::string::npos) {
+                // Find the matching ] for the outer array (skip nested [] pairs)
+                size_t arr_e = arr_s + 1;
+                int depth = 1;
+                while (arr_e < block_json.size() && depth > 0) {
+                    if (block_json[arr_e] == '[') depth++;
+                    else if (block_json[arr_e] == ']') depth--;
+                    if (depth > 0) arr_e++;
+                }
+                if(g_verbose) printf("[PARSE] segment_proofs array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
+                fflush(stdout);
+                // Parse array of segment proof objects
+                size_t pos = arr_s + 1;
+                while (pos < arr_e) {
+                    auto obj_s = block_json.find('{', pos);
+                    if (obj_s == std::string::npos || obj_s >= arr_e) break;
+                    // Find matching } (skip nested {})
+                    size_t obj_e = obj_s + 1;
+                    int od = 1;
+                    while (obj_e < block_json.size() && od > 0) {
+                        if (block_json[obj_e] == '{') od++;
+                        else if (block_json[obj_e] == '}') od--;
+                        if (od > 0) obj_e++;
+                    }
+                    if (od != 0) break;
+                    std::string obj = block_json.substr(obj_s, obj_e - obj_s + 1);
+                    SegmentProof sp;
+                    sp.leaf.segment_index = (uint32_t)jint(obj, "si");
+                    sp.leaf.round_start = (uint32_t)jint(obj, "rs");
+                    sp.leaf.round_end = (uint32_t)jint(obj, "re");
+                    sp.leaf.state_start = from_hex(jstr(obj, "ss"));
+                    sp.leaf.state_end = from_hex(jstr(obj, "se"));
+                    sp.leaf.x_start_hash = from_hex(jstr(obj, "xsh"));
+                    sp.leaf.x_end_hash = from_hex(jstr(obj, "xeh"));
+                    sp.leaf.residual_start = juint(obj, "rrs");
+                    sp.leaf.residual_end = juint(obj, "rre");
+                    // Parse merkle_path
+                    auto mp_s = obj.find("\"mp\"");
+                    if (mp_s != std::string::npos) {
+                        auto mp_arr = obj.find('[', mp_s);
+                        auto mp_end = obj.find(']', mp_arr);
+                        if (mp_arr != std::string::npos && mp_end != std::string::npos) {
+                            std::string mps = obj.substr(mp_arr+1, mp_end-mp_arr-1);
+                            size_t mpos = 0;
+                            while (mpos < mps.size()) {
+                                auto q1 = mps.find('"', mpos);
+                                if (q1 == std::string::npos) break;
+                                auto q2 = mps.find('"', q1+1);
+                                if (q2 == std::string::npos) break;
+                                std::string lh = mps.substr(q1+1, q2-q1-1);
+                                if (lh.size() == 64) sp.merkle_path.push_back(from_hex(lh));
+                                mpos = q2+1;
+                            }
+                        }
+                    }
+                    seg_proofs_vec.push_back(sp);
+                    pos = obj_e + 1;
+                }
+            }
+        }
+        if(g_verbose) printf("[PARSE] Parsed %zu segment_proofs\n", seg_proofs_vec.size()); fflush(stdout);
+    }
+    return seg_proofs_vec;
+}
+
+static std::vector<RoundWitness> parse_round_witnesses_json(const std::string& block_json) {
+    std::vector<RoundWitness> round_witnesses_vec;
+    {
+        auto rw_start = block_json.find("\"round_witnesses\"");
+        if (rw_start != std::string::npos) {
+            auto arr_s = block_json.find('[', rw_start);
+            if (arr_s != std::string::npos) {
+                // Find matching ] for outer array (skip nested [])
+                size_t arr_e = arr_s + 1;
+                { int d2 = 1; while (arr_e < block_json.size() && d2 > 0) { if (block_json[arr_e]=='[') d2++; else if (block_json[arr_e]==']') d2--; if (d2>0) arr_e++; } }
+                if(g_verbose) printf("[PARSE] round_witnesses array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
+                fflush(stdout);
+                size_t pos = arr_s + 1;
+                while (pos < arr_e) {
+                    auto obj_s = block_json.find('{', pos);
+                    if (obj_s == std::string::npos || obj_s >= arr_e) break;
+                    // Find matching closing brace (skip nested {})
+                    int depth = 0; size_t obj_e = obj_s;
+                    for (size_t k = obj_s; k < block_json.size(); ++k) {
+                        if (block_json[k] == '{') depth++;
+                        if (block_json[k] == '}') { depth--; if (depth == 0) { obj_e = k; break; } }
+                    }
+                    std::string obj = block_json.substr(obj_s, obj_e - obj_s + 1);
+                    RoundWitness rw;
+                    rw.round_index = (uint32_t)jint(obj, "ri");
+                    rw.state_before = from_hex(jstr(obj, "sb"));
+                    rw.state_after = from_hex(jstr(obj, "sa"));
+                    rw.dataset_value = juint(obj, "dv");
+                    rw.program_output = juint(obj, "po");
+                    // Decode x_before (128 hex chars = 32 int32)
+                    std::string xb_hex = jstr(obj, "xb");
+                    auto hxd = [](const std::string& h) -> std::vector<uint8_t> {
+                        std::vector<uint8_t> o; auto hx=[](char c)->uint8_t{
+                            if(c>='0'&&c<='9')return c-'0';if(c>='a'&&c<='f')return 10+c-'a';
+                            if(c>='A'&&c<='F')return 10+c-'A';return 0;};
+                        for(size_t i=0;i+1<h.size();i+=2)o.push_back((hx(h[i])<<4)|hx(h[i+1]));
+                        return o;
+                    };
+                    auto xb_raw = hxd(xb_hex);
+                    for (int k = 0; k < 32 && k*4+3 < (int)xb_raw.size(); ++k)
+                        rw.x_before[k] = read_i32_le(xb_raw.data() + k*4);
+                    std::string xa_hex = jstr(obj, "xa");
+                    auto xa_raw = hxd(xa_hex);
+                    for (int k = 0; k < 32 && k*4+3 < (int)xa_raw.size(); ++k)
+                        rw.x_after[k] = read_i32_le(xa_raw.data() + k*4);
+                    // Parse scratch_values and scratch_indices arrays
+                    auto parse_i32_arr = [&](const std::string& key) -> std::array<int32_t,4> {
+                        std::array<int32_t,4> a{};
+                        auto ks = obj.find("\"" + key + "\"");
+                        if (ks == std::string::npos) return a;
+                        auto as = obj.find('[', ks); auto ae = obj.find(']', as);
+                        if (as == std::string::npos || ae == std::string::npos) return a;
+                        std::string arr = obj.substr(as+1, ae-as-1);
+                        int idx = 0; size_t p = 0;
+                        while (p < arr.size() && idx < 4) {
+                            while (p < arr.size() && (arr[p]==' '||arr[p]==',')) p++;
+                            if (p >= arr.size()) break;
+                            a[idx++] = (int32_t)std::strtol(arr.c_str()+p, nullptr, 10);
+                            while (p < arr.size() && arr[p]!=',') p++;
+                        }
+                        return a;
+                    };
+                    auto parse_u32_arr = [&](const std::string& key) -> std::array<uint32_t,4> {
+                        std::array<uint32_t,4> a{};
+                        auto ks = obj.find("\"" + key + "\"");
+                        if (ks == std::string::npos) return a;
+                        auto as = obj.find('[', ks); auto ae = obj.find(']', as);
+                        if (as == std::string::npos || ae == std::string::npos) return a;
+                        std::string arr = obj.substr(as+1, ae-as-1);
+                        int idx = 0; size_t p = 0;
+                        while (p < arr.size() && idx < 4) {
+                            while (p < arr.size() && (arr[p]==' '||arr[p]==',')) p++;
+                            if (p >= arr.size()) break;
+                            a[idx++] = (uint32_t)std::strtoul(arr.c_str()+p, nullptr, 10);
+                            while (p < arr.size() && arr[p]!=',') p++;
+                        }
+                        return a;
+                    };
+                    rw.scratch_values = parse_i32_arr("sv");
+                    rw.scratch_indices = parse_u32_arr("si2");
+                    round_witnesses_vec.push_back(rw);
+                    pos = obj_e + 1;
+                }
+            }
+        }
+    }
+    return round_witnesses_vec;
+}
+
+// Pre-storage check for blocks that do NOT extend the active tip (fork candidates and
+// orphans). Such blocks are kept in g_block_index / the known-set before they are connected,
+// so whatever is stored under an id must be the block that id names, and must carry real
+// proof of work. Runs only checks that need no chain context and that the connect path
+// (process_block on the extends-tip branch) also runs, so it can never refuse a block that
+// full validation would accept:
+//   1. transactions present and decodable; merkle root and block_id recomputed from the body
+//      exactly as process_block does (txs -> merkle -> header v1/v2 -> compute_block_id);
+//   2. PoW inequality commit <= target(bits_q)                       (connect: pow_meets_target)
+//   3. JSON reward fields: subsidy == schedule(height), miner/gold_vault/popc_pool == coinbase
+//      outputs for the 3-output shape, 0 otherwise                   (connect: subsidy + "JSON
+//      rewards mismatch" checks);
+//   4. ConvergenceX Transcript V2 proof (verify_cx_proof) with the parameters of the declared,
+//      commit-bound profile_index, unless the height is inside the same fast-sync trust
+//      (exact hard checkpoint, or <= assumevalid height without --full-verify) under which
+//      process_block skips it too.
+// The context checks (bits_q vs cASERT, timestamps, profile_index vs chain history, tx and
+// UTXO validity, SbPoW) stay at connect time. Not a consensus rule: a block failing here
+// fails full validation as well. Returns true = may be stored; false = `why` says why.
+static bool fork_block_precheck(const std::string& block_json, const std::string& bid,
+                                int64_t height, std::string& why) {
+    if (height <= 0) { why = "fork block: invalid height"; return false; }
     std::vector<std::string> tx_hexes = json_get_tx_hexes(block_json);
-    if (tx_hexes.empty()) return -1;
+    if (tx_hexes.empty()) { why = "fork block: missing transactions"; return false; }
     std::vector<Transaction> txs;
     txs.reserve(tx_hexes.size());
     for (const auto& hx : tx_hexes) {
         std::vector<Byte> raw;
-        if (!decode_tx_hex(hx, raw)) return 0;
+        if (!decode_tx_hex(hx, raw)) { why = "block_id mismatch"; return false; }
         Transaction tx; std::string derr;
-        if (!Transaction::Deserialize(raw, tx, &derr)) return 0;
+        if (!Transaction::Deserialize(raw, tx, &derr)) { why = "block_id mismatch"; return false; }
         txs.push_back(std::move(tx));
     }
     Hash256 mrkl{}; std::string merr;
-    if (!ComputeMerkleRootFromTxs(txs, mrkl, &merr)) return 0;
-    if (mrkl != from_hex(jstr(block_json, "merkle_root"))) return 0;
+    if (!ComputeMerkleRootFromTxs(txs, mrkl, &merr) ||
+        mrkl != from_hex(jstr(block_json, "merkle_root"))) { why = "block_id mismatch"; return false; }
 
     const bool     ver_present = (block_json.find("\"version\"") != std::string::npos);
     const int64_t  ver_raw     = ver_present ? jint(block_json, "version") : 0;
@@ -6434,17 +6639,93 @@ static int fork_block_id_check(const std::string& block_json) {
         std::string pk_hex  = jstr(block_json, "miner_pubkey");
         std::string sig_hex = jstr(block_json, "miner_signature");
         if (!hex_to_bytes(pk_hex, pk.data(), pk.size()) ||
-            !hex_to_bytes(sig_hex, sig.data(), sig.size())) return 0;
+            !hex_to_bytes(sig_hex, sig.data(), sig.size())) { why = "block_id mismatch"; return false; }
     }
+    const uint32_t ts     = (uint32_t)jint(block_json, "timestamp");
+    const uint32_t bits_q = (uint32_t)jint(block_json, "bits_q");
+    const uint32_t nonce  = (uint32_t)jint(block_json, "nonce");
+    const uint32_t extra  = (uint32_t)jint(block_json, "extra_nonce");
+    const Bytes32  commit = from_hex(jstr(block_json, "commit"));
+    const Bytes32  croot  = from_hex(jstr(block_json, "checkpoints_root"));
     uint8_t hc72[72];
-    build_hc72(hc72, from_hex(jstr(block_json, "prev_hash")), mrkl,
-               (uint32_t)jint(block_json, "timestamp"), (uint32_t)jint(block_json, "bits_q"));
-    auto hdr = build_full_header_bytes(hc72, from_hex(jstr(block_json, "checkpoints_root")),
-                                       (uint32_t)jint(block_json, "nonce"),
-                                       (uint32_t)jint(block_json, "extra_nonce"), version,
+    build_hc72(hc72, from_hex(jstr(block_json, "prev_hash")), mrkl, ts, bits_q);
+    auto hdr = build_full_header_bytes(hc72, croot, nonce, extra, version,
                                        version >= 2 ? &pk : nullptr, version >= 2 ? &sig : nullptr);
-    Bytes32 id = compute_block_id(hdr.data(), hdr.size(), from_hex(jstr(block_json, "commit")));
-    return id == from_hex(jstr(block_json, "block_id")) ? 1 : 0;
+    const Bytes32 id = compute_block_id(hdr.data(), hdr.size(), commit);
+    if (id != from_hex(bid)) { why = "block_id mismatch"; return false; }
+
+    // 2. PoW inequality (cheap).
+    if (!pow_meets_target(commit, bits_q)) { why = "fork block: PoW invalid (commit above target)"; return false; }
+
+    // 3. Reward fields of the JSON (not hashed into block_id; enforced at connect).
+    if (txs[0].tx_type != TX_TYPE_COINBASE || txs[0].outputs.empty()) {
+        why = "fork block: txs[0] is not a coinbase"; return false;
+    }
+    if (jint(block_json, "subsidy") != sost_subsidy_stocks(height)) { why = "subsidy mismatch"; return false; }
+    {
+        const auto& outs = txs[0].outputs;
+        const int64_t miner_r = jint(block_json, "miner");
+        const int64_t gold_r  = jint(block_json, "gold_vault");
+        const int64_t popc_r  = jint(block_json, "popc_pool");
+        const bool ok = (outs.size() == 3)
+            ? (outs[0].amount == miner_r && outs[1].amount == gold_r && outs[2].amount == popc_r)
+            : (outs[0].amount == miner_r && gold_r == 0 && popc_r == 0);
+        if (!ok) { why = "JSON rewards mismatch"; return false; }
+    }
+
+    // 4. ConvergenceX proof, outside the fast-sync trust only (mirrors process_block).
+    const bool optimistic_anchor = sost::has_assumevalid_anchor() &&
+                                   (uint32_t)height <= sost::get_assumevalid_height();
+    if (sost::can_skip_cx_recomputation((uint32_t)height, bid, optimistic_anchor, g_full_verify_mode))
+        return true;
+    const std::string x_hex  = jstr(block_json, "x_bytes");
+    const std::string fs_hex = jstr(block_json, "final_state");
+    const std::string sr_hex = jstr(block_json, "segments_root");
+    if (x_hex.empty() || fs_hex.empty() || sr_hex.empty()) { why = "missing CX proof data"; return false; }
+    ConsensusParams cx_params = sost::get_consensus_params(sost::ACTIVE_PROFILE, height);
+    const bool pi_present = (block_json.find("\"profile_index\"") != std::string::npos);
+    int32_t declared_pi = (int32_t)jint(block_json, "profile_index");
+    if (!pi_present) {
+        // process_block outside the trust: required from V4, B0 before.
+        if (height >= CASERT_V4_FORK_HEIGHT) { why = "profile_index missing"; return false; }
+        declared_pi = 0;
+    } else if (declared_pi < CASERT_H_MIN || declared_pi > CASERT_H_MAX ||
+               declared_pi > validator_profile_ceiling_at(height)) {
+        why = "profile_index out of bounds"; return false;
+    }
+    {
+        CasertDecision dec_for_profile;
+        dec_for_profile.profile_index = declared_pi;
+        cx_params = sost::casert_apply_profile(cx_params, dec_for_profile, height);
+    }
+    {
+        const HistoricParamException* pe = historic_param_exception_at(height);
+        if (pe && historic_param_id_matches(pe, id)) {
+            cx_params.stab_scale  = pe->scale;
+            cx_params.stab_steps  = pe->steps;
+            cx_params.stab_k      = pe->k;
+            cx_params.stab_margin = pe->margin;
+        }
+    }
+    cx_params.verbose = g_verbose;
+    std::vector<uint8_t> x_raw;
+    x_raw.reserve(x_hex.size() / 2);
+    {
+        auto hx = [](char c) -> uint8_t {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+            if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+            return 0; };
+        for (size_t i = 0; i + 1 < x_hex.size(); i += 2) x_raw.push_back((hx(x_hex[i]) << 4) | hx(x_hex[i + 1]));
+    }
+    if (!sost::verify_cx_proof(hc72, nonce, extra, commit, croot, from_hex(sr_hex), from_hex(fs_hex),
+                               x_raw.data(), x_raw.size(), juint(block_json, "stability_metric"),
+                               parse_checkpoint_leaves_json(block_json),
+                               parse_segment_proofs_json(block_json),
+                               parse_round_witnesses_json(block_json), cx_params, height)) {
+        why = "CX Transcript V2 verification failed"; return false;
+    }
+    return true;
 }
 
 static bool process_block(const std::string& block_json, bool reorg_connect) {
@@ -6497,29 +6778,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     std::string final_state_hex = jstr(block_json,"final_state");
 
     // Parse checkpoint_leaves array (for CX proof verification)
-    std::vector<Bytes32> checkpoint_leaves_vec;
-    {
-        // Simple JSON array parser for checkpoint_leaves
-        auto cl_start = block_json.find("\"checkpoint_leaves\"");
-        if (cl_start != std::string::npos) {
-            auto arr_start = block_json.find('[', cl_start);
-            auto arr_end = block_json.find(']', arr_start);
-            if (arr_start != std::string::npos && arr_end != std::string::npos) {
-                std::string arr = block_json.substr(arr_start + 1, arr_end - arr_start - 1);
-                size_t pos = 0;
-                while (pos < arr.size()) {
-                    auto q1 = arr.find('"', pos);
-                    if (q1 == std::string::npos) break;
-                    auto q2 = arr.find('"', q1 + 1);
-                    if (q2 == std::string::npos) break;
-                    std::string leaf_hex = arr.substr(q1 + 1, q2 - q1 - 1);
-                    if (leaf_hex.size() == 64)
-                        checkpoint_leaves_vec.push_back(from_hex(leaf_hex));
-                    pos = q2 + 1;
-                }
-            }
-        }
-    }
+    std::vector<Bytes32> checkpoint_leaves_vec = parse_checkpoint_leaves_json(block_json);
 
     Hash256 prev_h = from_hex(prev);
 
@@ -6576,15 +6835,19 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             record_block_reject("fork block height mismatch");
             return false;
         }
-        // Fork candidates and orphans are stored before full validation: make sure the body
-        // really is the block its id names (see fork_block_id_check), so a mutated copy can
-        // neither take the genuine block's place nor get the genuine id marked INVALID.
-        if (fork_block_id_check(block_json) == 0) {
-            printf("[FORK] Block h=%lld bid=%s REJECTED: body does not match its block_id\n",
-                   (long long)height, bid.substr(0,16).c_str());
-            fflush(stdout);
-            record_block_reject("block_id mismatch");
-            return false;
+        // Fork candidates and orphans are stored before full validation: the stored body must
+        // be the block its id names (so a mutated copy can neither take the genuine block's
+        // place nor get the genuine id marked INVALID) and must carry real proof of work (so
+        // a fake branch cannot trigger a reorg). See fork_block_precheck.
+        {
+            std::string why;
+            if (!fork_block_precheck(block_json, bid, height, why)) {
+                printf("[FORK] Block h=%lld bid=%s REJECTED before storage: %s\n",
+                       (long long)height, bid.substr(0,16).c_str(), why.c_str());
+                fflush(stdout);
+                record_block_reject(why);
+                return false;
+            }
         }
 
         if (!parent_known) {
@@ -6817,8 +7080,15 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
 
     // FAST-SYNC: if block is under assumevalid, allow missing/empty transactions
     // This handles high-latency peers where block data arrives incomplete
+    // A reorg connects blocks that were stored as fork/orphan candidates. The height-based
+    // (optimistic) assumevalid trust below only holds for the chain that leads to the anchor,
+    // so on that path it is granted only when the branch being connected contains the
+    // assumevalid block itself (g_reorg_trust_anchored, set by try_reorganize). Otherwise every
+    // fork block gets the full checks: no header-only accept, no CX skip, profile_index
+    // required. Exact hard-checkpoint matches (height AND recomputed id) keep their trust.
+    const bool trust_shortcuts_ok = !reorg_connect || g_reorg_trust_anchored;
     bool is_trusted_height = false;
-    if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height() && !g_full_verify_mode){
+    if(trust_shortcuts_ok && sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height() && !g_full_verify_mode){
         is_trusted_height = true;
     }
 
@@ -6858,6 +7128,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             return true;
         }
         printf("[BLOCK] REJECTED: missing transactions[] (must include coinbase)\n");
+        record_block_reject("missing transactions");
         return false;
     }
 
@@ -6867,11 +7138,13 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         std::vector<Byte> raw;
         if(!decode_tx_hex(hx, raw)){
             printf("[BLOCK] REJECTED: bad tx hex in transactions[]\n");
+            record_block_reject("tx decode failed");
             return false;
         }
         Transaction tx; std::string derr;
         if(!Transaction::Deserialize(raw, tx, &derr)){
             printf("[BLOCK] REJECTED: tx deserialize failed: %s\n", derr.c_str());
+            record_block_reject("tx decode failed");
             return false;
         }
         txs.push_back(std::move(tx));
@@ -6881,6 +7154,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     Hash256 computed_mrkl{}; std::string merr;
     if(!ComputeMerkleRootFromTxs(txs, computed_mrkl, &merr)){
         printf("[BLOCK] REJECTED: merkle compute failed: %s\n", merr.c_str());
+        record_block_reject("tx decode failed");
         return false;
     }
     Hash256 mrkl_h = from_hex(mrkl);
@@ -7367,6 +7641,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         }
         if(txs[0].outputs[0].amount!=miner_r || txs[0].outputs[1].amount!=gold_r || txs[0].outputs[2].amount!=popc_r){
             printf("[BLOCK] REJECTED: JSON rewards mismatch vs coinbase tx outputs\n");
+            record_block_reject("JSON rewards mismatch");
             return false;
         }
     } else if (!phase2_ctx.paid_out) {
@@ -7376,6 +7651,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         }
         if(txs[0].outputs[0].amount!=miner_r || gold_r != 0 || popc_r != 0){
             printf("[BLOCK] REJECTED: Phase 2 UPDATE JSON rewards mismatch\n");
+            record_block_reject("JSON rewards mismatch");
             return false;
         }
     } else {
@@ -7385,6 +7661,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         }
         if(txs[0].outputs[0].amount!=miner_r || gold_r != 0 || popc_r != 0){
             printf("[BLOCK] REJECTED: Phase 2 PAYOUT JSON rewards mismatch\n");
+            record_block_reject("JSON rewards mismatch");
             return false;
         }
     }
@@ -7538,159 +7815,9 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         Bytes32 sroot = from_hex(segments_root_hex);
 
         // Parse segment_proofs from JSON
-        std::vector<SegmentProof> seg_proofs_vec;
-        {
-            auto sp_start = block_json.find("\"segment_proofs\"");
-            if (sp_start != std::string::npos) {
-                auto arr_s = block_json.find('[', sp_start);
-                if (arr_s != std::string::npos) {
-                    // Find the matching ] for the outer array (skip nested [] pairs)
-                    size_t arr_e = arr_s + 1;
-                    int depth = 1;
-                    while (arr_e < block_json.size() && depth > 0) {
-                        if (block_json[arr_e] == '[') depth++;
-                        else if (block_json[arr_e] == ']') depth--;
-                        if (depth > 0) arr_e++;
-                    }
-                    if(g_verbose) printf("[PARSE] segment_proofs array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
-                    fflush(stdout);
-                    // Parse array of segment proof objects
-                    size_t pos = arr_s + 1;
-                    while (pos < arr_e) {
-                        auto obj_s = block_json.find('{', pos);
-                        if (obj_s == std::string::npos || obj_s >= arr_e) break;
-                        // Find matching } (skip nested {})
-                        size_t obj_e = obj_s + 1;
-                        int od = 1;
-                        while (obj_e < block_json.size() && od > 0) {
-                            if (block_json[obj_e] == '{') od++;
-                            else if (block_json[obj_e] == '}') od--;
-                            if (od > 0) obj_e++;
-                        }
-                        if (od != 0) break;
-                        std::string obj = block_json.substr(obj_s, obj_e - obj_s + 1);
-                        SegmentProof sp;
-                        sp.leaf.segment_index = (uint32_t)jint(obj, "si");
-                        sp.leaf.round_start = (uint32_t)jint(obj, "rs");
-                        sp.leaf.round_end = (uint32_t)jint(obj, "re");
-                        sp.leaf.state_start = from_hex(jstr(obj, "ss"));
-                        sp.leaf.state_end = from_hex(jstr(obj, "se"));
-                        sp.leaf.x_start_hash = from_hex(jstr(obj, "xsh"));
-                        sp.leaf.x_end_hash = from_hex(jstr(obj, "xeh"));
-                        sp.leaf.residual_start = juint(obj, "rrs");
-                        sp.leaf.residual_end = juint(obj, "rre");
-                        // Parse merkle_path
-                        auto mp_s = obj.find("\"mp\"");
-                        if (mp_s != std::string::npos) {
-                            auto mp_arr = obj.find('[', mp_s);
-                            auto mp_end = obj.find(']', mp_arr);
-                            if (mp_arr != std::string::npos && mp_end != std::string::npos) {
-                                std::string mps = obj.substr(mp_arr+1, mp_end-mp_arr-1);
-                                size_t mpos = 0;
-                                while (mpos < mps.size()) {
-                                    auto q1 = mps.find('"', mpos);
-                                    if (q1 == std::string::npos) break;
-                                    auto q2 = mps.find('"', q1+1);
-                                    if (q2 == std::string::npos) break;
-                                    std::string lh = mps.substr(q1+1, q2-q1-1);
-                                    if (lh.size() == 64) sp.merkle_path.push_back(from_hex(lh));
-                                    mpos = q2+1;
-                                }
-                            }
-                        }
-                        seg_proofs_vec.push_back(sp);
-                        pos = obj_e + 1;
-                    }
-                }
-            }
-            if(g_verbose) printf("[PARSE] Parsed %zu segment_proofs\n", seg_proofs_vec.size()); fflush(stdout);
-        }
+        std::vector<SegmentProof> seg_proofs_vec = parse_segment_proofs_json(block_json);
         // Parse round_witnesses from JSON
-        std::vector<RoundWitness> round_witnesses_vec;
-        {
-            auto rw_start = block_json.find("\"round_witnesses\"");
-            if (rw_start != std::string::npos) {
-                auto arr_s = block_json.find('[', rw_start);
-                if (arr_s != std::string::npos) {
-                    // Find matching ] for outer array (skip nested [])
-                    size_t arr_e = arr_s + 1;
-                    { int d2 = 1; while (arr_e < block_json.size() && d2 > 0) { if (block_json[arr_e]=='[') d2++; else if (block_json[arr_e]==']') d2--; if (d2>0) arr_e++; } }
-                    if(g_verbose) printf("[PARSE] round_witnesses array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
-                    fflush(stdout);
-                    size_t pos = arr_s + 1;
-                    while (pos < arr_e) {
-                        auto obj_s = block_json.find('{', pos);
-                        if (obj_s == std::string::npos || obj_s >= arr_e) break;
-                        // Find matching closing brace (skip nested {})
-                        int depth = 0; size_t obj_e = obj_s;
-                        for (size_t k = obj_s; k < block_json.size(); ++k) {
-                            if (block_json[k] == '{') depth++;
-                            if (block_json[k] == '}') { depth--; if (depth == 0) { obj_e = k; break; } }
-                        }
-                        std::string obj = block_json.substr(obj_s, obj_e - obj_s + 1);
-                        RoundWitness rw;
-                        rw.round_index = (uint32_t)jint(obj, "ri");
-                        rw.state_before = from_hex(jstr(obj, "sb"));
-                        rw.state_after = from_hex(jstr(obj, "sa"));
-                        rw.dataset_value = juint(obj, "dv");
-                        rw.program_output = juint(obj, "po");
-                        // Decode x_before (128 hex chars = 32 int32)
-                        std::string xb_hex = jstr(obj, "xb");
-                        auto hxd = [](const std::string& h) -> std::vector<uint8_t> {
-                            std::vector<uint8_t> o; auto hx=[](char c)->uint8_t{
-                                if(c>='0'&&c<='9')return c-'0';if(c>='a'&&c<='f')return 10+c-'a';
-                                if(c>='A'&&c<='F')return 10+c-'A';return 0;};
-                            for(size_t i=0;i+1<h.size();i+=2)o.push_back((hx(h[i])<<4)|hx(h[i+1]));
-                            return o;
-                        };
-                        auto xb_raw = hxd(xb_hex);
-                        for (int k = 0; k < 32 && k*4+3 < (int)xb_raw.size(); ++k)
-                            rw.x_before[k] = read_i32_le(xb_raw.data() + k*4);
-                        std::string xa_hex = jstr(obj, "xa");
-                        auto xa_raw = hxd(xa_hex);
-                        for (int k = 0; k < 32 && k*4+3 < (int)xa_raw.size(); ++k)
-                            rw.x_after[k] = read_i32_le(xa_raw.data() + k*4);
-                        // Parse scratch_values and scratch_indices arrays
-                        auto parse_i32_arr = [&](const std::string& key) -> std::array<int32_t,4> {
-                            std::array<int32_t,4> a{};
-                            auto ks = obj.find("\"" + key + "\"");
-                            if (ks == std::string::npos) return a;
-                            auto as = obj.find('[', ks); auto ae = obj.find(']', as);
-                            if (as == std::string::npos || ae == std::string::npos) return a;
-                            std::string arr = obj.substr(as+1, ae-as-1);
-                            int idx = 0; size_t p = 0;
-                            while (p < arr.size() && idx < 4) {
-                                while (p < arr.size() && (arr[p]==' '||arr[p]==',')) p++;
-                                if (p >= arr.size()) break;
-                                a[idx++] = (int32_t)std::strtol(arr.c_str()+p, nullptr, 10);
-                                while (p < arr.size() && arr[p]!=',') p++;
-                            }
-                            return a;
-                        };
-                        auto parse_u32_arr = [&](const std::string& key) -> std::array<uint32_t,4> {
-                            std::array<uint32_t,4> a{};
-                            auto ks = obj.find("\"" + key + "\"");
-                            if (ks == std::string::npos) return a;
-                            auto as = obj.find('[', ks); auto ae = obj.find(']', as);
-                            if (as == std::string::npos || ae == std::string::npos) return a;
-                            std::string arr = obj.substr(as+1, ae-as-1);
-                            int idx = 0; size_t p = 0;
-                            while (p < arr.size() && idx < 4) {
-                                while (p < arr.size() && (arr[p]==' '||arr[p]==',')) p++;
-                                if (p >= arr.size()) break;
-                                a[idx++] = (uint32_t)std::strtoul(arr.c_str()+p, nullptr, 10);
-                                while (p < arr.size() && arr[p]!=',') p++;
-                            }
-                            return a;
-                        };
-                        rw.scratch_values = parse_i32_arr("sv");
-                        rw.scratch_indices = parse_u32_arr("si2");
-                        round_witnesses_vec.push_back(rw);
-                        pos = obj_e + 1;
-                    }
-                }
-            }
-        }
+        std::vector<RoundWitness> round_witnesses_vec = parse_round_witnesses_json(block_json);
         if(g_verbose) printf("[BLOCK-V2] Parsed: x_bytes=%zu final_state=%s segments_root=%s cp_leaves=%zu seg_proofs=%zu rw=%zu\n",
                 x_bytes_raw.size(), final_state_hex.substr(0,16).c_str(), segments_root_hex.substr(0,16).c_str(),
                 checkpoint_leaves_vec.size(), seg_proofs_vec.size(), round_witnesses_vec.size());
@@ -7713,7 +7840,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         {
             // Check if this block is in the trusted range
             bool trusted_block = false;
-            if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height() && !g_full_verify_mode){
+            if(trust_shortcuts_ok && sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height() && !g_full_verify_mode){
                 trusted_block = true;
             }
 
@@ -7732,6 +7859,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             if (pi_missing && !trusted_block && height >= CASERT_V4_FORK_HEIGHT) {
                 printf("[BLOCK] REJECTED: profile_index missing on non-trusted block at height %lld (V4+ requires profile_index)\n",
                        (long long)height);
+                record_block_reject("profile_index missing");
                 return false;
             }
 
@@ -7831,6 +7959,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 if (declared_pi < CASERT_H_MIN || declared_pi > CASERT_H_MAX) {
                     printf("[BLOCK] REJECTED: profile_index %d out of bounds [%d, %d]\n",
                            declared_pi, CASERT_H_MIN, CASERT_H_MAX);
+                    record_block_reject("profile_index out of bounds");
                     return false;
                 }
                 // Hard profile ceiling: pre-V12 = H13, V12 = H20, V13 = H35.
@@ -7843,6 +7972,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                     if (declared_pi > max_profile) {
                         printf("[BLOCK] REJECTED: profile_index %d exceeds active ceiling %d at height %lld\n",
                                declared_pi, max_profile, (long long)height);
+                        record_block_reject("profile_index out of bounds");
                         return false;
                     }
                 }
@@ -7859,6 +7989,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                     } else {
                         printf("[BLOCK] REJECTED: profile_index %d exceeds base profile %d (can only ease, not harden beyond base)\n",
                                declared_pi, base_profile);
+                        record_block_reject("profile_index above base profile");
                         return false;
                     }
                 }
@@ -7880,6 +8011,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                     if (declared_pi < min_profile) {
                         printf("[BLOCK] REJECTED: profile_index %d below lag floor %d (lag=%d, minimum enforcement)\n",
                                declared_pi, min_profile, base_dec.lag);
+                        record_block_reject("profile_index below lag minimum");
                         return false;
                     }
                 }
@@ -7895,6 +8027,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                         printf("[BLOCK] REJECTED: profile_index %d below deterministic floor %d "
                                "(anti-stall profile at block timestamp, block %lld)\n",
                                declared_pi, floor_profile, (long long)height);
+                        record_block_reject("profile_index below deterministic minimum");
                         return false;
                     }
                 }
@@ -7970,7 +8103,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             // For initial sync, we trust the assumevalid anchor optimistically:
             // we don't yet have the anchor block on our chain, but we will verify it
             // when we reach that height. This is the same trust model as Bitcoin Core.
-            if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height()){
+            if(trust_shortcuts_ok && sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height()){
                 anchor_on_chain = true; // optimistic trust during initial sync
             } else if(sost::has_assumevalid_anchor() && sost::get_assumevalid_height() < g_blocks.size()){
                 std::string chain_hash = to_hex(g_blocks[sost::get_assumevalid_height()].block_id.data(), 32);
@@ -8030,6 +8163,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                         seg_proofs_vec, round_witnesses_vec, cx_params,
                         height)) {
                     printf("[BLOCK] REJECTED: CX Transcript V2 verification failed\n");
+                    record_block_reject("CX Transcript V2 verification failed");
                     return false;
                 }
                 printf("[BLOCK] CX Transcript V2 verified\n");
@@ -8040,7 +8174,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         // Missing CX proof data — only acceptable for trusted blocks
         std::string bid_hex_nodata = to_hex(computed_bid.data(), 32);
         bool anchor_trust = false;
-        if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height()){
+        if(trust_shortcuts_ok && sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height()){
             anchor_trust = true;
         }
         bool skip_nodata = sost::can_skip_cx_recomputation(
@@ -8056,6 +8190,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                        sost::full_verify_class_name(sost::FullVerifyClass::UNVERIFIABLE_MISSING_HISTORICAL_DATA));
             }
             printf("[BLOCK] REJECTED: missing CX proof data (not in trusted range)\n");
+            record_block_reject("missing CX proof data");
             return false;
         }
     }
@@ -8639,6 +8774,18 @@ static bool dev_reorg_fault(const char* phase, int idx) {
 static inline bool dev_reorg_fault(const char*, int) { return false; }
 #endif
 
+// Reject reasons (record_block_reject) that come from fields block_id does not commit to.
+// A body failing for one of these can be a mutated copy of a genuine block with the same id.
+static bool reject_reason_is_body_malleable(const std::string& r) {
+    static const char* const exact[] = {
+        "missing transactions", "tx decode failed", "merkle_root mismatch", "block_id mismatch",
+        "subsidy mismatch", "JSON rewards mismatch", "missing CX proof data",
+        "CX Transcript V2 verification failed", "missing/invalid required hex fields",
+    };
+    for (const char* e : exact) if (r == e) return true;
+    return r.rfind("profile_index", 0) == 0;
+}
+
 static bool try_reorganize(const std::string& fork_tip_hash) {
     // Guard against recursive reorg (process_block→try_reorganize→process_block→try_reorganize)
     if (g_in_reorg) {
@@ -8853,6 +9000,18 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     size_t connected = 0;
     bool connect_success = true;
     size_t invalid_from = SIZE_MAX;
+    bool evict_failed_body = false;   // failure lies in data block_id does not commit to
+    // Fast-sync trust for this branch only if it contains the assumevalid block itself; the
+    // ids in fork_chain were recomputed from their bodies before storage (fork_block_precheck)
+    // and each header commits to its parent, so then every lower block is that block's ancestor.
+    bool anchored = false;
+    if (sost::has_assumevalid_anchor()) {
+        for (const auto& fc : fork_chain)
+            if (fc.height == (int64_t)sost::get_assumevalid_height() &&
+                to_hex(fc.block_id.data(), 32) == sost::get_assumevalid_hash()) { anchored = true; break; }
+    }
+    g_reorg_trust_anchored = anchored;
+    struct AnchorGuard { ~AnchorGuard(){ g_reorg_trust_anchored = false; } } _ag;
 
     for (size_t i = 0; i < fork_chain.size(); ++i) {
 #ifdef SOST_DEVNET_FORKS
@@ -8880,8 +9039,15 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             // A block that fails full validation is invalid for good (except a future
             // timestamp, which only means "not yet"): remember it and everything built on
             // it, so the same branch cannot trigger disconnect/reconnect storms again.
-            if (g_last_reject_reason != "timestamp too far in future")
+            // Exception: when the failure lies in a field block_id does not commit to (JSON
+            // reward fields, ConvergenceX witness, profile_index, missing tx data) the stored
+            // BODY is bad, not necessarily the block the id names. Marking the id INVALID would
+            // let a mutated copy blacklist a genuine block, so that body is evicted instead
+            // and the genuine block can still be received and connected.
+            if (g_last_reject_reason != "timestamp too far in future") {
                 invalid_from = i;
+                evict_failed_body = reject_reason_is_body_malleable(g_last_reject_reason);
+            }
             break;
         }
         connected++;
@@ -8974,11 +9140,29 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
         {
             std::lock_guard<std::mutex> lk(g_block_index_mu);
             for (size_t fi = 0; fi < fork_chain.size(); ++fi) {
-                auto it = g_block_index.find(to_hex(fork_chain[fi].block_id.data(), 32));
-                if (it != g_block_index.end())
+                const std::string fh = to_hex(fork_chain[fi].block_id.data(), 32);
+                auto it = g_block_index.find(fh);
+                if (it == g_block_index.end()) continue;
+                if (fi == invalid_from && evict_failed_body) {
+                    // The bad body goes; its id stays receivable.
+                    g_block_index.erase(it);
+                    unmark_block_known(fh);
+                } else if (fi > invalid_from && evict_failed_body) {
+                    // Descendants were never tested: they wait as orphans for the genuine
+                    // parent body and are re-processed when it arrives.
+                    it->second.status = BlockStatus::ORPHAN;
+                    it->second.cumulative_work = {};
+                    g_orphans_by_prev.insert({to_hex(it->second.prev_hash.data(), 32), fh});
+                } else {
                     it->second.status = (fi >= invalid_from) ? BlockStatus::INVALID : BlockStatus::FORK;
+                }
             }
-            if (invalid_from != SIZE_MAX)
+            if (invalid_from != SIZE_MAX && evict_failed_body)
+                printf("[REORG] Evicted the stored body of h=%lld (%zu descendant(s) kept as orphans): "
+                       "failure in data block_id does not commit to (%s) - ids NOT marked invalid\n",
+                       (long long)fork_chain[invalid_from].height, fork_chain.size() - invalid_from - 1,
+                       g_last_reject_reason.c_str());
+            else if (invalid_from != SIZE_MAX)
                 printf("[REORG] Marked %zu fork block(s) INVALID from h=%lld\n",
                        fork_chain.size() - invalid_from, (long long)fork_chain[invalid_from].height);
             for (const auto& sb : saved_blocks) {
