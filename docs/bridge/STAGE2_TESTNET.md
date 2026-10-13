@@ -17,7 +17,7 @@ The atomic swap (ATOMIC_SWAP_WSOST.md) never mints, burns, unlocks the vault or 
 - New deployment script `contracts/wsost/script/DeployStage2.s.sol` (refuses chainId 1): WSOST, QuarantineVault,
   GoldReserveVault (XAUT enabled, PAXG gated), a fresh AtomicSwapHTLCv2. Dry-run on Anvil: OK.
 - Disposable deployer generated (key in `~/sost-keys/`, mode 600, never committed): `0xB6C433C46B4F7Cd95A524B1a4c8A19fa9b51835D`.
-  **Balance 0 Sepolia ETH → Sepolia deployment BLOCKED until funded from a faucet (~0.05 ETH).**
+  Funded 2026-10-13 (0.05 SepoliaETH). **Deployed and E2E-tested on Sepolia: see STAGE2_SEPOLIA_RESULT.md.**
 
 ## Real capsule E2E
 
@@ -39,7 +39,7 @@ Status: **IN PROGRESS** (not yet reached).
 
 ## Open
 
-1. Fund the Sepolia deployer → deploy → Sepolia wrap / unwrap / swap E2E.
+1. ~~Fund the Sepolia deployer → deploy → Sepolia wrap / unwrap / swap E2E.~~ Done 2026-10-13 (STAGE2_SEPOLIA_RESULT.md).
 2. Devnet past 7,350 → 100 % real capsule wrap/unwrap E2E.
 3. Wallet signer for capsule and HTLC transactions (design: CLI_CAPSULE_OFFLINE_DESIGN.md; needs authorization).
 4. External review before any mainnet recommendation.

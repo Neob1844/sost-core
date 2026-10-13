@@ -1,0 +1,71 @@
+[PASS] wallet alice.json — <work>/run1/alice.json
+[PASS] wallet bob.json — <work>/run1/bob.json
+[PASS] capsule-fast devnet A: fresh chain at genesis, isolated (no peers) — RPC 127.0.0.1:18755 P2P 19755 datadir <work>/run1/A
+--- mining to #298 (Alice is the miner; coinbase maturity 5 on DEVNET_FAST)
+[PASS]    mined 298 block(s) → tip 298 — from 0
+[PASS] CLI gate at tip 298: capsule build refused before activation — ERROR: capsule attach requires chain height >= capsule activation (300); tip is 298
+[PASS]    plain buildtx (watch-only) for the boundary tx — <work>/run1/tx/boundary.json --out signed.hex
+[PASS]    capsule inserted before signing; signtx (offline, v1) shows it and signs — n1/tx/boundary.hex
+[PASS] FAST_DEVNET_299: valid Capsule v1 tx for block #299 → REJECT (R14, not yet active) — {'code': -25, 'message': 'consensus: R14: output[0] type 0x00 payload forbidden before capsule activation'}
+[PASS]    not in the mempool
+[PASS]    mined 1 block(s) → tip 299 — from 298
+[PASS]    same signed bytes for block #300: accepted by the mempool
+[PASS]    mined 1 block(s) → tip 300 — from 299
+[PASS] FAST_DEVNET_300: the capsule tx is confirmed IN block #300 — txid 17c72596654a1cd3… block 300
+[PASS]    capsule read back from the node matches the signed bytes
+[PASS] CLI gate at tip 300: capsule build allowed; CLI capsule bytes == bridge encoder bytes — 5343010100000000001d00001c534f5354206361…
+[PASS]    mined 1 block(s) → tip 301 — from 300
+[PASS]    #301+: normal capsule operation (CLI-built capsule confirmed at #301)
+--- reorg test: node B syncs, goes offline, mines a longer competing chain
+[PASS]    mined 5 block(s) → tip 306 — from 301
+[PASS]    node B synced from A over P2P — tip 306
+[PASS]    bridge deposit (5 SOST + WSOST capsule) to a separate reorg-test vault
+[PASS]    mined 2 block(s) → tip 308 — from 306
+[PASS]    observer statement for the deposit on A (block #307, 2 conf)
+[PASS]    relayer pre-flight: statement canonical before the reorg
+[PASS]    node B restarted offline at the pre-deposit tip
+[PASS]    mined 4 block(s) → tip 310 — from 306
+[PASS]    REAL REORG on node A: deposit block replaced by B's longer chain — #307 9b1b013118d7… → 9ea6d24bb61d… tip 310 · submitblock ["{'code': -25, 'message': 'Block rejected", "{'code': -25, 'message': 'Block rejected", "{'code': -25, 'message': 'Block rejected", True]
+[PASS] REORGANIZED DEPOSIT: relayer pre-flight refuses the stale statement
+[PASS]    observer re-verification refuses (block moved / not confirmed / gone) — 71de73355f8eaa18066079017a60dbff18c7764fbd9f1ef056b9155ba8690672: not confirmed · deposit now at height -1
+--- continuous mining + tests/bridge/e2e_real_capsule.py
+[PASS]    reorged deposit re-mined on the new chain: new block, old statement still refused, fresh statement differs — #311 83c712db3e86… (deposit_id unchanged = txid:vout)
+[PASS] C0. devnet at or above capsule activation (300) — height 311
+[PASS] parties — Alice sost1c04829366… · fresh Bridge Vault sost1998ce0923…
+[PASS] A. open-note capsule tx built (buildtx), signed offline (signtx), accepted
+[PASS]    offline review showed the capsule text + hash
+[PASS] H. confirmed; capsule read back from the node and parsed by the bridge parser — payload 5343010100000000001e00001d534f5354207265…
+[PASS] EVM RPC is NOT Ethereum mainnet — chainId 11155111
+[PASS] deployment file is for this chain — chainId 11155111
+[PASS] deployed WSOST is bound to this Bridge Vault, these observers, 2-of-3, 30 confirmations — 0x4F71ef1D4878225eBd711216A75451F0bfF946C0 chainId 11155111
+[PASS]    clean start: supply 0, nothing minted or burned, mint not paused
+[PASS] B. bridge deposit 100 SOST + Ethereum-recipient capsule, signed offline with ENCRYPTED v2 wallet
+[PASS]    passphrase never on a command line (file 0600)
+[PASS] 5. observer reads the REAL deposit: txid, vout, amount, recipient, block hash, height, confirmations — txid 262df8d37427de86… vout 0 amount 100.00000000 → 0xB6C433C4… h 316 conf 1
+[PASS]    deposit_id deterministic = keccak(SOST-WSOST-DEPOSIT-V1 || txid || vout)
+[PASS]    before confirmations: PENDING and observers refuse
+[PASS]    2-of-3 observers attest from the real node
+[PASS]    relayer pre-flight: deposit block still canonical
+[PASS]    wrong recipient with valid signatures: mint reverts
+[PASS]    stale / reorged block hash: relayer pre-flight refuses
+[PASS] 9. WRAP: 100 native SOST locked, 100 wSOST minted
+[PASS]    duplicate mint authorization reverts
+[PASS]    reconciliation BALANCED — {"A_confirmed_deposits": 10000000000, "B_pending_deposits": 0, "C_minted": 10000000000, "D_burned": 0, "E_burns_awaiting_release": 0, "F_completed_releases": 0,
+[PASS] C. governance vote capsule built + signed offline + accepted
+[PASS]    governance tally reads the vote from the real chain — yes 1 census 2
+[PASS] D. malformed capsule (bad magic) — offline signer flags it, node rejects — {'code': -25, 'message': "policy: Policy: output[0] bad capsule: expected magic 'SC' (0x53,0x43)"}
+[PASS] E. oversize capsule (81 > 80) refused before anything is built
+[PASS] F. capsule mutated after signing: node rejects the signature — {'code': -25, 'message': 'consensus: input[0]: VerifySighash: ECDSA verification failed (E
+[PASS] G. same offline-signed capsule tx unmodified: accepted
+[FAIL] 10. burn 40 wSOST on the EVM side
+[PASS]    release pending → PENDING
+[PASS]    release built watch-only, signed OFFLINE by the vault wallet, broadcast
+[PASS]    journal blocks a second release for the same burn
+[PASS]    release carries WSOST-RELEASE capsule, 40 SOST − fee allowance to Alice
+[PASS] 11. FINAL: 60 wSOST outstanding, ≥ 60 SOST locked, every id reconciled → BALANCED — locked 60.00097050 SOST · supply 60.00000000 · {"A_confirmed_deposits": 10000000000, "B_pending_deposits": 0, "C_minted": 10000000000, "D_burned": 4000000000, "E_burns
+FINAL_LOCKED_GROSS: 60.00097050 SOST (vault UTXOs)
+FINAL_BACKING_OWED: 60.00000000 SOST (= wSOST supply + awaiting releases + unminted deposits)
+FINAL_SURPLUS: 0.00097050 SOST (unused part of the release fee allowance)
+FINAL_WSOST_SUPPLY: 60.00000000 wSOST
+RESULT: 32/33 PASS
+[FAIL] tests/bridge/e2e_real_capsule.py on the capsule-fast devnet + Sepolia

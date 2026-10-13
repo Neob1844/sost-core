@@ -1,0 +1,18 @@
+[
+ {
+  "op": "mint (wrap 100)",
+  "tx": "0x7cfe9ab737f02fb72f648267ee1c8a6ece608051b76ac180957eebe42af3d63a",
+  "block": 11904207,
+  "status": 1,
+  "gasUsed": 609281,
+  "effectiveGasPriceWei": 1000019
+ },
+ {
+  "op": "burn (unwrap 40)",
+  "tx": "0xb9d8976e37661833056c9508e90eaa4c92bf6abcf132dcdefc1c7ccc7a916ef9",
+  "block": 11904208,
+  "status": 1,
+  "gasUsed": 609235,
+  "effectiveGasPriceWei": 1000019
+ }
+]

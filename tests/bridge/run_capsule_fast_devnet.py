@@ -79,6 +79,15 @@ def main():
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--min-conf", type=int, default=30)
     ap.add_argument("--skip-e2e", action="store_true")
+    # Sepolia: forwarded to e2e_real_capsule.py; --swap-signer also runs e2e_swap_sost_wsost.py on this devnet
+    ap.add_argument("--eth-rpc")
+    ap.add_argument("--eth-key-file")
+    ap.add_argument("--deployment")
+    ap.add_argument("--observer-keys")
+    ap.add_argument("--vault-wallet")
+    ap.add_argument("--test-keys")
+    ap.add_argument("--gas-out-dir")
+    ap.add_argument("--swap-signer")
     a = ap.parse_args()
     B, W = os.path.abspath(a.bin), os.path.abspath(a.work)
     NODE, MINER, CLI = (os.path.join(B, x) for x in ("sost-node", "sost-miner", "sost-cli"))
@@ -286,9 +295,27 @@ def main():
          hR2 > 0 and rpcA.getblockhash(hR2) != hashA and not still_canonical(rpcA, msg) and len(d2) == 1
          and d2[0].block_hash != msg.sostBlockHash.hex() and d2[0].deposit_id == msg.depositId,
          f"#{hR2} {rpcA.getblockhash(hR2)[:12] if hR2 > 0 else ''}… (deposit_id unchanged = txid:vout)")
+    sep = []
+    if a.deployment:
+        sep = ["--eth-rpc", a.eth_rpc, "--eth-key-file", a.eth_key_file, "--deployment", a.deployment,
+               "--observer-keys", a.observer_keys, "--vault-wallet", a.vault_wallet]
+        if a.gas_out_dir:
+            sep += ["--gas-out", os.path.join(a.gas_out_dir, "gas-bridge.json")]
     r = subprocess.run([sys.executable, os.path.join(ROOT, "tests", "bridge", "e2e_real_capsule.py"), "--cli", CLI, "--work", W,
-                        "--rpc", RA, "--min-conf", str(a.min_conf), "--capsule-activation", str(ACT)])
-    step("tests/bridge/e2e_real_capsule.py on the capsule-fast devnet", r.returncode == 0)
+                        "--rpc", RA, "--min-conf", str(a.min_conf), "--capsule-activation", str(ACT), *sep])
+    step("tests/bridge/e2e_real_capsule.py on the capsule-fast devnet" + (" + Sepolia" if a.deployment else ""), r.returncode == 0)
+    if a.swap_signer and r.returncode == 0:
+        print("--- tests/bridge/e2e_swap_sost_wsost.py (SOST devnet HTLC <-> wSOST HTLCv2" + (" on Sepolia)" if a.deployment else ")"), flush=True)
+        vault = json.load(open(a.vault_wallet))["keys"][0]["address"] if a.vault_wallet else None
+        sw = [sys.executable, os.path.join(ROOT, "tests", "bridge", "e2e_swap_sost_wsost.py"), "--work", os.path.join(W, "swap"),
+              "--signer", a.swap_signer, "--rpc-port", str(a.rpc_port), "--cli", CLI, "--funder-wallet", os.path.join(W, "alice.json")]
+        if a.deployment:
+            sw += ["--eth-rpc", a.eth_rpc, "--eth-key-file", a.eth_key_file, "--alice-eth-key-file", a.test_keys,
+                   "--deployment", a.deployment, "--vault", vault]
+            if a.gas_out_dir:
+                sw += ["--gas-out", os.path.join(a.gas_out_dir, "gas-swap.json")]
+        rs = subprocess.run(sw)
+        step("tests/bridge/e2e_swap_sost_wsost.py on the same devnet", rs.returncode == 0)
     finish()
 
 

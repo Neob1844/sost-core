@@ -12,6 +12,11 @@ the mint pause are exactly what they were before.
 
   python3 tests/bridge/e2e_swap_sost_wsost.py --work DIR --signer PATH   (node must be running on 18655)
 
+Sepolia mode (--eth-rpc + --deployment): the EVM side is the DEPLOYED Stage 2 WSOST + AtomicSwapHTLCv2.
+Bob is the funded deployer and already holds bridge-minted wSOST (from the real wrap run); Alice gets a
+fresh test EVM key (--alice-eth-key-file) and a little test ETH for gas. Real Sepolia blocks are waited
+for (no evm_mine). The Bridge Vault checked is --vault (the vault bound in the deployed WSOST).
+
 Disposable devnet/Anvil keys only. Nothing leaves localhost.
 """
 import argparse
@@ -88,6 +93,8 @@ def pkh(addr):
 
 def artifact(path):
     base = os.path.join(ROOT, "contracts", "atomic-swap", "out") if path.startswith("AtomicSwap") else OUT
+    if not os.path.exists(os.path.join(base, path)):
+        base = OUT                                   # contracts/wsost compiles the same AtomicSwapHTLCv2 source
     j = json.load(open(os.path.join(base, path)))
     return j["abi"], j["bytecode"]["object"]
 
@@ -96,9 +103,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--work", required=True)
     ap.add_argument("--signer", required=True)
+    ap.add_argument("--rpc-port", type=int, default=RPC_PORT)
+    ap.add_argument("--cli", default=CLI)
+    ap.add_argument("--funder-wallet")                 # devnet wallet with spendable SOST (copied as juan.json)
+    ap.add_argument("--eth-rpc")
+    ap.add_argument("--eth-key-file")
+    ap.add_argument("--alice-eth-key-file")            # JSON with "alice_eth" hex key
+    ap.add_argument("--deployment")
+    ap.add_argument("--vault")
+    ap.add_argument("--gas-out")
     a = ap.parse_args()
     work = a.work
+    globals()["RPC_PORT"], globals()["CLI"] = a.rpc_port, a.cli
+    SEP = bool(a.deployment)
     rpc = SostRPC(f"http://127.0.0.1:{RPC_PORT}/")
+    if SEP and a.funder_wallet and not os.path.exists(os.path.join(work, "juan.json")):
+        os.makedirs(work, exist_ok=True)
+        open(os.path.join(work, "juan.json"), "w").write(open(a.funder_wallet).read()); os.chmod(os.path.join(work, "juan.json"), 0o600)
 
     def cli(wallet, *args, check=True):
         r = subprocess.run([CLI, "--wallet", os.path.join(work, wallet), "--node", f"127.0.0.1:{RPC_PORT}", *args],
@@ -150,44 +171,94 @@ def main():
     tip = rpc.getblockcount()
     must("SOST devnet node reachable, DEV profile", rpc.call("getinfo").get("profile") == "dev", f"height {tip}")
     must("SOST HTLC active on devnet (V14_5=11, V14_7=12)", tip > 12)
-    funder, vault = wallet("juan.json"), wallet("vault.json")
+    funder = wallet("juan.json")
+    vault = a.vault if SEP else wallet("vault.json")
     alice, bob = wallet("alice.json"), wallet("bob.json")
     step("parties", True, f"Alice(SOST)={alice[:14]}… Bob(SOST)={bob[:14]}… BridgeVault={vault[:14]}…")
 
-    if not any(int(u["amount_stocks"]) >= to_stocks("150") and u.get("output_type") == OUT_TRANSFER for u in utxos(alice)):
-        cli("juan.json", "--yes", "send", alice, "150")
-        wait_until(lambda: any(int(u["amount_stocks"]) >= to_stocks("150") for u in utxos(alice)), 300, "Alice funding")
-    must("Alice holds native devnet SOST", balance(alice) >= to_stocks("150"), fmt_sost(balance(alice)) + " SOST")
+    NEED = to_stocks("40" if SEP else "150")
+    if not any(int(u["amount_stocks"]) >= NEED and u.get("output_type") == OUT_TRANSFER for u in utxos(alice)):
+        cli("juan.json", "--yes", "send", alice, fmt_sost(NEED))
+        wait_until(lambda: any(int(u["amount_stocks"]) >= NEED for u in utxos(alice)), 300, "Alice funding")
+    must("Alice holds native devnet SOST", balance(alice) >= NEED, fmt_sost(balance(alice)) + " SOST")
 
     # ------------------------------------------------------------------ Anvil, WSOST, HTLCv2
-    procs.append(subprocess.Popen([ANVIL, "--port", str(ANVIL_PORT), "--silent"], stdout=subprocess.DEVNULL,
-                                  stderr=subprocess.DEVNULL, preexec_fn=os.setsid))
-    w3 = Web3(Web3.HTTPProvider(f"http://127.0.0.1:{ANVIL_PORT}"))
-    wait_until(lambda: w3.eth.chain_id, 30, "anvil")
-    admin, alice_eth, bob_eth, relayer = w3.eth.accounts[:4]
+    gaslog = []
+    if SEP:
+        w3 = Web3(Web3.HTTPProvider(a.eth_rpc))
+        must("EVM is Sepolia (never Ethereum mainnet)", w3.eth.chain_id == 11155111, f"chainId {w3.eth.chain_id}")
+        bob_acct = Account.from_key(open(a.eth_key_file).read().strip())
+        alice_acct = Account.from_key(bytes.fromhex(json.load(open(a.alice_eth_key_file))["alice_eth"].removeprefix("0x")))
+        accts = {bob_acct.address: bob_acct, alice_acct.address: alice_acct}
+        nonces = {k: w3.eth.get_transaction_count(k, "pending") for k in accts}
+        bob_eth, alice_eth = bob_acct.address, alice_acct.address
+        admin = relayer = bob_eth
+
+        def send_raw(tx, sender, label):
+            tx.update({"nonce": nonces[sender], "chainId": w3.eth.chain_id})
+            h = w3.eth.send_raw_transaction(accts[sender].sign_transaction(tx).raw_transaction)
+            nonces[sender] += 1
+            r = w3.eth.wait_for_transaction_receipt(h, timeout=600)
+            ok, t0 = 0, time.time()          # load-balanced RPC: wait until reads see the receipt's block
+            while ok < 3 and time.time() - t0 < 120:
+                ok = ok + 1 if w3.eth.block_number >= r.blockNumber else 0
+                time.sleep(1)
+            time.sleep(3)
+            gaslog.append({"op": label, "from": sender, "tx": "0x" + h.hex().removeprefix("0x"), "block": r.blockNumber,
+                           "status": r.status, "gasUsed": r.gasUsed, "effectiveGasPriceWei": r.effectiveGasPrice})
+            if a.gas_out:
+                json.dump(gaslog, open(a.gas_out, "w"), indent=1)
+            return r
+        if w3.eth.get_balance(alice_eth) < Web3.to_wei("0.0002", "ether"):
+            gas_ = int(w3.eth.estimate_gas({"from": bob_eth, "to": alice_eth, "value": Web3.to_wei("0.0005", "ether")}) * 1.25)
+            r = send_raw({"from": bob_eth, "to": alice_eth, "value": Web3.to_wei("0.0005", "ether"), "gas": gas_,     # new account: > 21000 on current Sepolia
+                          "maxFeePerGas": w3.eth.gas_price * 4, "maxPriorityFeePerGas": w3.eth.max_priority_fee}, bob_eth, "fund Alice gas")
+            must("Alice (EVM) receives 0.0005 test ETH for gas", r.status == 1)
+    else:
+        procs.append(subprocess.Popen([ANVIL, "--port", str(ANVIL_PORT), "--silent"], stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL, preexec_fn=os.setsid))
+        w3 = Web3(Web3.HTTPProvider(f"http://127.0.0.1:{ANVIL_PORT}"))
+        wait_until(lambda: w3.eth.chain_id, 30, "anvil")
+        admin, alice_eth, bob_eth, relayer = w3.eth.accounts[:4]
 
     def deploy(path, *args):
         abi, bc = artifact(path)
         r = w3.eth.wait_for_transaction_receipt(w3.eth.contract(abi=abi, bytecode=bc).constructor(*args).transact({"from": admin}))
         return w3.eth.contract(address=r.contractAddress, abi=abi)
 
-    def tx(fn, sender):
-        r = w3.eth.wait_for_transaction_receipt(fn.transact({"from": sender}))
+    def tx(fn, sender, label=None):
+        if SEP:
+            t_ = fn.build_transaction({"from": sender, "nonce": nonces[sender], "chainId": w3.eth.chain_id})
+            t_["gas"] = int(w3.eth.estimate_gas({k: t_[k] for k in ("from", "to", "data")}) * 1.25)
+            r = send_raw(t_, sender, label or fn.fn_name)
+        else:
+            r = w3.eth.wait_for_transaction_receipt(fn.transact({"from": sender}))
         assert r.status == 1
         return r
 
-    obs_keys = [Account.create().key for _ in range(3)]
-    obs = [Account.from_key(k).address for k in obs_keys]
-    w = deploy("WSOST.sol/WSOST.json", vault_hash(vault), (admin, obs, 2, 30, to_stocks("100000"), to_stocks("50000")))
-    htlc = deploy("AtomicSwapHTLCv2.sol/AtomicSwapHTLCv2.json")
-    step("Anvil: WSOST + existing AtomicSwapHTLCv2 deployed", True, f"WSOST={w.address} HTLCv2={htlc.address}")
+    if SEP:
+        dep_ = json.load(open(a.deployment))["contracts"]
+        w = w3.eth.contract(address=dep_["WSOST"]["address"], abi=artifact("WSOST.sol/WSOST.json")[0])
+        htlc = w3.eth.contract(address=dep_["AtomicSwapHTLCv2"]["address"], abi=artifact("AtomicSwapHTLCv2.sol/AtomicSwapHTLCv2.json")[0])
+        must("Sepolia: deployed WSOST is bound to this Bridge Vault", bytes(w.functions.bridgeVault().call()) == vault_hash(vault),
+             f"WSOST={w.address} HTLCv2={htlc.address}")
+        BOB0 = w.functions.balanceOf(bob_eth).call()
+        must("Bob holds existing bridge-minted wSOST (from the real wrap)", BOB0 >= to_stocks("12"), fmt_sost(BOB0) + " wSOST")
+    else:
+        obs_keys = [Account.create().key for _ in range(3)]
+        obs = [Account.from_key(k).address for k in obs_keys]
+        w = deploy("WSOST.sol/WSOST.json", vault_hash(vault), (admin, obs, 2, 30, to_stocks("100000"), to_stocks("50000")))
+        htlc = deploy("AtomicSwapHTLCv2.sol/AtomicSwapHTLCv2.json")
+        step("Anvil: WSOST + existing AtomicSwapHTLCv2 deployed", True, f"WSOST={w.address} HTLCv2={htlc.address}")
 
-    # Bob's existing wSOST: one canonical 2-of-3 attested bridge mint (500)
-    dep = DepositMsg(depositId=hashlib.sha256(b"bob-existing-deposit").digest(), recipient=bob_eth, amount=to_stocks("500"),
-                     bridgeVault=vault_hash(vault), sostBlockHash=b"\x11" * 32, sostBlockHeight=tip, confirmations=30)
-    sigs = order_signatures([(obs[i], sign_deposit(obs_keys[i], dep, w3.eth.chain_id, w.address)) for i in (0, 2)])
-    tx(w.functions.mint(dep.as_tuple(), sigs), relayer)
-    must("Bob holds 500 existing wSOST (canonical bridge mint)", w.functions.balanceOf(bob_eth).call() == to_stocks("500"))
+        # Bob's existing wSOST: one canonical 2-of-3 attested bridge mint (500)
+        dep = DepositMsg(depositId=hashlib.sha256(b"bob-existing-deposit").digest(), recipient=bob_eth, amount=to_stocks("500"),
+                         bridgeVault=vault_hash(vault), sostBlockHash=b"\x11" * 32, sostBlockHeight=tip, confirmations=30)
+        sigs = order_signatures([(obs[i], sign_deposit(obs_keys[i], dep, w3.eth.chain_id, w.address)) for i in (0, 2)])
+        tx(w.functions.mint(dep.as_tuple(), sigs), relayer)
+        must("Bob holds 500 existing wSOST (canonical bridge mint)", w.functions.balanceOf(bob_eth).call() == to_stocks("500"))
+        BOB0 = to_stocks("500")
+    alice_w0 = w.functions.balanceOf(alice_eth).call()
 
     def bridge_state():
         return {"vault_sost": balance(vault), "supply": w.functions.totalSupply().call(),
@@ -206,12 +277,12 @@ def main():
     # Alice: 100 native SOST  <->  Bob: 99.5 wSOST (negotiated ratio, not hardcoded 1:1)
     S = secrets.token_bytes(32)
     H = hashlib.sha256(S).hexdigest()
-    sost_amt, wsost_amt = to_stocks("100"), to_stocks("99.5")
+    sost_amt, wsost_amt = (to_stocks("10"), to_stocks("9.95")) if SEP else (to_stocks("100"), to_stocks("99.5"))
     u = next(u for u in utxos(alice) if int(u["amount_stocks"]) >= sost_amt + FEE and u.get("output_type") == OUT_TRANSFER)
     T1 = rpc.getblockcount() + 120
     raw = build("createhtlclock", u["txid"], u["vout"], u["amount_stocks"], pkh(alice), H, T1, pkh(bob), pkh(alice), sost_amt, FEE)
     lock_txid = broadcast(sign("alice.json", raw, f"{u['amount_stocks']}:{OUT_TRANSFER}:{alice}"))
-    step("1. Alice funds the SOST HTLC (100 SOST, claim=Bob, refund=Alice)", bool(lock_txid), f"txid {str(lock_txid)[:16]}… refund_height {T1}")
+    step(f"1. Alice funds the SOST HTLC ({fmt_sost(sost_amt)} SOST, claim=Bob, refund=Alice)", bool(lock_txid), f"txid {str(lock_txid)[:16]}… refund_height {T1}")
     wait_until(lambda: confirmed(lock_txid), 300, "SOST lock confirmation")
     def htlc_status(txid):
         return json.loads(re.search(r"\{.*\}", cli("bob.json", "gethtlcstatus", txid, "0"), re.S).group(0))["result"]
@@ -222,18 +293,18 @@ def main():
 
     swap1 = hashlib.sha256(b"swap-1" + S).digest()
     T2 = w3.eth.block_number + 40
-    tx(w.functions.approve(htlc.address, wsost_amt), bob_eth)
-    tx(htlc.functions.lockERC20(swap1, w.address, wsost_amt, bytes.fromhex(H), T2, alice_eth, bob_eth), bob_eth)
+    tx(w.functions.approve(htlc.address, wsost_amt), bob_eth, "approve (swap 1)")
+    tx(htlc.functions.lockERC20(swap1, w.address, wsost_amt, bytes.fromhex(H), T2, alice_eth, bob_eth), bob_eth, "swap fund (lockERC20)")
     s1 = htlc.functions.getSwap(swap1).call()
-    step("3. Bob funds the wSOST HTLC (99.5 wSOST, same hashlock, claim=Alice)", s1[0] == 1 and s1[3] == wsost_amt and s1[4].hex() == H,
+    step(f"3. Bob funds the wSOST HTLC ({fmt_sost(wsost_amt)} wSOST, same hashlock, claim=Alice)", s1[0] == 1 and s1[3] == wsost_amt and s1[4].hex() == H,
          f"lockedAmount {fmt_sost(s1[3])}")
     step("4. same hashlock on both chains", s1[4].hex() == H == st["hashlock"])
     bridge_unchanged("after both locks")
 
-    r = tx(htlc.functions.claimERC20(swap1, S, wsost_amt), alice_eth)
+    r = tx(htlc.functions.claimERC20(swap1, S, wsost_amt), alice_eth, "swap claim (claimERC20)")
     ev = htlc.events.Claimed().process_receipt(r)[0]
     revealed = bytes(ev["args"]["preimage"])
-    step("5. Alice claims the wSOST, revealing the secret on Ethereum", revealed == S and w.functions.balanceOf(alice_eth).call() == wsost_amt)
+    step("5. Alice claims the wSOST, revealing the secret on Ethereum", revealed == S and w.functions.balanceOf(alice_eth).call() - alice_w0 == wsost_amt)
 
     # negative: a claim with a wrong preimage is rejected by SOST consensus (R21)
     bad = build("claimhtlc", lock_txid, 0, sost_amt, secrets.token_hex(32), pkh(bob), MARKER, FEE)
@@ -252,8 +323,8 @@ def main():
          f"+{fmt_sost(balance(bob) - bob_before)} SOST")
     st = htlc_status(lock_txid)
     step("   SOST node reports the lock CLAIMED with the same secret", st["status"] == "claimed" and st.get("revealed_preimage") == S.hex())
-    step("7. final balances", w.functions.balanceOf(alice_eth).call() == wsost_amt
-         and w.functions.balanceOf(bob_eth).call() == to_stocks("500") - wsost_amt
+    step("7. final balances", w.functions.balanceOf(alice_eth).call() - alice_w0 == wsost_amt
+         and w.functions.balanceOf(bob_eth).call() == BOB0 - wsost_amt
          and w.functions.balanceOf(htlc.address).call() == 0,
          f"Alice {fmt_sost(w.functions.balanceOf(alice_eth).call())} wSOST · Bob {fmt_sost(w.functions.balanceOf(bob_eth).call())} wSOST + {fmt_sost(sost_amt - FEE)} SOST")
     ok, why = rejected(sign("bob.json", claim, f"{sost_amt}:{OUT_HTLC_LOCK}:{bob}"))
@@ -263,20 +334,21 @@ def main():
     # ================================================================== SWAP 2 — refund path
     S2 = secrets.token_bytes(32)
     H2 = hashlib.sha256(S2).hexdigest()
-    amt2 = to_stocks("20")
+    amt2 = to_stocks("2" if SEP else "20")
     u = next(u for u in utxos(alice) if int(u["amount_stocks"]) >= amt2 + FEE and u.get("output_type") == OUT_TRANSFER)
-    T1b = rpc.getblockcount() + 12
+    T1b = rpc.getblockcount() + (60 if SEP else 12)   # Sepolia steps take minutes while devnet blocks take seconds
     raw = build("createhtlclock", u["txid"], u["vout"], u["amount_stocks"], pkh(alice), H2, T1b, pkh(bob), pkh(alice), amt2, FEE)
     lock2 = broadcast(sign("alice.json", raw, f"{u['amount_stocks']}:{OUT_TRANSFER}:{alice}"))
     wait_until(lambda: confirmed(lock2), 300, "SOST lock 2")
-    swap2 = hashlib.sha256(b"swap-2" + S2).digest()
-    tx(w.functions.approve(htlc.address, amt2), bob_eth)
-    tx(htlc.functions.lockERC20(swap2, w.address, amt2, bytes.fromhex(H2), w3.eth.block_number + 5, alice_eth, bob_eth), bob_eth)
-    step("9. refund path: both sides locked, nobody reveals", True, f"SOST refund_height {T1b}")
-
     refund = build("refundhtlc", lock2, 0, amt2, pkh(alice), FEE)
     ok, why = rejected(sign("alice.json", refund, f"{amt2}:{OUT_HTLC_LOCK}:{alice}"))
-    step("   SOST refund before refund_height is rejected", ok, why)
+    step("   SOST refund before refund_height is rejected", ok, f"tip {rpc.getblockcount()} < refund_height {T1b} · {why}")
+    swap2 = hashlib.sha256(b"swap-2" + S2).digest()
+    tx(w.functions.approve(htlc.address, amt2), bob_eth, "approve (swap 2)")
+    RT2 = w3.eth.block_number + (10 if SEP else 5)
+    tx(htlc.functions.lockERC20(swap2, w.address, amt2, bytes.fromhex(H2), RT2, alice_eth, bob_eth), bob_eth, "swap fund (lockERC20, refund path)")
+    step("9. refund path: both sides locked, nobody reveals", True, f"SOST refund_height {T1b}")
+
     try:
         htlc.functions.refundERC20(swap2).call({"from": bob_eth})
         early = False
@@ -284,10 +356,13 @@ def main():
         early = True
     step("   wSOST refund before refundTime is rejected", early)
 
-    for _ in range(6):
-        w3.provider.make_request("evm_mine", [])
+    if SEP:
+        wait_until(lambda: w3.eth.block_number >= RT2 + 1, 900, "Sepolia refund block", every=6)
+    else:
+        for _ in range(6):
+            w3.provider.make_request("evm_mine", [])
     bob_w = w.functions.balanceOf(bob_eth).call()
-    tx(htlc.functions.refundERC20(swap2), bob_eth)
+    tx(htlc.functions.refundERC20(swap2), bob_eth, "swap refund (refundERC20)")
     step("10. Bob refunds his wSOST after the EVM timeout", w.functions.balanceOf(bob_eth).call() - bob_w == amt2)
 
     wait_until(lambda: rpc.getblockcount() >= T1b, 600, "SOST refund height", every=2)

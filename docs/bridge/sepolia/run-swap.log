@@ -1,0 +1,30 @@
+[PASS] SOST devnet node reachable, DEV profile — height 214
+[PASS] SOST HTLC active on devnet (V14_5=11, V14_7=12)
+[PASS] parties — Alice(SOST)=sost1348c5d3bd… Bob(SOST)=sost1204263c64… BridgeVault=sost1998ce0923…
+[PASS] Alice holds native devnet SOST — 69.99700000 SOST
+[PASS] EVM is Sepolia (never Ethereum mainnet) — chainId 11155111
+[PASS] Sepolia: deployed WSOST is bound to this Bridge Vault — WSOST=0x4F71ef1D4878225eBd711216A75451F0bfF946C0 HTLCv2=0x395295622fDE4702BA199e4898F85B9d85175794
+[PASS] Bob holds existing bridge-minted wSOST (from the real wrap) — 50.05000000 wSOST
+[PASS] bridge snapshot taken — vault 0.00000000 SOST · wSOST supply 60.00000000
+[PASS] 1. Alice funds the SOST HTLC (10.00000000 SOST, claim=Bob, refund=Alice) — txid 6c07266b385f1b3e… refund_height 337
+[PASS] 2. Bob verifies the SOST lock on chain (gethtlcstatus) — status locked amount 10.0 refund_height 337
+[PASS] 3. Bob funds the wSOST HTLC (9.95000000 wSOST, same hashlock, claim=Alice) — lockedAmount 9.95000000
+[PASS] 4. same hashlock on both chains
+[PASS] after both locks: Bridge Vault, wSOST supply/minted/burned, burn nonce, mint pause UNCHANGED
+[PASS] 5. Alice claims the wSOST, revealing the secret on Ethereum
+[PASS]    SOST node rejects a claim with the wrong preimage — {'code': -25, 'message': 'consensus: R21: HTLC_CLAIM preimage hash mismatch'}
+[PASS]    SOST node rejects a claim not signed by the claim key — {'code': -25, 'message': 'consensus: HTLC_CLAIM input[0]: VerifyTransactionInput: pubkey hash mismatch (S2)'}
+[PASS] 6. Bob claims the native SOST with the revealed secret — +9.99900000 SOST
+[PASS]    SOST node reports the lock CLAIMED with the same secret
+[PASS] 7. final balances — Alice 19.90000000 wSOST · Bob 40.10000000 wSOST + 9.99900000 SOST
+[PASS]    SOST claim cannot be replayed — {'code': -25, 'message': 'consensus: S1: input[0] references missing UTXO'}
+[PASS] 8. after the claim path (no mint, no burn, no vault release): Bridge Vault, wSOST supply/minted/burned, burn nonce, mint pause UNCHANGED
+[PASS]    SOST refund before refund_height is rejected — tip 235 < refund_height 293 · {'code': -25, 'message': 'consensus: R24: HTLC_REFUND at spend_height 236 < refund_height 293 (refund window not yet open)'}
+[PASS] 9. refund path: both sides locked, nobody reveals — SOST refund_height 293
+[PASS]    wSOST refund before refundTime is rejected
+[PASS] 10. Bob refunds his wSOST after the EVM timeout
+[PASS] 11. Alice refunds her native SOST after refund_height — +1.99900000 SOST
+[PASS] 12. after the refund path: Bridge Vault, wSOST supply/minted/burned, burn nonce, mint pause UNCHANGED
+[PASS] 13. HTLC escrow empty
+
+RESULT: 28/28 PASS
