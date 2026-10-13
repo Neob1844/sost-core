@@ -103,9 +103,6 @@ logic plus extra orphan handling after reorgs. It must be re-tested on the recon
 production baseline before any conclusion. It does not affect 1-block races, where the
 competing block arrives with a known parent. **Not fixed here; no consensus impact.**
 
-Re-tested on the v40000 base in `docs/p2p/DEEP_FORK_V40000.md`: this case is fixed there by
-`299cf2e6`; three remaining false-penalty / non-convergence cases were found and fixed.
-
 ## Known limitation: `buildtx` and pending transactions
 
 `buildtx` is watch-only. It selects coins from `getaddressutxos`, which still lists outputs
