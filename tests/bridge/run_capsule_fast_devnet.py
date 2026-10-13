@@ -284,8 +284,8 @@ def main():
                                        "--address", alice, "--wallet", os.path.join(W, "alice.json"), "--mining-key-label", "default",
                                        "--blocks", "1000000", "--threads", str(a.threads), "--realtime"],
                                       cwd=W, stdout=log("miner"), stderr=subprocess.STDOUT)
-    # The reorg put the deposit back in A's mempool. buildtx is watch-only and cannot see mempool spends,
-    # so wait for it to be mined again before the next build from Alice (else: safe RBF rejection).
+    # The reorg put the deposit back in A's mempool. buildtx now skips mempool-spent inputs
+    # (getmempoolspends), but the test still waits for it to be mined again: it checks the re-mined block.
     t0 = time.time()
     while time.time() - t0 < 300 and tx_height(rpcA, txR) < 0:
         time.sleep(2)

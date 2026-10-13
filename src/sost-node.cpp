@@ -3439,6 +3439,44 @@ static std::string handle_getaddressutxos(const std::string& id, const std::vect
 }
 
 // =============================================================================
+// getmempoolspends <address> — READ-ONLY.
+//
+// Lists the confirmed outputs of <address> that a transaction already in this
+// node's mempool spends: [{txid, vout, amount_stocks, spent_by}], plus the
+// mempool size. getaddressutxos reports the confirmed UTXO set only (mempool
+// acceptance does not consume UTXOs until block connect), and getrawmempool is
+// capped at one block template, so neither lets a watch-only builder (sost-cli
+// buildtx) know which coins are already being spent. Nothing is changed here:
+// no mempool or chain state is written, no policy is relaxed, and the answer is
+// a subset of what getaddressutxos + getrawtransaction already expose.
+// =============================================================================
+static std::string handle_getmempoolspends(const std::string& id, const std::vector<std::string>& p) {
+    if(p.empty()) return rpc_error(id,-1,"missing address");
+    const std::string addr = p[0];
+    if(!address_valid(addr)) return rpc_error(id,-8,"invalid address");
+    PubKeyHash pkh{};
+    address_decode(addr, pkh);
+
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    std::ostringstream s;
+    s << "{\"address\":\"" << addr << "\",\"mempool_size\":" << g_mempool.Size() << ",\"spent\":[";
+    bool first = true;
+    for(const auto& kv : g_utxo_set.GetMap()){
+        if(kv.second.pubkey_hash != pkh) continue;
+        Hash256 by{};
+        if(!g_mempool.SpentBy(kv.first, by)) continue;
+        if(!first) s << ",";
+        first = false;
+        s << "{\"txid\":\"" << to_hex(kv.first.txid.data(),32)
+          << "\",\"vout\":" << kv.first.index
+          << ",\"amount_stocks\":" << kv.second.amount
+          << ",\"spent_by\":\"" << to_hex(by.data(),32) << "\"}";
+    }
+    s << "]}";
+    return rpc_result(id, s.str());
+}
+
+// =============================================================================
 // AddressFlowsCache — lifetime non-mining flow per address.
 //
 // Walks every block in g_blocks once, deserializing every tx, and tallies
@@ -5184,6 +5222,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"estimatefee",handle_estimatefee},
     {"getaddressbalance",handle_getaddressbalance},
     {"getaddressutxos",handle_getaddressutxos},
+    {"getmempoolspends",handle_getmempoolspends},
     {"listbonds",handle_listbonds},
     {"listtransfers",handle_listtransfers},
     {"popc_register",handle_popc_register},

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Offline signing E2E against a REAL devnet node: buildtx (watch-only) -> signtx (offline) -> sendrawtransaction.
 
-  python3 tests/cli/test_offline_signing.py --cli build/sost-cli --work DIR [--rpc 127.0.0.1:18655] [--capsule]
+  python3 tests/cli/test_offline_signing.py --cli build/sost-cli --work DIR [--rpc 127.0.0.1:18655] [--capsule] [--mine-cmd CMD]
 
 DIR holds devnet test wallets alice.json (funded) and bob.json. Disposable devnet keys only.
 --capsule additionally runs the capsule cases (needs devnet height >= 7,350).
@@ -23,12 +23,111 @@ def step(name, ok, detail=""):
     print(f"[{'PASS' if ok else 'FAIL'}] {name}" + (f" — {detail}" if detail else ""), flush=True)
 
 
+def outpoints(path):
+    return {(i["txid"], i["vout"]) for i in json.load(open(path))["inputs"]}
+
+
+def mempool_section(a, run, rpc, broadcast, wait_conf, alice, bob, AW, p, tmp):
+    """buildtx must never reuse an input that is already taken: spent by a tx in the node mempool,
+    or reserved by an earlier unsigned build that has not reached the mempool yet."""
+    def sign(u, s):
+        r = run("--wallet", AW, "signtx", u, "--network", "dev", "--yes", "--out", s)
+        return open(s).read().strip() if r.returncode == 0 else None
+
+    # A: build -> sign -> broadcast (stays in the mempool), then IMMEDIATELY build B from the same address
+    r = run("--from-address", alice, "buildtx", bob, "1", "--network", "dev", "--out", p("mpA.json"))
+    sA = sign(p("mpA.json"), p("mpA.hex")) if r.returncode == 0 else None
+    txA, e = broadcast(sA) if sA else (None, r.stderr)
+    inA = outpoints(p("mpA.json")) if r.returncode == 0 else set()
+    sp = rpc("getmempoolspends", [alice]).get("result") or {}
+    got = {(x["txid"], x["vout"]) for x in sp.get("spent", [])}
+    step("MEMPOOL: tx A built, signed, accepted into the mempool (unconfirmed)", bool(txA) and rpc("getrawtransaction", [txA, True]).get("result", {}).get("confirmed") is not True, e[:80])
+    step("   getmempoolspends lists exactly A's inputs, spent_by = A", got == inA and all(x["spent_by"] == txA for x in sp.get("spent", [])), f"{len(got)} outpoint(s)")
+    os.remove(os.path.join(tmp, "sost-buildtx-reservations.json"))          # mempool alone must protect B (no local ledger)
+    r = run("--from-address", alice, "buildtx", bob, "1", "--network", "dev", "--out", p("mpB.json"))
+    inB = outpoints(p("mpB.json")) if r.returncode == 0 else set()
+    step("   build B (ledger removed): uses inputs disjoint from A", r.returncode == 0 and inB and not (inA & inB) and "spent by pending mempool txs" in r.stdout,
+         r.stderr.strip()[-160:] if r.returncode else f"A={len(inA)} B={len(inB)} input(s)")
+    sB = sign(p("mpB.json"), p("mpB.hex")) if r.returncode == 0 else None
+    txB, e = broadcast(sB) if sB else (None, "not built")
+    step("   B accepted by the node while A is still pending (no conflict / RBF rejection)", bool(txB), e[:100])
+
+    # C: built (reserved) but NOT broadcast; D must not reuse C's inputs
+    r = run("--from-address", alice, "buildtx", bob, "1", "--network", "dev", "--out", p("mpC.json"))
+    inC = outpoints(p("mpC.json")) if r.returncode == 0 else set()
+    step("RESERVATION: build C (not broadcast) records its inputs", r.returncode == 0 and "inputs reserved in" in r.stdout, r.stderr.strip()[-120:])
+    r = run("--from-address", alice, "buildtx", bob, "1", "--network", "dev", "--out", p("mpD.json"))
+    inD = outpoints(p("mpD.json")) if r.returncode == 0 else set()
+    step("   build D avoids C's reserved inputs and the mempool inputs", r.returncode == 0 and inD and not (inD & (inC | inA | inB)),
+         r.stderr.strip()[-160:] if r.returncode else "")
+    r = run("buildtx", "--list-reservations", "--out", p("x.json"))
+    step("   --list-reservations shows C and D", r.returncode == 0 and "mpC.json" in r.stdout and "mpD.json" in r.stdout)
+
+    # Not enough AVAILABLE funds: clean failure naming what is held back, never a conflicting tx
+    total = sum(u["amount_stocks"] for u in rpc("getaddressutxos", [alice])["result"] if u.get("spendable"))
+    amt = f"{(total - 100_000_000) / 1e8:.8f}"
+    r = run("--from-address", alice, "buildtx", bob, amt, "--network", "dev", "--out", p("mpBig.json"))
+    step("INSUFFICIENT: total - 1 SOST requested -> 'insufficient available funds', nothing written",
+         r.returncode != 0 and "insufficient available funds" in r.stderr and "mempool" in r.stderr and "reserved" in r.stderr
+         and not os.path.exists(p("mpBig.json")), r.stderr.strip().splitlines()[0][:160] if r.stderr.strip() else "")
+    # explicit override: --ignore-reservations may reuse C/D's inputs (but never mempool-spent ones)
+    r = run("--from-address", alice, "buildtx", bob, "1", "--network", "dev", "--out", p("mpE.json"), "--ignore-reservations")
+    inE = outpoints(p("mpE.json")) if r.returncode == 0 else set()
+    step("   --ignore-reservations: warns, still excludes mempool-spent inputs", r.returncode == 0 and "WARNING" in r.stderr and not (inE & (inA | inB)))
+    r = run("--from-address", alice, "buildtx", "--clear-reservations", "--out", p("y.json"))
+    lst = run("buildtx", "--list-reservations", "--out", p("x.json"))
+    step("   --clear-reservations releases the address's reservations", r.returncode == 0 and "Cleared " in r.stdout and "Reservations in" in lst.stdout and ": 0" in lst.stdout,
+         r.stdout.strip()[-80:])
+
+    # Older node without getmempoolspends: fallback via getrawmempool + getrawtransaction (proxy hides the method)
+    import http.server, threading
+    up = a.rpc
+    class Hide(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            body = self.rfile.read(int(self.headers.get("content-length", 0)))
+            if json.loads(body).get("method") == "getmempoolspends":
+                out = json.dumps({"result": None, "error": {"code": -32601, "message": "Method not found: getmempoolspends"}, "id": 1}).encode()
+            else:
+                out = urllib.request.urlopen(urllib.request.Request(f"http://{up}/", body, {"content-type": "application/json"}), timeout=20).read()
+            self.send_response(200); self.send_header("content-type", "application/json"); self.send_header("content-length", str(len(out)))
+            self.end_headers(); self.wfile.write(out)
+        def log_message(self, *x):
+            pass
+    srv = http.server.HTTPServer(("127.0.0.1", 0), Hide)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    proxy = f"127.0.0.1:{srv.server_address[1]}"
+    os.remove(os.path.join(tmp, "sost-buildtx-reservations.json"))
+    r = subprocess.run([run.cli, "--node", proxy, "--from-address", alice, "buildtx", bob, "1", "--network", "dev", "--out", p("mpF.json")],
+                       capture_output=True, text=True, timeout=180)
+    inF = outpoints(p("mpF.json")) if r.returncode == 0 else set()
+    pending = (inA | inB) if rpc("getrawtransaction", [txA, True]).get("result", {}).get("confirmed") is not True else set()
+    step("FALLBACK (node without getmempoolspends): still excludes mempool-spent inputs", r.returncode == 0 and inF and not (inF & pending),
+         r.stderr.strip()[-160:] if r.returncode else f"{len(pending)} pending outpoint(s) checked")
+    srv.shutdown()
+
+    # Negative control (the old behaviour): with both protections switched off, the same coin selection
+    # picks an input that pending A/B already spend, and the node rejects the conflicting tx.
+    r = run("--from-address", alice, "buildtx", bob, "1.5", "--network", "dev", "--out", p("mpG.json"), "--skip-mempool-check", "--ignore-reservations")
+    inG = outpoints(p("mpG.json")) if r.returncode == 0 else set()
+    sG = sign(p("mpG.json"), p("mpG.hex")) if r.returncode == 0 else None
+    txG, e = broadcast(sG) if sG else (None, "not built")
+    if inG & pending:
+        step("NEGATIVE CONTROL: protections off -> reuses a pending input, node rejects it", not txG and bool(e), e[:90])
+    else:
+        print(f"[INFO] negative control inconclusive: selection did not hit a pending input (pending={len(pending)})")
+
+    ok = all(wait_conf(t) for t in (txA, txB) if t)
+    step("   A and B both confirm", ok and bool(txA) and bool(txB))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cli", required=True)
     ap.add_argument("--work", required=True)
     ap.add_argument("--rpc", default="127.0.0.1:18655")
     ap.add_argument("--capsule", action="store_true")
+    ap.add_argument("--mine-cmd", help="shell command that mines ONE block; when given, blocks are mined only while waiting "
+                                       "for a confirmation, so pending transactions stay in the mempool deterministically")
     a = ap.parse_args()
     CLI = os.path.abspath(a.cli)
     tmp = tempfile.mkdtemp(prefix="sost-offline-")
@@ -47,6 +146,7 @@ def main():
 
     def run(*args, stdin=None):
         return subprocess.run([CLI, "--node", a.rpc, *args], capture_output=True, text=True, input=stdin, timeout=180)
+    run.cli = CLI
 
     def broadcast(hexs):
         r = rpc("sendrawtransaction", [hexs])
@@ -54,6 +154,13 @@ def main():
 
     def wait_conf(txid, t=300):
         t0 = time.time()
+        if a.mine_cmd:
+            while time.time() - t0 < t:
+                r = rpc("gettransaction", [txid]).get("result") or {}
+                if int(r.get("confirmations", 0) or 0) >= 1:
+                    return True
+                subprocess.run(a.mine_cmd, shell=True, capture_output=True, timeout=t)
+            return False
         while time.time() - t0 < t:
             r = rpc("gettransaction", [txid]).get("result") or {}
             if int(r.get("confirmations", 0) or 0) >= 1:
@@ -172,6 +279,9 @@ def main():
         step("   oversized capsule refused", r.returncode != 0)
         r = run("--from-address", alice, "--capsule-mode", "bogus", "--capsule-text", "x", "buildtx", bob, "1", "--network", "dev", "--out", p("bad.json"))
         step("   invalid capsule mode refused", r.returncode != 0)
+
+    # ------------------------------------------------------------------ pending transactions (mempool + local reservations)
+    mempool_section(a, run, rpc, broadcast, wait_conf, alice, bob, AW, p, tmp)
 
     n = sum(results)
     print(f"\nRESULT: {n}/{len(results)} PASS")

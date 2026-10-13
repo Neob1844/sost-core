@@ -103,14 +103,23 @@ logic plus extra orphan handling after reorgs. It must be re-tested on the recon
 production baseline before any conclusion. It does not affect 1-block races, where the
 competing block arrives with a known parent. **Not fixed here; no consensus impact.**
 
-## Known limitation: `buildtx` and pending transactions
+## Resolved: `buildtx` and pending transactions
 
-`buildtx` is watch-only. It selects coins from `getaddressutxos`, which still lists outputs
-spent by an unconfirmed mempool transaction. Two offline builds from the same address before
-the first one confirms can pick the same input. The node then rejects the second one
-("replacement fee-rate not strictly higher") — **a safe failure, never a double spend**. The
-online `send` avoids this because it marks spent inputs in the wallet file. The test waits for
-confirmation. A later CLI change can exclude mempool-spent outpoints.
+Previously `buildtx` (watch-only) selected coins from `getaddressutxos`, which still lists outputs
+spent by an unconfirmed mempool transaction, so two builds from the same address before the first
+one confirmed could pick the same input and the node rejected the second ("replacement fee-rate not
+strictly higher") — a safe failure, never a double spend, but bad UX.
+
+Branch `fix/v40k-buildtx-mempool`: `buildtx` now excludes
+- inputs spent by a tx in the node mempool (new read-only RPC `getmempoolspends <address>`; older
+  nodes fall back to `getrawmempool` + `getrawtransaction`, and the build fails closed if the node
+  cannot show every pending tx), and
+- inputs reserved by earlier unsigned builds that have not been broadcast yet (local ledger
+  `sost-buildtx-reservations.json` next to `--out`).
+
+If what is left is not enough it fails with `insufficient available funds` and says how much is
+held back by the mempool and by reservations. Details: `docs/cli/OFFLINE_SIGNING.md`. The
+orchestrator's wait-for-confirmation before the next build is no longer required, but is harmless.
 
 ## Status
 Today's results are valid functional evidence. Final pre-mainnet Stage 2 acceptance re-runs the
