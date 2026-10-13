@@ -146,16 +146,29 @@
       "nav.sost-canon-nav .nav-logo { font-family: 'Space Grotesk', sans-serif !important; font-weight: 700 !important; line-height: normal !important; }",
       "nav.sost-canon-nav .nav-logo .brand-sost { font-size: 1.76em !important; }",
       "nav.sost-canon-nav .nav-logo img { width: 110px !important; height: 110px !important; }",
-      "nav.sost-canon-nav .nav-toggle, nav.sost-canon-nav .sost-nav-toggle { font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace !important;",
+      "nav.sost-canon-nav .nav-toggle, nav.sost-canon-nav .sost-nav-toggle { font-family: monospace !important;",
       "  font-size: 11px !important; letter-spacing: 1px !important;",
       "  padding: 5px 10px !important; border-width: 1px !important; line-height: normal !important; }",
       /* Pinned box: the Explorer does not load the JetBrains Mono web font (it renders the
-         system monospace) while section pages do, so a content-sized button came out 1px
+         system monospace) while section pages did, so a content-sized button came out 1px
          taller and a few px narrower or wider depending on the OS — enough to shift every
          module in the row. 98x25 is what the Explorer renders. */
       "nav.sost-canon-nav .nav-toggle, nav.sost-canon-nav .sost-nav-toggle { box-sizing: border-box !important; width: 98px !important; height: 25px !important;",
       "  padding: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;",
       "  white-space: nowrap !important; overflow: hidden; }",
+      /* Geometry that must not depend on page content, web fonts or the OS:
+         - Logo block: the Explorer's ("SOST EXPLORER", Space Grotesk, loaded on every page)
+           measures 407.0625px; every page reserves exactly that, so the modules and HIDE NAV
+           start at the same x and the top row wraps at the same width.
+         - Button and toggle text: the Explorer does not load JetBrains Mono / IBM Plex Mono,
+           section pages do. Their buttons came out wider than the Explorer's on systems whose
+           monospace is narrower (Windows: Consolas), so the row split differed. Both now use
+           the Explorer's effective stack (no web font), so the rows are the same everywhere.
+         - Scrollbar: section pages set a thin scrollbar, the Explorer did not, so the
+           Explorer's bar was a few px narrower. Thin on every page that has this bar. */
+      "@media (min-width: 769px) { nav.sost-canon-nav .nav-logo { flex: 0 0 407.0625px !important; width: 407.0625px !important; box-sizing: border-box; } }",
+      "nav.sost-canon-nav .nav-links a.sx { font-family: ui-monospace, Menlo, Consolas, monospace !important; }",
+      "html:has(nav.sost-canon-nav) { scrollbar-width: thin; }",
       /* Collapsed bar = the Explorer's: SHOW NAV alone at the right edge, no hamburger. */
       "body.nav-collapsed nav.sost-canon-nav .nav-hamburger { display: none !important; }",
       "nav.sost-canon-nav .nav-hamburger { font-size: 20px !important; padding: 4px 8px !important; line-height: 1 !important; border-width: 1px !important; }",
