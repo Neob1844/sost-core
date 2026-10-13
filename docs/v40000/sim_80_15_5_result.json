@@ -1,0 +1,735 @@
+{
+ "tip": 30428,
+ "blocks": 30428,
+ "dtd_model_validation": {
+  "checked_blocks": 5429,
+  "exact_winner_matches": 5429
+ },
+ "windows": {
+  "V15 [25000,29999]": {
+   "blocks": 5000,
+   "days": 34.72,
+   "total_reward_SOST": 39255.0941129,
+   "fees_SOST": 0.0509629,
+   "distinct_producers": 174,
+   "producer_block_share_top5": [
+    [
+     "sost1ad01a1ce3ae",
+     0.555
+    ],
+    [
+     "sost17a8985bc0ba",
+     0.3392
+    ],
+    [
+     "sost1e8ba0b2667b",
+     0.0484
+    ],
+    [
+     "sost1aaded7603e8",
+     0.0008
+    ],
+    [
+     "sost190442648a16",
+     0.0006
+    ]
+   ],
+   "top1_block_share": 0.555,
+   "top3_block_share": 0.9426,
+   "dtd_empty_blocks": 0,
+   "current": {
+    "miner_SOST_per_block": 3.92550941629,
+    "dtd_SOST_per_block": 3.9255094062900002,
+    "jackpot_inflow_SOST_per_block": 0.0,
+    "dtd_distinct_recipients": 179,
+    "dtd_gini": 0.1343,
+    "dtd_hhi": 0.0059,
+    "dtd_to_top1_producer": 0.007,
+    "all_flows_top1": 0.2693,
+    "all_flows_top3": 0.4583,
+    "all_flows_gini": 0.5225,
+    "all_flows_hhi": 0.1017,
+    "small_participants_share_all_flows": 0.5673,
+    "hash_proportional_share": 0.5
+   },
+   "candidate_80_15_5": {
+    "miner_SOST_per_block": 6.280815064082001,
+    "dtd_SOST_per_block": 1.177652818878,
+    "jackpot_inflow_SOST_per_block": 0.39255093962,
+    "jackpot_inflow_total_SOST": 1962.7546981,
+    "dtd_distinct_recipients": 179,
+    "dtd_gini": 0.1343,
+    "dtd_hhi": 0.0059,
+    "all_flows_top1": 0.448,
+    "all_flows_top3": 0.7612,
+    "all_flows_gini": 0.8011,
+    "all_flows_hhi": 0.2775,
+    "small_participants_share_all_flows": 0.2785,
+    "hash_proportional_share": 0.8
+   },
+   "per_producer_SOST": [
+    [
+     "sost1ad01a1ce3ae",
+     2775,
+     11030.67,
+     17470.46
+    ],
+    [
+     "sost17a8985bc0ba",
+     1696,
+     6689.08,
+     10661.71
+    ],
+    [
+     "sost1e8ba0b2667b",
+     242,
+     1048.11,
+     1549.4
+    ],
+    [
+     "sost15d56c9ad635",
+     2,
+     253.1,
+     156.14
+    ],
+    [
+     "sost1a8ac758e1d6",
+     3,
+     245.24,
+     158.88
+    ],
+    [
+     "sost1d6f29aad00a",
+     1,
+     241.32,
+     147.5
+    ],
+    [
+     "sost179d9d96d3ab",
+     2,
+     237.39,
+     151.42
+    ],
+    [
+     "sost141bfebb4b83",
+     2,
+     237.39,
+     151.42
+    ],
+    [
+     "sost1ca704b23ff7",
+     2,
+     233.47,
+     150.25
+    ],
+    [
+     "sost1c172f9f7fec",
+     1,
+     229.54,
+     143.97
+    ],
+    [
+     "sost1d34b35aafae",
+     2,
+     213.84,
+     144.36
+    ],
+    [
+     "sost10e0759a932c",
+     1,
+     205.99,
+     136.9
+    ]
+   ],
+   "dtd_eligible_set_size_mean": 166.9,
+   "dtd_eligible_set_size_min_max": [
+    3,
+    194
+   ]
+  },
+  "V16 [30000,30428]": {
+   "blocks": 429,
+   "days": 2.99,
+   "total_reward_SOST": 3368.08270227,
+   "fees_SOST": 0.0,
+   "distinct_producers": 2,
+   "producer_block_share_top5": [
+    [
+     "sost17a8985bc0ba",
+     0.6876
+    ],
+    [
+     "sost1ad01a1ce3ae",
+     0.3124
+    ]
+   ],
+   "top1_block_share": 0.6876,
+   "top3_block_share": 1.0,
+   "dtd_empty_blocks": 0,
+   "current": {
+    "miner_SOST_per_block": 3.92550432,
+    "dtd_SOST_per_block": 3.92550431,
+    "jackpot_inflow_SOST_per_block": 0.0,
+    "dtd_distinct_recipients": 2,
+    "dtd_gini": 0.0524,
+    "dtd_hhi": 0.5055,
+    "dtd_to_top1_producer": 0.4476,
+    "all_flows_top1": 0.5676,
+    "all_flows_top3": 1.0,
+    "all_flows_gini": 0.0676,
+    "all_flows_hhi": 0.5091,
+    "small_participants_share_all_flows": 0.0,
+    "hash_proportional_share": 0.5
+   },
+   "candidate_80_15_5": {
+    "miner_SOST_per_block": 6.28080691,
+    "dtd_SOST_per_block": 1.17765129,
+    "jackpot_inflow_SOST_per_block": 0.39255043,
+    "jackpot_inflow_total_SOST": 168.40413447,
+    "dtd_distinct_recipients": 2,
+    "dtd_gini": 0.0524,
+    "dtd_hhi": 0.5055,
+    "all_flows_top1": 0.6497,
+    "all_flows_top3": 1.0,
+    "all_flows_gini": 0.1497,
+    "all_flows_hhi": 0.5448,
+    "small_participants_share_all_flows": 0.0,
+    "hash_proportional_share": 0.8
+   },
+   "per_producer_SOST": [
+    [
+     "sost17a8985bc0ba",
+     295,
+     1911.72,
+     2078.95
+    ],
+    [
+     "sost1ad01a1ce3ae",
+     134,
+     1456.36,
+     1120.73
+    ]
+   ],
+   "dtd_eligible_set_size_mean": 1.56,
+   "dtd_eligible_set_size_min_max": [
+    1,
+    2
+   ]
+  },
+  "post-V15 [25000,30428]": {
+   "blocks": 5429,
+   "days": 37.72,
+   "total_reward_SOST": 42623.17681517,
+   "fees_SOST": 0.0509629,
+   "distinct_producers": 174,
+   "producer_block_share_top5": [
+    [
+     "sost1ad01a1ce3ae",
+     0.5358
+    ],
+    [
+     "sost17a8985bc0ba",
+     0.3667
+    ],
+    [
+     "sost1e8ba0b2667b",
+     0.0446
+    ],
+    [
+     "sost1aaded7603e8",
+     0.0007
+    ],
+    [
+     "sost190442648a16",
+     0.0006
+    ]
+   ],
+   "top1_block_share": 0.5358,
+   "top3_block_share": 0.9471,
+   "dtd_empty_blocks": 0,
+   "current": {
+    "miner_SOST_per_block": 3.9255090135807698,
+    "dtd_SOST_per_block": 3.92550900358077,
+    "jackpot_inflow_SOST_per_block": 0.0,
+    "dtd_distinct_recipients": 179,
+    "dtd_gini": 0.1943,
+    "dtd_hhi": 0.0089,
+    "dtd_to_top1_producer": 0.0501,
+    "all_flows_top1": 0.2817,
+    "all_flows_top3": 0.4994,
+    "all_flows_gini": 0.5579,
+    "all_flows_hhi": 0.1191,
+    "small_participants_share_all_flows": 0.5242,
+    "hash_proportional_share": 0.5
+   },
+   "candidate_80_15_5": {
+    "miner_SOST_per_block": 6.28081441974581,
+    "dtd_SOST_per_block": 1.1776526980659423,
+    "jackpot_inflow_SOST_per_block": 0.3925508993497882,
+    "jackpot_inflow_total_SOST": 2131.15883257,
+    "dtd_distinct_recipients": 179,
+    "dtd_gini": 0.1943,
+    "dtd_hhi": 0.0089,
+    "all_flows_top1": 0.4406,
+    "all_flows_top3": 0.7793,
+    "all_flows_gini": 0.8152,
+    "all_flows_hhi": 0.287,
+    "small_participants_share_all_flows": 0.2574,
+    "hash_proportional_share": 0.8
+   },
+   "per_producer_SOST": [
+    [
+     "sost1ad01a1ce3ae",
+     2909,
+     12487.03,
+     18591.19
+    ],
+    [
+     "sost17a8985bc0ba",
+     1991,
+     8600.8,
+     12740.65
+    ],
+    [
+     "sost1e8ba0b2667b",
+     242,
+     1048.11,
+     1549.4
+    ],
+    [
+     "sost15d56c9ad635",
+     2,
+     253.1,
+     156.14
+    ],
+    [
+     "sost1a8ac758e1d6",
+     3,
+     245.24,
+     158.88
+    ],
+    [
+     "sost1d6f29aad00a",
+     1,
+     241.32,
+     147.5
+    ],
+    [
+     "sost179d9d96d3ab",
+     2,
+     237.39,
+     151.42
+    ],
+    [
+     "sost141bfebb4b83",
+     2,
+     237.39,
+     151.42
+    ],
+    [
+     "sost1ca704b23ff7",
+     2,
+     233.47,
+     150.25
+    ],
+    [
+     "sost1c172f9f7fec",
+     1,
+     229.54,
+     143.97
+    ],
+    [
+     "sost1d34b35aafae",
+     2,
+     213.84,
+     144.36
+    ],
+    [
+     "sost10e0759a932c",
+     1,
+     205.99,
+     136.9
+    ]
+   ],
+   "dtd_eligible_set_size_mean": 153.83,
+   "dtd_eligible_set_size_min_max": [
+    1,
+    194
+   ]
+  }
+ },
+ "jackpot": {
+  "historical_reserve_at_24999_SOST": 68174.28647272,
+  "historical_reserve_at_tip_SOST": 66474.28647272,
+  "jackpot_payouts": 17,
+  "jackpot_paid_total_SOST": 1700.0,
+  "first_last_paid_height": [
+   25290,
+   29898
+  ],
+  "payout_sizes_SOST": [
+   100.0
+  ],
+  "v2_jackpot_heights_to_tip": [
+   30186
+  ],
+  "v2_jackpots_paid": 0,
+  "drain_SOST_per_block_at_base": 0.34722222222222227,
+  "projection_current_no_inflow": {
+   "historical_reserve_empty_height": 221660,
+   "historical_reserve_empty_years": 3.64,
+   "base_payout_unfundable_height": 221660,
+   "base_payout_unfundable_years": 3.64,
+   "yearly_hist_and_inflow_pool_SOST": [
+    [
+     1.0,
+     48174.3,
+     0.0
+    ],
+    [
+     2.0,
+     29974.3,
+     0.0
+    ],
+    [
+     3.0,
+     11674.3,
+     0.0
+    ],
+    [
+     4.0,
+     0.0,
+     0.0
+    ],
+    [
+     5.0,
+     0.0,
+     0.0
+    ],
+    [
+     6.0,
+     0.0,
+     0.0
+    ],
+    [
+     7.0,
+     0.0,
+     0.0
+    ],
+    [
+     8.0,
+     0.0,
+     0.0
+    ],
+    [
+     9.0,
+     0.0,
+     0.0
+    ],
+    [
+     10.0,
+     0.0,
+     0.0
+    ],
+    [
+     11.0,
+     0.0,
+     0.0
+    ],
+    [
+     12.0,
+     0.0,
+     0.0
+    ]
+   ]
+  },
+  "projection_candidate_5pct_inflow": {
+   "historical_reserve_empty_height": 221660,
+   "historical_reserve_empty_years": 3.64,
+   "base_payout_unfundable_height": 671804,
+   "base_payout_unfundable_years": 12.2,
+   "yearly_hist_and_inflow_pool_SOST": [
+    [
+     1.0,
+     48174.3,
+     20689.0
+    ],
+    [
+     2.0,
+     29974.3,
+     40939.8
+    ],
+    [
+     3.0,
+     11674.3,
+     57052.4
+    ],
+    [
+     4.0,
+     0.0,
+     66551.2
+    ],
+    [
+     5.0,
+     0.0,
+     62318.8
+    ],
+    [
+     6.0,
+     0.0,
+     56598.8
+    ],
+    [
+     7.0,
+     0.0,
+     50650.1
+    ],
+    [
+     8.0,
+     0.0,
+     42169.5
+    ],
+    [
+     9.0,
+     0.0,
+     33642.3
+    ],
+    [
+     10.0,
+     0.0,
+     23944.9
+    ],
+    [
+     11.0,
+     0.0,
+     13256.0
+    ],
+    [
+     12.0,
+     0.0,
+     2524.2
+    ]
+   ]
+  },
+  "inflow_per_288_blocks_by_epoch_SOST": [
+   [
+    0,
+    113.05452384
+   ],
+   [
+    1,
+    88.04695104
+   ],
+   [
+    2,
+    68.57103456
+   ],
+   [
+    3,
+    53.40317472
+   ],
+   [
+    4,
+    41.59043424
+   ],
+   [
+    5,
+    32.39066304
+   ]
+  ]
+ },
+ "small_miner_daily_variance": [
+  {
+   "hash_share": 0.005,
+   "assumed_dtd_eligible_set": 2.56,
+   "current_50_50": {
+    "daily_mean_SOST": 171.509,
+    "daily_sd_SOST": 21.808,
+    "cv": 0.127,
+    "hash_proportional_fraction": 0.016
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 55.127,
+    "daily_sd_SOST": 8.371,
+    "cv": 0.152,
+    "hash_proportional_fraction": 0.082
+   }
+  },
+  {
+   "hash_share": 0.01,
+   "assumed_dtd_eligible_set": 2.56,
+   "current_50_50": {
+    "daily_mean_SOST": 214.246,
+    "daily_sd_SOST": 23.209,
+    "cv": 0.108,
+    "hash_proportional_fraction": 0.026
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 71.622,
+    "daily_sd_SOST": 10.136,
+    "cv": 0.142,
+    "hash_proportional_fraction": 0.126
+   }
+  },
+  {
+   "hash_share": 0.05,
+   "assumed_dtd_eligible_set": 2.56,
+   "current_50_50": {
+    "daily_mean_SOST": 249.073,
+    "daily_sd_SOST": 25.171,
+    "cv": 0.101,
+    "hash_proportional_fraction": 0.113
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 111.465,
+    "daily_sd_SOST": 17.815,
+    "cv": 0.16,
+    "hash_proportional_fraction": 0.406
+   }
+  },
+  {
+   "hash_share": 0.1,
+   "assumed_dtd_eligible_set": 2.56,
+   "current_50_50": {
+    "daily_mean_SOST": 277.337,
+    "daily_sd_SOST": 26.98,
+    "cv": 0.097,
+    "hash_proportional_fraction": 0.204
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 156.687,
+    "daily_sd_SOST": 23.639,
+    "cv": 0.151,
+    "hash_proportional_fraction": 0.577
+   }
+  },
+  {
+   "hash_share": 0.005,
+   "assumed_dtd_eligible_set": 20,
+   "current_50_50": {
+    "daily_mean_SOST": 24.418,
+    "daily_sd_SOST": 9.621,
+    "cv": 0.394,
+    "hash_proportional_fraction": 0.116
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 11.0,
+    "daily_sd_SOST": 5.966,
+    "cv": 0.542,
+    "hash_proportional_fraction": 0.411
+   }
+  },
+  {
+   "hash_share": 0.01,
+   "assumed_dtd_eligible_set": 20,
+   "current_50_50": {
+    "daily_mean_SOST": 32.353,
+    "daily_sd_SOST": 11.038,
+    "cv": 0.341,
+    "hash_proportional_fraction": 0.175
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 17.054,
+    "daily_sd_SOST": 8.076,
+    "cv": 0.474,
+    "hash_proportional_fraction": 0.53
+   }
+  },
+  {
+   "hash_share": 0.05,
+   "assumed_dtd_eligible_set": 20,
+   "current_50_50": {
+    "daily_mean_SOST": 56.527,
+    "daily_sd_SOST": 14.519,
+    "cv": 0.257,
+    "hash_proportional_fraction": 0.5
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 53.701,
+    "daily_sd_SOST": 16.713,
+    "cv": 0.311,
+    "hash_proportional_fraction": 0.842
+   }
+  },
+  {
+   "hash_share": 0.1,
+   "assumed_dtd_eligible_set": 20,
+   "current_50_50": {
+    "daily_mean_SOST": 84.791,
+    "daily_sd_SOST": 17.467,
+    "cv": 0.206,
+    "hash_proportional_fraction": 0.667
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 98.923,
+    "daily_sd_SOST": 22.82,
+    "cv": 0.231,
+    "hash_proportional_fraction": 0.914
+   }
+  },
+  {
+   "hash_share": 0.005,
+   "assumed_dtd_eligible_set": 153.83,
+   "current_50_50": {
+    "daily_mean_SOST": 5.634,
+    "daily_sd_SOST": 4.691,
+    "cv": 0.833,
+    "hash_proportional_fraction": 0.502
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 5.364,
+    "daily_sd_SOST": 5.408,
+    "cv": 1.008,
+    "hash_proportional_fraction": 0.843
+   }
+  },
+  {
+   "hash_share": 0.01,
+   "assumed_dtd_eligible_set": 153.83,
+   "current_50_50": {
+    "daily_mean_SOST": 9.124,
+    "daily_sd_SOST": 5.959,
+    "cv": 0.653,
+    "hash_proportional_fraction": 0.62
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 10.086,
+    "daily_sd_SOST": 7.58,
+    "cv": 0.752,
+    "hash_proportional_fraction": 0.897
+   }
+  },
+  {
+   "hash_share": 0.05,
+   "assumed_dtd_eligible_set": 153.83,
+   "current_50_50": {
+    "daily_mean_SOST": 31.938,
+    "daily_sd_SOST": 10.942,
+    "cv": 0.343,
+    "hash_proportional_fraction": 0.885
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 46.324,
+    "daily_sd_SOST": 16.466,
+    "cv": 0.355,
+    "hash_proportional_fraction": 0.976
+   }
+  },
+  {
+   "hash_share": 0.1,
+   "assumed_dtd_eligible_set": 153.83,
+   "current_50_50": {
+    "daily_mean_SOST": 60.202,
+    "daily_sd_SOST": 14.63,
+    "cv": 0.243,
+    "hash_proportional_fraction": 0.939
+   },
+   "candidate_80_15": {
+    "daily_mean_SOST": 91.546,
+    "daily_sd_SOST": 22.639,
+    "cv": 0.247,
+    "hash_proportional_fraction": 0.988
+   }
+  }
+ ]
+}
