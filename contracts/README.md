@@ -70,8 +70,14 @@ forge test -vvv
 #### Step 2: Deploy to Sepolia
 ```bash
 source .env
-forge script script/DeploySepolia.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast
+forge script script/DeploySepolia.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --skip-simulation
 ```
+
+> **Gas warning.** Never `forge script --broadcast` without `--skip-simulation`: forge would take the gas
+> limit from its local EVM (pre-Glamsterdam pricing) and, on chains with EIP-8037 state-creation pricing
+> (Sepolia since 2026-10-06), the deployment runs out of gas and the fee is lost. First run a dry-run gas
+> plan against the target node (`python3 ops/sostbridge/evm_gas.py --rpc "$RPC" --from <deployer> --plan plan.json`)
+> and see `docs/bridge/EVM_GAS_ESTIMATION.md`. Ethereum Mainnet deployment is not authorised by this document.
 
 #### Step 3: Verify on Etherscan
 ```bash
@@ -102,7 +108,10 @@ cast call <escrow> "getDeposit(uint256)" 0 --rpc-url $SEPOLIA_RPC_URL
 
 ```bash
 source .env
-forge script script/DeployMainnet.s.sol --rpc-url $MAINNET_RPC_URL --broadcast
+forge script script/DeployMainnet.s.sol --rpc-url $MAINNET_RPC_URL --broadcast --skip-simulation
 ```
+
+> Not authorised. Any Ethereum Mainnet deployment needs a separate decision and a fresh gas measurement
+> on the mainnet node (`docs/bridge/EVM_GAS_ESTIMATION.md`); local forge estimates are not valid there either.
 
 Both deploy scripts include chain-ID guards to prevent accidental misdeployment.

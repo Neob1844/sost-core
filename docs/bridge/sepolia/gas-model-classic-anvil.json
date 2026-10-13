@@ -1,0 +1,36 @@
+{
+ "chainId": 31337,
+ "block": 0,
+ "cases": {
+  "transfer_self_1wei": 21000,
+  "transfer_new_account_1wei": 21000,
+  "transfer_new_account_0wei": 21000,
+  "create_runtime_0_bytes": 53068,
+  "create_runtime_1_bytes": 53283,
+  "create_runtime_32_bytes": 59483,
+  "create_runtime_100_bytes": 73092,
+  "create_runtime_1000_bytes": 253190,
+  "create_runtime_2000_bytes": 453288,
+  "create_runtime_4000_bytes": 853497,
+  "create_runtime_8000_bytes": 1653964,
+  "create_0_new_slots": 53006,
+  "create_1_new_slots": 75196,
+  "create_2_new_slots": 97386,
+  "create_5_new_slots": 163956,
+  "create_10_new_slots": 274908,
+  "create_20_new_slots": 496812,
+  "create_50_new_slots": 1162524,
+  "real_AtomicSwapHTLCv2": {
+   "simulated": 1386123
+  },
+  "real_GoldReserveVault": {
+   "simulated": 2072738
+  },
+  "real_QuarantineVault": {
+   "simulated": 1494309
+  },
+  "real_WSOST": {
+   "simulated": 2239725
+  }
+ }
+}

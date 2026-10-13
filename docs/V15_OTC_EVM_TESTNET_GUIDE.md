@@ -78,6 +78,13 @@ forge create src/AtomicSwapHTLC.sol:AtomicSwapHTLC \
 
 Use a funded testnet key and the network RPC (NOT stored in the repo):
 
+> **Gas warning.** `forge create` uses the node's `eth_estimateGas` (with no margin), but `forge script --broadcast`
+> without `--skip-simulation` takes the gas limit from its local EVM (pre-Glamsterdam pricing) and, on chains with EIP-8037 state-creation pricing
+> (Sepolia since 2026-10-06), the deployment runs out of gas and the fee is lost. First run a dry-run gas
+> plan against the target node (`python3 ops/sostbridge/evm_gas.py --rpc "$RPC" --from <deployer> --plan plan.json`)
+> and see `docs/bridge/EVM_GAS_ESTIMATION.md`. Ethereum Mainnet deployment is not authorised by this document.
+
+
 ```bash
 # Sepolia
 forge create src/AtomicSwapHTLC.sol:AtomicSwapHTLC \

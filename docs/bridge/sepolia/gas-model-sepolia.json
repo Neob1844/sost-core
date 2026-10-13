@@ -1,0 +1,44 @@
+{
+ "chainId": 11155111,
+ "block": 11905664,
+ "cases": {
+  "transfer_self_1wei": 12000,
+  "transfer_new_account_1wei": 204600,
+  "transfer_new_account_0wei": 15000,
+  "create_runtime_0_bytes": 207668,
+  "create_runtime_1_bytes": 209219,
+  "create_runtime_32_bytes": 256649,
+  "create_runtime_100_bytes": 360716,
+  "create_runtime_1000_bytes": 1737982,
+  "create_runtime_2000_bytes": 3268266,
+  "create_runtime_4000_bytes": 6328847,
+  "create_runtime_8000_bytes": 12450064,
+  "create_0_new_slots": 207606,
+  "create_1_new_slots": 317716,
+  "create_2_new_slots": 427826,
+  "create_5_new_slots": 758156,
+  "create_10_new_slots": 1308708,
+  "create_20_new_slots": 2409812,
+  "create_50_new_slots": 5713124,
+  "real_WSOST": {
+   "onChainGasUsed": 15095931,
+   "simulated": 15095931,
+   "initcodeBytes": 10896
+  },
+  "real_QuarantineVault": {
+   "onChainGasUsed": 9760465,
+   "simulated": 9760465,
+   "initcodeBytes": 6771
+  },
+  "real_GoldReserveVault": {
+   "onChainGasUsed": 13907788,
+   "simulated": 13907788,
+   "initcodeBytes": 9470
+  },
+  "real_AtomicSwapHTLCv2": {
+   "onChainGasUsed": 9742661,
+   "simulated": 9742661,
+   "initcodeBytes": 6195
+  }
+ }
+}

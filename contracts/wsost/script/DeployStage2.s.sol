@@ -8,6 +8,14 @@ pragma solidity 0.8.24;
 // env: PRIVATE_KEY (disposable testnet deployer), OBSERVERS (3 comma-separated), GUARDIANS
 // (5 comma-separated), BRIDGE_VAULT_HASH (keccak256 of the devnet/testnet Bridge Vault address),
 // TEST_XAUT, TEST_PAXG
+//
+// GAS WARNING (docs/bridge/EVM_GAS_ESTIMATION.md): `forge script --broadcast` WITHOUT --skip-simulation
+// sets every gas limit from forge's LOCAL EVM (pre-Glamsterdam pricing) x 1.3. On Sepolia since
+// Glamsterdam (EIP-8037) contract creation costs ~5-7x more (WSOST 2.24M local vs 15.10M real) and those
+// transactions run out of gas, burning the fee. Always either
+//   (a) pass --skip-simulation (forge then asks the target node's eth_estimateGas, x1.3), or
+//   (b) use tests/bridge/sepolia_stage2_deploy.py (node estimates, margin, EIP-7825 cap, --dry-run),
+// and first run a dry-run gas plan: python3 ops/sostbridge/evm_gas.py --rpc ... --from ... --plan ...
 import {Script, console2} from "forge-std/Script.sol";
 import {WSOST} from "../src/WSOST.sol";
 import {GoldReserveVault} from "../src/GoldReserveVault.sol";
