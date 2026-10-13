@@ -85,6 +85,7 @@
 #include <map>
 #include <set>
 #include <unordered_set>
+#include <random>    // orphan-pool eviction (P2P only)
 #include <deque>
 #include <mutex>
 #include <memory>
@@ -6378,6 +6379,53 @@ static bool historic_param_id_matches(const HistoricParamException* e, const Byt
     return to_hex(computed_bid.data(), 32) == std::string(e->block_id_hex);
 }
 
+// P2P hygiene for blocks that do NOT extend the active tip (fork candidates and orphans),
+// which are stored before full validation. Recomputes the block id from the body exactly as
+// process_block does further down (txs -> merkle root -> header -> id) and compares it with
+// the claimed "block_id". A body that does not hash to its id is a mutated copy: storing it
+// would occupy that id in the known-set and the fork index, so the genuine block with the
+// same id would later be dropped as a duplicate, and a failed reorg would mark the genuine id
+// INVALID (and reject its descendants). Not a consensus rule: process_block rejects such a
+// body anyway when it is connected. Returns 1 = id matches, 0 = mismatch / malformed,
+// -1 = not checkable (header-only block without transactions; left to the existing path).
+static int fork_block_id_check(const std::string& block_json) {
+    std::vector<std::string> tx_hexes = json_get_tx_hexes(block_json);
+    if (tx_hexes.empty()) return -1;
+    std::vector<Transaction> txs;
+    txs.reserve(tx_hexes.size());
+    for (const auto& hx : tx_hexes) {
+        std::vector<Byte> raw;
+        if (!decode_tx_hex(hx, raw)) return 0;
+        Transaction tx; std::string derr;
+        if (!Transaction::Deserialize(raw, tx, &derr)) return 0;
+        txs.push_back(std::move(tx));
+    }
+    Hash256 mrkl{}; std::string merr;
+    if (!ComputeMerkleRootFromTxs(txs, mrkl, &merr)) return 0;
+    if (mrkl != from_hex(jstr(block_json, "merkle_root"))) return 0;
+
+    const bool     ver_present = (block_json.find("\"version\"") != std::string::npos);
+    const int64_t  ver_raw     = ver_present ? jint(block_json, "version") : 0;
+    const uint32_t version     = (ver_raw <= 0) ? 1u : (uint32_t)ver_raw;
+    sost::sbpow::MinerPubkey    pk{};
+    sost::sbpow::MinerSignature sig{};
+    if (version >= 2) {
+        std::string pk_hex  = jstr(block_json, "miner_pubkey");
+        std::string sig_hex = jstr(block_json, "miner_signature");
+        if (!hex_to_bytes(pk_hex, pk.data(), pk.size()) ||
+            !hex_to_bytes(sig_hex, sig.data(), sig.size())) return 0;
+    }
+    uint8_t hc72[72];
+    build_hc72(hc72, from_hex(jstr(block_json, "prev_hash")), mrkl,
+               (uint32_t)jint(block_json, "timestamp"), (uint32_t)jint(block_json, "bits_q"));
+    auto hdr = build_full_header_bytes(hc72, from_hex(jstr(block_json, "checkpoints_root")),
+                                       (uint32_t)jint(block_json, "nonce"),
+                                       (uint32_t)jint(block_json, "extra_nonce"), version,
+                                       version >= 2 ? &pk : nullptr, version >= 2 ? &sig : nullptr);
+    Bytes32 id = compute_block_id(hdr.data(), hdr.size(), from_hex(jstr(block_json, "commit")));
+    return id == from_hex(jstr(block_json, "block_id")) ? 1 : 0;
+}
+
 static bool process_block(const std::string& block_json, bool reorg_connect) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
 
@@ -6507,10 +6555,35 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             record_block_reject("fork block height mismatch");
             return false;
         }
+        // Fork candidates and orphans are stored before full validation: make sure the body
+        // really is the block its id names (see fork_block_id_check), so a mutated copy can
+        // neither take the genuine block's place nor get the genuine id marked INVALID.
+        if (fork_block_id_check(block_json) == 0) {
+            printf("[FORK] Block h=%lld bid=%s REJECTED: body does not match its block_id\n",
+                   (long long)height, bid.substr(0,16).c_str());
+            fflush(stdout);
+            record_block_reject("block_id mismatch");
+            return false;
+        }
 
         if (!parent_known) {
             // ORPHAN: parent not known locally
             std::lock_guard<std::mutex> lk(g_block_index_mu);
+            // Bounded pool. When it is full, evict one random orphan instead of refusing the
+            // newcomer: otherwise anyone can fill the pool once and every later honest orphan
+            // is dropped (and its sender then looks like it served an invalid block).
+            if (g_orphans_by_prev.size() >= MAX_ORPHAN_BLOCKS) {
+                static std::mt19937_64 orphan_rng{std::random_device{}()};
+                auto vit = g_orphans_by_prev.begin();
+                std::advance(vit, (long)(orphan_rng() % g_orphans_by_prev.size()));
+                const std::string victim = vit->second;
+                g_orphans_by_prev.erase(vit);
+                auto ve = g_block_index.find(victim);
+                if (ve != g_block_index.end() && ve->second.status == BlockStatus::ORPHAN) {
+                    g_block_index.erase(ve);
+                    unmark_block_known(victim);
+                }
+            }
             if (g_orphans_by_prev.size() < MAX_ORPHAN_BLOCKS) {
                 BlockIndexEntry entry;
                 entry.block_id = from_hex(bid);
@@ -9404,7 +9477,31 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 }
             }
             if (solicited) ++sync.batch_served;
-            if (already_have) return true; // silently skip — benign relay, no penalty
+            if (already_have) {
+                // Silently skip — benign relay, no penalty. A block we asked for and already
+                // hold off the active chain still tells the sync where the peer's branch is:
+                // an orphan means it does not connect yet (walk back to the fork point), a
+                // fork block means it connects (follow it). Without this, re-serving blocks we
+                // hold only as orphans/forks looked like "empty DONE" and the honest peer was
+                // penalised while the missing ancestor was never requested.
+                if (solicited && blk_bid_check.size() == 64) {
+                    BlockStatus st = BlockStatus::ACTIVE;
+                    bool indexed = false;
+                    {
+                        std::lock_guard<std::mutex> lkx(g_block_index_mu);
+                        auto it = g_block_index.find(blk_bid_check);
+                        if (it != g_block_index.end()) { indexed = true; st = it->second.status; }
+                    }
+                    if (indexed && st == BlockStatus::ORPHAN) {
+                        ++sync.batch_orphans;
+                        if (sync.lowest_orphan < 0 || blk_height < sync.lowest_orphan)
+                            sync.lowest_orphan = blk_height;
+                    } else if (indexed && st == BlockStatus::FORK && blk_height > sync.batch_max_placed) {
+                        sync.batch_max_placed = blk_height;
+                    }
+                }
+                return true;
+            }
 
             // New block we did not ask for: relay traffic, subject to the
             // steady-state limit like anyone else's. Solicited blocks skip the
