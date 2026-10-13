@@ -53,6 +53,7 @@
 #include "sost/popc_v15.h"            // P4a: chain-derived PoPC active set (V15)
 #include "sost/sostcompact.h"
 #include "sost/checkpoints.h"
+#include "sost/full_verify_history.h"
 #include "sost/popc.h"
 #include "sost/popc_tx_builder.h"
 #include "sost/popc_model_b.h"
@@ -663,6 +664,26 @@ static const int64_t MAX_REORG_DEPTH = 500;
 // Trust requires exact hard checkpoint match OR assumevalid anchor on active chain.
 // --full-verify forces full CX recomputation for all blocks.
 static bool g_full_verify_mode = false;
+// --full-verify-anchored-history (implies --full-verify). Opt-in: accept the
+// transcript-less mainnet window 1..3300 as ASSUMED_FROM_HISTORICAL_RULE after
+// every check that can run without Transcript V2 data has passed, with block
+// identity pinned to the compiled-in hard checkpoints. Without it,
+// --full-verify rejects those blocks as UNVERIFIABLE_MISSING_HISTORICAL_DATA.
+// docs/verification/FULL_VERIFY_EARLY_CHAIN.md. Never read by the default path.
+static bool g_full_verify_anchored_history = false;
+// --full-verify classification counters (blocks accepted by process_block in
+// this process; blocks loaded from chain.json at startup are not counted).
+static uint64_t g_fv_count[3] = {0, 0, 0};       // indexed by FullVerifyClass
+static int64_t  g_fv_assumed_unanchored_from = -1; // lowest ASSUMED height not yet pinned by a hard checkpoint
+static int64_t  g_fv_assumed_anchored_through = -1;
+static void fv_print_summary(const char* when) {
+    printf("[FULL-VERIFY] summary (%s): VERIFIED=%llu ASSUMED_FROM_HISTORICAL_RULE=%llu "
+           "UNVERIFIABLE_MISSING_HISTORICAL_DATA=%llu assumed_anchored_through=%lld assumed_unanchored_from=%lld\n",
+           when, (unsigned long long)g_fv_count[0], (unsigned long long)g_fv_count[1],
+           (unsigned long long)g_fv_count[2], (long long)g_fv_assumed_anchored_through,
+           (long long)g_fv_assumed_unanchored_from);
+    fflush(stdout);
+}
 static bool g_verbose = false;  // --verbose: show CX-VERIFY and PARSE debug output
 // --noseed / --disable-dns-seeds : NON-CONSENSUS isolation flag (P2P bootstrap
 // only). When set, the node performs ZERO DNS queries to the default seed
@@ -7499,6 +7520,9 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     // Parse segments_root from block JSON
     std::string segments_root_hex = jstr(block_json, "segments_root");
 
+    // --full-verify classification of this block (FullVerifyClass index);
+    // counted only once the block is actually connected. Unused otherwise.
+    int fv_class = -1;
     if (!x_bytes_hex.empty() && !final_state_hex.empty() && !segments_root_hex.empty()) {
         // Decode hex fields
         auto hex_decode = [](const std::string& h) -> std::vector<uint8_t> {
@@ -7711,7 +7735,57 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 return false;
             }
 
-            if (pi_missing) {
+            if (pi_missing && g_full_verify_mode) {
+                // --full-verify only (the default path takes the branch below,
+                // unchanged). The commit binds the profile byte, so assuming
+                // B0 is wrong for every non-B0 block (953 of mainnet 1..3300).
+                // Derive the profile from the block's stored stab_* params via
+                // the table casert_apply_profile uses at this height; the
+                // commit check later authenticates the choice. Fail closed:
+                // never fall back to B0 when the profile cannot be derived.
+                auto field_present = [&](const char* k) {
+                    return block_json.find(std::string("\"") + k + "\"") != std::string::npos;
+                };
+                if (!field_present("stab_scale") || !field_present("stab_steps")
+                    || !field_present("stab_k") || !field_present("stab_margin")) {
+                    printf("[BLOCK] REJECTED: --full-verify: profile_index missing at height %lld and "
+                           "stab_* params absent — profile cannot be derived (fail closed, no B0 default)\n",
+                           (long long)height);
+                    return false;
+                }
+                const int32_t s_scale = (int32_t)jint(block_json, "stab_scale");
+                const int32_t s_steps = (int32_t)jint(block_json, "stab_steps");
+                const int32_t s_k     = (int32_t)jint(block_json, "stab_k");
+                const int32_t s_margin= (int32_t)jint(block_json, "stab_margin");
+                const int32_t derived_pi = sost::derive_profile_from_stab_params(
+                    height, s_scale, s_steps, s_k, s_margin);
+                if (derived_pi == INT32_MIN) {
+                    printf("[BLOCK] REJECTED: --full-verify: profile_index missing at height %lld and "
+                           "stab_* (scale=%d steps=%d k=%d margin=%d) match no unique cASERT table row "
+                           "(fail closed, no B0 default)\n",
+                           (long long)height, s_scale, s_steps, s_k, s_margin);
+                    return false;
+                }
+                CasertDecision dec_for_profile;
+                dec_for_profile.profile_index = derived_pi;
+                cx_params = sost::casert_apply_profile(cx_params, dec_for_profile, height);
+                if (field_present("stab_lr_shift")
+                    && (int32_t)jint(block_json, "stab_lr_shift") != cx_params.stab_lr_shift) {
+                    printf("[BLOCK] REJECTED: --full-verify: stored stab_lr_shift %d != consensus %d at height %lld\n",
+                           (int)jint(block_json, "stab_lr_shift"), cx_params.stab_lr_shift, (long long)height);
+                    return false;
+                }
+                printf("[FULL-VERIFY] h=%lld: profile_index absent; profile %s (%d) derived from stored "
+                       "stab_* (scale=%d steps=%d k=%d margin=%d), to be authenticated by the commit\n",
+                       (long long)height, sost::profile_name(derived_pi).c_str(), derived_pi,
+                       s_scale, s_steps, s_k, s_margin);
+                // The persisted per-block profile_index feeds the cASERT
+                // recomputation of later blocks. Keep it exactly what the
+                // default path stores for a block without the field (B0), so
+                // later blocks are validated with the same inputs as on every
+                // other node. The derived profile is used for verification only.
+                g_last_accepted_profile = 0;
+            } else if (pi_missing) {
                 // Missing field on (a) trusted fast-sync or (b) pre-V4 legacy
                 // miner. Default to B0 — legacy miners ran without the field,
                 // and pre-V4 consensus doesn't enforce an exact profile match.
@@ -7908,6 +7982,45 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             if(skip_cx){
                 printf("[BLOCK] fast-sync height=%lld (trusted: checkpoint/assumevalid, CX proof skipped)\n",
                        (long long)height);
+            } else if (g_full_verify_mode && checkpoint_leaves_vec.empty()
+                       && seg_proofs_vec.empty() && round_witnesses_vec.empty()) {
+                // --full-verify only (skip_cx is never false on the default
+                // path for the transcript-less window). No Transcript V2 data
+                // at all: run every check that needs none, then classify.
+                // A partial transcript does not come here — it goes through
+                // verify_cx_proof() below and must pass in full.
+                std::string why;
+                if (!sost::verify_cx_without_transcript(hc72, nonce, extra,
+                        commit32, croot32, sroot, fstate,
+                        x_bytes_raw.data(), x_bytes_raw.size(), stb, cx_params, &why)) {
+                    printf("[FULL-VERIFY] h=%lld class=REJECTED (no Transcript V2 data; %s)\n",
+                           (long long)height, why.c_str());
+                    printf("[BLOCK] REJECTED: CX verification without transcript failed: %s\n", why.c_str());
+                    return false;
+                }
+                const char* checks = "x_len,seed,commit+profile_byte,stability_basin,metric,target,bits_q";
+                if (!sost::full_verify_historical_rule_applies(sost::ACTIVE_PROFILE, height,
+                                                               g_full_verify_anchored_history)) {
+                    printf("[FULL-VERIFY] h=%lld class=%s profile=%s checks_passed=%s "
+                           "sequential_work=NOT_CHECKABLE (checkpoint_leaves/segment_proofs/round_witnesses absent)%s\n",
+                           (long long)height,
+                           sost::full_verify_class_name(sost::FullVerifyClass::UNVERIFIABLE_MISSING_HISTORICAL_DATA),
+                           sost::profile_name(cx_params.stab_profile_index).c_str(), checks,
+                           (sost::ACTIVE_PROFILE == sost::Profile::MAINNET
+                            && height <= sost::FULL_VERIFY_TRANSCRIPTLESS_LAST_HEIGHT)
+                               ? "; --full-verify-anchored-history accepts it as ASSUMED_FROM_HISTORICAL_RULE"
+                               : "");
+                    ++g_fv_count[(int)sost::FullVerifyClass::UNVERIFIABLE_MISSING_HISTORICAL_DATA];
+                    printf("[BLOCK] REJECTED: CX Transcript V2 verification failed (Transcript V2 data missing)\n");
+                    return false;
+                }
+                fv_class = (int)sost::FullVerifyClass::ASSUMED_FROM_HISTORICAL_RULE;
+                printf("[FULL-VERIFY] h=%lld class=%s profile=%s checks_passed=%s "
+                       "sequential_work=NOT_CHECKED (Transcript V2 data never persisted for 1..%lld) "
+                       "identity=pinned by hash chain to hard checkpoints\n",
+                       (long long)height, sost::full_verify_class_name(sost::FullVerifyClass::ASSUMED_FROM_HISTORICAL_RULE),
+                       sost::profile_name(cx_params.stab_profile_index).c_str(), checks,
+                       (long long)sost::FULL_VERIFY_TRANSCRIPTLESS_LAST_HEIGHT);
             } else {
                 // Full Transcript V2 verification for non-trusted blocks
                 if (!sost::verify_cx_proof(hc72, nonce, extra,
@@ -7920,6 +8033,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                     return false;
                 }
                 printf("[BLOCK] CX Transcript V2 verified\n");
+                if (g_full_verify_mode) fv_class = (int)sost::FullVerifyClass::VERIFIED;
             }
         }
     } else if (height > 0) {
@@ -7935,6 +8049,12 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             printf("[BLOCK] fast-sync height=%lld (no CX data, trusted via checkpoint/assumevalid)\n",
                    (long long)height);
         } else {
+            if (g_full_verify_mode) {
+                ++g_fv_count[(int)sost::FullVerifyClass::UNVERIFIABLE_MISSING_HISTORICAL_DATA];
+                printf("[FULL-VERIFY] h=%lld class=%s (x_bytes/final_state/segments_root absent)\n",
+                       (long long)height,
+                       sost::full_verify_class_name(sost::FullVerifyClass::UNVERIFIABLE_MISSING_HISTORICAL_DATA));
+            }
             printf("[BLOCK] REJECTED: missing CX proof data (not in trusted range)\n");
             return false;
         }
@@ -7988,6 +8108,23 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 &sb_err)) {
             printf("[BLOCK] REJECTED: %s\n", sb_err.c_str());
             return false;
+        }
+    }
+
+    // --full-verify-anchored-history: ASSUMED_FROM_HISTORICAL_RULE blocks are
+    // accepted only on the chain the compiled-in hard checkpoints pin. Enforce
+    // the exact checkpoint hash at every hard-checkpoint height (the default
+    // path only uses these as trust hints), and record how far the assumed
+    // blocks are anchored.
+    if (g_full_verify_anchored_history) {
+        for (const auto& hcp : sost::HARD_CHECKPOINTS) {
+            if ((int64_t)hcp.height != height) continue;
+            if (to_hex(computed_bid.data(), 32) != hcp.block_hash) {
+                printf("[BLOCK] REJECTED: --full-verify-anchored-history: block_id at hard checkpoint "
+                       "height %lld != %s\n", (long long)height, hcp.block_hash.c_str());
+                return false;
+            }
+            break;
         }
     }
 
@@ -8121,6 +8258,29 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
 
     g_blocks.push_back(sb);
     g_block_undos.push_back(undo); // Store for reorg
+    if (g_full_verify_mode && fv_class >= 0) {
+        ++g_fv_count[fv_class];
+        if (fv_class == (int)sost::FullVerifyClass::ASSUMED_FROM_HISTORICAL_RULE
+            && g_fv_assumed_unanchored_from < 0)
+            g_fv_assumed_unanchored_from = height;
+        if (g_full_verify_anchored_history && g_fv_assumed_unanchored_from >= 0) {
+            for (const auto& hcp : sost::HARD_CHECKPOINTS) {
+                if ((int64_t)hcp.height != height) continue;
+                // block_id == checkpoint hash was enforced above, so the hash
+                // chain now pins every assumed block at or below this height.
+                printf("[FULL-VERIFY] hard checkpoint %lld %s matched: ASSUMED_FROM_HISTORICAL_RULE "
+                       "blocks %lld..%lld are now pinned to it by the hash chain\n",
+                       (long long)height, hcp.block_hash.substr(0, 16).c_str(),
+                       (long long)g_fv_assumed_unanchored_from, (long long)height);
+                g_fv_assumed_anchored_through = height;
+                g_fv_assumed_unanchored_from = -1;
+                break;
+            }
+        }
+        if (height == sost::FULL_VERIFY_TRANSCRIPTLESS_LAST_HEIGHT || height % 1000 == 0)
+            fv_print_summary(height == sost::FULL_VERIFY_TRANSCRIPTLESS_LAST_HEIGHT
+                             ? "end of transcript-less window" : "periodic");
+    }
     g_chain_height = height;
 
     // Update block index: mark as ACTIVE
@@ -10634,6 +10794,10 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--full-verify")){
             g_full_verify_mode = true;
         }
+        else if(!strcmp(argv[i],"--full-verify-anchored-history")){
+            g_full_verify_mode = true;
+            g_full_verify_anchored_history = true;
+        }
         else if(!strcmp(argv[i],"--dry-run-replay")){
             g_dry_run_replay=true;
         }
@@ -10672,6 +10836,10 @@ int main(int argc, char** argv) {
             printf("  --p2p-enc off|on|required      P2P encryption mode (default: off)\n");
             printf("  --full-verify              Force full ConvergenceX verification (no fast sync)\n");
             printf("  --no-fast-sync             Same as --full-verify\n");
+            printf("  --full-verify-anchored-history\n"
+                   "                             --full-verify, but accept mainnet 1..3300 (no Transcript V2\n"
+                   "                             data was ever persisted) as ASSUMED_FROM_HISTORICAL_RULE after\n"
+                   "                             all transcript-free checks pass, pinned to the hard checkpoints\n");
             printf("  --noseed                   Isolation (NON-CONSENSUS): no DNS seeds, no external\n");
             printf("                             auto-connect. Only explicit --connect peers are used.\n");
             printf("  --disable-dns-seeds        Alias for --noseed\n");
@@ -10754,6 +10922,13 @@ int main(int argc, char** argv) {
            profile_name, p2p_port, rpc_port,
            g_rpc_auth_required ? "ON" : "OFF", enc_str,
            g_full_verify_mode ? "OFF (--full-verify)" : "ON");
+    if (g_full_verify_mode) {
+        printf("Full verify: transcript-less mainnet window 1..%lld -> %s\n",
+               (long long)sost::FULL_VERIFY_TRANSCRIPTLESS_LAST_HEIGHT,
+               g_full_verify_anchored_history
+                   ? "ASSUMED_FROM_HISTORICAL_RULE after transcript-free checks, pinned to hard checkpoints (--full-verify-anchored-history)"
+                   : "UNVERIFIABLE_MISSING_HISTORICAL_DATA (rejected; see --full-verify-anchored-history)");
+    }
     printf("Assumevalid: height=%u hash=%s\n\n",
            sost::get_assumevalid_height(),
            sost::get_assumevalid_hash().substr(0,16).c_str());

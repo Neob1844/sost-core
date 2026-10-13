@@ -1,10 +1,24 @@
 # `--full-verify` and the early mainnet chain (heights 1..3300)
 
-Status: **EXPLAINED AND GATED.** No consensus or validation code was changed.
-The default sync path (hard checkpoints + assumevalid) is unaffected and still
-accepts the canonical chain. `--full-verify` from genesis remains unable to pass
-block 1. This document records why, what can and cannot be verified for that
-window, and the options; the owner must pick one before anything is implemented.
+Status: **PARTIALLY VERIFIABLE BY DESIGN — decided and implemented (§8).**
+No consensus rule changed. The default sync path (hard checkpoints +
+assumevalid) is byte-for-byte unchanged and still accepts the canonical chain.
+
+- Plain `--full-verify` stays strict. It now derives each transcript-less
+  block's profile from `stab_*` (fail closed), runs every check that needs no
+  transcript, classifies the block `UNVERIFIABLE_MISSING_HISTORICAL_DATA` and
+  rejects it. Mainnet block 1 is still the first block it cannot accept.
+- `--full-verify-anchored-history` (new, opt-in, implies `--full-verify`)
+  accepts mainnet 1..3300 as `ASSUMED_FROM_HISTORICAL_RULE` once those checks
+  pass. Block identity is pinned to the compiled-in hard checkpoints, and the
+  node enforces their exact hashes in this mode. Every block from 3301 on must be
+  `VERIFIED` (full Transcript V2).
+- The sequential-work evidence for 1..3300 is never reported as verified. Only
+  an offline full recompute (Option A, `cx-reverify`) can supply it.
+
+Sections 1-7 record the original finding. §1 and §4 describe the behaviour
+**before** this change; line numbers there refer to the parent commit
+`11dc2fcc`.
 
 ## 1. The failing check
 
@@ -121,23 +135,61 @@ Timing on the reference machine:
 `scripts/verification/full_verify_early_chain.sh reverify` with
 `REVERIFY_HEIGHTS=all` runs the whole window offline.
 
-## 6. Options (owner decision; none implemented)
+## 6. Options
 
-| | Option | Guarantee for 1..3300 | Cost | Changes |
+| | Option | Assurance for 1..3300 | Cost | Changes |
 |---|---|---|---|---|
 | A | `--full-verify` falls back to **full recompute** (`convergencex_attempt`) for transcript-less blocks at h ≤ 3300, profile derived from `stab_*` and authenticated by the commit | Strongest: the work is redone | ~20 s and 8.4 GB per block (~18 h single-threaded for the window); shardable across machines | New expensive path in `process_block`, reachable only under `--full-verify` and only in that window |
 | B | `--full-verify` accepts 1..3300 as **checkpoint-anchored** (hash chain to hard checkpoint 3300 `2894a6b3…a230`) after commit binding + basin + metric + target, and logs it as reduced verification | No sequential-work proof for 1..3300 | Seconds | Changes what `--full-verify` promises; needs explicit documentation and a flag name that says so |
 | C | **Recover the original transcripts** from any archive (node or miner logs, raw `submitblock` JSON, 2026-03-19..2026-04-08) and serve them | Full Transcript V2 verification | Depends on whether an archive exists | Data only, plus the §4 profile fix |
 | D | **Keep as is**: `--full-verify` is usable from a trusted snapshot at or above 3300 (as done in §7) | Full for 3301..tip only | — | Docs only |
 
-A and C both need the §4 profile derivation as well. Option A can be run today
-as an offline audit, without touching the node: `full_verify_early_chain.sh
-reverify` with `REVERIFY_HEIGHTS=all`. Putting it inside `sost-node
---full-verify` would hold 8.4 GB in the node process for the whole window. That
-is a deployment decision, not a bug fix. Nothing here would change
-which chain the default node accepts. B weakens the meaning of `--full-verify`,
-and A adds a slow consensus-adjacent path. That is why this branch leaves the
-behaviour gated and only adds the regression test and evidence.
+### 6.1 Evaluation against the five requirements
+
+| Requirement | A (recompute in node) | B (anchored) | C (recover) | D (as is) |
+|---|---|---|---|---|
+| Preserve the accepted chain | yes | yes (same block_ids, same persisted chain.json, §8.3) | yes | yes |
+| Never invent missing data | yes (recomputes, does not invent) | yes, provided the missing evidence is labelled as missing, never as verified | yes, but only if an archive exists | yes |
+| Never silently weaken current validation | yes | **only** as an explicit opt-in flag; as a silent change to `--full-verify` it would weaken what the flag promises | yes | yes |
+| Never reinterpret old blocks wrongly | needs the §4 profile fix | needs the §4 profile fix | needs the §4 profile fix | the B0 default in the full-verify path is wrong for 953 blocks (latent) |
+| Deterministically verify everything the data allows | yes, and more | yes, if every transcript-free check runs | yes | **no**: nothing in 1..3300 is checked |
+
+- **A** gives the strongest result, but not inside the node. It holds 8.4 GB
+  RSS in the node process for about 18 hours, on a machine class that also
+  mines. It stays an **offline audit tool**
+  (`full_verify_early_chain.sh reverify`, `REVERIFY_HEIGHTS=all`; shardable).
+  It was not re-run here: the reference machine had 10 GB free (< 12 GB)
+  next to a production miner. The six earlier samples (one per profile class,
+  plus 3300) remain the evidence, all MATCH (§7).
+- **C** is not available. The repository tree and the working scratch area
+  were searched for any file that contains the commit of any of the 3300
+  blocks (key and wallet files excluded). The only hits are copies of the
+  canonical chain.json (13 copies, 0 blocks in 1..3300 with
+  `checkpoint_leaves`, `segment_proofs` or `round_witnesses`), the regression
+  fixture and earlier cx-reverify inputs. **No archive of the original
+  transcripts exists there.** C stays open if one turns up elsewhere. Recovered
+  data would go through the unchanged `verify_cx_proof()` path and be
+  classified `VERIFIED`.
+- **D** leaves the latent B0 defect in place and verifies nothing in the
+  window.
+
+### 6.2 Decision
+
+**B + D, with the §4 profile fix, and A kept as an offline audit:**
+
+1. **Profile fix (full-verify path only).** A missing `profile_index` is
+   derived from the stored `stab_*` via the cASERT table that
+   `casert_apply_profile` uses at that height. The derived profile must match
+   exactly one row; otherwise the block is rejected (fail closed, no B0
+   default). The commit check then authenticates it. The persisted per-block
+   `profile_index` stays what the default path stores (B0), because that value
+   feeds the cASERT recomputation of later blocks on every node.
+2. **D is kept as the meaning of plain `--full-verify`.** It stays strict. What
+   it gains: the transcript-free checks run, and the block is labelled
+   `UNVERIFIABLE_MISSING_HISTORICAL_DATA` before it is rejected.
+3. **B is available only behind `--full-verify-anchored-history`.** The flag
+   name says what it does. Blocks accepted this way are labelled
+   `ASSUMED_FROM_HISTORICAL_RULE`, never `VERIFIED`.
 
 ## 7. Evidence
 
@@ -166,3 +218,107 @@ behaviour gated and only adds the regression test and evidence.
   ebb8bf4b5c6fa1367e8852cef250131b3fdecc102c4a68584b85ed4d11ad2500`, both
   identical to the default-path replay. So the transcript-less window is the
   **only** obstacle to a from-genesis `--full-verify` of the mainnet chain.
+
+## 8. Implementation
+
+### 8.1 Classification
+
+Each block that `process_block` connects under `--full-verify` gets exactly
+one label in the log:
+
+| Class | When | Accepted? |
+|---|---|---|
+| `VERIFIED` | `verify_cx_proof()` passed on the block's own Transcript V2 data (any height; a partial transcript also goes this way and must pass in full) | yes |
+| `ASSUMED_FROM_HISTORICAL_RULE` | no `checkpoint_leaves`, `segment_proofs` or `round_witnesses` at all; mainnet; 1 ≤ h ≤ 3300; `--full-verify-anchored-history`; and every transcript-free check passed: x_bytes length, seed, commit binding including the profile byte, stability basin, metric (phases 1, 4, 5, 9, 10), plus the PoW target and cASERT `bits_q` checks that always run | yes, and the block_id at every hard-checkpoint height must equal the compiled-in hash |
+| `UNVERIFIABLE_MISSING_HISTORICAL_DATA` | no Transcript V2 data and the historical rule does not apply (plain `--full-verify`, other networks, h > 3300) | **no** |
+
+If a transcript-free check fails, the block is rejected with the failing phase
+in the log, whatever the flag. Sequential work (phases 2, 3, 6-8) is logged as
+`NOT_CHECKED` or `NOT_CHECKABLE`, never as passed. When a hard checkpoint is
+reached, the node logs the range of assumed blocks that the hash chain now pins
+to it. It prints a summary line at 3300 and every 1000 blocks:
+
+```
+[FULL-VERIFY] summary (end of transcript-less window): VERIFIED=0 ASSUMED_FROM_HISTORICAL_RULE=3300 UNVERIFIABLE_MISSING_HISTORICAL_DATA=0 assumed_anchored_through=3300 assumed_unanchored_from=-1
+```
+
+Limits, stated plainly:
+
+- An assumed block is final only once the next hard checkpoint above it
+  matches. Until then a peer could feed a fabricated block that passes the
+  transcript-free checks, and the node would reject the branch at the
+  checkpoint. This matches the optimistic assumevalid trust of the default
+  path, and it applies only in the opt-in mode.
+- The counters cover the current process. Blocks loaded from `chain.json` at
+  startup are not re-verified or counted.
+
+### 8.2 Code
+
+- `include/sost/full_verify_history.h`, `src/full_verify_history.cpp`:
+  `derive_profile_from_stab_params()`, `verify_cx_without_transcript()`,
+  `FullVerifyClass`, `full_verify_historical_rule_applies()`. These are pure,
+  in `sost-core`.
+- `src/sost-node.cpp`:
+  - flag and counters, `:666-686`;
+  - profile derivation (fail closed), `:7738-7787`. The previous B0 branch is
+    now `else if (pi_missing)` at `:7788`, unchanged and reached only when
+    `--full-verify` is off;
+  - transcript-free checks and classification, `:7985-8022`;
+  - `VERIFIED`, `:8036`;
+  - hard-checkpoint enforcement in the opt-in mode, `:8114-8129`;
+  - counting and anchoring at connect time, `:8261-8283`;
+  - CLI flag, `:10797`.
+
+  Every new branch is guarded by `g_full_verify_mode` or
+  `g_full_verify_anchored_history`, and both are false on the default path.
+
+### 8.3 Evidence
+
+- Unit (`ctest full-verify-early-chain`). It uses the real blocks 1 (B0),
+  2 (E4), 339 (E1), 931 (H1), 1001 (H2) and 3300 (B0), so all five profile
+  classes are covered, and checks that:
+  - the library derivation equals the reference derivation;
+  - `verify_cx_without_transcript` passes with the derived profile, and fails
+    at phase 5 with the old B0 default for every non-B0 block;
+  - a tampered final_state fails at phase 5, and a short x_bytes fails at
+    phase 1;
+  - both cASERT tables round-trip (40/40 legacy at h=1, 3300 and 5749; 43/43
+    V8 at 5750);
+  - unmatched, zero and `-1` (missing) `stab_*` values give no profile (fail
+    closed);
+  - the class names and the historical-rule predicate are correct (mainnet
+    1 and 3300 with opt-in: yes; 3301, genesis, no opt-in, testnet, dev: no).
+- Whole window: `full_verify_early_chain.sh scan` on the real chain gives
+  3300 blocks, 33953 checks, 0 failures. Derived profiles:
+  `E4=1 E1=565 B0=2347 H1=353 H2=34`.
+- Real nodes: `full_verify_early_chain.sh classify` (TIP=3500, local server,
+  `--noseed`):
+  - strict `--full-verify`: block 1 is classified
+    `UNVERIFIABLE_MISSING_HISTORICAL_DATA` and rejected;
+  - `--full-verify-anchored-history` reaches 3500:
+    `ASSUMED_FROM_HISTORICAL_RULE=3300`, all pinned through hard checkpoints
+    500 … 3300; `VERIFIED=200` (3301..3500, full Transcript V2);
+    `UNVERIFIABLE=0`; 0 fast-sync skips; 953 non-B0 derived profiles;
+  - the default client reaches 3500;
+  - block_id is identical at every height 0..3500 across the source chain,
+    the anchored client and the default client (tip
+    `ce08be1edad978c19a20b227a141742208c836e876585ffd94b5626aa696cf66`);
+  - the anchored and default clients persist a byte-identical `chain.json`;
+  - with `BASE_NODE` set to a sost-node built from the parent commit, its
+    default sync persists the same bytes and logs the same `[BLOCK]`
+    decisions (§8.4).
+- Above the window, the existing evidence still holds (§7): 3301..30428 under
+  `--full-verify`, 27128/27128 verified.
+
+### 8.4 Default path unchanged
+
+The default path of this binary and of a binary built from the parent commit
+`11dc2fcc` were compared on the same local sync to 3500. Both persist the same
+`chain.json` (SHA-256
+`fdb0e9e9de77ec80a499e69fbaf3890115cc1f15151d34f5202fa96036c6aab1`, which is
+also the `--full-verify-anchored-history` client's file) and make the same set
+of `[BLOCK]` decisions. In code, every new branch sits behind
+`g_full_verify_mode` or `g_full_verify_anchored_history`. The default path's
+fast-sync and `verify_cx_proof()` branches, and its B0 assumption for a missing
+`profile_index`, are textually unchanged.
+

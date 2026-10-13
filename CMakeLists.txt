@@ -183,6 +183,7 @@ add_library(sost-core STATIC
     src/sostcompact.cpp src/pow/convergencex.cpp src/pow/scratchpad.cpp
     src/pow/scratchpad_cache.cpp
     src/pow/relief_predict.cpp
+    src/full_verify_history.cpp
 
     # Phase 1: transaction serialization
     src/transaction.cpp

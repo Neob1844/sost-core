@@ -24,8 +24,17 @@
 //      miner actually used (E4/E1/H1/H2 here). Any future full-verify path for
 //      this window must derive the profile from stab_*, not assume B0.
 //
+//   4. The node-side fix (src/full_verify_history.cpp, used only under
+//      --full-verify): derive_profile_from_stab_params() returns the same
+//      profile as the reference derivation here, for every block; and
+//      verify_cx_without_transcript() accepts each block with that profile
+//      and rejects it with the B0 default whenever the block is not B0.
+//   5. The classification rule: only mainnet 1..3300 with the explicit
+//      --full-verify-anchored-history opt-in may be ASSUMED_FROM_HISTORICAL_RULE.
+//
 // Pure, no network, no chain file, no 4 GB allocations. Consensus untouched.
 // =============================================================================
+#include "sost/full_verify_history.h"
 #include "sost/pow/convergencex.h"
 #include "sost/pow/casert.h"
 #include "sost/emission.h"
@@ -35,6 +44,7 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -60,6 +70,7 @@ const EarlyBlock kBlocks[] = {
 };
 
 int g_fail = 0, g_checks = 0;
+std::map<int32_t, long> g_profile_hist;   // derived profile -> blocks
 bool g_quiet = false;   // whole-window mode: print failures only
 void check(bool ok, const std::string& what) {
     ++g_checks;
@@ -163,6 +174,86 @@ void check_block(const EarlyBlock& b) {
                                         p.stab_scale, p.stab_k, p.stab_margin, p.stab_steps,
                                         p.stab_lr_shift, metric);
     check(basin && metric == b.metric, tag + "stability basin holds and metric matches (" + std::to_string(metric) + ")");
+
+    // (4) The node-side helpers used by --full-verify.
+    const int32_t lib_pi = derive_profile_from_stab_params(b.height, b.scale, b.steps, b.k, b.margin);
+    check(lib_pi == pi, tag + "derive_profile_from_stab_params = " + profile_name(lib_pi) + " (reference " + profile_name(pi) + ")");
+    ++g_profile_hist[lib_pi];
+    std::string why;
+    bool lib_ok = verify_cx_without_transcript(hc, b.nonce, b.extra, h32(b.commit), h32(b.cp_root),
+                                               h32(b.seg_root), h32(b.final_state), xb.data(), xb.size(),
+                                               b.metric, p, &why);
+    check(lib_ok, tag + "verify_cx_without_transcript passes with the derived profile" + (why.empty() ? "" : " [" + why + "]"));
+    if (pi != 0) {
+        why.clear();
+        bool b0_ok = verify_cx_without_transcript(hc, b.nonce, b.extra, h32(b.commit), h32(b.cp_root),
+                                                  h32(b.seg_root), h32(b.final_state), xb.data(), xb.size(),
+                                                  b.metric, params_for(b.height, 0), &why);
+        check(!b0_ok && why.rfind("phase 5", 0) == 0,
+              tag + "verify_cx_without_transcript rejects the old B0 default at phase 5 (" + why + ")");
+    }
+    // Tampering with any committed field must fail.
+    Bytes32 bad_fs = h32(b.final_state); bad_fs[0] ^= 1;
+    why.clear();
+    bool tampered_ok = verify_cx_without_transcript(hc, b.nonce, b.extra, h32(b.commit), h32(b.cp_root),
+                                                    h32(b.seg_root), bad_fs, xb.data(), xb.size(),
+                                                    b.metric, p, &why);
+    check(!tampered_ok && why.rfind("phase 5", 0) == 0, tag + "tampered final_state is rejected (" + why + ")");
+    why.clear();
+    bool short_ok = verify_cx_without_transcript(hc, b.nonce, b.extra, h32(b.commit), h32(b.cp_root),
+                                                 h32(b.seg_root), h32(b.final_state), xb.data(), xb.size() - 4,
+                                                 b.metric, p, &why);
+    check(!short_ok && why.rfind("phase 1", 0) == 0, tag + "short x_bytes is rejected at phase 1 (" + why + ")");
+}
+
+// Profile derivation on its own: every row of both cASERT tables round-trips
+// through casert_apply_profile at a height that uses that table, and
+// parameters that match no row fail closed.
+void check_derivation_tables() {
+    for (int64_t h : {int64_t(1), int64_t(3300), int64_t(CASERT_CEILING_H13_HEIGHT - 1)}) {
+        int ok = 0;
+        for (int32_t pi = CASERT_H_MIN_LEGACY; pi < CASERT_H_MIN_LEGACY + CASERT_PROFILE_COUNT_LEGACY; ++pi) {
+            ConsensusParams p = params_for(h, pi);
+            ok += derive_profile_from_stab_params(h, p.stab_scale, p.stab_steps, p.stab_k, p.stab_margin) == pi;
+        }
+        check(ok == CASERT_PROFILE_COUNT_LEGACY, "legacy table round-trips at h=" + std::to_string(h)
+              + " (" + std::to_string(ok) + "/" + std::to_string(CASERT_PROFILE_COUNT_LEGACY) + ")");
+    }
+    {
+        const int64_t h = CASERT_CEILING_H13_HEIGHT;
+        int ok = 0;
+        for (int32_t pi = CASERT_H_MIN; pi < CASERT_H_MIN + CASERT_PROFILE_COUNT; ++pi) {
+            ConsensusParams p = params_for(h, pi);
+            ok += derive_profile_from_stab_params(h, p.stab_scale, p.stab_steps, p.stab_k, p.stab_margin) == pi;
+        }
+        check(ok == CASERT_PROFILE_COUNT, "V8 table round-trips at h=" + std::to_string(h)
+              + " (" + std::to_string(ok) + "/" + std::to_string(CASERT_PROFILE_COUNT) + ")");
+    }
+    check(derive_profile_from_stab_params(1, 1, 4, 4, 186) == INT32_MIN, "no matching row -> INT32_MIN (fail closed)");
+    check(derive_profile_from_stab_params(1, 0, 0, 0, 0) == INT32_MIN, "zeroed/absent stab_* -> INT32_MIN (fail closed)");
+    check(derive_profile_from_stab_params(1, -1, -1, -1, -1) == INT32_MIN, "jint() missing-field value -1 -> INT32_MIN (fail closed)");
+    check(profile_name(-4) == "E4" && profile_name(0) == "B0" && profile_name(2) == "H2", "profile names E4/B0/H2");
+}
+
+void check_classification_rule() {
+    check(full_verify_historical_rule_applies(Profile::MAINNET, 1, true), "mainnet h=1 + opt-in -> historical rule applies");
+    check(full_verify_historical_rule_applies(Profile::MAINNET, 3300, true), "mainnet h=3300 + opt-in -> historical rule applies");
+    check(!full_verify_historical_rule_applies(Profile::MAINNET, 3301, true), "mainnet h=3301 -> no historical rule (transcripts exist from here)");
+    check(!full_verify_historical_rule_applies(Profile::MAINNET, 1, false), "plain --full-verify -> no historical rule (UNVERIFIABLE)");
+    check(!full_verify_historical_rule_applies(Profile::MAINNET, 0, true), "genesis is never covered");
+    check(!full_verify_historical_rule_applies(Profile::TESTNET, 1, true), "testnet -> no historical rule");
+    check(!full_verify_historical_rule_applies(Profile::DEV, 1, true), "dev -> no historical rule");
+    check(std::string(full_verify_class_name(FullVerifyClass::VERIFIED)) == "VERIFIED"
+          && std::string(full_verify_class_name(FullVerifyClass::ASSUMED_FROM_HISTORICAL_RULE)) == "ASSUMED_FROM_HISTORICAL_RULE"
+          && std::string(full_verify_class_name(FullVerifyClass::UNVERIFIABLE_MISSING_HISTORICAL_DATA)) == "UNVERIFIABLE_MISSING_HISTORICAL_DATA",
+          "classification names");
+}
+
+void print_profile_hist() {
+    std::string s;
+    for (const auto& kv : g_profile_hist)
+        s += " " + profile_name(kv.first) + "=" + std::to_string(kv.second);
+    std::printf("derived profiles:%s\n", s.c_str());
 }
 } // namespace
 
@@ -190,12 +281,22 @@ int main(int argc, char** argv) {
             b.x_bytes = xb.c_str();
             check_block(b); ++n;
         }
+        print_profile_hist();
         std::printf("\n=== full-verify early chain (file): %ld blocks, %d checks, %d failure%s ===\n",
                     n, g_checks, g_fail, g_fail == 1 ? "" : "s");
         return (g_fail || n == 0) ? 1 : 0;
     }
 
     for (const auto& b : kBlocks) check_block(b);
+    check_derivation_tables();
+    check_classification_rule();
+    print_profile_hist();
+    {
+        // The embedded fixture must cover every profile class used in 1..3300.
+        bool all = g_profile_hist.count(0) && g_profile_hist.count(-1) && g_profile_hist.count(1)
+                && g_profile_hist.count(2) && g_profile_hist.count(-4);
+        check(all, "fixture covers B0, E1, H1, H2 and E4");
+    }
 
     std::printf("\n=== full-verify early chain: %s (%d failure%s) ===\n",
                 g_fail ? "FAIL" : "PASS", g_fail, g_fail == 1 ? "" : "s");
