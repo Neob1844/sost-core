@@ -1081,6 +1081,12 @@ add_executable(test-multisig tests/test_multisig.cpp)
 target_link_libraries(test-multisig PRIVATE sost-core)
 add_test(NAME multisig COMMAND test-multisig)
 
+# Non-consensus: compile-time type-code registry (uniqueness, literal pins, reserved
+# ranges) + R2/R11 allow-list sweep + legacy script/PSBT fence. Changes no runtime code.
+add_executable(test-type-registry tests/test_type_registry.cpp)
+target_link_libraries(test-type-registry PRIVATE sost-core)
+add_test(NAME type-registry COMMAND test-type-registry ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_executable(test-popc tests/test_popc.cpp)
 target_link_libraries(test-popc PRIVATE sost-core)
 add_test(NAME popc COMMAND test-popc)

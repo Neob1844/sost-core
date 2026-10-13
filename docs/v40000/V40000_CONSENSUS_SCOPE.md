@@ -131,6 +131,17 @@ Not blocking: Schnorr/MuSig (later, if ever); a timelocked recovery path (out of
 
 **NATIVE_MULTISIG_DESIGN_READY = NO.** The design becomes ready after a revision (r4) that closes items 1–4 and 6, and records decisions for 5, 7 and 8, with the vectors committed as test files.
 
+> **Update 2026-10-13 (r4).** All eight items above, plus five found while writing r4 (live-path
+> block byte limit, capsule consensus scope on 0x50, exact v2 tx size, spent-output commitment in
+> the sighash, the 0x30 fence/type registry), are closed in
+> `docs/v40000/MULTISIG_OPEN_DECISIONS_CLOSED.md` (0/13 open). The normative result is
+> `docs/v40000/NATIVE_MULTISIG_SPEC_40000.md`; vectors are in
+> `tests/vectors/native_multisig_40000.json`; the `type-registry` ctest is in place.
+> NATIVE_MULTISIG_DESIGN_READY is now **YES** (design only; implementation not authorized;
+> BLOCK_40000_READINESS unchanged at NOT_YET). Correction to §A.1 #4: a 3-of-5 input is 400 B, so a
+> 16,000 B standard tx holds at most 39 of them; 497 B is the N = 15 policy alone, and a 15-of-15
+> input is 1,510 B.
+
 ---
 
 ## B. Native assets

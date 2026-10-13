@@ -4,6 +4,12 @@ Status: **not implemented, not scheduled.** This document lists what a real nati
 require so that the bridge can later replace `ColdSingleSigner` with `NativeMultisigSigner`.
 Activating it is a separate, explicit future decision with its own release, tests, audit and notice.
 
+> **Update 2026-10-13.** The normative design is now `docs/v40000/NATIVE_MULTISIG_SPEC_40000.md`
+> (`OUT_MULTISIG = 0x50`, transaction version 2, v2 sighash with CHAIN_ID, bech32m `sostms`
+> addresses). Every open decision is closed in `docs/v40000/MULTISIG_OPEN_DECISIONS_CLOSED.md`.
+> Requirement 4 below ("a `sost3`-style script-hash address") is replaced by the bech32m `sostms` /
+> `tsostms` / `dsostms` format; `sost3` is not revived.
+
 ## Why the existing library code cannot simply be switched on
 
 `include/sost/script.h` / `src/script.cpp` (OP_CHECKMULTISIG, P2SH, `sost3`) and `include/sost/psbt.h`

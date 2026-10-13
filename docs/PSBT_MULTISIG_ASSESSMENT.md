@@ -2,6 +2,11 @@
 
 **Date:** 2026-03-24
 
+> **Superseded (2026-10-13).** The multisig parts of this assessment are replaced by
+> `docs/v40000/NATIVE_MULTISIG_SPEC_40000.md` (native `OUT_MULTISIG = 0x50`, transaction
+> version 2, no script engine) and `docs/v40000/MULTISIG_OPEN_DECISIONS_CLOSED.md`. The MuSig2
+> statement below was wrong and is corrected in place.
+
 ## PSBT (Partially Signed Bitcoin Transactions)
 
 **Status:** Designed but NOT implemented in this session.
@@ -32,11 +37,20 @@
 - Adding m-of-n validation IS a consensus change (new output type, new validation rules)
 - Cannot be done as "wallet-layer only"
 
-**What COULD be done without consensus:**
-- **Threshold signing via MuSig2** — multiple signers produce a single standard ECDSA signature. Looks like a normal single-key TX on chain. No consensus change needed.
-- This is the approach modern Bitcoin wallets use for Taproot-based multisig.
+**What could be done without consensus (corrected 2026-10-13):**
+- ~~Threshold signing via MuSig2 produces a single standard ECDSA signature.~~ **Wrong.** MuSig2
+  aggregates keys and produces one BIP-340 **Schnorr** signature (64 bytes, `R.x ‖ s`). SOST
+  transaction inputs are verified with **ECDSA only** (`secp256k1_ecdsa_verify` in `VerifySighash`,
+  `src/tx_signer.cpp`), so a MuSig2 signature cannot authorize a SOST input. Using it would itself
+  require a consensus change (a Schnorr input type). In Bitcoin, MuSig2 works because Taproot
+  (BIP-341) added Schnorr verification by soft fork.
+- The only way to get an ordinary single-key ECDSA signature from several parties without a
+  consensus change is **threshold ECDSA** (multi-round MPC such as GG18/GG20, CGGMP or DKLs). It is
+  complex, interactive, hides the M-of-N structure from the chain and has a history of
+  implementation vulnerabilities; it is not recommended for SOST custody.
+- SOST therefore uses native consensus multisig instead (see the specification above).
 
 **Recommendation:**
 1. Implement PSBT first (pure wallet, no consensus)
-2. Implement MuSig2 threshold signing (no consensus)
-3. Only add on-chain multisig opcodes when SOST needs a script upgrade
+2. ~~Implement MuSig2 threshold signing (no consensus)~~ — not possible without a consensus change (see above)
+3. ~~Only add on-chain multisig opcodes~~ — superseded: native M-of-N multisig without a script engine (`docs/v40000/NATIVE_MULTISIG_SPEC_40000.md`)
