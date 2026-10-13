@@ -1,0 +1,6 @@
+[
+  {"prefix": "203.0.113.0/24", "asn": 64500, "provider": "ExampleHost-A", "region": "EU"},
+  {"prefix": "198.51.0.0/16", "asn": 64501, "provider": "ExampleHost-B", "region": "NA"},
+  {"prefix": "192.0.2.0/24", "asn": 64502, "provider": "ExampleHost-C", "region": "APAC"},
+  {"prefix": "192.0.128.0/17", "asn": 64503, "provider": "ExampleHost-D", "region": "APAC"}
+]

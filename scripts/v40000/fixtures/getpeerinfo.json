@@ -1,0 +1,6 @@
+[
+  {"addr": "seed-eu.sostcore.xxx.xxx:19333", "direction": "outbound", "height": 30500, "version_acked": true, "connected": true, "enc_mode": "encrypted", "ban_score": 0, "conntime": 1790000000},
+  {"addr": "203.0.xxx.xxx:19333", "direction": "outbound", "height": 30500, "version_acked": true, "connected": true, "enc_mode": "encrypted", "ban_score": 0, "conntime": 1790000000},
+  {"addr": "198.51.xxx.xxx:51234", "direction": "inbound", "height": 30500, "version_acked": true, "connected": true, "enc_mode": "plaintext", "ban_score": 0, "conntime": 1790000000},
+  {"addr": "198.51.xxx.xxx:51240", "direction": "inbound", "height": 30499, "version_acked": false, "connected": true, "enc_mode": "plaintext", "ban_score": 0, "conntime": 1790000000}
+]

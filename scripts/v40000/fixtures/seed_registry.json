@@ -1,0 +1,11 @@
+{
+  "project": {"operator": "sost-foundation", "asns": ["64500"]},
+  "seeds": [
+    {"host": "seed-eu.sostcore.com", "operator": "sost-foundation", "asn": "64500", "region": "EU", "evidence": "x"},
+    {"host": "seed.example-a.org:19333", "operator": "op-a", "asn": "64510", "region": "EU", "evidence": "signed challenge 2026-10-01"},
+    {"host": "198.51.100.20:19333", "operator": "op-b", "asn": "64511", "region": "NA", "evidence": "signed challenge 2026-10-02"},
+    {"host": "seed.example-c.net", "operator": "op-c", "asn": "64511", "region": "APAC", "evidence": "signed challenge"},
+    {"host": "seed.example-d.net", "operator": "op-d", "asn": "64512", "region": "APAC", "evidence": ""},
+    {"host": "seed.example-e.net", "operator": "op-a", "asn": "64513", "region": "SA", "evidence": "signed"}
+  ]
+}

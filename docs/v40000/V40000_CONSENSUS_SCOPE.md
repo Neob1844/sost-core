@@ -259,3 +259,134 @@ This rests on the type-registry fence and the legacy-code removal. Nothing else 
 * Set a **go/no-go cutoff at about #36,000**. If gates 1–5 are not green by then, move native multisig to **#50,000**.
 * In that case #40,000 carries no consensus change, and only the non-consensus scope ships.
 * Native assets and 80/15/5 belong at **#50,000 or later** in any case.
+
+---
+
+## G. Scope confirmation — 2026-10-13 (`release/v40000-prep` @ `11dc2fcc`)
+
+This section is added; nothing above was rewritten. It re-checks §F against the
+tree after the merges since `bc8a45d9`:
+* `75f6790d` buildtx mempool awareness;
+* `4934fd50` deep-fork P2P;
+* `8b0c8bb9` full-verify early chain;
+* `5efccd0f` sanitizers;
+* `d05e0a12` EVM gas.
+
+It also sweeps every activation constant for anything that activates silently at
+or before #40,000.
+
+### G.1 Verdict
+
+| Proposed item | Verdict | Reason |
+|---|---|---|
+| **CONSENSUS at #40,000 = native multisig only** | **CONFIRMED as the upper bound; CHALLENGED as the expected outcome** | Nothing else in the tree is consensus-ready (§G.3), so "only multisig" is right. But "native multisig" is not one rule. It is five consensus changes that ship together: OUT_MULTISIG 0x50, tx v2 per-input auth, sighash v2 with CHAIN_ID, the 12,000-sigcheck cap, and the outer-version fence for node/jackpot txs (§E). A partial subset must not ship. The design is still NOT READY (§A.4, 8 defects). The 4-week hard-fork notice (about 4,032 blocks) puts the latest notice at about #35,968. A 2,016-block testnet soak must finish before that, so implementation would have to be complete by about #34,000. The realistic default is therefore **#40,000 = no consensus change**, with multisig moved to #50,000 unless the #36,000 go/no-go is green. The scope statement should read "native multisig only, **or nothing**". |
+| **NOT #40,000: native assets activation** | **CONFIRMED** | Mainnet `NATIVE_ASSETS_ACTIVATION_HEIGHT = INT64_MAX` (`include/sost/params.h:723`). `RESTRICTED_DEV_MODE_END_HEIGHT = INT64_MAX` (`:748`). Bugs 4a–4c, the mempool hook, fuzz and live-reorg gates are still open (§B). The asset bug fixes touch dormant consensus code. Keep them out of the #40,000 binary and ship them with the asset release, so the #40,000 diff stays reviewable and replay-tested. |
+| **NOT #40,000: 80/15/5 economics** | **CONFIRMED** | It is a reward-split hard fork, WATCH (§C, `ECONOMICS_80_15_5.md`). There is no code in the tree. |
+| NONCONSENSUS: deep-fork P2P fix | CONFIRMED non-consensus, **on the block-acceptance path** | `fork_block_id_check` (`src/sost-node.cpp:6391-6426`, used at `:6561`) rejects fork/orphan bodies whose recomputed id ≠ claimed id. `process_block` applies the same derivation and rejection when the block is connected (`:7404-7465`: same version defaulting, same `build_full_header_bytes`, same `compute_block_id`), so no block valid under consensus is refused. Because it sits in front of fork storage, the reorg and historical-replay tests must cover it. Random orphan eviction and the "already have" sync accounting are P2P-only. |
+| NONCONSENSUS: buildtx mempool awareness | CONFIRMED | CLI plus a read-only `getmempoolspends` RPC and `Mempool::SpentBy` (a const lookup). No policy or validity change. |
+| NONCONSENSUS: offline signing | CONFIRMED | `buildtx`/`signtx` in `bc8a45d9`; CLI only. |
+| NONCONSENSUS: cASERT RPC metadata fix | CONFIRMED non-consensus, **on the release branch** | Ported as `90639442` (cherry-pick of `d0f18a7b`, patch-equivalent to the `devnet/capsule-fast-300` merge `9039c16d`; `include/sost/casert_meta_window.h`, test `casert-meta-window`). It changes the window used by `build_casert_meta` (getinfo/getblocktemplate/getblock) for heights < `CASERT_V6PP_HEIGHT` = 5175 only. Validation always uses the full chain, and at the mainnet tip it returns the old window. |
+| NONCONSENSUS: Stage 2 tooling, EVM deployment tooling | CONFIRMED | Ethereum-side and scripts. `d05e0a12` changes no SOST source. |
+| NONCONSENSUS: verification tooling | CONFIRMED | `8b0c8bb9` (full-verify early chain) is explained and gated; no validity change. |
+| NONCONSENSUS: decentralization improvements | CONFIRMED | P1–P8 in `DECENTRALIZATION_ACTION_PLAN_40000.md` are P2P/CLI/docs only. VERS gains optional trailing bytes; old peers already ignore the extra capability byte. |
+| **Missing from the proposed nonconsensus list** | ADD | The type registry with uniqueness `static_assert`s and the `type-registry` ctest; removal of the legacy `script.h`/`script.cpp`/psbt multisig (the 0x30 collision, §A.2); automated full-chain historical replay in ctest. These are prerequisites even if multisig slips. |
+
+### G.2 Consensus-adjacent changes since `bc8a45d9` (reviewed)
+
+The diff `bc8a45d9..11dc2fcc` over `src/` and `include/` changed 8 files
+(+599/−8):
+* `src/beacon.cpp`, `src/mempool.cpp`, `src/psbt.cpp`, `src/sost-cli.cpp`,
+  `src/sost-node.cpp`, `src/utxo_reservations.cpp`;
+* `include/sost/mempool.h`, `include/sost/utxo_reservations.h`.
+
+Of these:
+
+* `src/beacon.cpp:138` changes the `b64_decode` accumulator from `int` to
+  `uint32_t`. Only the low bits are emitted, so the output bytes are identical
+  for every input where the old code was defined. The signed overflow was UB.
+  Beacon P2P is active since V13 (`params.h:976`), so this is
+  **behaviour-preserving, not consensus-neutral by construction**. Keep it inside
+  the historical-replay test.
+* `src/psbt.cpp` touches only the base64 helpers. It is not reachable from node
+  validation (§A.1 #13).
+* `fork_block_id_check` is discussed above.
+* Every other change is CLI, RPC or mempool lookup.
+
+### G.3 Activation-height sweep (mainnet branch, `SOST_TESTNET_FORKS=OFF`, no `SOST_DEVNET_FORKS`)
+
+Every height-gated constant in `include/` and `src/` was enumerated.
+
+**Already active, ≤ #30,000:**
+* `V14_HEIGHT` 15,000;
+* `V14_5_HEIGHT` 16,000;
+* `V14_7_HEIGHT` 17,000;
+* `V15_HEIGHT` 25,000 and its dependents (`RESERVE_FREEZE`, `POPC_V15`,
+  `POPC_SINGLE_MODEL`, `HIST_JACKPOT_ACTIVATION`);
+* `DTD_POPC_ELIGIBILITY_HEIGHT` 30,000, which is inert because
+  `DTD_POPC_GATE_CONSENSUS_ACTIVE = false` (`params.h:1226`);
+* `HIST_JACKPOT_V2_HEIGHT` 30,000 (`:1415`);
+* `NODE_BIND_V2_HEIGHT` = 30,000 (`:1426`);
+* `DTD_V16_ELIGIBILITY_HEIGHT` = 30,000 (`:1475`).
+
+**Deferred (INT64_MAX or equivalent), will not activate:**
+* `SACS_V2_ACTIVATION_HEIGHT` (`params.h:702`);
+* `NATIVE_ASSETS_ACTIVATION_HEIGHT` (`:723`);
+* `RESTRICTED_DEV_MODE_END_HEIGHT` (`:748`);
+* `BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT` (`:968`);
+* `POPC_GOLD_BOOST_HEIGHT` (`:1294`);
+* `GV_G4_ACTIVATION_HEIGHT` (`gv_g4.h:57`);
+* `GV_G5_ACTIVATION_HEIGHT` (`gv_g5.h:50`);
+* `GV_SLICE1_ACTIVATION_HEIGHT` (`gold_vault_slice1.h:86`);
+* `DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE = false` (`params.h:1529`);
+* `CASERT_BURST_HEIGHT` = 999,999 (`:455`, not active).
+
+**Fixed heights above 30,000:**
+* `GV_G5_AUTO_DISCONNECT_HEIGHT` = 100,000 (`gv_g5.h:37`). It only turns G5
+  *off*, and G5 is INT64_MAX on mainnet.
+* `263106` in `gold_vault_governance.h:133,156` (epoch-2 threshold, 90 → 90,
+  numerically unchanged).
+* `BLOCKS_PER_EPOCH` = 131,553 (`params.h:51`).
+
+**Legacy `MULTISIG_ACTIVATION_HEIGHT = 2000` (`include/sost/script.h:38`).** It is
+past, but no validator references it: the legacy engine is reachable only from
+`tests/test_multisig.cpp` and `tests/test_psbt.cpp` (§A.1 #13). This is one more
+reason to delete that code before a real multisig height constant exists, so two
+constants with the same meaning cannot coexist.
+
+**There are no timestamp-based activations.** The only epoch timestamps are
+`GENESIS_TIME` and `GENESIS_TIMESTAMP`.
+
+**Finding: nothing consensus-relevant activates silently between the current tip
+and #40,000.** The only height-dependent behaviours in that range are periodic
+rules already active: jackpot cadence 288, NODE_EPOCH 288, the DTD windows and
+the cASERT windows.
+
+**Comment drift (not a consensus issue).** `params.h:750-753` says "the shipped
+default is the all-zero fail-closed placeholder", but `SOST_ADMIN_PKH_BYTES`
+(`:756`) bakes a real 20-byte PKH. It is dormant behind
+`NATIVE_ASSETS_ACTIVATION_HEIGHT = INT64_MAX`. Correct the comment together with
+the S14 work, never in the #40,000 consensus diff.
+
+### G.4 Confirmed #40,000 scope
+
+* **CONSENSUS:** native multisig as the complete five-rule bundle of §E,
+  **if and only if** the §F gates 1–7 are green at the **#36,000** go/no-go.
+  Otherwise **none**, and multisig moves to #50,000.
+* **NOT #40,000:**
+  * native assets activation, plus its dormant-code bug fixes in the shipped
+    binary;
+  * 80/15/5;
+  * any change to existing-height rules.
+* **NONCONSENSUS package:**
+  * deep-fork P2P fix (merged);
+  * buildtx mempool awareness (merged);
+  * offline signing (merged);
+  * cASERT RPC metadata fix (**cherry-pick needed**);
+  * Stage 2 and EVM deployment tooling;
+  * verification tooling;
+  * decentralization P1–P8 (`DECENTRALIZATION_ACTION_PLAN_40000.md`; P1, P2 and P3
+    are release blockers there);
+  * the type registry, legacy-script removal and automated historical replay.
+* **DECENTRALIZATION_GATES_MET = NO.** Independent seeds 0; providers 1;
+  regions 1; producers 2. The release blockers that are in core-dev control are
+  listed in the action plan §3.
