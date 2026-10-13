@@ -42,6 +42,8 @@ Two forge broadcasts ran out of gas and cost about 0.0000085 ETH:
 
 The same applies to a plain ETH transfer to a new account: a 21,000-gas transfer reverted (`0x6a082175…afcb`).
 
+Root cause (explained, see `EVM_GAS_ESTIMATION.md`): Glamsterdam/EIP-8037 is active on Sepolia since 2026-10-06. Code deposit is 1,530 gas/byte (was 200), a new account 183,600 and a new storage slot 97,920. forge 1.5.1 simulates the pre-Glamsterdam schedule: WSOST 2,239,725 local × 1.3 = 2,911,642, and × 2.5 = 5,599,312, against 15,095,931 real.
+
 `tests/bridge/sepolia_stage2_deploy.py` deploys with the same constructors and uses node-side `eth_estimateGas` for every tx, with a margin and the EIP-7825 cap. All EVM test scripts now estimate with the node.
 
 Public RPCs are load-balanced and can lag by a block. The scripts therefore keep a local nonce and wait until reads reflect the receipt's block.

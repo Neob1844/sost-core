@@ -14,13 +14,21 @@ action. v1 was never deployed either (corrected 2026-10-12: no EVM HTLC contract
 ## Cost (owner)
 - **Sepolia (recommended first):** ~free with a faucet.
 - **Ethereum mainnet:** 1.234M gas × gas price → ≈ **0.015 ETH @ 12 gwei**, ≈ **0.03 ETH @ 25 gwei**.
+  These figures use the pre-Glamsterdam schedule. On Sepolia (EIP-8037) the same contract used **9,742,661** gas;
+  if Ethereum Mainnet adopts EIP-8037 the cost is ~8x higher. Re-measure with the mainnet node before any decision.
 
 ## Deploy
+
+> **Gas warning.** Never `forge script --broadcast` without `--skip-simulation`: forge would take the gas
+> limit from its local EVM (pre-Glamsterdam pricing) and, on chains with EIP-8037 state-creation pricing
+> (Sepolia since 2026-10-06), the deployment runs out of gas and the fee is lost. First run a dry-run gas
+> plan against the target node (`python3 ops/sostbridge/evm_gas.py --rpc "$RPC" --from <deployer> --plan plan.json`)
+> and see `docs/bridge/EVM_GAS_ESTIMATION.md`. Ethereum Mainnet deployment is not authorised by this document.
 ```
 cd contracts/atomic-swap && forge install foundry-rs/forge-std --no-git   # if lib/ absent
 export PRIVATE_KEY=0x<deployer key>          # owner-held; never in repo/CI
 export RPC=<https rpc for the target network>
-forge script script/DeployHTLCv2.s.sol --rpc-url "$RPC" --broadcast \
+forge script script/DeployHTLCv2.s.sol --rpc-url "$RPC" --broadcast --skip-simulation \
   --verify --etherscan-api-key "$ETHERSCAN_API_KEY"   # --verify optional
 ```
 Then paste the printed address into `deploy/htlc-v2-config.json` (`addresses.<network>`) and redeploy the web;
