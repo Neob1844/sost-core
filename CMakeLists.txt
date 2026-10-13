@@ -482,6 +482,15 @@ target_link_libraries(popc15-carrier PRIVATE sost-core secp256k1)
 add_executable(otc-coordinator tools/otc_swap_coordinator.cpp)
 target_link_libraries(otc-coordinator PRIVATE sost-core)
 
+# --full-verify on the real chain, early window 1..3300: Transcript V2 data was
+# never persisted for those blocks (pre-07e49b16 save_chain), so the full
+# verifier must reject them; commit binding + stability basin still verify with
+# the profile selected by the stored stab_* params.
+# docs/verification/FULL_VERIFY_EARLY_CHAIN.md
+add_executable(test-full-verify-early-chain tests/test_full_verify_early_chain.cpp)
+target_link_libraries(test-full-verify-early-chain PRIVATE sost-core)
+add_test(NAME full-verify-early-chain COMMAND test-full-verify-early-chain)
+
 # Forensic: independent ConvergenceX PoW re-verifier (recomputes commit from scratch)
 add_executable(cx-reverify tools/cx_reverify.cpp)
 target_link_libraries(cx-reverify PRIVATE sost-core secp256k1)
