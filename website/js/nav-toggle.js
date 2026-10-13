@@ -131,6 +131,47 @@
       /* SOST nav text identical on every page (some pages used a
       "   smaller 18px override — force the standard size everywhere). */
       "nav .nav-logo { font-size: 26px !important; letter-spacing: 3px !important; gap: 14px !important; }",
+      /* ---- Nav geometry = the Explorer's (canonical) ----
+         The Explorer's own nav CSS (sost-explorer.html, #explorer-global-nav-css) is the
+         reference. Section pages reused their page-wide .container (max-width 1100px), so the
+         bar was narrower: HIDE NAV wrapped under the logo and the button block broke into more
+         rows. Same container, padding, gap and logo/toggle metrics on every page.
+         Scoped to the full bar (logo image present, class set in init below); the minimal
+         text-only navs of a few help sub-pages keep their own layout. */
+      "nav.sost-canon-nav { padding: 12px 0 !important; font-size: 13px; line-height: normal;",
+      "  border-bottom-color: #1a1a1a !important; }",
+      "nav.sost-canon-nav > .container { max-width: 1400px !important; margin: 0 auto !important; padding: 0 24px !important;",
+      "  display: flex !important; align-items: center !important; justify-content: space-between !important;",
+      "  gap: 16px !important; flex-wrap: wrap !important; box-sizing: border-box; }",
+      "nav.sost-canon-nav .nav-logo { font-family: 'Space Grotesk', sans-serif !important; font-weight: 700 !important; line-height: normal !important; }",
+      "nav.sost-canon-nav .nav-logo .brand-sost { font-size: 1.76em !important; }",
+      "nav.sost-canon-nav .nav-logo img { width: 110px !important; height: 110px !important; }",
+      "nav.sost-canon-nav .nav-toggle, nav.sost-canon-nav .sost-nav-toggle { font-family: monospace !important;",
+      "  font-size: 11px !important; letter-spacing: 1px !important;",
+      "  padding: 5px 10px !important; border-width: 1px !important; line-height: normal !important; }",
+      /* Pinned box: the Explorer does not load the JetBrains Mono web font (it renders the
+         system monospace) while section pages did, so a content-sized button came out 1px
+         taller and a few px narrower or wider depending on the OS — enough to shift every
+         module in the row. 98x25 is what the Explorer renders. */
+      "nav.sost-canon-nav .nav-toggle, nav.sost-canon-nav .sost-nav-toggle { box-sizing: border-box !important; width: 98px !important; height: 25px !important;",
+      "  padding: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;",
+      "  white-space: nowrap !important; overflow: hidden; }",
+      /* Geometry that must not depend on page content, web fonts or the OS:
+         - Logo block: the Explorer's ("SOST EXPLORER", Space Grotesk, loaded on every page)
+           measures 407.0625px; every page reserves exactly that, so the modules and HIDE NAV
+           start at the same x and the top row wraps at the same width.
+         - Button and toggle text: the Explorer does not load JetBrains Mono / IBM Plex Mono,
+           section pages do. Their buttons came out wider than the Explorer's on systems whose
+           monospace is narrower (Windows: Consolas), so the row split differed. Both now use
+           the Explorer's effective stack (no web font), so the rows are the same everywhere.
+         - Scrollbar: section pages set a thin scrollbar, the Explorer did not, so the
+           Explorer's bar was a few px narrower. Thin on every page that has this bar. */
+      "@media (min-width: 769px) { nav.sost-canon-nav .nav-logo { flex: 0 0 407.0625px !important; width: 407.0625px !important; box-sizing: border-box; } }",
+      "nav.sost-canon-nav .nav-links a.sx { font-family: ui-monospace, Menlo, Consolas, monospace !important; }",
+      "html:has(nav.sost-canon-nav) { scrollbar-width: thin; }",
+      /* Collapsed bar = the Explorer's: SHOW NAV alone at the right edge, no hamburger. */
+      "body.nav-collapsed nav.sost-canon-nav .nav-hamburger { display: none !important; }",
+      "nav.sost-canon-nav .nav-hamburger { font-size: 20px !important; padding: 4px 8px !important; line-height: 1 !important; border-width: 1px !important; }",
       /* The ONLY pulsing logo on the whole site: the SOST mark — min->max glow. */
       "nav .nav-logo img { animation: sostLogoPulse 4.7s ease-in-out infinite; }",
       "@keyframes sostLogoPulse {",
@@ -188,6 +229,8 @@
       if (collapsed) document.body.classList.add("nav-collapsed");
       return;
     }
+    // Full canonical bar (main logo image) -> Explorer geometry (CSS above).
+    if (nav.querySelector(".nav-logo img")) nav.classList.add("sost-canon-nav");
     var existing = nav.querySelector("#navToggleBtn, .sost-nav-toggle");
     if (!existing) {
       var btn = document.createElement("button");
@@ -846,11 +889,14 @@
 
 
 /* ============================================================================
-   "CLICK HERE TO OPEN EXPLORER" — red callout above the main SOST logo.
+   "CLICK HERE TO OPEN EXPLORER" — red callout beside the main SOST logo.
    Same pattern and timing as the Explorer's jackpot hint (visible 15 s, hidden 15 s,
    1.6 s soft pulse), in SOST red. A real <a> to the Explorer. Only on pages whose main
    logo already opens the Explorer (the Explorer itself keeps its HOME logo, no callout).
-   The nav reserves room above the logo so the callout never covers it or leaves the screen.
+   It floats over the bar and reserves NO room: the nav geometry must stay identical to the
+   Explorer's. It points LEFT at the logo and sits in the free space after the wordmark. It never
+   covers the logo or the wordmark: below 769px (the nav's own mobile breakpoint) it is not shown
+   at all, and at any wider width where that free space is too narrow it is hidden too.
    ========================================================================== */
 (function(){
   "use strict";
@@ -859,45 +905,55 @@
     if(document.getElementById('sost-xp-callout-style')) return;
     var st=document.createElement('style'); st.id='sost-xp-callout-style';
     st.textContent=[
-      'nav.has-xp-callout{padding-top:58px !important}',
       'nav.has-xp-callout .container{position:relative}',
-      'a.sost-xp-callout{--xp:#fb010d;position:absolute;z-index:60;display:block;box-sizing:border-box;',
+      'a.sost-xp-callout{--xp:#fb010d;position:absolute;z-index:60;display:flex;align-items:center;box-sizing:border-box;',
       'background:linear-gradient(135deg,rgba(8,6,8,.97),rgba(26,2,4,.97));border:1px solid var(--xp);border-radius:9px;',
-      'padding:9px 15px;white-space:nowrap;font:600 15px var(--font-mono,ui-monospace,monospace);color:#ff5c63;',
+      'padding:8px 13px;white-space:nowrap;font:600 14px/1.3 var(--font-mono,ui-monospace,monospace);color:#ff5c63;',
       'letter-spacing:.4px;text-decoration:none;opacity:0;pointer-events:none;transition:opacity .35s ease;',
       'animation:xpRedPulse 1.6s ease-in-out infinite}',
       'a.sost-xp-callout.show,a.sost-xp-callout:focus-visible{opacity:1;pointer-events:auto}',
       'a.sost-xp-callout:focus-visible{outline:2px solid #ffd6d8;outline-offset:3px}',
-      'a.sost-xp-callout::after{content:"";position:absolute;top:100%;left:var(--pl,50%);transform:translateX(-50%);',
-      'border:8px solid transparent;border-top-color:var(--xp)}',
-      'a.sost-xp-callout .xp-hand{display:inline-block;margin-right:7px;animation:xpBob 1s ease-in-out infinite}',
-      '@keyframes xpBob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}',
+      'a.sost-xp-callout::after{content:"";position:absolute;right:100%;top:50%;transform:translateY(-50%);',
+      'border:8px solid transparent;border-right-color:var(--xp)}',
+      'a.sost-xp-callout .xp-hand{display:inline-block;margin-right:8px;transform:rotate(-90deg);animation:xpBob 1s ease-in-out infinite}',
+      '@keyframes xpBob{0%,100%{transform:rotate(-90deg) translateY(0)}50%{transform:rotate(-90deg) translateY(-3px)}}',
       '@keyframes xpRedPulse{0%,100%{box-shadow:0 0 8px rgba(251,1,13,.35),0 0 16px rgba(251,1,13,.15)}',
       '50%{box-shadow:0 0 16px rgba(251,1,13,.75),0 0 32px rgba(251,1,13,.35)}}',
       '@media (prefers-reduced-motion:reduce){a.sost-xp-callout,a.sost-xp-callout .xp-hand{animation:none}}',
-      '@media (max-width:640px){a.sost-xp-callout{font-size:13px;padding:8px 12px}}',
+      '@media (max-width:768px){a.sost-xp-callout{display:none !important}}',
+      'a.sost-xp-callout.xp-noroom{display:none !important}',
       'body.nav-collapsed nav a.sost-xp-callout{display:none !important}'
     ].join('');
     (document.head||document.documentElement).appendChild(st);
   }
-  var el=null, img=null, box=null, nav=null;
+  var el=null, img=null, box=null, logo=null, nav=null;
   function place(){
-    if(!el||!img||!box) return;
+    if(!el||!img||!box||!logo) return;
+    el.classList.remove('xp-noroom');
     var b=box.getBoundingClientRect(), i=img.getBoundingClientRect();
     if(!i.width) return;
-    var w=el.offsetWidth, h=el.offsetHeight;
-    var cx=i.left+i.width/2-b.left;                         // logo centre, container coordinates
+    var w=el.offsetWidth, h=el.offsetHeight, ARROW=8, PAD=10;
     var vw=document.documentElement.clientWidth;
-    var left=cx-w/2;
-    var minL=8-b.left, maxL=vw-8-w-b.left;                  // keep the whole target on screen
-    if(left<minL) left=minL; if(left>maxL) left=Math.max(minL,maxL);
-    el.style.left=left+'px';
-    el.style.top=(i.top-b.top-h-11)+'px';
-    el.style.setProperty('--pl',Math.max(12,Math.min(w-12,cx-left))+'px');
+    // Free space after the wordmark: up to the next element on the logo's row, or the bar's edge.
+    var word=logo.querySelector('span'), wr=word?word.getBoundingClientRect():i;
+    var limit=Math.min(vw-8, b.right);
+    for(var n=logo.nextElementSibling;n;n=n.nextElementSibling){
+      if(n===el) continue;
+      var r=n.getBoundingClientRect();
+      if(!r.width||!r.height) continue;
+      if(r.top<i.bottom&&r.bottom>i.top&&r.left>=wr.right){ limit=Math.min(limit,r.left); break; }
+    }
+    // Measure with the no-room class off (display:none has no size), then decide.
+    var room=(wr.right+ARROW+PAD+w<=limit-PAD);
+    el.classList.toggle('xp-noroom',!room);
+    if(!room) return;
+    var left=wr.right+ARROW+PAD;
+    el.style.left=(left-b.left)+'px';
+    el.style.top=(i.top+i.height/2-h/2-b.top)+'px';
   }
   function inject(){
     nav=document.querySelector('nav'); if(!nav||nav.querySelector('a.sost-xp-callout')) return;
-    var logo=nav.querySelector('a.nav-logo[href$="sost-explorer.html"]'); if(!logo) return;
+    logo=nav.querySelector('a.nav-logo[href$="sost-explorer.html"]'); if(!logo) return;
     img=logo.querySelector('img'); if(!img) return;
     box=logo.parentNode;
     styleOnce();
@@ -906,12 +962,13 @@
     el.href='https://sostcore.com/sost-explorer.html';
     el.className='sost-xp-callout';
     el.setAttribute('aria-label','Open SOST Explorer');
-    el.innerHTML='<span class="xp-hand" aria-hidden="true">&#128070;</span>CLICK HERE TO OPEN EXPLORER';
+    el.innerHTML='<span class="xp-hand" aria-hidden="true">&#128070;</span><span>CLICK HERE TO<br>OPEN EXPLORER</span>';
     box.appendChild(el);
     place();
     window.addEventListener('resize',place);
     if(img.complete===false) img.addEventListener('load',place);
     setTimeout(place,400); setTimeout(place,1500);
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(place);
     function show(){ place(); el.classList.add('show'); setTimeout(hide,15000); }
     function hide(){ el.classList.remove('show'); setTimeout(show,15000); }
     show();
