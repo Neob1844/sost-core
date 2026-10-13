@@ -55,13 +55,18 @@
 #include "sost/crypto.h"          // sha256(file bytes) for --capsule-file
 #include "sost/node_participation.h" // V16 — NODE_BIND / NODE_HEARTBEAT builders
 #include "sost/sbpow.h"           // V16 — Schnorr sign/derive for node txs
+#include "sost/utxo_reservations.h" // buildtx: local reservations of unsigned builds
+#include <sys/file.h>               // flock() on the reservation ledger
+#include <fcntl.h>
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cerrno>
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 #include <fstream>
 #include <iostream>
 #include <sys/socket.h>
@@ -612,8 +617,14 @@ static bool rpc_accepted_txid(const std::string& resp, std::string& txid_out,
     return true;
 }
 
+// `exclude` (optional): "txid:vout" keys NOT to import (buildtx: spent by a mempool
+// tx or reserved by a local unsigned build). `seen` (optional): every spendable
+// UTXO the node reported, key -> amount, BEFORE exclusion — so the caller can say
+// how much was held back instead of reporting the address as empty.
 static int sync_wallet_utxos_from_node(sost::Wallet& w,
-                                       const std::string& addr_override = "") {
+                                       const std::string& addr_override = "",
+                                       const std::set<std::string>* exclude = nullptr,
+                                       std::map<std::string, int64_t>* seen = nullptr) {
     std::string addr = !addr_override.empty() ? addr_override : w.default_address();
     printf("[DEBUG] Wallet source address: %s\n", addr.empty() ? "(empty)" : addr.c_str());
     if (addr.empty()) {
@@ -660,6 +671,9 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w,
             std::string payload_hex; u.get_str("payload", payload_hex);  // V30000: asset UTXO payload
 
             if (!txid_hex.empty() && amount_stocks > 0 && spendable) {
+                const std::string key = sost::resv::outpoint_key(txid_hex, (uint32_t)vout);
+                if (seen) (*seen)[key] = amount_stocks;
+                if (exclude && exclude->count(key)) continue;
                 sost::WalletUTXO utxo{};
                 utxo.txid = sost::from_hex(txid_hex);
                 utxo.vout = (uint32_t)vout;
@@ -690,6 +704,81 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w,
     }
     printf("[DEBUG] Total UTXOs imported from node: %d\n", total_imported);
     return total_imported;
+}
+
+// =============================================================================
+// query_mempool_spends — outpoints of `addr` already spent by a tx in the node's
+// mempool (buildtx must never pick them: the node would reject the build as a
+// conflicting replacement).
+//
+// Primary: getmempoolspends <addr> (read-only RPC; one consistent snapshot).
+// Older node without it: getmempoolinfo + getrawmempool + getrawtransaction
+// verbose for each txid. getrawmempool is capped at one block template, so if it
+// lists fewer txs than the mempool holds the answer would be incomplete — that
+// case FAILS (fail closed) instead of guessing.
+// Returns false with `err` on any failure; `how` says which path answered.
+// =============================================================================
+static bool rpc_result_of(const std::string& resp, sost::json::Value& res, std::string& err) {
+    if (resp.empty()) { err = "no answer from the node"; return false; }
+    std::string body;
+    if (!sost::json::http_body(resp, body, &err)) return false;
+    return sost::json::rpc_result(body, res, &err);
+}
+
+static bool query_mempool_spends(const std::string& addr, std::set<std::string>& out,
+                                 std::string& err, std::string& how) {
+    sost::json::Value res;
+    std::string e;
+    if (rpc_result_of(rpc_call("getmempoolspends", "[\"" + addr + "\"]"), res, e)) {
+        const sost::json::Value* sp = res.find("spent");
+        if (!res.is_obj() || !sp || !sp->is_arr()) { err = "getmempoolspends returned an unexpected shape"; return false; }
+        for (const auto& u : sp->a) {
+            std::string txid; int64_t vout = -1;
+            if (!u.get_str("txid", txid) || !u.get_int("vout", vout) || txid.size() != 64 || vout < 0) {
+                err = "getmempoolspends returned an incomplete entry"; return false;
+            }
+            out.insert(sost::resv::outpoint_key(txid, (uint32_t)vout));
+        }
+        how = "getmempoolspends";
+        return true;
+    }
+    if (e.find("Method not found") == std::string::npos) { err = "getmempoolspends: " + e; return false; }
+
+    // Fallback for nodes without getmempoolspends.
+    sost::json::Value info, list;
+    int64_t size = -1;
+    if (!rpc_result_of(rpc_call("getmempoolinfo"), info, e) || !info.get_int("size", size)) {
+        err = "getmempoolinfo: " + (e.empty() ? std::string("unexpected shape") : e); return false;
+    }
+    if (!rpc_result_of(rpc_call("getrawmempool"), list, e) || !list.is_arr()) {
+        err = "getrawmempool: " + (e.empty() ? std::string("unexpected shape") : e); return false;
+    }
+    if ((int64_t)list.a.size() < size) {
+        err = "the node mempool holds " + std::to_string(size) + " txs but getrawmempool lists " + std::to_string(list.a.size())
+            + " — cannot see every pending spend (upgrade the node for getmempoolspends)";
+        return false;
+    }
+    for (const auto& t : list.a) {
+        if (t.type != sost::json::Value::T::Str) { err = "getrawmempool returned a non-string txid"; return false; }
+        sost::json::Value tx;
+        if (!rpc_result_of(rpc_call("getrawtransaction", "[\"" + t.s + "\", true]"), tx, e)) {
+            if (e.find("No such transaction") != std::string::npos) continue;   // left the mempool meanwhile
+            err = "getrawtransaction " + t.s.substr(0, 16) + ": " + e; return false;
+        }
+        const sost::json::Value* vin = tx.find("vin");
+        if (!vin || !vin->is_arr()) {
+            bool confirmed = false;
+            if (tx.get_bool("confirmed", confirmed) && confirmed) continue;   // mined meanwhile: inputs are gone anyway
+            err = "getrawtransaction returned no input list"; return false;
+        }
+        for (const auto& in : vin->a) {
+            std::string txid; int64_t vout = -1;
+            if (!in.get_str("txid", txid) || !in.get_int("vout", vout) || vout < 0) { err = "mempool tx input is incomplete"; return false; }
+            out.insert(sost::resv::outpoint_key(txid, (uint32_t)vout));
+        }
+    }
+    how = "getrawmempool fallback";
+    return true;
 }
 
 // =============================================================================
@@ -1097,6 +1186,10 @@ static void print_usage() {
     printf("  sendrawtransaction <hex>  Broadcast an already-signed tx hex (no wallet/sign)\n");
     printf("  buildtx <to> <amt> --out tx.json  ONLINE, watch-only: build an UNSIGNED tx (needs --from-address;\n");
     printf("                         accepts --capsule-*; --network mainnet|testnet|dev). No wallet, no key.\n");
+    printf("                         Skips inputs spent by pending mempool txs and inputs reserved by earlier\n");
+    printf("                         unsigned builds (ledger sost-buildtx-reservations.json next to --out, or\n");
+    printf("                         --reservations P; --reservation-ttl S, default 86400; --list-reservations;\n");
+    printf("                         --clear-reservations; --ignore-reservations; --skip-mempool-check).\n");
     printf("  signtx tx.json [--out signed.hex]  OFFLINE: review + sign with --wallet (v1 or encrypted v2;\n");
     printf("                         --passphrase-file / --passphrase-fd). No network. Then sendrawtransaction.\n");
     printf("  create-bond <amt> <blocks>  Create BOND_LOCK (timelocked to self)\n");
@@ -1557,9 +1650,24 @@ int main(int argc, char** argv) {
         std::string out_path, network = "mainnet", pass_file;
         int pass_fd = -1;
         std::vector<std::string> pos;
+        // buildtx only: local reservation ledger + mempool awareness
+        std::string resv_path;
+        int64_t resv_ttl = sost::resv::kDefaultTtlSeconds;
+        bool ignore_resv = false, clear_resv = false, list_resv = false, skip_mempool = false;
+        const bool is_build = (cmd == "buildtx");
         for (int i = arg_start + 1; i < argc; ++i) {
             std::string a = argv[i];
             if (a == "--out" && i + 1 < argc) out_path = argv[++i];
+            else if (is_build && a == "--reservations" && i + 1 < argc) resv_path = argv[++i];
+            else if (is_build && a == "--reservation-ttl" && i + 1 < argc) {
+                char* end = nullptr; long long v = strtoll(argv[++i], &end, 10);
+                if (!end || *end || v < 60 || v > 30LL * 24 * 3600) { fprintf(stderr, "Error: --reservation-ttl must be 60..2592000 seconds\n"); return 1; }
+                resv_ttl = v;
+            }
+            else if (is_build && a == "--ignore-reservations") ignore_resv = true;
+            else if (is_build && a == "--clear-reservations") clear_resv = true;
+            else if (is_build && a == "--list-reservations") list_resv = true;
+            else if (is_build && a == "--skip-mempool-check") skip_mempool = true;
             else if (a == "--network" && i + 1 < argc) network = argv[++i];
             else if (a == "--passphrase-fd" && i + 1 < argc) pass_fd = atoi(argv[++i]);
             else if (a == "--passphrase-file" && i + 1 < argc) pass_file = argv[++i];
@@ -1574,9 +1682,54 @@ int main(int argc, char** argv) {
         const sost::Hash256 genesis_hash = sost::from_hex(kGenesis);
 
         if (cmd == "buildtx") {
-            if (pos.size() != 2 || out_path.empty() || g_from_address.empty()) {
-                fprintf(stderr, "Usage: sost-cli --from-address <sost1..> [--capsule-mode ...] buildtx <to> <amount> --out tx.json [--network mainnet|testnet|dev]\n");
+            const bool admin_only = list_resv || (clear_resv && pos.empty());
+            if (!admin_only && (pos.size() != 2 || out_path.empty() || g_from_address.empty())) {
+                fprintf(stderr, "Usage: sost-cli --from-address <sost1..> [--capsule-mode ...] buildtx <to> <amount> --out tx.json [--network mainnet|testnet|dev]\n"
+                                "         [--reservations P] [--reservation-ttl S] [--ignore-reservations] [--clear-reservations] [--skip-mempool-check]\n"
+                                "       sost-cli [--from-address A] buildtx --list-reservations | --clear-reservations [--reservations P | --out dir/x]\n");
                 return 1;
+            }
+            // ---- reservation ledger: next to the unsigned tx unless --reservations says otherwise.
+            // Builds that should see each other's reservations must share it (same --out
+            // directory, or the same --reservations path).
+            if (resv_path.empty()) {
+                std::string dir = ".";
+                auto sl = out_path.rfind('/');
+                if (sl != std::string::npos) dir = sl == 0 ? "/" : out_path.substr(0, sl);
+                resv_path = dir + (dir == "/" ? "" : "/") + "sost-buildtx-reservations.json";
+            }
+            // Serialise concurrent buildtx runs on the same ledger (read-modify-write).
+            const std::string lock_path = resv_path + ".lock";
+            int lock_fd = ::open(lock_path.c_str(), O_RDWR | O_CREAT, 0600);
+            if (lock_fd < 0 || ::flock(lock_fd, LOCK_EX) != 0) {
+                fprintf(stderr, "Error: cannot lock %s: %s\n", lock_path.c_str(), strerror(errno)); return 1;
+            }
+            sost::resv::Ledger ledger;
+            {
+                std::string lerr;
+                if (!sost::resv::load(resv_path, ledger, &lerr)) {
+                    fprintf(stderr, "Error: %s\n  Refusing to build: the reserved inputs cannot be read. Inspect or move the file\n"
+                                    "  (or point --reservations elsewhere) — it is never discarded silently.\n", lerr.c_str());
+                    return 1;
+                }
+            }
+            const int64_t now = (int64_t)time(nullptr);
+            if (list_resv) {
+                printf("Reservations in %s: %zu\n", resv_path.c_str(), ledger.items.size());
+                for (const auto& r : ledger.items) {
+                    printf("  from %s  file %s  %zu input(s)  %s (expires in %llds)\n", r.from.c_str(), r.file.c_str(), r.outpoints.size(),
+                           r.expires_at > now ? "active" : "EXPIRED", (long long)(r.expires_at - now));
+                    for (const auto& o : r.outpoints) printf("      %s\n", o.c_str());
+                }
+                return 0;
+            }
+            if (clear_resv) {
+                if (g_from_address.empty()) { fprintf(stderr, "Error: --clear-reservations needs --from-address\n"); return 1; }
+                size_t n = sost::resv::clear_from(ledger, g_from_address);
+                std::string lerr;
+                if (n && !sost::resv::save(resv_path, ledger, &lerr)) { fprintf(stderr, "Error: %s\n", lerr.c_str()); return 1; }
+                printf("Cleared %zu reservation(s) of %s in %s\n", n, g_from_address.c_str(), resv_path.c_str());
+                if (pos.empty()) return 0;                          // clear only
             }
             const std::string to_addr = pos[0];
             g_send_to = to_addr;
@@ -1606,8 +1759,68 @@ int main(int argc, char** argv) {
                 fprintf(stderr, "ERROR: Sealed Capsule is available from block %lld (V13)\n", (long long)sost::V13_HEIGHT); return 1;
             }
 
+            // ---- coins already taken: spent by a tx in the node mempool, or reserved by a
+            // local unsigned build (written by an earlier buildtx, not yet in the mempool).
+            // getaddressutxos lists confirmed outputs only and does not know about either.
+            std::map<std::string, int64_t> seen;
+            {
+                // A failed or empty read must stop here: `seen` also decides which reservations
+                // are released as "confirmed", so an unread UTXO set must never prune them.
+                sost::Wallet probe;
+                if (sync_wallet_utxos_from_node(probe, g_from_address, nullptr, &seen) <= 0) {
+                    fprintf(stderr, "Error: no spendable UTXOs found for %s\n", g_from_address.c_str()); return 1;
+                }
+            }
+            std::set<std::string> live;
+            for (const auto& kv : seen) live.insert(kv.first);
+            const size_t pruned = sost::resv::prune(ledger, now, g_from_address, live);
+            std::set<std::string> in_mempool;
+            if (!skip_mempool) {
+                std::string merr, how;
+                if (!query_mempool_spends(g_from_address, in_mempool, merr, how)) {
+                    fprintf(stderr, "Error: cannot read the node mempool (%s).\n"
+                                    "  Refusing to build: an input may already be spent by a pending tx. Retry, or pass\n"
+                                    "  --skip-mempool-check if you accept that the node may reject a conflicting build.\n", merr.c_str());
+                    return 1;
+                }
+            } else {
+                fprintf(stderr, "WARNING: --skip-mempool-check: inputs spent by pending mempool txs are NOT excluded;\n"
+                                "         the node will reject the build if it conflicts with one.\n");
+            }
+            const std::set<std::string> reserved = ignore_resv ? std::set<std::string>{}
+                                                                : sost::resv::reserved_for(ledger, g_from_address, now);
+            if (ignore_resv)
+                fprintf(stderr, "WARNING: --ignore-reservations: inputs of earlier unsigned builds may be reused;\n"
+                                "         broadcast only ONE of the conflicting transactions.\n");
+            std::set<std::string> exclude;
+            int n_mp = 0, n_rs = 0; int64_t amt_mp = 0, amt_rs = 0, amt_avail = 0;
+            for (const auto& kv : seen) {
+                if (in_mempool.count(kv.first)) { ++n_mp; amt_mp += kv.second; exclude.insert(kv.first); }
+                else if (reserved.count(kv.first)) { ++n_rs; amt_rs += kv.second; exclude.insert(kv.first); }
+                else amt_avail += kv.second;
+            }
+            auto held_back = [&]() {
+                char b[512];
+                snprintf(b, sizeof b, "%d output(s) / %s SOST spent by pending mempool txs, %d output(s) / %s SOST reserved by local unsigned builds",
+                         n_mp, format_sost(amt_mp).c_str(), n_rs, format_sost(amt_rs).c_str());
+                return std::string(b);
+            };
+            auto insufficient = [&](const std::string& detail) {
+                fprintf(stderr, "Error: insufficient available funds: %s SOST available for %s (%s)%s%s\n",
+                        format_sost(amt_avail).c_str(), g_from_address.c_str(), held_back().c_str(),
+                        detail.empty() ? "" : "\n  ", detail.c_str());
+                if (n_rs)
+                    fprintf(stderr, "  Reserved inputs are released when their tx confirms, when the reservation expires,\n"
+                                    "  or explicitly: buildtx --clear-reservations --from-address %s [--reservations %s]\n"
+                                    "  (list them with --list-reservations).\n", g_from_address.c_str(), resv_path.c_str());
+                if (n_mp) fprintf(stderr, "  Mempool-spent inputs are released when those txs confirm (change becomes spendable) or leave the mempool.\n");
+                return 1;
+            };
+            if (n_mp || n_rs) printf("Excluding %s\n", held_back().c_str());
+
             sost::Wallet watch;                                    // watch-only: no keys at all
-            if (sync_wallet_utxos_from_node(watch, g_from_address) <= 0) {
+            if (sync_wallet_utxos_from_node(watch, g_from_address, &exclude) <= 0) {
+                if (n_mp || n_rs) return insufficient("");
                 fprintf(stderr, "Error: no spendable UTXOs found for %s\n", g_from_address.c_str()); return 1;
             }
             sost::Transaction tx;
@@ -1619,6 +1832,7 @@ int main(int argc, char** argv) {
                 if (!watch.create_transaction(to_addr, amount, fee, genesis_hash, tx, chain_height, &err, cap_ptr,
                                               /*mark_spent=*/false, &from_pkh, nullptr, g_fee_rate,
                                               /*sign=*/false, &spent)) {
+                    if ((n_mp || n_rs) && err.find("insufficient") != std::string::npos) return insufficient(err);
                     fprintf(stderr, "Error: %s\n", err.c_str()); return 1;
                 }
                 raw.clear();
@@ -1653,7 +1867,28 @@ int main(int argc, char** argv) {
             FILE* f = fopen(out_path.c_str(), "wx");                // never overwrite an existing file
             if (!f) { fprintf(stderr, "Error: cannot create %s (does it already exist?)\n", out_path.c_str()); return 1; }
             fwrite(j.data(), 1, j.size(), f); fclose(f);
+            // Reserve the inputs so the next build from this address does not reuse them before
+            // this tx reaches the mempool. If that cannot be recorded, do not leave the build behind.
+            {
+                sost::resv::Reservation r;
+                r.from = g_from_address;
+                r.file = out_path;
+                r.build_id = tx.ComputeTxIdHex();
+                r.created_at = now;
+                r.expires_at = now + resv_ttl;
+                for (const auto& in : tx.inputs)
+                    r.outpoints.push_back(sost::resv::outpoint_key(to_hex(in.prev_txid.data(), 32), in.prev_index));
+                ledger.items.push_back(r);
+                std::string lerr;
+                if (!sost::resv::save(resv_path, ledger, &lerr)) {
+                    ::unlink(out_path.c_str());
+                    fprintf(stderr, "Error: cannot record the input reservation (%s); %s removed.\n", lerr.c_str(), out_path.c_str());
+                    return 1;
+                }
+            }
             printf("Unsigned transaction written to %s\n", out_path.c_str());
+            printf("  inputs reserved in %s for %llds%s\n", resv_path.c_str(), (long long)resv_ttl,
+                   pruned ? (" (" + std::to_string(pruned) + " stale reservation(s) released)").c_str() : "");
             printf("  network %s · height %lld · %zu input(s) · %zu output(s)\n", network.c_str(), (long long)chain_height, tx.inputs.size(), tx.outputs.size());
             printf("  pay %s SOST to %s · fee %s SOST · capsule %s\n", format_sost(amount).c_str(), to_addr.c_str(),
                    format_sost(sum_in - sum_out).c_str(), cap_ptr ? g_capsule_mode.c_str() : "none");

@@ -165,6 +165,9 @@ public:
     bool HasTransaction(const Hash256& txid) const;
     const MempoolEntry* GetEntry(const Hash256& txid) const;
     bool IsSpent(const OutPoint& op) const;
+    // Read-only: which mempool tx spends `op` (false if none). Used by the
+    // getmempoolspends RPC so watch-only builders can avoid conflicting inputs.
+    bool SpentBy(const OutPoint& op, Hash256& txid_out) const;
 
     size_t Size() const { return entries_.size(); }
     int64_t TotalFees() const;

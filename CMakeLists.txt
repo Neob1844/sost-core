@@ -255,6 +255,7 @@ add_library(sost-core STATIC
     # is reached on real chain heights yet.
     src/lottery.cpp
     src/json_rpc.cpp
+    src/utxo_reservations.cpp
     src/sweep.cpp
     src/secret_input.cpp
 
@@ -675,6 +676,9 @@ add_test(NAME casert-meta-window COMMAND test-casert-meta-window)
 add_executable(test-offline-build tests/test_offline_build.cpp)
 target_link_libraries(test-offline-build PRIVATE sost-core)
 add_test(NAME offline-build COMMAND test-offline-build)
+add_executable(test-buildtx-reservations tests/test_buildtx_reservations.cpp)
+target_link_libraries(test-buildtx-reservations PRIVATE sost-core)
+add_test(NAME buildtx-reservations COMMAND test-buildtx-reservations)
 
 # V11 Phase 1 — component A (extended cASERT cascade)
 add_executable(test-casert-v11 tests/test_casert_v11.cpp)

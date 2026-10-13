@@ -31,6 +31,45 @@ key for every input. It then prints every input, every output (change marked), t
 (size, type, SHA-256 and printable text), asks for `yes` (or `--yes`), signs, and **verifies each
 signature** before writing `signed.hex`. Plain v1 and encrypted v2 wallets are both accepted.
 
+## Pending transactions: mempool spends and local reservations
+
+`getaddressutxos` lists *confirmed* outputs only. An output spent by a tx that is still in the mempool
+is listed as unspent, and an unsigned build that has not been broadcast yet is invisible to the node.
+`buildtx` therefore excludes two kinds of taken inputs before coin selection:
+
+1. **Spent by a pending mempool tx.** Read with the node RPC `getmempoolspends <address>`
+   (read-only, same auth as `getaddressutxos`): `{address, mempool_size, spent:[{txid, vout,
+   amount_stocks, spent_by}]}` — the confirmed outputs of the address that a mempool tx spends.
+   Against an older node without it, `buildtx` uses `getmempoolinfo` + `getrawmempool` +
+   `getrawtransaction <txid> true`; because `getrawmempool` is capped at one block template, the
+   build **fails closed** if it lists fewer txs than the mempool holds. Any failure to read the
+   mempool refuses the build. `--skip-mempool-check` overrides that (warning printed); the node would
+   then reject a conflicting build — never a double spend.
+2. **Reserved by an earlier unsigned build.** Each successful `buildtx` appends its inputs to a local
+   ledger, `sost-buildtx-reservations.json` in the directory of `--out` (or `--reservations PATH`;
+   builds that must see each other share the directory or the path). Mode 0600, atomic replace, and a
+   `flock` serialises concurrent builds. If the reservation cannot be written, the unsigned file is
+   removed. A reservation is released when
+   - it expires (`--reservation-ttl SECONDS`, default 86400, range 60..2592000),
+   - none of its inputs is an unspent output any more (the tx, or a conflicting one, confirmed), or
+   - explicitly: `buildtx --clear-reservations --from-address A [--reservations PATH | --out dir/x]`.
+
+   `buildtx --list-reservations [--reservations PATH | --out dir/x]` prints them. A damaged ledger is
+   never discarded silently: the build is refused until the file is inspected or moved.
+   `--ignore-reservations` builds as if nothing were reserved (warning printed) — broadcast only one of
+   the conflicting transactions.
+
+When the inputs that are left cannot pay amount + fee, `buildtx` fails without writing anything:
+
+```
+Error: insufficient available funds: 12.00000000 SOST available for sost1… (2 output(s) / 100.00000000 SOST
+spent by pending mempool txs, 1 output(s) / 50.00000000 SOST reserved by local unsigned builds)
+```
+
+Change outputs of a pending tx are not spendable by `buildtx` until it confirms (`getaddressutxos`
+lists confirmed outputs only). A tx broadcast to a *different* node that has not reached this node's
+mempool yet cannot be seen; the node then rejects the conflicting build as before.
+
 ## Why a tampered file cannot steal funds
 
 The sighash commits to every input's amount and output type, to all outputs (amounts, destinations,
@@ -54,3 +93,12 @@ exactly what it signs.
   replay, wrong network, wrong wallet, wrong passphrase, fee mismatch, truncated tx, mismatched/duplicate
   inputs, refusal without `yes`, and node rejection of a destination/amount/input-amount/capsule changed after
   signing. `--capsule` adds the capsule cases (devnet height ≥ 7,350).
+  Pending-transaction section: tx A signed and left in the mempool, then B built immediately uses
+  disjoint inputs and is accepted; an unbroadcast build C reserves its inputs and D avoids them;
+  `--list-reservations`, `--clear-reservations`, `--ignore-reservations` (still skips mempool inputs);
+  "insufficient available funds" with nothing written; the fallback path against a node without
+  `getmempoolspends` (a local proxy hides the method). Pass `--mine-cmd "<miner … --blocks 1>"` so
+  blocks are mined only while waiting for a confirmation and pending txs stay pending deterministically.
+- `tests/test_buildtx_reservations.cpp` (ctest `buildtx-reservations`): ledger round trip, mode 0600,
+  damaged ledgers refused, expiry, release on confirmation, per-address clear, and the exclusion rule
+  (a second build never reuses the first build's inputs; with every coin taken it fails as insufficient).

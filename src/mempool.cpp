@@ -660,6 +660,13 @@ bool Mempool::IsSpent(const OutPoint& op) const {
     return spent_index_.count(op) > 0;
 }
 
+bool Mempool::SpentBy(const OutPoint& op, Hash256& txid_out) const {
+    auto it = spent_index_.find(op);
+    if (it == spent_index_.end()) return false;
+    txid_out = it->second;
+    return true;
+}
+
 int64_t Mempool::TotalFees() const {
     int64_t total = 0;
     for (const auto& [_, e] : entries_) total += e.fee;
