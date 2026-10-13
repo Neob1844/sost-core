@@ -1,0 +1,65 @@
+[
+ {
+  "op": "fund Alice gas",
+  "from": "0xB6C433C46B4F7Cd95A524B1a4c8A19fa9b51835D",
+  "tx": "0xed914ff75ef978c2071ebcc4e09d62665aa171e3f91f151c8a334d387f5ea1c3",
+  "block": 11904235,
+  "status": 1,
+  "gasUsed": 204600,
+  "effectiveGasPriceWei": 1000020
+ },
+ {
+  "op": "approve (swap 1)",
+  "from": "0xB6C433C46B4F7Cd95A524B1a4c8A19fa9b51835D",
+  "tx": "0x18bf87366fa5ab966a58b46a43926170b7b6d315b70d19ae145e72c91f609da5",
+  "block": 11904237,
+  "status": 1,
+  "gasUsed": 128094,
+  "effectiveGasPriceWei": 1000020
+ },
+ {
+  "op": "swap fund (lockERC20)",
+  "from": "0xB6C433C46B4F7Cd95A524B1a4c8A19fa9b51835D",
+  "tx": "0xd6fa431391275b826f6f2a01ae1641a9200430ddbe37973fc8a683fe65a8e7af",
+  "block": 11904238,
+  "status": 1,
+  "gasUsed": 928056,
+  "effectiveGasPriceWei": 1000020
+ },
+ {
+  "op": "swap claim (claimERC20)",
+  "from": "0xeF3ebf419d55eCD00fB09A0Eac6e6A4eC4985DC3",
+  "tx": "0xa19c74d2eaf97723b686aa1ab32ea2adeef4e4277a1f514f10be976edc7dde24",
+  "block": 11904239,
+  "status": 1,
+  "gasUsed": 162937,
+  "effectiveGasPriceWei": 1000020
+ },
+ {
+  "op": "approve (swap 2)",
+  "from": "0xB6C433C46B4F7Cd95A524B1a4c8A19fa9b51835D",
+  "tx": "0x30b662207ac90feb3ef07545398f580bd1a81876b8e4c0939042bfa2e4dd00c9",
+  "block": 11904242,
+  "status": 1,
+  "gasUsed": 128082,
+  "effectiveGasPriceWei": 1000020
+ },
+ {
+  "op": "swap fund (lockERC20, refund path)",
+  "from": "0xB6C433C46B4F7Cd95A524B1a4c8A19fa9b51835D",
+  "tx": "0x9e2def2fa110f674556d8433f8c70f45ebbb2ce6aca262ae779d267e17948e73",
+  "block": 11904243,
+  "status": 1,
+  "gasUsed": 928044,
+  "effectiveGasPriceWei": 1000020
+ },
+ {
+  "op": "swap refund (refundERC20)",
+  "from": "0xB6C433C46B4F7Cd95A524B1a4c8A19fa9b51835D",
+  "tx": "0x6fe38848d75e57b82e8646e1c7acca8fdc8269ae898aed30d6a0a86bb381ee92",
+  "block": 11904254,
+  "status": 1,
+  "gasUsed": 64308,
+  "effectiveGasPriceWei": 1000021
+ }
+]

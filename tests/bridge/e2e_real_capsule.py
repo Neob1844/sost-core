@@ -6,6 +6,10 @@ devnet: tests/bridge/run_capsule_fast_devnet.py), real transactions built
 with `sost-cli buildtx` (watch-only), signed with `sost-cli signtx` (offline, v1 and encrypted v2) and
 broadcast with sendrawtransaction. Observers, ledger and governance read the real node.
 EVM side: Anvil by default; any EVM RPC (e.g. Sepolia) with --eth-rpc and a funded --eth-key-file.
+With --deployment (JSON from tests/bridge/sepolia_stage2_deploy.py) the run uses that ALREADY-DEPLOYED
+WSOST, its test observer keys (--observer-keys) and its Bridge Vault wallet (--vault-wallet), and skips the
+unbacked-mint CRITICAL drill (it would leave permanent unbacked supply and a mint pause on a shared
+contract; that drill runs on Anvil). --gas-out writes every EVM receipt used by the run.
 
   python3 tests/bridge/e2e_real_capsule.py --cli <sost-cli with buildtx> --work DIR [--min-conf 30]
   DIR: devnet wallets alice.json (funded), bob.json. A fresh Bridge Vault wallet is created per run.
@@ -104,10 +108,14 @@ def main():
     ap.add_argument("--eth-key-file")
     ap.add_argument("--deployment")                    # JSON with an already-deployed WSOST (e.g. Sepolia)
     ap.add_argument("--capsule-activation", type=int, default=7350)   # 300 on the capsule-fast devnet build
+    ap.add_argument("--observer-keys")                 # with --deployment: JSON {"observers": [hex keys]}
+    ap.add_argument("--vault-wallet")                  # with --deployment: Bridge Vault wallet bound in the contract
+    ap.add_argument("--gas-out")
     a = ap.parse_args()
     CLI, W, NODE, MINC = os.path.abspath(a.cli), a.work, a.rpc, a.min_conf
     tmp = tempfile.mkdtemp(prefix="sost-realcap-"); os.chmod(tmp, 0o700)
     rpc = SostRPC(f"http://{NODE}/")
+    gaslog = []
 
     def raw_rpc(m, p):
         return rpc.call(m, p)
@@ -158,6 +166,8 @@ def main():
     must(f"C0. devnet at or above capsule activation ({a.capsule_activation:,})", tip >= a.capsule_activation, f"height {tip}")
     alice, bob = wallet_addr("alice.json"), wallet_addr("bob.json")
     vault_name = f"vault-real-{int(time.time())}.json"
+    if a.deployment:
+        open(os.path.join(W, vault_name), "w").write(open(a.vault_wallet).read()); os.chmod(os.path.join(W, vault_name), 0o600)
     vault = wallet_addr(vault_name)
     step("parties", True, f"Alice {alice[:14]}… · fresh Bridge Vault {vault[:14]}…")
 
@@ -185,10 +195,27 @@ def main():
         acct = Account.from_key(open(a.eth_key_file).read().strip())
         must("EVM RPC is NOT Ethereum mainnet", w3.eth.chain_id != 1, f"chainId {w3.eth.chain_id}")
         sender = acct.address
-        def send(fn):
-            tx = fn.build_transaction({"from": sender, "nonce": w3.eth.get_transaction_count(sender), "chainId": w3.eth.chain_id})
+        nonce = [w3.eth.get_transaction_count(sender, "pending")]     # public RPCs are load-balanced and lag
+        def settle(bn, n=3):
+            """Load-balanced RPC: reads after a write may hit a lagging backend. Wait until n consecutive
+            requests report the receipt's block, then a short grace period."""
+            ok, t0 = 0, time.time()
+            while ok < n and time.time() - t0 < 120:
+                ok = ok + 1 if w3.eth.block_number >= bn else 0
+                time.sleep(1)
+            time.sleep(3)
+        def send(fn, label=None):
+            tx = fn.build_transaction({"from": sender, "nonce": nonce[0], "chainId": w3.eth.chain_id})
+            tx["gas"] = int(w3.eth.estimate_gas({k: tx[k] for k in ("from", "to", "data")}) * 1.25)
             h = w3.eth.send_raw_transaction(acct.sign_transaction(tx).raw_transaction)
-            r = w3.eth.wait_for_transaction_receipt(h, timeout=600); assert r.status == 1, "tx reverted"; return r
+            nonce[0] += 1
+            r = w3.eth.wait_for_transaction_receipt(h, timeout=600)
+            settle(r.blockNumber)
+            gaslog.append({"op": label or fn.fn_name, "tx": "0x" + h.hex().removeprefix("0x"), "block": r.blockNumber,
+                           "status": r.status, "gasUsed": r.gasUsed, "effectiveGasPriceWei": r.effectiveGasPrice})
+            if a.gas_out:
+                json.dump(gaslog, open(a.gas_out, "w"), indent=1)
+            assert r.status == 1, "tx reverted"; return r
         juan_eth = sender
     else:
         procs.append(subprocess.Popen([os.path.expanduser("~/.foundry/bin/anvil"), "--port", "8550", "--silent"],
@@ -196,16 +223,31 @@ def main():
         w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8550"))
         wait(lambda: w3.eth.chain_id, 30, "anvil")
         sender, juan_eth = w3.eth.accounts[0], w3.eth.accounts[1]
-        def send(fn, frm=None):
+        def send(fn, frm=None, label=None):
             r = w3.eth.wait_for_transaction_receipt(fn.transact({"from": frm or sender})); assert r.status == 1; return r
-    obs_keys = [Account.create().key for _ in range(3)]
-    obs = [Account.from_key(k).address for k in obs_keys]
     j = json.load(open(os.path.join(OUT, "WSOST.sol/WSOST.json")))
-    C = w3.eth.contract(abi=j["abi"], bytecode=j["bytecode"]["object"])
-    r = send(C.constructor(vault_hash(vault), (sender, obs, 2, MINC, to_stocks("100000"), to_stocks("50000"))))
-    wsost = w3.eth.contract(address=r.contractAddress, abi=j["abi"])
-    eth = Web3WSOST(w3, wsost.address, j["abi"])
-    step("EVM: WSOST deployed for this run", True, f"{wsost.address} chainId {w3.eth.chain_id}")
+    if a.deployment:
+        dep = json.load(open(a.deployment))
+        must("deployment file is for this chain", dep["chainId"] == w3.eth.chain_id, f"chainId {w3.eth.chain_id}")
+        obs_keys = [bytes.fromhex(k.removeprefix("0x")) for k in json.load(open(a.observer_keys))["observers"]]
+        obs = [Account.from_key(k).address for k in obs_keys]
+        wsost = w3.eth.contract(address=dep["contracts"]["WSOST"]["address"], abi=j["abi"])
+        eth = Web3WSOST(w3, wsost.address, j["abi"], from_block=dep["contracts"]["WSOST"]["block"])
+        must("deployed WSOST is bound to this Bridge Vault, these observers, 2-of-3, %d confirmations" % MINC,
+             bytes(wsost.functions.bridgeVault().call()) == vault_hash(vault) and wsost.functions.threshold().call() == 2
+             and wsost.functions.minConfirmations().call() == MINC and all(wsost.functions.isObserver(o).call() for o in obs),
+             f"{wsost.address} chainId {w3.eth.chain_id}")
+        step("   clean start: supply 0, nothing minted or burned, mint not paused",
+             wsost.functions.totalSupply().call() == 0 and wsost.functions.totalMinted().call() == 0
+             and wsost.functions.totalBurned().call() == 0 and not wsost.functions.mintPaused().call())
+    else:
+        obs_keys = [Account.create().key for _ in range(3)]
+        obs = [Account.from_key(k).address for k in obs_keys]
+        C = w3.eth.contract(abi=j["abi"], bytecode=j["bytecode"]["object"])
+        r = send(C.constructor(vault_hash(vault), (sender, obs, 2, MINC, to_stocks("100000"), to_stocks("50000"))))
+        wsost = w3.eth.contract(address=r.contractAddress, abi=j["abi"])
+        eth = Web3WSOST(w3, wsost.address, j["abi"])
+        step("EVM: WSOST deployed for this run", True, f"{wsost.address} chainId {w3.eth.chain_id}")
     start = rpc.getblockcount()
     status = {"s": None}
     def reco():
@@ -242,7 +284,7 @@ def main():
     step("   wrong recipient with valid signatures: mint reverts", wr)
     stale = dataclasses.replace(msg, sostBlockHash=b"\x77" * 32)
     step("   stale / reorged block hash: relayer pre-flight refuses", not still_canonical(rpc, stale))
-    send(wsost.functions.mint(msg.as_tuple(), sigs))
+    send(wsost.functions.mint(msg.as_tuple(), sigs), label="mint (wrap 100)")
     step("9. WRAP: 100 native SOST locked, 100 wSOST minted", wsost.functions.balanceOf(juan_eth).call() == to_stocks("100")
          and scan_vault(rpc, vault, start).vault_balance == to_stocks("100"))
     try:
@@ -291,8 +333,9 @@ def main():
     step("G. same offline-signed capsule tx unmodified: accepted", bool(okF))
 
     # ================================================================ 10. UNWRAP 40 — release signed offline from the cold vault wallet
-    r = send(wsost.functions.burn(to_stocks("40"), alice), juan_eth) if not a.eth_rpc else send(wsost.functions.burn(to_stocks("40"), alice))
-    step("10. burn 40 wSOST on the EVM side", wsost.functions.totalSupply().call() == to_stocks("60"))
+    r = send(wsost.functions.burn(to_stocks("40"), alice), juan_eth) if not a.eth_rpc else send(wsost.functions.burn(to_stocks("40"), alice), label="burn (unwrap 40)")
+    step("10. burn 40 wSOST on the EVM side", r.status == 1 and wsost.functions.totalSupply().call() == to_stocks("60"),
+         f"supply {fmt_sost(wsost.functions.totalSupply().call())}")
     step("   release pending → PENDING", reco().status == PENDING)
     signer = OfflinePipelineSigner(CLI, os.path.join(W, vault_name), vault, NODE, "dev", tmp)
     proc = ReleaseProcessor(signer, ReleaseJournal(os.path.join(tmp, "journal.json")), rpc, vault, start, FEE_ALLOWANCE)
@@ -310,6 +353,14 @@ def main():
          rr.status == BALANCED and wsost.functions.totalSupply().call() == to_stocks("60") and sc.vault_balance >= to_stocks("60"),
          f"locked {fmt_sost(sc.vault_balance)} SOST · supply {fmt_sost(wsost.functions.totalSupply().call())} · {json.dumps(rr.ledger)[:120]}")
 
+    if a.deployment:
+        print(f"FINAL_LOCKED_GROSS: {fmt_sost(sc.vault_balance)} SOST (vault UTXOs)\n"
+              f"FINAL_BACKING_OWED: {fmt_sost(rr.ledger['owed'])} SOST (= wSOST supply + awaiting releases + unminted deposits)\n"
+              f"FINAL_SURPLUS: {fmt_sost(rr.ledger['surplus'])} SOST (unused part of the release fee allowance)\n"
+              f"FINAL_WSOST_SUPPLY: {fmt_sost(wsost.functions.totalSupply().call())} wSOST\n"
+              f"LEDGER: {json.dumps(rr.ledger)}\n"
+              "CRITICAL drill (unbacked mint → pause) not run on the shared Sepolia contract; covered on Anvil.", flush=True)
+        finish()
     # unbacked mint by two compromised observers → CRITICAL (balance alone is not enough)
     from sostbridge.eip712 import DepositMsg, order_signatures
     fake = DepositMsg(b"\x99" * 32, juan_eth, to_stocks("1"), vault_hash(vault), bytes.fromhex(rpc.getblockhash(start)), start, MINC)

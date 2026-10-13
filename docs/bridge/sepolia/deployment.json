@@ -1,0 +1,130 @@
+{
+ "chainId": 11155111,
+ "deployer": "0xB6C433C46B4F7Cd95A524B1a4c8A19fa9b51835D",
+ "forge": "forge Version: 1.5.1-stable",
+ "contracts": {
+  "WSOST": {
+   "address": "0x4F71ef1D4878225eBd711216A75451F0bfF946C0",
+   "tx": "0x10d081b7761943cf9b19ac6423c53c5dc1a02935d52d96ac8730e79eab02eb7b",
+   "block": 11904101,
+   "status": 1,
+   "gasEstimateNode": 15216907,
+   "gasLimit": 16777216,
+   "gasUsed": 15095931,
+   "effectiveGasPriceWei": 1000018,
+   "costWei": 15096202726758,
+   "compiler": "0.8.24+commit.e11b9ed9",
+   "constructorArgs": {
+    "bridgeVaultHash": "0xfcb10f8a130b494868aa58c3d3fb865ddadc755ba86e6fe5890e5501c6b82959",
+    "admin": "0xB6C433C46B4F7Cd95A524B1a4c8A19fa9b51835D",
+    "observers": [
+     "0x27f181bB209A922658bb1174c1890A0D38253742",
+     "0xA0F8409af9Cb6dca4ebb95EFb5744c9Dfc1C4347",
+     "0xc3CE119FD5162E5b61Fc27eC234051680a54768e"
+    ],
+    "threshold": 2,
+    "minConfirmations": 30,
+    "exposureCap": "100000 wSOST",
+    "dailyMintCap": "50000 wSOST"
+   },
+   "runtimeBytes": 8821,
+   "runtimeKeccak256": "0x457cccc11fc3533f1536510ca6a23f61f102574b392f57432b29467c6b82eb97",
+   "runtimeSha256": "4146f48646931e07bd5259859fc40f4917c2e978b2f8f7a5965723615e948364",
+   "runtimeMatchesArtifact": "immutables"
+  },
+  "QuarantineVault": {
+   "address": "0x8ef5A156cA578e779655085dc9655C79b61ee1A0",
+   "tx": "0x5e4c96fa457f5afad32dca5b8b62b70fc5bdd77138982b94aa2600b3a9c84a37",
+   "block": 11904103,
+   "status": 1,
+   "gasEstimateNode": 9839096,
+   "gasLimit": 11314960,
+   "gasUsed": 9760465,
+   "effectiveGasPriceWei": 1000018,
+   "costWei": 9760640688370,
+   "compiler": "0.8.24+commit.e11b9ed9",
+   "constructorArgs": {
+    "guardians": [
+     "0x64dc9d07903f1C2deb48DFd9B9508e8F0FA7fc55",
+     "0xf8c2e4Cbd66E7E615d8E111bD69A29d22511557d",
+     "0x6bECdB58989bB8801BA796070c488346E6C753B4",
+     "0x44bfe63bA2F74991742b574E23EBDC7630A0Ddca",
+     "0x5eE982b8F49F7aaaFCfD4C6c36D750e1DC41275A"
+    ],
+    "registeredTokens": [
+     "0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0",
+     "0x754A7D020D559EDD60848450c563303262cAdec7"
+    ],
+    "minTimelock": 3600
+   },
+   "runtimeBytes": 5304,
+   "runtimeKeccak256": "0x3e6c0b791e418b616342757255c0292a06f2abba3b625aa2978f235d3af7b857",
+   "runtimeSha256": "6c8dc8a17e266244294168547f01d3cddba94a4ba4e7274e07f47e7376df0ed2",
+   "runtimeMatchesArtifact": "immutables"
+  },
+  "GoldReserveVault": {
+   "address": "0x3cDaaD6a606a4ab77EBCd5DB421fbd1f8792534B",
+   "tx": "0xe273818217c4425c34cf403d94121016e5d66251d56e4358729ba178380d5e16",
+   "block": 11904104,
+   "status": 1,
+   "gasEstimateNode": 14019335,
+   "gasLimit": 16122235,
+   "gasUsed": 13907788,
+   "effectiveGasPriceWei": 1000018,
+   "costWei": 13908038340184,
+   "compiler": "0.8.24+commit.e11b9ed9",
+   "constructorArgs": {
+    "guardians": [
+     "0x64dc9d07903f1C2deb48DFd9B9508e8F0FA7fc55",
+     "0xf8c2e4Cbd66E7E615d8E111bD69A29d22511557d",
+     "0x6bECdB58989bB8801BA796070c488346E6C753B4",
+     "0x44bfe63bA2F74991742b574E23EBDC7630A0Ddca",
+     "0x5eE982b8F49F7aaaFCfD4C6c36D750e1DC41275A"
+    ],
+    "quarantine": "0x8ef5A156cA578e779655085dc9655C79b61ee1A0",
+    "xaut": "0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0",
+    "paxg": "0x754A7D020D559EDD60848450c563303262cAdec7",
+    "minTimelock": 3600,
+    "rescueDelay": 600
+   },
+   "runtimeBytes": 7987,
+   "runtimeKeccak256": "0xd02743e4c1b6b903580624875e8b896d282c352332c300ee015e1b7335dc5711",
+   "runtimeSha256": "3d2c38d4d5ab81052c13087ea3ca6200ee0b97b086064084ad10b479757255de",
+   "runtimeMatchesArtifact": "immutables"
+  },
+  "AtomicSwapHTLCv2": {
+   "address": "0x395295622fDE4702BA199e4898F85B9d85175794",
+   "tx": "0x28fbbc942217064489d0eccf433b6f328b3db3196dfb0c726345592f42237032",
+   "block": 11904105,
+   "status": 1,
+   "gasEstimateNode": 9821151,
+   "gasLimit": 11294323,
+   "gasUsed": 9742661,
+   "effectiveGasPriceWei": 1000018,
+   "costWei": 9742836367898,
+   "compiler": "0.8.24+commit.e11b9ed9",
+   "constructorArgs": {},
+   "runtimeBytes": 6166,
+   "runtimeKeccak256": "0x0aab418ff666cc55a8c3b020a001cefd48e0abce557f92788a65e03a3c777167",
+   "runtimeSha256": "ad7edcfe0f6b43e350bc11fa7132958eeb7d10cea2bf164e4d78d7ee34d67f01",
+   "runtimeMatchesArtifact": true
+  }
+ },
+ "inputs": {
+  "observers": [
+   "0x27f181bB209A922658bb1174c1890A0D38253742",
+   "0xA0F8409af9Cb6dca4ebb95EFb5744c9Dfc1C4347",
+   "0xc3CE119FD5162E5b61Fc27eC234051680a54768e"
+  ],
+  "guardians": [
+   "0x64dc9d07903f1C2deb48DFd9B9508e8F0FA7fc55",
+   "0xf8c2e4Cbd66E7E615d8E111bD69A29d22511557d",
+   "0x6bECdB58989bB8801BA796070c488346E6C753B4",
+   "0x44bfe63bA2F74991742b574E23EBDC7630A0Ddca",
+   "0x5eE982b8F49F7aaaFCfD4C6c36D750e1DC41275A"
+  ],
+  "bridgeVaultHash": "0xfcb10f8a130b494868aa58c3d3fb865ddadc755ba86e6fe5890e5501c6b82959",
+  "testXAUT": "0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0",
+  "testPAXG": "0x754A7D020D559EDD60848450c563303262cAdec7"
+ }
+}
