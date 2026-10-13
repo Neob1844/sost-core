@@ -43,7 +43,7 @@ static const char B64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0
 
 static std::string b64_encode(const std::string& in) {
     std::string out;
-    int val = 0, valb = -6;
+    uint32_t val = 0; int valb = -6;  // unsigned: only the low bits are used; a signed shift overflowed (UBSan)
     for (unsigned char c : in) {
         val = (val << 8) + c;
         valb += 8;
@@ -64,7 +64,7 @@ static std::string b64_decode(const std::string& in) {
         init = true;
     }
     std::string out;
-    int val = 0, valb = -8;
+    uint32_t val = 0; int valb = -8;  // unsigned, as in b64_encode
     for (unsigned char c : in) {
         if (T[c] == -1) break;
         val = (val << 6) + T[c];
