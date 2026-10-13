@@ -67,6 +67,9 @@ Layers 1–7 ALWAYS run. Layer 8 (ConvergenceX recomputation) is skipped for:
 - Hard checkpoint matches (height + hash in HARD_CHECKPOINTS)
 - Blocks under assumevalid height (when anchor is on chain)
 - Override: `--full-verify` forces Layer 8 for all blocks
+  - Known limit on mainnet: blocks 1..3300 were persisted without their Transcript V2
+    data, so `--full-verify` from genesis rejects block 1. See
+    `docs/verification/FULL_VERIFY_EARLY_CHAIN.md`.
 
 Reorg depth limit: 500 blocks.
 
