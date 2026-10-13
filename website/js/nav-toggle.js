@@ -138,7 +138,8 @@
          rows. Same container, padding, gap and logo/toggle metrics on every page.
          Scoped to the full bar (logo image present, class set in init below); the minimal
          text-only navs of a few help sub-pages keep their own layout. */
-      "nav.sost-canon-nav { padding: 12px 0 !important; font-size: 13px; line-height: normal; }",
+      "nav.sost-canon-nav { padding: 12px 0 !important; font-size: 13px; line-height: normal;",
+      "  border-bottom-color: #1a1a1a !important; }",
       "nav.sost-canon-nav > .container { max-width: 1400px !important; margin: 0 auto !important; padding: 0 24px !important;",
       "  display: flex !important; align-items: center !important; justify-content: space-between !important;",
       "  gap: 16px !important; flex-wrap: wrap !important; box-sizing: border-box; }",
@@ -155,6 +156,8 @@
       "nav.sost-canon-nav .nav-toggle, nav.sost-canon-nav .sost-nav-toggle { box-sizing: border-box !important; width: 98px !important; height: 25px !important;",
       "  padding: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;",
       "  white-space: nowrap !important; overflow: hidden; }",
+      /* Collapsed bar = the Explorer's: SHOW NAV alone at the right edge, no hamburger. */
+      "body.nav-collapsed nav.sost-canon-nav .nav-hamburger { display: none !important; }",
       "nav.sost-canon-nav .nav-hamburger { font-size: 20px !important; padding: 4px 8px !important; line-height: 1 !important; border-width: 1px !important; }",
       /* The ONLY pulsing logo on the whole site: the SOST mark — min->max glow. */
       "nav .nav-logo img { animation: sostLogoPulse 4.7s ease-in-out infinite; }",
@@ -878,8 +881,9 @@
    1.6 s soft pulse), in SOST red. A real <a> to the Explorer. Only on pages whose main
    logo already opens the Explorer (the Explorer itself keeps its HOME logo, no callout).
    It floats over the bar and reserves NO room: the nav geometry must stay identical to the
-   Explorer's. It points LEFT at the logo and never covers it: it sits in the free space after
-   the wordmark when that space is wide enough, otherwise right after the logo image.
+   Explorer's. It points LEFT at the logo and sits in the free space after the wordmark. It never
+   covers the logo or the wordmark: below 769px (the nav's own mobile breakpoint) it is not shown
+   at all, and at any wider width where that free space is too narrow it is hidden too.
    ========================================================================== */
 (function(){
   "use strict";
@@ -903,7 +907,8 @@
       '@keyframes xpRedPulse{0%,100%{box-shadow:0 0 8px rgba(251,1,13,.35),0 0 16px rgba(251,1,13,.15)}',
       '50%{box-shadow:0 0 16px rgba(251,1,13,.75),0 0 32px rgba(251,1,13,.35)}}',
       '@media (prefers-reduced-motion:reduce){a.sost-xp-callout,a.sost-xp-callout .xp-hand{animation:none}}',
-      '@media (max-width:640px){a.sost-xp-callout{font-size:12px;padding:7px 10px}}',
+      '@media (max-width:768px){a.sost-xp-callout{display:none !important}}',
+      'a.sost-xp-callout.xp-noroom{display:none !important}',
       'body.nav-collapsed nav a.sost-xp-callout{display:none !important}'
     ].join('');
     (document.head||document.documentElement).appendChild(st);
@@ -911,6 +916,7 @@
   var el=null, img=null, box=null, logo=null, nav=null;
   function place(){
     if(!el||!img||!box||!logo) return;
+    el.classList.remove('xp-noroom');
     var b=box.getBoundingClientRect(), i=img.getBoundingClientRect();
     if(!i.width) return;
     var w=el.offsetWidth, h=el.offsetHeight, ARROW=8, PAD=10;
@@ -924,8 +930,11 @@
       if(!r.width||!r.height) continue;
       if(r.top<i.bottom&&r.bottom>i.top&&r.left>=wr.right){ limit=Math.min(limit,r.left); break; }
     }
-    var left=(wr.right+ARROW+PAD+w<=limit-PAD)?(wr.right+ARROW+PAD):(i.right+ARROW+6);
-    if(left+w>vw-8) left=Math.max(i.right+ARROW+2, vw-8-w);
+    // Measure with the no-room class off (display:none has no size), then decide.
+    var room=(wr.right+ARROW+PAD+w<=limit-PAD);
+    el.classList.toggle('xp-noroom',!room);
+    if(!room) return;
+    var left=wr.right+ARROW+PAD;
     el.style.left=(left-b.left)+'px';
     el.style.top=(i.top+i.height/2-h/2-b.top)+'px';
   }
