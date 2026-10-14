@@ -405,3 +405,35 @@ python3 -I scripts/v40000/check_decentralization_gates.py \
   --last 2016 --asn-map <local asn_map.json> --source src/sost-node.cpp \
   --json-out decentralization-report.json
 ```
+
+## 6. Implementation status (branch `feat/v40k-p2p`, 2026-10-14)
+
+Code only — not released, not deployed, no mainnet run. It changes none of the measured
+gates (independent seeds 0, providers 1, regions 1, producers 2).
+
+| ID | Status | Where | Evidence |
+|---|---|---|---|
+| P1 | DONE | `connect_peer` (getpeername), `save_peer_store`, `include/sost/p2p_addrbook.h` | lab: every `peers.txt` holds only IPv4 literals, mode 600; a node whose store had `seed-eu.sostcore.com` + one IPv4 recovered through the IPv4 entry and dropped the hostname |
+| P2 | DONE | `AddrBook` (256 cap, last-success, back-off, 14-day expiry, gossip persisted only after a handshake) | `d1-peer-store` 54 checks; `d1-addr-fuzz` +50k `peers.txt` fuzz; restart lab below |
+| P3 | DONE | main loop: outbound target 8, 2 dials/cycle, ≤ 2 per /16 (devnet loopback exempt), 5 s connect timeout | lab: every node ≥ 3 outbound without a seed |
+| P4 | DONE | VERS 41 → 51 bytes (listen port + self nonce, cap bit 0x02), feeler verification, GADR refresh 120 s, `--externalip` | old `4d8f9899` ↔ new in both directions, no penalties; old node bootstraps from a v2 `peers.txt` |
+| P5 | DONE | `--addnode` (discovery stays on), `--connect` exclusive, `bootstrap_plan` | unit tests + lab (line topology built only with `--addnode`) |
+| P6 | MECHANISM DONE, LIST EMPTY | `FALLBACK_SEED_IPS` in boot plan and zero-peer redial | unit test with a test list; no operator invented — entries need D-1 evidence |
+| P7 | DONE | `getpeerinfo` `source`/`subnet16`/`listen_port`/`feeler`; `getaddrbookinfo` (counts only); gates script reads them | lab, `test_check_decentralization_gates.py` 32 tests |
+| P8 | DONE | `BOOTSTRAP_AUDIT.md`, `AUTONOMY_STATUS_CHECK.md`, `website/decentralization-status.json`, `RUN_A_NODE.md` | — |
+| D-6 tooling | DONE (no key, no mirror deployed) | `scripts/release/`, `scripts/{sign,verify}-release.sh`, `release/MIRRORS.txt` | ctest `release-integrity` 28 checks with throwaway keys |
+
+**Five-node lab** (`tests/p2p/run_p2p_lab.py`, devnet build, inside `unshare -rn` with only
+loopback: `seed.sostcore.com` unresolvable, default seeds tried and failing):
+
+* L1 line A←B←C←D←E, each node only `--addnode` its left neighbour:
+  `t_full_propagation` A 124 s, B 93 s, C 93 s, D 93 s, E 93 s (target ≤ 1800 s);
+  ≥ 3 outbound: A 63 s, B 63 s, C 33 s, D 33 s, E 63 s.
+* L2 a block mined on A reached all five nodes.
+* L3 all nodes stopped and restarted with no `--addnode`/`--connect`: every node had ≥ 1
+  outbound peer after 59 s (the first cycle hits the 60 s back-off of the dials that failed
+  while the other nodes were still starting) and ≥ 3 outbound 30 s later; reconnection came
+  from `peers.txt`; a block mined on E reached every node.
+* L4 a clean node with only `--addnode` to one node synced and learned all five addresses
+  (≥ 3 outbound); a clean node with only a `peers.txt` (hostname + one IPv4) synced.
+* L5 old/new interoperability as above. Result: 27/27 checks.

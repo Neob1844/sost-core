@@ -6,6 +6,16 @@
 
 ---
 
+> **Peer-autonomy addendum (2026-10-14).** This document predates the P2P work and says
+> nothing about peers. Current facts: released binaries (v16.x) have a persistent
+> `peers.txt` and ADDR gossip, but store dialed hostnames, share only outbound peers and
+> dial gossip only at zero peers (see `docs/decentralization/BOOTSTRAP_AUDIT.md` update box).
+> Branch `feat/v40k-p2p` adds a resolved-IP address book, outbound target maintenance with
+> /16 diversity, listen-port self-advertisement, `--addnode`, provenance in `getpeerinfo` and
+> signed-SHA256SUMS + multi-mirror verification tooling. It is not released or deployed, and
+> the measured decentralization gates (independent seeds 0, hosting providers 1, producers 2)
+> are unchanged by it.
+
 ## 1. What ALREADY Works Without AI
 
 | Component | Status | Details |

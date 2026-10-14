@@ -94,12 +94,12 @@
       "github.com/Neob1844/sost-core/releases"
     ],
     "label": "KNOWN",
-    "note": "single primary source today (GitHub); reproducible build recipe published (docs/decentralization/REPRODUCIBLE_BUILD.md + Dockerfile.reproducible) for independent hash verification"
+    "note": "single primary source today (GitHub); reproducible build recipe published (docs/decentralization/REPRODUCIBLE_BUILD.md + Dockerfile.reproducible). Signed-SHA256SUMS and multi-mirror fetch-and-verify tooling exists on branch feat/v40k-p2p (scripts/release/), but no release is signed yet and no independent mirror is operated."
   },
   "persistent_peer_recovery": {
-    "value": "not found in audited code",
+    "value": "partial in released binaries; address book on development branch",
     "label": "KNOWN",
-    "note": "Bootstrap audit (docs/decentralization/BOOTSTRAP_AUDIT.md) finds no persistent peer store and no ADDR/GETADDR gossip in src/sost-node.cpp; automatic redial covers only --connect peers, not seed-only nodes. Earlier 'implemented/lab-verified' wording is not supported by the current code and is being corrected."
+    "note": "Released v16.x nodes keep peers.txt and ADDR gossip, but (1) peers.txt stores the dialed hostname (seed-*.sostcore.com for a default node), useless without sostcore.com DNS; (2) gossip carries almost no dialable addresses (hostnames dropped on mainnet, inbound peers never shared, no listen-address advertisement); (3) gossiped addresses are dialed only after losing every peer. Branch feat/v40k-p2p (not released, not deployed) stores resolved IPv4 peers, keeps an outbound target of 8 with /16 diversity, advertises the listen port and adds --addnode; lab-tested on a 5-node devnet with no DNS, no mainnet run recorded. See docs/decentralization/BOOTSTRAP_AUDIT.md and docs/v40000/DECENTRALIZATION_ACTION_PLAN_40000.md."
   },
   "infrastructure_independence_test_24h": {
     "value": "planned",

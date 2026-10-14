@@ -18,6 +18,7 @@
 # Backends (preferred first):
 #   minisign  — tiny, modern Ed25519. Install: `apt install minisign`.
 #   gpg       — if minisign is unavailable.
+#   openssl   — Ed25519 with the stock `openssl` CLI (>= 1.1.1), no extra package.
 #
 # Usage:
 #   # minisign (preferred)
@@ -27,16 +28,20 @@
 #   # gpg
 #   scripts/sign-release.sh --gpg <SHA256SUMS> [key-id-or-fingerprint]
 #
+#   # openssl Ed25519 (secret key = PEM file on the OFFLINE machine)
+#   scripts/sign-release.sh --openssl <SHA256SUMS> <ed25519_secret.pem>
+#
 # Output:
 #   minisign -> <SHA256SUMS>.minisig   (detached)
 #   gpg      -> <SHA256SUMS>.asc        (detached, ASCII-armored)
+#   openssl  -> <SHA256SUMS>.sig        (detached, raw 64-byte Ed25519)
 #
 # Exit: 0 ok, 2 usage, 3 missing tool, 4 missing input, 5 signing failed.
 set -uo pipefail
 
 die() { echo "ERROR: $*" >&2; exit "${2:-2}"; }
 
-[ $# -ge 2 ] || die "usage: $0 --minisign|--gpg <SHA256SUMS> [key]  (see header)" 2
+[ $# -ge 2 ] || die "usage: $0 --minisign|--gpg|--openssl <SHA256SUMS> [key]  (see header)" 2
 BACKEND="$1"; shift
 SUMS="$1"; shift
 [ -r "$SUMS" ] || die "cannot read SHA256SUMS file: $SUMS" 4
@@ -77,5 +82,19 @@ case "$BACKEND" in
     echo "OK: wrote detached GPG signature -> $OUT"
     echo "Publish $OUT next to $SUMS. Verify with scripts/verify-release.sh --gpg $SUMS <public_key.asc>"
     ;;
-  *) die "unknown backend '$BACKEND' (use --minisign or --gpg)" 2 ;;
+  --openssl)
+    command -v openssl >/dev/null 2>&1 || die "openssl not installed" 3
+    KEY="${1:-${SIGN_KEY:-}}"
+    [ -n "$KEY" ] || die "openssl needs an Ed25519 secret-key PEM PATH (arg or SIGN_KEY env). Read at runtime only." 2
+    [ -r "$KEY" ] || die "cannot read secret key at: $KEY" 4
+    OUT="$SUMS.sig"
+    # Ed25519 signs the whole message (-rawin); the key never leaves the file it is read from.
+    if openssl pkeyutl -sign -inkey "$KEY" -rawin -in "$SUMS" -out "$OUT" 2>/dev/null && [ -s "$OUT" ]; then
+      echo "OK: wrote detached Ed25519 signature -> $OUT"
+      echo "Publish $OUT next to $SUMS. Verify with scripts/verify-release.sh --openssl $SUMS <ed25519_public.pem>"
+    else
+      rm -f "$OUT"; die "openssl signing failed (is $KEY an Ed25519 private key?)" 5
+    fi
+    ;;
+  *) die "unknown backend '$BACKEND' (use --minisign, --gpg or --openssl)" 2 ;;
 esac
