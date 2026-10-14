@@ -908,9 +908,12 @@ def main():
                 s, base, 2, mut_witness, same_id=True, full=False, expect_storage_reject=False)),
             ("s18_invalid_cx_witness_fullverify", lambda s: bad_branch_then_honest(
                 s, base, 2, mut_witness, same_id=True, full=True, expect_storage_reject=True)),
+            # A forged commit (00..00 meets any target) inside the fast-sync trust: since G2 the
+            # commit binding (trusted_cx_binding_check) runs in fork_block_precheck too, so the
+            # block is refused BEFORE storage instead of being caught at reorg-connect time.
             ("s19_invalid_longer_fork", lambda s: bad_branch_then_honest(
                 s, base, 1, lambda j: j.update(commit="00" * 32), same_id=False, full=False,
-                expect_storage_reject=False)),
+                expect_storage_reject=True)),
             ("s20_invalid_longer_fork_fullverify", lambda s: bad_branch_then_honest(
                 s, base, 1, lambda j: j.update(commit="00" * 32), same_id=False, full=True,
                 expect_storage_reject=True)),
