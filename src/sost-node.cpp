@@ -6985,7 +6985,10 @@ static bool fork_block_precheck(const std::string& block_json, const std::string
         const int64_t miner_r = jint(block_json, "miner");
         const int64_t gold_r  = jint(block_json, "gold_vault");
         const int64_t popc_r  = jint(block_json, "popc_pool");
-        const bool ok = (outs.size() == 3)
+        // V17: a coinbase may carry MINER + LOTTERY + JACKPOT (3 outputs) with no Gold
+        // Vault / PoPC outputs, so the legacy "3 outputs == 50/25/25" reading does not apply.
+        const bool legacy3 = (outs.size() == 3) && !sost::v17_active_at(height);
+        const bool ok = legacy3
             ? (outs[0].amount == miner_r && outs[1].amount == gold_r && outs[2].amount == popc_r)
             : (outs[0].amount == miner_r && gold_r == 0 && popc_r == 0);
         if (!ok) { why = "JSON rewards mismatch"; return false; }
@@ -9647,11 +9650,29 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             auto it = g_block_index.find(h);
             if (it != g_block_index.end()) it->second.status = BlockStatus::ACTIVE;
         }
-        // Mark old active blocks as FORK (they're no longer on main chain)
+        // Mark old active blocks as FORK (they're no longer on main chain). An ACTIVE
+        // index entry carries no raw_json (and a block loaded from chain.json has no
+        // index entry at all), so keep the disconnected body here: without it a later
+        // reorg BACK to this branch fails ("missing/invalid required hex fields") and the
+        // node could not return to the branch it just left.
         for (const auto& dsb : disconnected) {
             std::string h = to_hex(dsb.block_id.data(), 32);
             auto it = g_block_index.find(h);
-            if (it != g_block_index.end()) it->second.status = BlockStatus::FORK;
+            if (it != g_block_index.end()) {
+                it->second.status = BlockStatus::FORK;
+                if (it->second.raw_json.empty()) it->second.raw_json = dsb.raw_block_json;
+            } else if (!dsb.raw_block_json.empty()) {
+                BlockIndexEntry e;
+                e.block_id = dsb.block_id;
+                e.prev_hash = dsb.prev_hash;
+                e.height = dsb.height;
+                e.bits_q = dsb.bits_q;
+                e.block_work = compute_block_work(dsb.bits_q);
+                e.cumulative_work = dsb.cumulative_work;
+                e.status = BlockStatus::FORK;
+                e.raw_json = dsb.raw_block_json;
+                g_block_index[h] = e;
+            }
         }
     }
 
