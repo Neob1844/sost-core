@@ -33,6 +33,7 @@
 #include "sost/wallet.h"     // V11 Phase 2 — wallet key loading for SbPoW
 #include "sost/sbpow.h"      // V11 Phase 2 — Schnorr signing helpers
 #include "sost/lottery.h"    // V11 Phase 2 (C11) — phase2_coinbase_split helper
+#include "sost/v17_economics.h" // V17 — 80/15/5 subsidy split + J-funded jackpot coinbase output
 
 #include <fstream>
 #include <cstdio>
@@ -584,6 +585,16 @@ static bool sync_local_chain_to_rpc_tip() {
 }
 
 
+// V17 — append the J-funded jackpot output (OUT_COINBASE_JACKPOT) to a coinbase.
+// Order is MINER, [LOTTERY], JACKPOT (validator CB4/CB11).
+static void append_v17_jackpot_j_output(Transaction& cb, int64_t amount, const PubKeyHash& winner_pkh) {
+    TxOutput o;
+    o.amount = amount;
+    o.type = OUT_COINBASE_JACKPOT;
+    o.pubkey_hash = winner_pkh;
+    cb.outputs.push_back(o);
+}
+
 // =============================================================================
 // Fetch block template from node (mempool txs + fees)
 // =============================================================================
@@ -592,6 +603,12 @@ struct BlockTemplateResult {
     std::vector<std::string> tx_hexes;
     int64_t total_fees;
     int count;
+    // V17 (node reports these only from V17_HEIGHT)
+    bool        ok{false};                  // RPC answered with a parsable template
+    bool        v17_active{false};
+    int64_t     template_height{-1};
+    int64_t     jackpot_j_payout{0};        // coinbase OUT_COINBASE_JACKPOT amount (0 = none)
+    std::string jackpot_winner_pkh_hex;     // 40-hex pkh of the jackpot winner
 };
 
 static int hex_val(char c) {
@@ -629,6 +646,14 @@ static BlockTemplateResult fetch_block_template() {
 
     int64_t fees_val = jint(resp, "total_fees");
     result.total_fees = (fees_val > 0) ? fees_val : 0;
+    result.ok = resp.find("\"height\"") != std::string::npos;
+    result.template_height = jint(resp, "height");
+    if (resp.find("\"v17_active\":true") != std::string::npos) {
+        result.v17_active = true;
+        const int64_t jp = jint(resp, "jackpot_j_payout");
+        result.jackpot_j_payout = jp > 0 ? jp : 0;
+        result.jackpot_winner_pkh_hex = jstr(resp, "jackpot_winner_pkh");
+    }
 
     auto tx_pos = resp.find("\"transactions\"");
     if (tx_pos == std::string::npos) return result;
@@ -1343,8 +1368,14 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     int64_t total_fees = 0;
     std::vector<Transaction> mempool_txs;
     std::vector<std::string> mempool_tx_hexes;
+    BlockTemplateResult v17_tmpl;   // V17 jackpot J directive (from the same template)
     if (!g_rpc_url.empty()) {
         auto tmpl = fetch_block_template();
+        v17_tmpl.ok = tmpl.ok;
+        v17_tmpl.v17_active = tmpl.v17_active;
+        v17_tmpl.template_height = tmpl.template_height;
+        v17_tmpl.jackpot_j_payout = tmpl.jackpot_j_payout;
+        v17_tmpl.jackpot_winner_pkh_hex = tmpl.jackpot_winner_pkh_hex;
         if (tmpl.count > 0) {
             total_fees = tmpl.total_fees;
             for (size_t ti = 0; ti < tmpl.tx_raws.size(); ++ti) {
@@ -1406,7 +1437,55 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         return false;
     }
 
-    if (ls.coinbase_shape == "NORMAL") {
+    const bool v17_block = sost::v17_active_at(h);
+    if (v17_block) {
+        // V17 (80/15/5 of the SUBSIDY; fees 100% to the miner). The node directs the
+        // DTD shape (getlotterystate) and the J-funded jackpot output (getblocktemplate).
+        if (!v17_tmpl.ok || !v17_tmpl.v17_active || v17_tmpl.template_height != h) {
+            printf("[MINER] V17: block template missing/stale (ok=%d v17=%d tmpl_h=%lld h=%lld); "
+                   "aborting block candidate.\n", (int)v17_tmpl.ok, (int)v17_tmpl.v17_active,
+                   (long long)v17_tmpl.template_height, (long long)h);
+            return false;
+        }
+        const auto amt = sost::v17::coinbase_amounts(subsidy, total_fees);
+        if (!amt.ok) { printf("[MINER] V17: coinbase amounts out of range; aborting.\n"); return false; }
+        json_miner_reward = amt.miner_total;
+        json_gold_reward = 0;
+        json_popc_reward = 0;
+        if (ls.coinbase_shape == "UPDATE_EMPTY") {
+            coinbase_tx = build_phase2_update_coinbase_tx(h, amt.miner_total, g_miner_pkh);
+        } else if (ls.coinbase_shape == "PAYOUT") {
+            if (ls.lottery_winner_pkh_hex.size() != 40) {
+                printf("[MINER] V17 PAYOUT: lottery_winner_pkh wrong length; aborting.\n");
+                return false;
+            }
+            std::vector<uint8_t> wr;
+            if (!hex_to_raw(ls.lottery_winner_pkh_hex, wr) || wr.size() != 20) {
+                printf("[MINER] V17 PAYOUT: lottery_winner_pkh decode failed; aborting.\n");
+                return false;
+            }
+            PubKeyHash wpkh{}; std::copy(wr.begin(), wr.end(), wpkh.begin());
+            coinbase_tx = build_phase2_payout_coinbase_tx(
+                h, amt.miner_total, amt.dtd_subsidy + ls.pending_lottery_before, g_miner_pkh, wpkh);
+        } else {
+            printf("[MINER] V17: unexpected coinbase_shape '%s'; aborting.\n", ls.coinbase_shape.c_str());
+            return false;
+        }
+        if (v17_tmpl.jackpot_j_payout > 0) {
+            std::vector<uint8_t> jr;
+            if (v17_tmpl.jackpot_winner_pkh_hex.size() != 40 ||
+                !hex_to_raw(v17_tmpl.jackpot_winner_pkh_hex, jr) || jr.size() != 20) {
+                printf("[MINER] V17: jackpot_winner_pkh invalid; aborting.\n");
+                return false;
+            }
+            PubKeyHash jpkh{}; std::copy(jr.begin(), jr.end(), jpkh.begin());
+            append_v17_jackpot_j_output(coinbase_tx, v17_tmpl.jackpot_j_payout, jpkh);
+        }
+        printf("[MINER] V17 %s: miner=%lld (subsidy %lld + fees %lld) dtd=%lld J_alloc=%lld J_paid=%lld\n",
+               ls.coinbase_shape.c_str(), (long long)amt.miner_total, (long long)amt.miner_subsidy,
+               (long long)total_fees, (long long)amt.dtd_subsidy, (long long)amt.jackpot_j,
+               (long long)v17_tmpl.jackpot_j_payout);
+    } else if (ls.coinbase_shape == "NORMAL") {
         coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);
     } else if (ls.coinbase_shape == "UPDATE_EMPTY") {
         // Emit ONLY a MINER output; the non-miner half is withheld in

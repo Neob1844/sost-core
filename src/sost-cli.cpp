@@ -1205,6 +1205,8 @@ static void print_usage() {
     printf("             <refund_dest_pkh> <fee>   Build unsigned REFUND tx\n");
     printf("  decodehtlc <raw_tx_hex>   Decode an HTLC LOCK/CLAIM/REFUND tx\n");
     printf("  gethtlcstatus <lock_txid> <lock_vout>  Query lock status from node (read-only)\n");
+    printf("  getjackpotstate [height]               Jackpot funding state: historical reserve H and\n"
+           "                                         V17 accumulator J shown separately (read-only)\n");
     printf("  listhtlclocks   List all open HTLC locks on chain (read-only)\n");
     printf("  dumpprivkey <addr>     Reveal private key (DANGER)\n");
     printf("  wallet-export          Export encrypted wallet backup (AES-256-GCM)\n");
@@ -1592,6 +1594,50 @@ int main(int argc, char** argv) {
     // dispatch is wired in a later sprint; until then the node answers
     // method-not-found, which this surfaces verbatim.)
     // =====================================================================
+    // =====================================================================
+    // getjackpotstate [height]  (read-only; forwards to the node)
+    //
+    // V17: prints the Historical Jackpot funding sources SEPARATELY — the
+    // frozen historical reserve H and the V17 accumulator J_BALANCE — plus the
+    // next jackpot's prize and its H/J funding preview. With a height: the J
+    // balance after that block and what that block paid from H and from J.
+    // =====================================================================
+    if (cmd == "getjackpotstate") {
+        std::string params = "[]";
+        if (argc > arg_start + 1) params = std::string("[\"") + argv[arg_start + 1] + "\"]";
+        std::string resp = rpc_call("getjackpotstate", params);
+        sost::json::Value res; std::string err;
+        if (resp.empty() || !rpc_result_of(resp, res, err) || !res.is_obj()) {
+            fprintf(stderr, "Error: getjackpotstate failed%s%s\n", err.empty() ? "" : ": ", err.c_str());
+            return 1;
+        }
+        auto num = [&](const char* k) -> int64_t { int64_t v = 0; res.get_int(k, v); return v; };
+        if (argc > arg_start + 1) {
+            printf("Block %lld (V17 %s)\n", (long long)num("height"),
+                   sost::v17_active_at(num("height")) ? "active" : "not active");
+            printf("  jackpot paid from H : %s SOST\n", format_sost(num("jackpot_h_paid_stocks")).c_str());
+            printf("  jackpot paid from J : %s SOST\n", format_sost(num("jackpot_j_paid_stocks")).c_str());
+            printf("  J allocated (5%%)    : %s SOST\n", format_sost(num("jackpot_j_alloc_stocks")).c_str());
+            printf("  J before / after    : %s / %s SOST\n", format_sost(num("j_balance_before_stocks")).c_str(),
+                   format_sost(num("j_balance_after_stocks")).c_str());
+            return 0;
+        }
+        printf("Tip %lld  (V17 activation height %lld)\n", (long long)num("tip_height"), (long long)num("v17_height"));
+        printf("  H  historical reserve : %s SOST (%lld UTXOs)\n", format_sost(num("h_reserve_stocks")).c_str(),
+               (long long)num("h_reserve_utxos"));
+        printf("  J  V17 accumulator    : %s SOST\n", format_sost(num("j_balance_stocks")).c_str());
+        printf("  next jackpot          : #%lld (%lld blocks), prize %s SOST (rollover %s)\n",
+               (long long)num("next_jackpot_height"), (long long)num("blocks_remaining"),
+               format_sost(num("prize_stocks")).c_str(), format_sost(num("rollover_before_stocks")).c_str());
+        const sost::json::Value* pv = res.find("preview_if_winner");
+        if (pv && pv->is_obj()) {
+            int64_t hp = 0, jp = 0; pv->get_int("h_part_stocks", hp); pv->get_int("j_part_stocks", jp);
+            printf("  funding if paid       : %s SOST from H + %s SOST from J\n",
+                   format_sost(hp).c_str(), format_sost(jp).c_str());
+        }
+        return 0;
+    }
+
     if (cmd == "gethtlcstatus") {
         if (argc < arg_start + 3) {
             fprintf(stderr,
@@ -1945,7 +1991,7 @@ int main(int argc, char** argv) {
             }
             if (!seen.insert(txid + ":" + std::to_string(vout)).second) { fprintf(stderr, "Error: duplicate input %zu\n", i); return 1; }
             for (auto b : tx.inputs[i].signature) if (b) { fprintf(stderr, "Error: input %zu is already signed\n", i); return 1; }
-            if (typ != 0x00 && typ != 0x01 && typ != 0x04) {   // transfer, coinbase miner, coinbase lottery payout
+            if (typ != 0x00 && typ != 0x01 && typ != 0x04 && typ != 0x05) {   // transfer, coinbase miner, DTD payout, V17 jackpot J payout
                 fprintf(stderr, "Error: input %zu spends output type 0x%02x, which signtx does not sign\n", i, (int)typ); return 1;
             }
             spent[i].amount = amt; spent[i].type = (uint8_t)typ;
@@ -2572,6 +2618,8 @@ int main(int argc, char** argv) {
                    (long long)u.height);
             if (u.output_type == 0x10) printf("  [BOND locked until %llu]", (unsigned long long)u.lock_until);
             if (u.output_type == 0x11) printf("  [ESCROW locked until %llu]", (unsigned long long)u.lock_until);
+            if (u.output_type == 0x04) printf("  [DTD payout]");
+            if (u.output_type == 0x05) printf("  [jackpot payout, J-funded]");
             printf("\n");
         }
         printf("\nTotal: %zu UTXOs\n", utxos.size());
