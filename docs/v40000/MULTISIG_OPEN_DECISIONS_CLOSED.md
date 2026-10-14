@@ -1,7 +1,8 @@
 # Native multisig — open decisions, closed (design revision r4)
 
-Status: **DESIGN ONLY. No consensus code is changed. Implementation is NOT authorized by this
-document.** Normative result: `docs/v40000/NATIVE_MULTISIG_SPEC_40000.md` (the "spec").
+Status: **DECISIONS CLOSED (r4).** Implemented on branch `feat/v40k-ms` (2026-10-14) under the
+owner-frozen V17 decisions; implementation details settled there are recorded in spec §16.
+Normative result: `docs/v40000/NATIVE_MULTISIG_SPEC_40000.md` (the "spec").
 Author: Neob. Date: 2026-10-13. Baseline `release/v40000-prep` @ `11dc2fcc`.
 
 Sources reviewed: `docs/v40000/V40000_CONSENSUS_SCOPE.md` §A (eight open items in §A.4),
@@ -346,5 +347,5 @@ soak of ≥ 2,016 blocks across MH with a mixed-version network.
 |---|---|
 | MULTISIG_OPEN_DECISIONS | **0/13** |
 | MULTISIG_DESIGN_READY | **YES** — every consensus rule (serialization, sighash, validation order, limits, activation, error codes) is specified without TBD in the spec, with independently generated and libsecp256k1-cross-checked vectors |
-| IMPLEMENTATION_AUTHORIZED | **NO** (separate decision) |
+| IMPLEMENTATION_AUTHORIZED | **YES** — owner decision 2026-10-14 (V17 package at `V17_HEIGHT`); implemented on `feat/v40k-ms`, not merged |
 | BLOCK_40000_READINESS | **NOT_YET** (implementation, full test plan, soak, replay automation, notice and external review are all outstanding; go/no-go at ~#36,000, fallback #50,000) |

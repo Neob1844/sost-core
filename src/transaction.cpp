@@ -227,6 +227,77 @@ bool TxInput::DeserializeFrom(const std::vector<Byte>& in, size_t& offset,
 }
 
 // =============================================================================
+// TxInput v2 serialization (V17 native multisig, spec §3.3)
+// =============================================================================
+//
+//   input_v2 = prev_txid[32] || prev_index u32 || auth_kind u8 || auth
+//   auth (0x00) = signature[64] || pubkey[33]
+//   auth (0x01) = M u8 || N u8 || PK[33] x N || K u8 || (key_index u8 || sig[64]) x K
+
+bool TxInput::SerializeV2To(std::vector<Byte>& out, std::string* err) const {
+    WriteBytes(out, prev_txid.data(), 32);
+    WriteU32LE(out, prev_index);
+    out.push_back(auth_kind);
+    if (auth_kind == AUTH_MULTISIG) {
+        if (ms_pubkeys.empty() || ms_pubkeys.size() > 255 || ms_sigs.size() > 255) {
+            if (err) *err = "TxInput::SerializeV2: multisig key/signature count does not fit";
+            return false;
+        }
+        out.push_back(ms_m);
+        out.push_back(static_cast<Byte>(ms_pubkeys.size()));
+        for (const auto& k : ms_pubkeys) WriteBytes(out, k.data(), 33);
+        out.push_back(static_cast<Byte>(ms_sigs.size()));
+        for (const auto& s : ms_sigs) {
+            out.push_back(s.key_index);
+            WriteBytes(out, s.sig.data(), 64);
+        }
+    } else {
+        WriteBytes(out, signature.data(), 64);
+        WriteBytes(out, pubkey.data(), 33);
+    }
+    return true;
+}
+
+bool TxInput::DeserializeV2From(const std::vector<Byte>& in, size_t& offset,
+                                TxInput& out_txin, std::string* err) {
+    auto trunc = [&]() { if (err) *err = "truncated"; return false; };
+    out_txin = TxInput{};
+    if (!ReadBytes(in, offset, out_txin.prev_txid.data(), 32, nullptr)) return trunc();
+    if (!ReadU32LE(in, offset, out_txin.prev_index, nullptr)) return trunc();
+    if (!ReadU8(in, offset, out_txin.auth_kind, nullptr)) return trunc();
+    if (out_txin.auth_kind == AUTH_SINGLE) {
+        if (!ReadBytes(in, offset, out_txin.signature.data(), 64, nullptr)) return trunc();
+        if (!ReadBytes(in, offset, out_txin.pubkey.data(), 33, nullptr)) return trunc();
+        return true;
+    }
+    if (out_txin.auth_kind != AUTH_MULTISIG) {
+        if (err) *err = "unknown_auth_kind";
+        return false;
+    }
+    uint8_t n = 0, k = 0;
+    if (!ReadU8(in, offset, out_txin.ms_m, nullptr)) return trunc();
+    if (!ReadU8(in, offset, n, nullptr)) return trunc();
+    if (n == 0 || n > MAX_MULTISIG_N) {
+        if (err) *err = "policy_n_range";
+        return false;
+    }
+    out_txin.ms_pubkeys.resize(n);
+    for (size_t j = 0; j < n; ++j)
+        if (!ReadBytes(in, offset, out_txin.ms_pubkeys[j].data(), 33, nullptr)) return trunc();
+    if (!ReadU8(in, offset, k, nullptr)) return trunc();
+    if (k > MAX_MULTISIG_N) {
+        if (err) *err = "sig_count_range";
+        return false;
+    }
+    out_txin.ms_sigs.resize(k);
+    for (size_t j = 0; j < k; ++j) {
+        if (!ReadU8(in, offset, out_txin.ms_sigs[j].key_index, nullptr)) return trunc();
+        if (!ReadBytes(in, offset, out_txin.ms_sigs[j].sig.data(), 64, nullptr)) return trunc();
+    }
+    return true;
+}
+
+// =============================================================================
 // TxOutput serialization
 // =============================================================================
 //
@@ -330,7 +401,12 @@ bool Transaction::Serialize(std::vector<Byte>& out, std::string* err) const {
 
     WriteCompactSize(out, static_cast<uint64_t>(inputs.size()));
     for (const auto& txin : inputs) {
-        txin.SerializeTo(out);
+        // Layout dispatch on the version alone (spec §3.2): version 2 -> input_v2.
+        if (version == TX_VERSION_V2) {
+            if (!txin.SerializeV2To(out, err)) return false;
+        } else {
+            txin.SerializeTo(out);
+        }
     }
 
     WriteCompactSize(out, static_cast<uint64_t>(outputs.size()));
@@ -368,7 +444,11 @@ bool Transaction::Deserialize(const std::vector<Byte>& in,
 
     tmp.inputs.resize(static_cast<size_t>(num_inputs));
     for (size_t i = 0; i < num_inputs; ++i) {
-        if (!TxInput::DeserializeFrom(in, offset, tmp.inputs[i], err)) {
+        // Layout dispatch on the version alone (spec §3.2), independent of height.
+        const bool ok = (tmp.version == TX_VERSION_V2)
+            ? TxInput::DeserializeV2From(in, offset, tmp.inputs[i], err)
+            : TxInput::DeserializeFrom(in, offset, tmp.inputs[i], err);
+        if (!ok) {
             if (err && err->empty()) {
                 *err = "Transaction::Deserialize: failed at input " + std::to_string(i);
             }
@@ -439,7 +519,10 @@ bool Transaction::DeserializeFrom(const std::vector<Byte>& in,
 
     out_tx.inputs.resize(static_cast<size_t>(num_inputs));
     for (size_t i = 0; i < num_inputs; ++i) {
-        if (!TxInput::DeserializeFrom(in, offset, out_tx.inputs[i], err)) {
+        const bool ok = (out_tx.version == TX_VERSION_V2)
+            ? TxInput::DeserializeV2From(in, offset, out_tx.inputs[i], err)
+            : TxInput::DeserializeFrom(in, offset, out_tx.inputs[i], err);
+        if (!ok) {
             if (err && err->empty()) {
                 *err = "Transaction::DeserializeFrom: failed at input " + std::to_string(i);
             }

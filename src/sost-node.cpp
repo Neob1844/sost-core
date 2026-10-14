@@ -64,6 +64,7 @@
 #include "sost/jackpot_block.h"    // V15 (J) live wiring: block-level jackpot validation (validate BEFORE mutate)
 #include "sost/beacon.h"
 #include "sost/beacon_p2p.h"
+#include "sost/multisig.h"     // V17 — sostms addresses in the address RPCs
 
 #include <fstream>
 #include <sys/socket.h>
@@ -2765,12 +2766,30 @@ static std::string handle_getassetbalance(const std::string& id, const std::vect
     return rpc_result(id,s.str());
 }
 
+// V17: address RPCs accept a single-key "sost1..." address or a bech32m multisig
+// address of THIS build's network ("sostms1" / "tsostms1" / "dsostms1"). A multisig
+// address matches only OUT_MULTISIG outputs whose lock is its MSH.
+static bool decode_rpc_address(const std::string& addr, PubKeyHash& pkh, bool& is_ms) {
+    is_ms = false;
+    if (address_valid(addr)) return address_decode(addr, pkh);
+    if (sost::MultisigAddressDecode(addr, sost::ActiveMsNetwork(), pkh)) { is_ms = true; return true; }
+    return false;
+}
+
+// Display address of an output: OUT_MULTISIG locks are MSHs and show as the build's
+// bech32m multisig address, everything else as "sost1" + hex(pkh).
+static std::string rpc_out_address(const TxOutput& o) {
+    if (o.type == OUT_MULTISIG) return sost::MultisigAddressEncode(o.pubkey_hash, sost::ActiveMsNetwork());
+    return address_encode(o.pubkey_hash);
+}
+
 static std::string handle_validateaddress(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
-    bool valid=address_valid(p[0]); bool mine=g_wallet.has_address(p[0]);
+    PubKeyHash vp{}; bool is_ms = false;
+    bool valid=decode_rpc_address(p[0], vp, is_ms); bool mine=!is_ms && g_wallet.has_address(p[0]);
     std::ostringstream s;
     s<<"{\"isvalid\":"<<(valid?"true":"false")<<",\"address\":\""<<json_escape(p[0])
-     <<"\",\"ismine\":"<<(mine?"true":"false")<<"}";
+     <<"\",\"ismine\":"<<(mine?"true":"false")<<",\"ismultisig\":"<<(is_ms?"true":"false")<<"}";
     return rpc_result(id,s.str());
 }
 
@@ -2956,7 +2975,7 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
     for(size_t i=0;i<entry->tx.outputs.size();++i){
         if(i)s<<",";
         const auto& o=entry->tx.outputs[i];
-        s<<"{\"value\":"<<format_sost(o.amount)<<",\"n\":"<<i<<",\"address\":\""<<address_encode(o.pubkey_hash)<<"\"}";
+        s<<"{\"value\":"<<format_sost(o.amount)<<",\"n\":"<<i<<",\"address\":\""<<rpc_out_address(o)<<"\"}";
     }
     s<<"]}";
     return rpc_result(id,s.str());
@@ -3162,7 +3181,7 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
         for(size_t i=0;i<mentry->tx.outputs.size();++i){
             if(i)s<<",";
             const auto&o=mentry->tx.outputs[i];
-            s<<"{\"address\":\""<<address_encode(o.pubkey_hash)
+            s<<"{\"address\":\""<<rpc_out_address(o)
              <<"\",\"amount\":"<<format_sost(o.amount)
              <<",\"type\":"<<(int)o.type;
             if(!o.payload.empty()){
@@ -3256,7 +3275,7 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
                 if(decode_tx_hex(g_blocks[ibh].tx_hexes[itpos],iraw)){
                     Transaction itx; std::string ie;
                     if(Transaction::Deserialize(iraw,itx,&ie)&&in.prev_index<itx.outputs.size()){
-                        in_addr=address_encode(itx.outputs[in.prev_index].pubkey_hash);
+                        in_addr=rpc_out_address(itx.outputs[in.prev_index]);
                         in_amt=itx.outputs[in.prev_index].amount;
                     }
                 }
@@ -3270,7 +3289,7 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
     for(size_t i=0;i<tx.outputs.size();++i){
         if(i)s<<",";
         const auto&o=tx.outputs[i];
-        s<<"{\"address\":\""<<address_encode(o.pubkey_hash)
+        s<<"{\"address\":\""<<rpc_out_address(o)
          <<"\",\"amount\":"<<format_sost(o.amount)
          <<",\"type\":"<<(int)o.type;
         if(!o.payload.empty()){
@@ -3429,17 +3448,15 @@ static std::string handle_getaddressbalance(const std::string& id, const std::ve
 static std::string handle_getaddressutxos(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
     std::string addr = p[0];
-    if(!address_valid(addr)) return rpc_error(id,-8,"invalid address");
-
-    PubKeyHash pkh{};
-    address_decode(addr, pkh);
+    PubKeyHash pkh{}; bool is_ms = false;
+    if(!decode_rpc_address(addr, pkh, is_ms)) return rpc_error(id,-8,"invalid address");
 
     std::ostringstream s;
     s << "[";
     bool first = true;
     const auto& umap = g_utxo_set.GetMap();
     for(const auto& kv : umap){
-        if(kv.second.pubkey_hash == pkh){
+        if(kv.second.pubkey_hash == pkh && (kv.second.type == OUT_MULTISIG) == is_ms){
             if(!first) s << ",";
             first = false;
             bool mature = !kv.second.is_coinbase ||
@@ -3479,16 +3496,15 @@ static std::string handle_getaddressutxos(const std::string& id, const std::vect
 static std::string handle_getmempoolspends(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
     const std::string addr = p[0];
-    if(!address_valid(addr)) return rpc_error(id,-8,"invalid address");
-    PubKeyHash pkh{};
-    address_decode(addr, pkh);
+    PubKeyHash pkh{}; bool is_ms = false;
+    if(!decode_rpc_address(addr, pkh, is_ms)) return rpc_error(id,-8,"invalid address");
 
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     std::ostringstream s;
     s << "{\"address\":\"" << addr << "\",\"mempool_size\":" << g_mempool.Size() << ",\"spent\":[";
     bool first = true;
     for(const auto& kv : g_utxo_set.GetMap()){
-        if(kv.second.pubkey_hash != pkh) continue;
+        if(kv.second.pubkey_hash != pkh || (kv.second.type == OUT_MULTISIG) != is_ms) continue;
         Hash256 by{};
         if(!g_mempool.SpentBy(kv.first, by)) continue;
         if(!first) s << ",";
@@ -5986,11 +6002,11 @@ static bool apply_node_state_for_block(const std::vector<Transaction>& txs, int6
         auto k = np::classify_node_tx(txs[i]);
         if (k == np::NodeTxKind::Bind) {
             np::NodeBindTx b; const char* r = nullptr;
-            if (!np::extract_bind(txs[i], b, &r)) { err = std::string("node_bind_encoding:") + (r?r:""); return false; }
+            if (!np::extract_bind_at(txs[i], height, b, &r)) { err = std::string("node_bind_encoding:") + (r?r:""); return false; }
             bnt.binds.push_back(b);
         } else if (k == np::NodeTxKind::Heartbeat) {
             np::NodeHeartbeatTx hb; const char* r = nullptr;
-            if (!np::extract_heartbeat(txs[i], hb, &r)) { err = std::string("node_hb_encoding:") + (r?r:""); return false; }
+            if (!np::extract_heartbeat_at(txs[i], height, hb, &r)) { err = std::string("node_hb_encoding:") + (r?r:""); return false; }
             bnt.heartbeats.push_back(hb);
         }
     }
@@ -7148,6 +7164,20 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             return false;
         }
         txs.push_back(std::move(tx));
+    }
+
+    // V17 (spec §7.1, D4, D9): live-path block limits — tx count <= 65,536, serialized
+    // tx bytes <= 1,000,000 and sigchecks <= 12,000 — checked right after parsing and
+    // BEFORE merkle / coinbase / jackpot / node-tx / signature work. This is the ONE
+    // block acceptance path: normal relay, submitblock and reorg_connect (fork blocks
+    // replayed by try_reorganize) all pass here. No-op below V17_HEIGHT.
+    {
+        std::string lim;
+        if(!CheckBlockLimitsV17(txs, height, &lim)){
+            printf("[BLOCK] REJECTED: %s at height %lld\n", lim.c_str(), (long long)height);
+            record_block_reject(lim);
+            return false;
+        }
     }
 
     // Validate merkle root from txs
@@ -8481,6 +8511,9 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         // after an epoch boundary, bind already applied, ...). Policy only.
         if (size_t dn = g_mempool.RevalidateNodeTxs(height + 1))
             printf("[MEMPOOL] evicted %zu node tx(s) no longer valid at h=%lld\n", dn, (long long)(height + 1));
+        // V17: never keep a version-2 / OUT_MULTISIG tx when the next block is below activation.
+        if (size_t dm = g_mempool.RemoveMultisigBeforeActivation(height + 1))
+            printf("[MEMPOOL] evicted %zu multisig/v2 tx(s): next height %lld is below V17\n", dm, (long long)(height + 1));
         if(exp>0) printf("[BLOCK] Mempool: %zu expired HTLC lock(s) evicted\n", exp);
     }
 
@@ -9228,6 +9261,15 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             }
         }
     }
+
+    // V17 (spec §9.5): a reorg across activation must leave no version-2 tx and no tx
+    // creating or spending OUT_MULTISIG in the mempool while tip + 1 < MULTISIG_HEIGHT.
+    if (size_t dm = g_mempool.RemoveMultisigBeforeActivation(g_chain_height + 1))
+        printf("[REORG] Mempool: evicted %zu multisig/v2 tx(s) (next height %lld below V17)\n",
+               dm, (long long)(g_chain_height + 1));
+    if (size_t dn = g_mempool.RevalidateNodeTxs(g_chain_height + 1))
+        printf("[REORG] Mempool: evicted %zu node tx(s) no longer valid at h=%lld\n",
+               dn, (long long)(g_chain_height + 1));
 
     printf("[REORG] Success: new tip = %s at height %lld\n",
            to_hex(g_blocks.back().block_id.data(), 32).substr(0, 16).c_str(), (long long)g_chain_height);

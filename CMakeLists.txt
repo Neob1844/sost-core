@@ -235,8 +235,9 @@ add_library(sost-core STATIC
     src/addressbook.cpp
     src/wallet_policy.cpp
     src/hd_wallet.cpp
-    src/psbt.cpp
-    src/script.cpp
+    # V17 — native M-of-N multisig (policy, sighash v2, sigchecks, bech32m)
+    src/multisig.cpp
+    src/multisig_psst.cpp   # V17 — offline multisig workflow (non-consensus)
     # Phase 8: PoPC application layer (no consensus)
     src/popc.cpp
     src/popc_tx_builder.cpp
@@ -1074,19 +1075,25 @@ add_executable(test-hd-wallet tests/test_hd_wallet.cpp)
 target_link_libraries(test-hd-wallet PRIVATE sost-core)
 add_test(NAME hd-wallet COMMAND test-hd-wallet)
 
-add_executable(test-psbt tests/test_psbt.cpp)
-target_link_libraries(test-psbt PRIVATE sost-core)
-add_test(NAME psbt COMMAND test-psbt)
 
-add_executable(test-multisig tests/test_multisig.cpp)
-target_link_libraries(test-multisig PRIVATE sost-core)
-add_test(NAME multisig COMMAND test-multisig)
 
 # Non-consensus: compile-time type-code registry (uniqueness, literal pins, reserved
 # ranges) + R2/R11 allow-list sweep + legacy script/PSBT fence. Changes no runtime code.
 add_executable(test-type-registry tests/test_type_registry.cpp)
 target_link_libraries(test-type-registry PRIVATE sost-core)
 add_test(NAME type-registry COMMAND test-type-registry ${CMAKE_CURRENT_SOURCE_DIR})
+
+# V17 native multisig (docs/v40000/NATIVE_MULTISIG_SPEC_40000.md): one binary, one
+# ctest per group. The activation group asserts mainnet heights (39998..40001).
+add_executable(test-multisig-v17 tests/test_multisig_v17.cpp)
+target_link_libraries(test-multisig-v17 PRIVATE sost-core)
+foreach(_msg vectors serial policy bech32m sighash validation sigchecks activation reorg mempool fuzzlite)
+    add_test(NAME multisig-${_msg} COMMAND test-multisig-v17 ${CMAKE_CURRENT_SOURCE_DIR} ${_msg})
+endforeach()
+add_executable(test-multisig-psst tests/test_multisig_psst.cpp)
+target_link_libraries(test-multisig-psst PRIVATE sost-core)
+add_test(NAME multisig-psst COMMAND test-multisig-psst psst)
+add_test(NAME multisig-cli COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/tests/cli/test_multisig_cli.sh ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(test-popc tests/test_popc.cpp)
 target_link_libraries(test-popc PRIVATE sost-core)

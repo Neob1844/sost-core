@@ -11,6 +11,7 @@
 #include <sost/merkle.h>
 
 #include <sost/subsidy.h>
+#include <sost/multisig.h>          // V17 — exact tx size + sigchecks for the live-path limits
 #include <sost/gold_vault_slice1.h>   // V13 Gold Vault Slice 1 (sentinel-disabled by default)
 #include <unordered_set>
 #include <string>
@@ -89,6 +90,33 @@ bool ValidateBlockStructure(const Block& block, std::string* err) {
         return false;
     }
 
+    return true;
+}
+
+// ==========================================================================
+// L1b: CheckBlockLimitsV17 (spec §7.1)
+// ==========================================================================
+
+bool CheckBlockLimitsV17(const std::vector<Transaction>& txs, int64_t height, std::string* reason) {
+    if (!v17_block_limits_active_at(height)) return true;
+    if (txs.size() > MAX_BLOCK_TXS_CONSENSUS) {
+        if (reason) *reason = "BLOCK_TOO_MANY_TXS";
+        return false;
+    }
+    uint64_t bytes = 0;
+    int64_t  sigchecks = 0;
+    for (const auto& tx : txs) {
+        bytes += TxSerializedSizeExact(tx);
+        sigchecks += TxSigchecks(tx);
+    }
+    if (bytes > (uint64_t)MAX_BLOCK_SIZE_CONSENSUS) {
+        if (reason) *reason = "BLOCK_TX_BYTES_EXCEEDED";
+        return false;
+    }
+    if (sigchecks > MAX_BLOCK_SIGCHECKS) {
+        if (reason) *reason = "BLOCK_TOO_MANY_SIGCHECKS";
+        return false;
+    }
     return true;
 }
 
@@ -323,6 +351,12 @@ BlockConsensusResult ValidateBlockTransactionsConsensus(
 
     const int64_t height = block.header.height;
     const int64_t subsidy = GetBlockSubsidy(height);
+
+    // V17 (spec §7.1): byte / count / sigcheck limits, before any signature check.
+    {
+        std::string lim;
+        if (!CheckBlockLimitsV17(block.txs, height, &lim)) return BlockConsensusResult::Fail(lim);
+    }
 
     // validate standard txs, connect into scratch, accumulate fees
     int64_t total_fees = 0;

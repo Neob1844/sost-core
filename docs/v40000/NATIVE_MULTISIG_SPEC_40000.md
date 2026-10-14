@@ -1,7 +1,8 @@
 # Native M-of-N multisig — normative specification (#40,000 target)
 
-Status: **NORMATIVE DESIGN SPEC, revision r4. NOT IMPLEMENTED. IMPLEMENTATION NOT AUTHORIZED by this document.**
-Author: Neob. Date: 2026-10-13.
+Status: **NORMATIVE SPEC, revision r4 + implementation notes (§16, 2026-10-14). IMPLEMENTED on branch
+`feat/v40k-ms` under the owner-frozen V17 decisions (activation constant `V17_HEIGHT`). Not merged, not deployed.**
+Author: Neob. Date: 2026-10-13 (r4), 2026-10-14 (§16).
 
 Supersedes, for every consensus rule it states: `docs/design/NATIVE_MULTISIG_40000.md` r3
 (branch `design/native-multisig-40000` @ `13b02df4`) and the multisig parts of
@@ -565,3 +566,116 @@ txid `0a46ff228968ffb450ce65c8443404f42f05af353cf309076d082b5d26d76db5`). The im
 reproduce every value byte for byte. The named test cases per ctest target are listed per decision
 in `MULTISIG_OPEN_DECISIONS_CLOSED.md` §3 and summarized there; every one is REQUIRED before the
 implementation can be proposed for merge.
+
+---
+
+## 16. Implementation notes (settled by the implementation, 2026-10-14)
+
+Everything in §1–§15 is implemented as written. This section records the details the
+implementation had to settle; none of them changes a rule above.
+
+### 16.1 Activation constant
+
+* `include/sost/params.h`: `V17_HEIGHT` is the single shared activation constant of the
+  #40,000 package (mainnet `40000`, `SOST_DEVNET_FORKS` `60`, `SOST_TESTNET_FORKS`
+  `INT64_MAX`). `MULTISIG_HEIGHT = V17_HEIGHT`. Gates: `multisig_active_at(h)`,
+  `v17_block_limits_active_at(h)`, `node_tx_version_fence_at(h)` (all `h >= V17_HEIGHT`).
+* The §11 static assertions are in params.h (mainnet value ∈ {40000, 50000}; ordering against
+  `HIST_JACKPOT_V2_HEIGHT`, `V15_HEIGHT`, `NODE_BIND_V2_HEIGHT`).
+* The CHAIN_ID literals (`CHAIN_ID_MAINNET/TESTNET/DEVNET`, `ACTIVE_CHAIN_ID`) sit next to the fork
+  heights in params.h. `TxValidationContext::chain_id` defaults to `ACTIVE_CHAIN_ID`.
+
+### 16.2 Where each rule lives
+
+| Rule | Location |
+|---|---|
+| X1–X5 parse, layout dispatch | `TxInput::DeserializeV2From`, `Transaction::Deserialize[From]` (`src/transaction.cpp`) |
+| MSH, R26, §7.3 envelope, v2 sighash, sigchecks, exact size, bech32m | `src/multisig.cpp` (`include/sost/multisig.h`) |
+| R1, R25, R11/S9 (0x50), R29, R14, R26–R28, R9/S8 exact size, S16–S18 | `src/tx_validation.cpp` |
+| §7.1 block limits | `CheckBlockLimitsV17` (`src/block_validation.cpp`), called by `process_block` right after the transactions are parsed (before merkle / coinbase / jackpot / node-tx / signature work) and by `ValidateBlockTransactionsConsensus` |
+| R30 | `node_participation::extract_bind_at` / `extract_heartbeat_at` — the one predicate used by the block path (`apply_node_state_for_block`), the mempool validator and the template selector (`judge_node_tx`, `node_txs_valid_for_block`) |
+| P_TOO_MANY_SIGCHECKS | `ValidateTransactionPolicy` |
+| §9.4 template | `Mempool::BuildBlockTemplate[CPFP]` keep Σ sigchecks ≤ 12,000 (applied at every height: no historical template comes close) |
+| §9.5 eviction | `Mempool::RemoveMultisigBeforeActivation(next_height)`, called after every block connect and at the end of every successful reorg (descendants of evicted txs are evicted too) |
+
+`process_block` is the single live acceptance path: P2P relay, `submitblock` and the
+`reorg_connect` replay of fork blocks inside `try_reorganize` all pass through it, so the
+§7.1 limits are enforced on all three. `load_chain` (re-reading the node's own already-validated
+chain file at start-up) is unchanged.
+
+### 16.3 Ordering details
+
+* **S16 placement.** S16 is evaluated after S1, S12, S15, S13, S11 and **before** the HTLC
+  dispatch. This makes the §6 table exact: a v2 `auth_kind 0x01` input spending `OUT_HTLC_LOCK`
+  reports S16, a v2 `auth_kind 0x00` input spending it reports R20. Consequence (diagnostic only):
+  a v1 HTLC_CLAIM/REFUND input spending `OUT_MULTISIG` reports S16 instead of R20.
+* **R29** runs right after R11 for every `0x50` output; R14 then allows the payload because R29
+  passed (the generic capsule branch is never used for 0x50).
+* **R26–R28** run after all outputs, immediately before R9.
+* v2 single-sig: an unparseable pubkey reports S6 (§7.4 step 4: "pubkey parses and ECDSA
+  verifies else S6"); a pubkey whose hash differs from the lock reports S2 first.
+* A version-2 input with `auth_kind ∉ {0x00, 0x01}` cannot be parsed (X3); if one is constructed in
+  memory, ValidateStructure rejects it with R26.
+* The v2 spent-output list is gathered once per transaction, the first time a v2 input needs its
+  sighash; a missing UTXO of ANY input is then reported as S1 at that input's index.
+
+### 16.4 Reason strings
+
+Parse: `truncated`, `unknown_auth_kind`, `policy_n_range`, `sig_count_range` (X2 keeps the existing
+"trailing bytes" message). Block: `BLOCK_TOO_MANY_TXS`, `BLOCK_TX_BYTES_EXCEEDED`,
+`BLOCK_TOO_MANY_SIGCHECKS`. Node tx: `node_tx_bad_version`. Policy-file / address decoder reasons
+(`wrong_hrp`, `bad_checksum`, `mixed_case`, `upper_case`, `char_not_in_alphabet`,
+`nonzero_padding`, `bad_padding`, `bad_length`, `bad_format_byte`, `too_long`,
+`missing_separator`) are wallet-level, not consensus.
+
+### 16.5 Sigcheck cap reachability
+
+Every VALID form costs at least 98 bytes per sigcheck (§8), so a valid block within 1,000,000
+bytes never exceeds 9,933 sigchecks. The count is taken from the bytes before any validation,
+however, and a structurally parseable input with `N = 1` and `K = 15` costs 65 bytes per declared
+sigcheck: 12,001 sigchecks fit in ~0.84 MB. The ctest `multisig-sigchecks` uses exactly that
+construction to prove the cap is enforced (12,000 passes the limit check, 12,001 is rejected with
+`BLOCK_TOO_MANY_SIGCHECKS` before any transaction or signature is validated).
+
+### 16.6 Offline workflow as implemented (§12)
+
+* `sost-cli createmultisig <M> <pubkey_hex>... [--out policy.json] [--network N]` writes
+  `sost-ms-policy-v1` {network, m, n, keys (sorted), policy_hex, msh, address,
+  ceremony_commitments = SHA256(pubkey) per key}. `sost-cli --wallet w getpubkey [addr]` prints a
+  wallet key for the ceremony.
+* `buildtx --from-multisig policy.json <to> <amount> --out tx.json` (vault spend; `<to>` = sost1 or
+  sostms — paying a new policy is the rotation; change returns to the same MSH, D7) and
+  `--from-address sost1… buildtx <sostms…> <amount> --out tx.json` (funding: version-2 single-sig
+  inputs, `OUT_MULTISIG` output). Both are watch-only, exclude inputs spent in the node mempool, use
+  the exact final size for the fee, refuse a non-standard result, and refuse before the network's
+  `MULTISIG_HEIGHT` (`--allow-before-activation` exists only so tests can prove the node rejects
+  such a tx).
+* `signtx tx.json --out signed.json` recognises `sost-psst-v1`; refuses a network, CHAIN_ID or
+  genesis different from the signer's, any template inconsistency (template inputs ≠ declared
+  inputs, MSH ≠ msh ≠ spent lock, declared fee ≠ computed fee, a carried signature that does not
+  verify), and a wallet that holds no usable key; shows network, inputs (M-of-N, signatures
+  present), outputs, capsule text + SHA-256, fee, size, sigchecks; requires `yes` (or `--yes`);
+  passphrases only by `--passphrase-file`/`--passphrase-fd`/tty. It adds one signature per wallet
+  key that belongs to an input (normally exactly one).
+* `combinetx a.json b.json … --out c.json` merges identical templates, verifies every signature,
+  and when complete emits `final_hex` using the M lowest key indexes.
+* `verifytx <file|hex>`: exit 0 = complete and valid (§7.2–7.5 against the declared spent outputs),
+  1 = invalid, 2 = incomplete, 3 = raw hex whose structure is valid but whose signatures cannot be
+  checked without the spent outputs.
+* Node RPCs `getaddressutxos`, `getmempoolspends`, `validateaddress` accept the build's bech32m
+  multisig address; it matches only `OUT_MULTISIG` outputs with that MSH (a sost1 address no longer
+  lists `OUT_MULTISIG` outputs).
+* Wallet refusals (§10.3): a sostms address is refused as an HTLC claim/refund key
+  (createhtlclock/claimhtlc/refundhtlc), in BOND/ESCROW locks, and as a destination of the legacy
+  single-key builders (send/createtx/sendmany).
+
+### 16.7 Tests (ctest, mainnet flags)
+
+`multisig-vectors`, `-serial`, `-policy`, `-bech32m`, `-sighash`, `-validation`, `-sigchecks`, `-fuzzlite` (deterministic 300,000-mutation parser campaign + 200,000 address corruptions),
+`-activation` (mainnet boundaries 39998/39999/40000/40001), `-reorg`, `-mempool`, `-psst`, `-cli`,
+plus the updated `type-registry`. Devnet end to end with the real node and miner across the devnet
+activation: `tests/run_v17_devnet_multisig.sh <devnet build dir>`.
+
+Still outstanding from §15 / the decisions document: the ≥ 10⁷-exec fuzz campaigns, the testnet
+soak across a testnet `MULTISIG_HEIGHT`, the D8 lineage-check script, and external review.
+

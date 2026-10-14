@@ -14,6 +14,10 @@ namespace sost {
 struct SpentOutput {
     int64_t amount{0};       // Stockshis of the UTXO being spent
     uint8_t type{0};         // Output type of the UTXO being spent
+    // V17 sighash v2 only (hashSpentOutputs commits to the whole spent output).
+    // The v1 sighash reads amount + type alone, so v1 callers may leave these empty.
+    std::array<Byte, 20> pubkey_hash{};
+    std::vector<Byte>    payload;
 };
 
 // -----------------------------------------------------------------------------

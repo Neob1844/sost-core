@@ -4,6 +4,7 @@
 #include "sost/transaction.h"
 #include "sost/tx_signer.h"
 #include "sost/consensus_constants.h"
+#include "sost/params.h"     // V17 — ACTIVE_CHAIN_ID / multisig_active_at
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -31,6 +32,12 @@ inline constexpr uint16_t MAX_PAYLOAD_STANDARD     = 512;  // per-type limits in
 inline constexpr uint8_t  MAX_PAYLOAD_OUTPUTS_STD  = 1;
 inline constexpr int64_t  MIN_RELAY_FEE_PER_BYTE   = 1;  // stocks/byte
 inline constexpr int64_t  DUST_THRESHOLD           = 10000; // stocks
+
+// V17 native multisig (spec §2.1).
+inline constexpr int64_t  MULTISIG_DUST             = 10000;  // consensus minimum of an OUT_MULTISIG output (R29)
+inline constexpr int64_t  MAX_BLOCK_SIGCHECKS       = 12000;  // consensus, h >= V17_HEIGHT (D4)
+inline constexpr int64_t  MAX_TX_SIGCHECKS_STANDARD = 1500;   // relay/mining policy
+static_assert(MULTISIG_DUST == DUST_THRESHOLD, "MULTISIG_DUST equals DUST_THRESHOLD by spec");
 
 // =============================================================================
 // Outpoint — unique reference to an output
@@ -109,6 +116,14 @@ enum class TxValCode : int {
     R23_HTLC_REFUND_STRUCTURE_INVALID = 121,  // HTLC_REFUND tx structure
     R24_HTLC_REFUND_BEFORE_TIMEOUT    = 122,  // REFUND before refund_height
 
+    // V17 native multisig (spec §7.7). Reachable only at h >= MULTISIG_HEIGHT.
+    R25_V2_TX_TYPE         = 123,  // version 2 with tx_type != STANDARD
+    R26_MS_POLICY          = 124,  // M = 0, M > N, bad key prefix, off-curve key, keys not strictly increasing
+    R27_MS_SIG_COUNT       = 125,  // K != M
+    R28_MS_KEY_INDEX       = 126,  // key indexes not strictly increasing, or an index >= N
+    R29_MULTISIG_OUTPUT    = 127,  // 0x50 output below 10,000 stocks or payload fails the envelope
+    R30_NODE_TX_VERSION    = 128,  // node tx outer version != 1 at h >= MULTISIG_HEIGHT
+
     // Spend / signature (S1-S12)
     S1_UTXO_NOT_FOUND      = 201,
     S2_PKH_MISMATCH        = 202,
@@ -134,6 +149,10 @@ enum class TxValCode : int {
     // created, moved or destroyed ONLY by an ASSET_* tx type. A STANDARD / HTLC tx that
     // carries or spends asset state is consensus-invalid (closes the S9 bypass).
     S15_ASSET_STATE_NON_ASSET_TX = 215,
+    // V17 native multisig.
+    S16_AUTH_KIND_MISMATCH = 216,  // auth kind does not match the spent UTXO type (spec §6)
+    S17_MSH_MISMATCH       = 217,  // MSH(policy) != UTXO lock
+    S18_MS_SIG_INVALID     = 218,  // a multisig signature does not verify against PK[key_index]
 
     // Coinbase (CB1-CB10)
     CB1_MISSING_COINBASE   = 301,
@@ -166,6 +185,7 @@ enum class TxValCode : int {
     P_BAD_CAPSULE          = 408,   // capsule header/body validation failed
     P_BAD_BOND_PAYLOAD     = 409,   // BOND_LOCK/ESCROW_LOCK payload format invalid
     P_RESERVE_FROZEN       = 410,   // V15 — relay policy mirror of S13 (never relay a reserve sweep)
+    P_TOO_MANY_SIGCHECKS   = 411,   // V17 — tx sigchecks > MAX_TX_SIGCHECKS_STANDARD
 
     // Internal
     INTERNAL_ERROR         = 999,
@@ -204,15 +224,23 @@ struct TxValidationContext {
     // copies from params ADMIN_AUTHORITY_PKH. All-zero => no authority set
     // (fail-closed: every native-asset op is rejected while restricted mode is on).
     std::array<uint8_t,20> admin_authority_pkh{};
+    // V17: CHAIN_ID committed by the v2 sighash. Defaults to this build's network
+    // literal; tests set another network's literal to prove cross-network rejection.
+    std::array<uint8_t,32> chain_id = ACTIVE_CHAIN_ID;
 };
 
 // =============================================================================
 // Core validation functions
 // =============================================================================
 
-// Estimate serialized size without actually serializing (cheap upper bound).
-// Uses the exact formula matching Phase 1 Serialize().
+// Exact canonical serialized size (spec §3.6, D11). For version-1 transactions this
+// is the historical 133-bytes-per-input formula, byte for byte; for version 2 it
+// counts each input's real auth length. Used by R9, S8 and every policy size/fee rule.
 size_t EstimateTxSerializedSize(const Transaction& tx);
+
+// V17: number of signature checks a transaction costs (spec §8). Pure function of
+// the parsed transaction.
+int64_t TxSigchecksOf(const Transaction& tx);
 
 // Validate a STANDARD transaction against consensus rules (R1-R14, S1-S12).
 // Does NOT validate coinbase transactions — use ValidateCoinbaseConsensus().
