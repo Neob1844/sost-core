@@ -235,8 +235,6 @@ add_library(sost-core STATIC
     src/addressbook.cpp
     src/wallet_policy.cpp
     src/hd_wallet.cpp
-    src/psbt.cpp
-    src/script.cpp
     # Phase 8: PoPC application layer (no consensus)
     src/popc.cpp
     src/popc_tx_builder.cpp
@@ -1074,13 +1072,7 @@ add_executable(test-hd-wallet tests/test_hd_wallet.cpp)
 target_link_libraries(test-hd-wallet PRIVATE sost-core)
 add_test(NAME hd-wallet COMMAND test-hd-wallet)
 
-add_executable(test-psbt tests/test_psbt.cpp)
-target_link_libraries(test-psbt PRIVATE sost-core)
-add_test(NAME psbt COMMAND test-psbt)
 
-add_executable(test-multisig tests/test_multisig.cpp)
-target_link_libraries(test-multisig PRIVATE sost-core)
-add_test(NAME multisig COMMAND test-multisig)
 
 # Non-consensus: compile-time type-code registry (uniqueness, literal pins, reserved
 # ranges) + R2/R11 allow-list sweep + legacy script/PSBT fence. Changes no runtime code.

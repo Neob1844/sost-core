@@ -25,10 +25,11 @@
 // Normative reference: docs/v40000/NATIVE_MULTISIG_SPEC_40000.md §2 and
 // docs/v40000/MULTISIG_OPEN_DECISIONS_CLOSED.md (item D13).
 //
-// Fenced legacy code: include/sost/script.h defines OUT_SCRIPT_HASH = 0x30, which
-// collides with the LIVE output type OUT_NODE_PROTOCOL = 0x30. That constant is
-// deliberately NOT part of this registry; it must never be wired into any
-// validation path. The `type-registry` ctest asserts the fence.
+// Deleted legacy code: the former script engine (include/sost/script.h) defined
+// OUT_SCRIPT_HASH = 0x30, colliding with the LIVE output type OUT_NODE_PROTOCOL =
+// 0x30. It was removed together with the PSBT library (spec §2.3 step 3); 0x30
+// keeps its only meaning, OUT_NODE_PROTOCOL. The `type-registry` ctest asserts the
+// files are absent and that nothing references them.
 // =============================================================================
 
 #include "sost/transaction.h"

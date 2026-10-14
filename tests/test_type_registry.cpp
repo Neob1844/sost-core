@@ -7,15 +7,16 @@
 //    checks they accept exactly the set the registry says is creatable there. In
 //    particular 0x50 (planned OUT_MULTISIG) and 0x20 (OUT_BURN) are rejected at
 //    every height, including 40,000.
-// 3. Legacy fence: the legacy script engine (script.h / OUT_SCRIPT_HASH = 0x30) and
-//    the PSBT library must not be referenced by any production source file.
+// 3. Legacy fence: the legacy script engine (script.h / OUT_SCRIPT_HASH = 0x30, which
+//    collided with the live OUT_NODE_PROTOCOL = 0x30) and the PSBT library have been
+//    DELETED (spec §2.3 step 3). The fence now asserts the files do not exist and that
+//    no production source file references them.
 //
 // Usage: test-type-registry <source-dir>
 #include "sost/type_registry.h"
 #include "sost/tx_validation.h"
 #include "sost/params.h"
 #include "sost/atomic_swap.h"
-#include "sost/script.h"   // test-only: to pin the fenced legacy collision value
 
 #include <cstdio>
 #include <fstream>
@@ -32,10 +33,9 @@ static int g_pass = 0, g_fail = 0;
 #define CHECK(cond, msg) do { if (cond) { ++g_pass; } else { ++g_fail; \
     std::printf("  FAIL: %s  [%s:%d]\n", msg, __FILE__, __LINE__); } } while (0)
 
-// The fenced legacy constant collides with the live node-protocol output type.
-// This is the known collision; it is documented and fenced, never wired.
-static_assert(OUT_SCRIPT_HASH == OUT_NODE_PROTOCOL,
-              "legacy OUT_SCRIPT_HASH value changed: re-audit the fence");
+// The live meaning of output type 0x30 is OUT_NODE_PROTOCOL; it must never be
+// reinterpreted (the deleted legacy engine used 0x30 as OUT_SCRIPT_HASH).
+static_assert(OUT_NODE_PROTOCOL == 0x30, "0x30 is the live OUT_NODE_PROTOCOL output type");
 
 class EmptyUtxoView : public IUtxoView {
 public:
@@ -155,10 +155,26 @@ static std::vector<std::string> list_dir(const std::string& d) {
 }
 
 static void legacy_fence(const std::string& root) {
-    // Files allowed to mention the legacy engine: the engine itself.
-    const std::set<std::string> allowed = {
-        "src/script.cpp", "src/psbt.cpp", "include/sost/script.h", "include/sost/psbt.h",
-        "include/sost/type_registry.h"};
+    // The legacy engine is deleted: no production file may mention it. The registry
+    // header documents the deletion and is the only allowed mention.
+    const std::set<std::string> allowed = {"include/sost/type_registry.h"};
+    for (const char* gone : {"include/sost/script.h", "src/script.cpp",
+                             "include/sost/psbt.h", "src/psbt.cpp",
+                             "tests/test_multisig.cpp", "tests/test_psbt.cpp"}) {
+        std::string tmp;
+        char m[160];
+        std::snprintf(m, sizeof m, "legacy_files_absent: %s does not exist", gone);
+        CHECK(!read_file(root + "/" + gone, tmp), m);
+    }
+    {
+        std::string cm;
+        CHECK(read_file(root + "/CMakeLists.txt", cm) &&
+              cm.find("src/script.cpp") == std::string::npos &&
+              cm.find("src/psbt.cpp") == std::string::npos &&
+              cm.find("tests/test_psbt.cpp") == std::string::npos &&
+              cm.find("tests/test_multisig.cpp") == std::string::npos,
+              "legacy_files_absent: CMakeLists.txt no longer builds script/psbt or their tests");
+    }
     const char* needles[] = {"sost/script.h", "sost/psbt.h", "OUT_SCRIPT_HASH", "eval_script",
                              "eval_p2sh", "MULTISIG_ACTIVATION_HEIGHT"};
     int scanned = 0, violations = 0;
