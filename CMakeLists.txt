@@ -237,6 +237,7 @@ add_library(sost-core STATIC
     src/hd_wallet.cpp
     # V17 — native M-of-N multisig (policy, sighash v2, sigchecks, bech32m)
     src/multisig.cpp
+    src/multisig_psst.cpp   # V17 — offline multisig workflow (non-consensus)
     # Phase 8: PoPC application layer (no consensus)
     src/popc.cpp
     src/popc_tx_builder.cpp
@@ -1089,6 +1090,10 @@ target_link_libraries(test-multisig-v17 PRIVATE sost-core)
 foreach(_msg vectors serial policy bech32m sighash validation sigchecks activation reorg mempool)
     add_test(NAME multisig-${_msg} COMMAND test-multisig-v17 ${CMAKE_CURRENT_SOURCE_DIR} ${_msg})
 endforeach()
+add_executable(test-multisig-psst tests/test_multisig_psst.cpp)
+target_link_libraries(test-multisig-psst PRIVATE sost-core)
+add_test(NAME multisig-psst COMMAND test-multisig-psst psst)
+add_test(NAME multisig-cli COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/tests/cli/test_multisig_cli.sh ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(test-popc tests/test_popc.cpp)
 target_link_libraries(test-popc PRIVATE sost-core)

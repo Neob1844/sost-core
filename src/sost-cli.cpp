@@ -56,6 +56,8 @@
 #include "sost/node_participation.h" // V16 — NODE_BIND / NODE_HEARTBEAT builders
 #include "sost/sbpow.h"           // V16 — Schnorr sign/derive for node txs
 #include "sost/utxo_reservations.h" // buildtx: local reservations of unsigned builds
+#include "sost/multisig.h"          // V17 — native multisig (policy, addresses)
+#include "sost/multisig_psst.h"     // V17 — offline multisig workflow (PSST)
 #include <sys/file.h>               // flock() on the reservation ledger
 #include <fcntl.h>
 
@@ -1170,6 +1172,82 @@ static int64_t calculate_fee(int64_t tx_size_bytes) {
     return fee;
 }
 
+// =============================================================================
+// V17 native multisig — CLI helpers (offline workflow, spec §12). Non-consensus.
+// =============================================================================
+static bool ms_read_text(const std::string& path, std::string& out) {
+    std::ifstream in(path, std::ios::binary);
+    if (!in) return false;
+    out.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+    return true;
+}
+static bool ms_write_new(const std::string& path, const std::string& text) {
+    FILE* f = fopen(path.c_str(), "wx");                // never overwrite an existing file
+    if (!f) { fprintf(stderr, "Error: cannot create %s (does it already exist?)\n", path.c_str()); return false; }
+    fwrite(text.data(), 1, text.size(), f); fclose(f);
+    return true;
+}
+static std::string ms_default_network() { return sost::MsNetworkName(sost::ActiveMsNetwork()); }
+
+struct MsCliUtxo { sost::Hash256 txid{}; uint32_t vout{0}; int64_t amount{0}; uint8_t type{0}; std::vector<sost::Byte> payload; bool spendable{false}; };
+// getaddressutxos <addr> (sost1 or sostms of the node's network), strict parse.
+static bool ms_fetch_utxos(const std::string& addr, std::vector<MsCliUtxo>& out, std::string& err) {
+    sost::json::Value res;
+    if (!rpc_result_of(rpc_call("getaddressutxos", "[\"" + addr + "\"]"), res, err)) return false;
+    if (!res.is_arr()) { err = "getaddressutxos returned an unexpected shape"; return false; }
+    for (const auto& u : res.a) {
+        MsCliUtxo x; std::string txid, pl; int64_t vout = -1, amt = 0, typ = 0; bool sp = false;
+        if (!u.get_str("txid", txid) || txid.size() != 64 || !u.get_int("vout", vout) || vout < 0 ||
+            !u.get_int("amount_stocks", amt) || amt <= 0) { err = "getaddressutxos returned an incomplete entry"; return false; }
+        u.get_int("output_type", typ); u.get_bool("spendable", sp); u.get_str("payload", pl);
+        x.txid = sost::from_hex(txid); x.vout = (uint32_t)vout; x.amount = amt; x.type = (uint8_t)typ; x.spendable = sp;
+        for (size_t k = 0; k + 1 < pl.size(); k += 2) x.payload.push_back((sost::Byte)strtol(pl.substr(k, 2).c_str(), nullptr, 16));
+        out.push_back(x);
+    }
+    return true;
+}
+// Load a signing wallet: plain v1, or encrypted v2 with --passphrase-file / --passphrase-fd / tty.
+static bool ms_load_wallet(const std::string& path, const std::string& pass_file, int pass_fd, sost::Wallet& w) {
+    bool encrypted = false; std::string eerr;
+    if (!sost::wallet_file_is_encrypted(path, encrypted, &eerr)) { fprintf(stderr, "Error: %s\n", eerr.c_str()); return false; }
+    if (encrypted) {
+        sost::Secret pass; std::string serr;
+        bool okp = !pass_file.empty() ? sost::read_secret_file(pass_file, pass, &serr)
+                 : pass_fd >= 0      ? sost::read_secret_fd(pass_fd, pass, &serr)
+                                     : sost::read_secret_tty("Wallet passphrase: ", pass, &serr);
+        if (!okp) { fprintf(stderr, "Error: %s\n", serr.c_str()); return false; }
+        if (!w.load_encrypted(path, pass.str(), &eerr)) { fprintf(stderr, "Error: %s\n", eerr.c_str()); return false; }
+        return true;
+    }
+    if (!w.load(path, &eerr)) { fprintf(stderr, "Error loading wallet: %s\n", eerr.c_str()); return false; }
+    return true;
+}
+static void ms_print_psst(const sost::psst::Psst& p) {
+    printf("Network:  %s  (CHAIN_ID %s…)\n", sost::MsNetworkName(p.net), to_hex(p.chain_id.data(), 32).substr(0, 16).c_str());
+    for (size_t i = 0; i < p.inputs.size(); ++i) {
+        const auto& in = p.inputs[i];
+        printf("Input  %zu: %s:%u  %s SOST  ", i, to_hex(in.txid.data(), 32).c_str(), in.vout, format_sost(in.spent.amount).c_str());
+        if (in.auth_kind == sost::AUTH_MULTISIG)
+            printf("multisig %d-of-%zu %s  signatures present: %zu\n", (int)in.m, in.keys.size(),
+                   sost::MultisigAddressEncode(in.spent.pubkey_hash, p.net).c_str(), in.sigs.size());
+        else
+            printf("single-sig %s%s\n", sost::address_encode(in.spent.pubkey_hash).c_str(), in.single_signed ? "  (signed)" : "");
+    }
+    for (size_t k = 0; k < p.outputs.size(); ++k) {
+        const auto& o = p.outputs[k];
+        std::string to = o.type == sost::OUT_MULTISIG ? sost::MultisigAddressEncode(o.pubkey_hash, p.net) : sost::address_encode(o.pubkey_hash);
+        printf("Output %zu: %s SOST  to %s%s\n", k, format_sost(o.amount).c_str(), to.c_str(), o.type == sost::OUT_MULTISIG ? "  (multisig)" : "");
+        if (!o.payload.empty()) {
+            auto dg = sost::sha256(o.payload);
+            std::string body;
+            for (size_t b = (o.payload.size() >= 12 ? 12 : 0); b < o.payload.size(); ++b) { char c = (char)o.payload[b]; body += (c >= 32 && c < 127) ? c : '.'; }
+            printf("          capsule: %zu bytes, sha256 %s\n          text: \"%s\"\n", o.payload.size(), to_hex(dg.data(), dg.size()).c_str(), body.c_str());
+        }
+    }
+    printf("Fee:      %s SOST  (%lld stocks)   size %zu B   sigchecks %lld\n", format_sost(sost::psst::Fee(p)).c_str(),
+           (long long)sost::psst::Fee(p), sost::psst::FinalSize(p), (long long)sost::psst::FinalSigchecks(p));
+}
+
 static void print_usage() {
     printf("SOST Wallet CLI v1.3\n\n");
     printf("Usage: sost-cli [options] <command> [args...]\n\n");
@@ -1192,6 +1270,14 @@ static void print_usage() {
     printf("                         --clear-reservations; --ignore-reservations; --skip-mempool-check).\n");
     printf("  signtx tx.json [--out signed.hex]  OFFLINE: review + sign with --wallet (v1 or encrypted v2;\n");
     printf("                         --passphrase-file / --passphrase-fd). No network. Then sendrawtransaction.\n");
+    printf("\nNative multisig (V17, active from MULTISIG_HEIGHT; offline workflow):\n");
+    printf("  createmultisig <M> <pubkey_hex>... [--out policy.json]  Canonical M-of-N policy + sostms address\n");
+    printf("  getpubkey [address]    Print the compressed public key of a wallet address (for createmultisig)\n");
+    printf("  buildtx --from-multisig policy.json <to> <amt> --out tx.json   Spend a multisig (watch-only PSST)\n");
+    printf("  --from-address A buildtx <sostms..> <amt> --out tx.json       Fund a multisig (v2 single-sig PSST)\n");
+    printf("  signtx tx.json --out s.json   OFFLINE: add this wallet's signature(s) to a PSST (--yes, --passphrase-*)\n");
+    printf("  combinetx a.json b.json ... --out c.json   Merge signatures; emits final_hex with the M lowest indexes\n");
+    printf("  verifytx <c.json | hex>   Check threshold + consensus rules locally (exit 0 only if complete and valid)\n");
     printf("  create-bond <amt> <blocks>  Create BOND_LOCK (timelocked to self)\n");
     printf("  create-escrow <amt> <blocks> <beneficiary>  Create ESCROW_LOCK\n");
     printf("  list-bonds             List active bond/escrow UTXOs\n");
@@ -1562,6 +1648,12 @@ int main(int argc, char** argv) {
     // =====================================================================
     if (cmd == "createhtlclock" || cmd == "claimhtlc" ||
         cmd == "refundhtlc"     || cmd == "decodehtlc") {
+        // V17 wallet rule (spec §10.3): never place an MSH in an HTLC claim/refund field.
+        for (int i = arg_start + 1; i < argc; ++i)
+            if (sost::LooksLikeMultisigAddress(argv[i])) {
+                fprintf(stderr, "Error: a multisig address cannot be an HTLC claimant or refund key (funds would be unspendable)\n");
+                return 1;
+            }
         std::vector<std::string> params;
         for (int i = arg_start + 1; i < argc; ++i)
             params.push_back(argv[i]);
@@ -1633,6 +1725,323 @@ int main(int argc, char** argv) {
         auto hb = resp.find("\r\n\r\n");
         printf("%s\n", (hb != std::string::npos ? resp.substr(hb + 4) : resp).c_str());
         return 0;
+    }
+
+    // =====================================================================
+    // V17 native multisig — offline workflow (spec §12). Wallet-free except
+    // signtx/getpubkey. Network = --network (mainnet|testnet|dev), default = this
+    // build's network; it selects the CHAIN_ID literal and the sostms HRP.
+    //
+    //   createmultisig <M> <pubkey_hex>... [--out policy.json]
+    //   buildtx --from-multisig policy.json <to> <amount> --out tx.json      (spend a vault; to = sost1 or sostms: rotation)
+    //   --from-address sost1.. buildtx <sostms..> <amount> --out tx.json     (fund a vault, v2 single-sig inputs)
+    //   --wallet w.json signtx tx.json --out signed.json [--yes] [--passphrase-file p | --passphrase-fd n]
+    //   combinetx a.json b.json ... --out combined.json
+    //   verifytx <file.json | raw hex>
+    //   --wallet w.json getpubkey [address]
+    // =====================================================================
+    {
+        std::vector<std::string> ms_pos;
+        std::string ms_out, ms_policy, ms_network = ms_default_network(), ms_pass_file;
+        int ms_pass_fd = -1; bool ms_skip_mempool = false, ms_has_policy = false;
+        bool ms_bad_flag = false;
+        const bool ms_cmd = (cmd == "createmultisig" || cmd == "combinetx" || cmd == "verifytx" || cmd == "getpubkey" ||
+                             cmd == "buildtx" || cmd == "signtx");
+        if (ms_cmd) {
+            for (int i = arg_start + 1; i < argc; ++i) {
+                std::string a = argv[i];
+                if (a == "--out" && i + 1 < argc) ms_out = argv[++i];
+                else if (a == "--from-multisig" && i + 1 < argc) { ms_policy = argv[++i]; ms_has_policy = true; }
+                else if (a == "--network" && i + 1 < argc) ms_network = argv[++i];
+                else if (a == "--passphrase-file" && i + 1 < argc) ms_pass_file = argv[++i];
+                else if (a == "--passphrase-fd" && i + 1 < argc) ms_pass_fd = atoi(argv[++i]);
+                else if (a == "--skip-mempool-check") ms_skip_mempool = true;
+                else if (a == "--yes" || a == "-y") g_yes_flag = true;
+                else if (!a.empty() && a[0] == '-') { ms_bad_flag = true; ms_pos.push_back(a); }
+                else ms_pos.push_back(a);
+            }
+        }
+        sost::MsNetwork ms_net = sost::MsNetwork::MAINNET;
+        if (ms_cmd && !sost::MsNetworkFromName(ms_network, ms_net)) {
+            fprintf(stderr, "Error: --network must be mainnet, testnet or dev\n"); return 1;
+        }
+        const std::string kMsGenesis = "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37";
+        const sost::Hash256 ms_genesis = sost::from_hex(kMsGenesis);
+
+        // ---- createmultisig ------------------------------------------------
+        if (cmd == "createmultisig") {
+            if (ms_bad_flag || ms_pos.size() < 2) {
+                fprintf(stderr, "Usage: sost-cli createmultisig <M> <pubkey_hex> [<pubkey_hex>...] [--out policy.json] [--network N]\n"); return 1;
+            }
+            int m = atoi(ms_pos[0].c_str());
+            std::vector<sost::PubKey33> keys;
+            for (size_t i = 1; i < ms_pos.size(); ++i) {
+                sost::PubKey33 k{};
+                const std::string& h = ms_pos[i];
+                if (h.size() != 66 || h.find_first_not_of("0123456789abcdef") != std::string::npos) {
+                    fprintf(stderr, "Error: key %zu is not a 33-byte compressed public key in lowercase hex\n", i); return 1;
+                }
+                for (size_t b = 0; b < 33; ++b) k[b] = (sost::Byte)strtol(h.substr(2 * b, 2).c_str(), nullptr, 16);
+                keys.push_back(k);
+            }
+            if (m < 1 || m > 15) { fprintf(stderr, "Error: M must be 1..15\n"); return 1; }
+            sost::psst::Policy pol; std::string e;
+            if (!sost::psst::MakePolicy(ms_net, (uint8_t)m, keys, pol, &e)) { fprintf(stderr, "Error: invalid policy: %s\n", e.c_str()); return 1; }
+            const std::string j = sost::psst::PolicyToJson(pol);
+            if (!ms_out.empty()) { if (!ms_write_new(ms_out, j)) return 1; printf("Policy written to %s\n", ms_out.c_str()); }
+            else printf("%s", j.c_str());
+            printf("Multisig %d-of-%zu address (%s): %s\nMSH: %s\n", m, pol.keys.size(), ms_network.c_str(), pol.address.c_str(),
+                   to_hex(pol.msh.data(), 20).c_str());
+            return 0;
+        }
+
+        // ---- getpubkey -----------------------------------------------------
+        if (cmd == "getpubkey") {
+            sost::Wallet w;
+            if (!ms_load_wallet(wallet_path, ms_pass_file, ms_pass_fd, w)) return 1;
+            const sost::WalletKey* k = ms_pos.empty() ? w.find_key(w.default_address()) : w.find_key(ms_pos[0]);
+            if (!k) { fprintf(stderr, "Error: address not in this wallet\n"); return 1; }
+            printf("%s\n", to_hex(k->pubkey.data(), 33).c_str());
+            return 0;
+        }
+
+        // ---- combinetx -----------------------------------------------------
+        if (cmd == "combinetx") {
+            if (ms_bad_flag || ms_pos.size() < 2 || ms_out.empty()) {
+                fprintf(stderr, "Usage: sost-cli combinetx a.json b.json [...] --out combined.json\n"); return 1;
+            }
+            std::vector<sost::psst::Psst> parts;
+            for (const auto& f : ms_pos) {
+                std::string t, e; sost::psst::Psst p;
+                if (!ms_read_text(f, t)) { fprintf(stderr, "Error: cannot read %s\n", f.c_str()); return 1; }
+                if (!sost::psst::FromJson(t, p, &e)) { fprintf(stderr, "Error: %s: %s\n", f.c_str(), e.c_str()); return 1; }
+                parts.push_back(p);
+            }
+            sost::psst::Psst c; std::string e;
+            if (!sost::psst::Combine(parts, c, &e)) { fprintf(stderr, "Error: cannot combine: %s\n", e.c_str()); return 1; }
+            if (!ms_write_new(ms_out, sost::psst::ToJson(c))) return 1;
+            bool complete = false; sost::Transaction ftx = sost::psst::Assemble(c, &complete);
+            printf("Combined %zu file(s) into %s\n", parts.size(), ms_out.c_str());
+            for (size_t i = 0; i < c.inputs.size(); ++i)
+                if (c.inputs[i].auth_kind == sost::AUTH_MULTISIG)
+                    printf("  input %zu: %zu of %d required signatures\n", i, c.inputs[i].sigs.size(), (int)c.inputs[i].m);
+            if (complete) {
+                std::vector<sost::Byte> raw; ftx.Serialize(raw);
+                printf("complete: yes (lowest key indexes selected)\ntxid %s\nfinal_hex %s\n", ftx.ComputeTxIdHex().c_str(), to_hex(raw.data(), raw.size()).c_str());
+            } else printf("complete: no — more signatures needed\n");
+            return 0;
+        }
+
+        // ---- verifytx ------------------------------------------------------
+        if (cmd == "verifytx") {
+            if (ms_bad_flag || ms_pos.size() != 1) { fprintf(stderr, "Usage: sost-cli verifytx <file.json | raw hex>\n"); return 1; }
+            std::string text;
+            if (ms_read_text(ms_pos[0], text)) {
+                sost::psst::Psst p; std::string e;
+                if (!sost::psst::FromJson(text, p, &e)) { fprintf(stderr, "INVALID: %s\n", e.c_str()); return 1; }
+                auto rep = sost::psst::Verify(p, sost::MultisigHeightFor(p.net) == INT64_MAX ? sost::MULTISIG_HEIGHT : sost::MultisigHeightFor(p.net));
+                ms_print_psst(p);
+                for (const auto& s : rep.input_status) printf("  %s\n", s.c_str());
+                printf("threshold: %s\nconsensus: %s\ntxid %s  size %zu  fee %lld  sigchecks %lld\n",
+                       rep.complete ? "met" : "NOT met", rep.reason.c_str(), rep.txid.c_str(), rep.size, (long long)rep.fee, (long long)rep.sigchecks);
+                if (rep.size > (size_t)sost::MAX_TX_BYTES_STANDARD || rep.sigchecks > sost::MAX_TX_SIGCHECKS_STANDARD)
+                    printf("WARNING: not relay-standard (size %zu > %d or sigchecks %lld > %lld)\n", rep.size, (int)sost::MAX_TX_BYTES_STANDARD,
+                           (long long)rep.sigchecks, (long long)sost::MAX_TX_SIGCHECKS_STANDARD);
+                if (!rep.complete) { printf("RESULT: INCOMPLETE\n"); return 2; }
+                if (!rep.valid) { printf("RESULT: INVALID\n"); return 1; }
+                printf("RESULT: VALID (UTXO existence is checked by the node at broadcast)\n");
+                return 0;
+            }
+            // raw hex: structure only (no spent outputs -> signatures cannot be checked)
+            std::vector<sost::Byte> raw; const std::string& h = ms_pos[0];
+            if (h.empty() || h.size() % 2 || h.find_first_not_of("0123456789abcdefABCDEF") != std::string::npos) {
+                fprintf(stderr, "Error: not a readable file and not hex\n"); return 1;
+            }
+            for (size_t i = 0; i < h.size(); i += 2) raw.push_back((sost::Byte)strtol(h.substr(i, 2).c_str(), nullptr, 16));
+            sost::Transaction tx; std::string e;
+            if (!sost::Transaction::Deserialize(raw, tx, &e)) { printf("INVALID: does not parse: %s\n", e.c_str()); return 1; }
+            class EmptyView : public sost::IUtxoView { public: std::optional<sost::UTXOEntry> GetUTXO(const sost::OutPoint&) const override { return std::nullopt; } } ev;
+            sost::TxValidationContext ctx; ctx.genesis_hash = ms_genesis; ctx.chain_id = sost::ChainIdFor(ms_net);
+            ctx.spend_height = sost::MultisigHeightFor(ms_net) == INT64_MAX ? sost::MULTISIG_HEIGHT : sost::MultisigHeightFor(ms_net);
+            auto r = sost::ValidateTransactionConsensus(tx, ev, ctx);
+            printf("txid %s  version %u  size %zu  sigchecks %lld\n", tx.ComputeTxIdHex().c_str(), tx.version,
+                   sost::EstimateTxSerializedSize(tx), (long long)sost::TxSigchecksOf(tx));
+            if (!r.ok && r.code != sost::TxValCode::S1_UTXO_NOT_FOUND) { printf("RESULT: INVALID: %s\n", r.message.c_str()); return 1; }
+            printf("RESULT: STRUCTURE OK — signatures NOT verified (spent outputs unknown; verify the PSST file)\n");
+            return 3;
+        }
+
+        // ---- buildtx (multisig variants) -----------------------------------
+        const bool ms_build = (cmd == "buildtx") &&
+            (ms_has_policy || (ms_pos.size() >= 1 && sost::LooksLikeMultisigAddress(ms_pos[0])));
+        if (ms_build) {
+            if (ms_bad_flag || ms_pos.size() != 2 || ms_out.empty() || (!ms_has_policy && g_from_address.empty())) {
+                fprintf(stderr, "Usage: sost-cli buildtx --from-multisig policy.json <to> <amount> --out tx.json [--network N]\n"
+                                "       sost-cli --from-address <sost1..> buildtx <sostms..> <amount> --out tx.json [--network N]\n"); return 1;
+            }
+            const std::string to_addr = ms_pos[0];
+            const int64_t amount = parse_amount(ms_pos[1].c_str());
+            if (amount <= 0) { fprintf(stderr, "Error: amount must be positive\n"); return 1; }
+            sost::psst::Policy pol;
+            if (ms_has_policy) {
+                std::string t, e;
+                if (!ms_read_text(ms_policy, t) || !sost::psst::PolicyFromJson(t, pol, &e)) { fprintf(stderr, "Error: policy file: %s\n", e.c_str()); return 1; }
+                if (pol.net != ms_net) { fprintf(stderr, "Error: policy is for '%s', --network is '%s'\n", sost::MsNetworkName(pol.net), ms_network.c_str()); return 1; }
+            }
+            // destination: sost1 -> OUT_TRANSFER, sostms (this network) -> OUT_MULTISIG
+            sost::TxOutput dest; dest.amount = amount;
+            if (sost::LooksLikeMultisigAddress(to_addr)) {
+                std::string e;
+                if (!sost::MultisigAddressDecode(to_addr, ms_net, dest.pubkey_hash, &e)) {
+                    fprintf(stderr, "Error: invalid multisig destination for network '%s': %s\n", ms_network.c_str(), e.c_str()); return 1;
+                }
+                dest.type = sost::OUT_MULTISIG;
+            } else {
+                if (!sost::address_decode(to_addr, dest.pubkey_hash)) { fprintf(stderr, "Error: invalid destination address\n"); return 1; }
+                dest.type = sost::OUT_TRANSFER;
+            }
+            std::vector<sost::Byte> capsule_payload;
+            g_send_to = to_addr;
+            if (!build_capsule_for_mode(capsule_payload)) return 1;
+            if (!capsule_payload.empty()) {
+                auto v = sost::ValidateCapsulePolicy(capsule_payload);
+                if (!v.ok) { fprintf(stderr, "ERROR: capsule failed local policy validation: %s\n", v.message.c_str()); return 1; }
+                if (dest.type == sost::OUT_MULTISIG && !sost::MultisigOutputPayloadOk(capsule_payload)) {
+                    fprintf(stderr, "ERROR: capsule does not fit the OUT_MULTISIG envelope\n"); return 1;
+                }
+                dest.payload = capsule_payload;
+            }
+            const int64_t height = query_chain_height();
+            if (height < 0) { fprintf(stderr, "Error: cannot connect to node at %s:%d\n", g_node_host.c_str(), g_node_port); return 1; }
+            const int64_t mh = sost::MultisigHeightFor(ms_net);
+            if (height + 1 < mh) {
+                fprintf(stderr, "Error: native multisig is not active on %s before block %lld (next block %lld) — refusing to build\n",
+                        ms_network.c_str(), (long long)mh, (long long)(height + 1)); return 1;
+            }
+            // candidate inputs
+            const std::string src = ms_has_policy ? pol.address : g_from_address;
+            sost::PubKeyHash src_pkh{};
+            if (!ms_has_policy && !sost::address_decode(g_from_address, src_pkh)) { fprintf(stderr, "Error: invalid --from-address\n"); return 1; }
+            std::vector<MsCliUtxo> utxos; std::string e;
+            if (!ms_fetch_utxos(src, utxos, e)) { fprintf(stderr, "Error: cannot read UTXOs of %s: %s\n", src.c_str(), e.c_str()); return 1; }
+            std::set<std::string> in_mempool;
+            if (!ms_skip_mempool) {
+                std::string merr, how;
+                if (!query_mempool_spends(src, in_mempool, merr, how)) {
+                    fprintf(stderr, "Error: cannot read the node mempool (%s); pass --skip-mempool-check to build anyway\n", merr.c_str()); return 1;
+                }
+            }
+            std::vector<sost::psst::Input> cands;
+            for (const auto& u : utxos) {
+                if (!u.spendable) continue;
+                if (in_mempool.count(sost::resv::outpoint_key(to_hex(u.txid.data(), 32), u.vout))) continue;
+                if (ms_has_policy ? (u.type != sost::OUT_MULTISIG)
+                                  : !(u.type == sost::OUT_TRANSFER || u.type == sost::OUT_COINBASE_MINER || u.type == sost::OUT_COINBASE_LOTTERY)) continue;
+                sost::psst::Input in; in.txid = u.txid; in.vout = u.vout;
+                in.spent.amount = u.amount; in.spent.type = u.type; in.spent.payload = u.payload;
+                in.spent.pubkey_hash = ms_has_policy ? pol.msh : src_pkh;
+                if (ms_has_policy) { in.auth_kind = sost::AUTH_MULTISIG; in.m = pol.m; in.keys = pol.keys; }
+                cands.push_back(in);
+            }
+            std::sort(cands.begin(), cands.end(), [](const sost::psst::Input& a, const sost::psst::Input& b) {
+                if (a.spent.amount != b.spent.amount) return a.spent.amount > b.spent.amount;
+                return a.txid < b.txid || (a.txid == b.txid && a.vout < b.vout);
+            });
+            if (cands.empty()) { fprintf(stderr, "Error: no spendable UTXOs for %s\n", src.c_str()); return 1; }
+            sost::psst::Psst p; int64_t fee = MIN_FEE_STOCKS; bool built = false;
+            for (int pass = 0; pass < 8 && !built; ++pass) {
+                std::vector<sost::psst::Input> ins; int64_t sum = 0;
+                for (const auto& c : cands) { if (sum >= amount + fee) break; ins.push_back(c); sum += c.spent.amount; }
+                if (sum < amount + fee) {
+                    fprintf(stderr, "Error: insufficient funds: %s SOST available at %s for %s + fee %s\n", format_sost(sum).c_str(), src.c_str(),
+                            format_sost(amount).c_str(), format_sost(fee).c_str()); return 1;
+                }
+                std::vector<sost::TxOutput> outs = {dest};
+                const int64_t change = sum - amount - fee;
+                if (change >= sost::DUST_THRESHOLD) {
+                    sost::TxOutput ch; ch.amount = change;
+                    if (ms_has_policy) { ch.type = sost::OUT_MULTISIG; ch.pubkey_hash = pol.msh; }   // change returns to the same MSH (D7)
+                    else { ch.type = sost::OUT_TRANSFER; ch.pubkey_hash = src_pkh; }
+                    outs.push_back(ch);
+                }
+                if (!sost::psst::Build(ms_net, ms_genesis, ins, outs, p, &e)) { fprintf(stderr, "Error: %s\n", e.c_str()); return 1; }
+                const int64_t need = calculate_fee((int64_t)sost::psst::FinalSize(p));
+                if (need <= sost::psst::Fee(p)) built = true; else fee = need;
+            }
+            if (!built) { fprintf(stderr, "Error: fee did not converge\n"); return 1; }
+            if (sost::psst::FinalSize(p) > (size_t)sost::MAX_TX_BYTES_STANDARD || sost::psst::FinalSigchecks(p) > sost::MAX_TX_SIGCHECKS_STANDARD) {
+                fprintf(stderr, "Error: the transaction would not be relay-standard (size %zu, sigchecks %lld); consolidate first\n",
+                        sost::psst::FinalSize(p), (long long)sost::psst::FinalSigchecks(p)); return 1;
+            }
+            if (!ms_write_new(ms_out, sost::psst::ToJson(p))) return 1;
+            printf("Unsigned multisig PSST written to %s (height %lld)\n", ms_out.c_str(), (long long)height);
+            ms_print_psst(p);
+            printf("Next: each signer runs  sost-cli --wallet <signer wallet> signtx %s --out <signer>.json --network %s\n",
+                   ms_out.c_str(), ms_network.c_str());
+            return 0;
+        }
+
+        // ---- signtx for a PSST ---------------------------------------------
+        if (cmd == "signtx" && ms_pos.size() == 1) {
+            std::string text;
+            if (ms_read_text(ms_pos[0], text) && text.find(sost::psst::PSST_FORMAT) != std::string::npos) {
+                sost::psst::Psst p; std::string e;
+                if (!sost::psst::FromJson(text, p, &e)) { fprintf(stderr, "Error: refusing to sign: %s\n", e.c_str()); return 1; }
+                if (p.net != ms_net) {
+                    fprintf(stderr, "Error: network mismatch — file is for '%s', signer is '%s' (use --network)\n", sost::MsNetworkName(p.net), ms_network.c_str()); return 1;
+                }
+                if (p.chain_id != sost::ChainIdFor(ms_net)) { fprintf(stderr, "Error: CHAIN_ID mismatch — refusing to sign\n"); return 1; }
+                if (p.genesis != ms_genesis) { fprintf(stderr, "Error: genesis mismatch — refusing to sign\n"); return 1; }
+                sost::Wallet w;
+                if (!ms_load_wallet(wallet_path, ms_pass_file, ms_pass_fd, w)) return 1;
+                std::vector<sost::PrivKey> mine;
+                for (const auto& k : w.keys()) {
+                    bool useful = false;
+                    for (const auto& in : p.inputs) {
+                        if (in.auth_kind == sost::AUTH_MULTISIG) {
+                            for (size_t j = 0; j < in.keys.size(); ++j) if (in.keys[j] == k.pubkey && !in.sigs.count((uint8_t)j)) useful = true;
+                        } else if (!in.single_signed && in.spent.pubkey_hash == k.pkh) useful = true;
+                    }
+                    if (useful) mine.push_back(k.privkey);
+                }
+                if (mine.empty()) { fprintf(stderr, "Error: this wallet holds no key that can add a signature to this transaction\n"); return 1; }
+                printf("\n=== OFFLINE MULTISIG SIGNING — REVIEW CAREFULLY ===\n");
+                ms_print_psst(p);
+                if (!g_yes_flag) {
+                    printf("\nSign with %zu key(s) of this wallet? Type 'yes' to continue: ", mine.size());
+                    fflush(stdout);
+                    std::string ans; if (!std::getline(std::cin, ans) || ans != "yes") { fprintf(stderr, "Not signed.\n"); return 1; }
+                }
+                int added = sost::psst::Sign(p, mine, &e);
+                if (added <= 0) { fprintf(stderr, "Error: signing failed: %s\n", e.c_str()); return 1; }
+                const std::string j = sost::psst::ToJson(p);
+                if (!ms_out.empty()) { if (!ms_write_new(ms_out, j)) return 1; printf("\n%d signature(s) added; written to %s\n", added, ms_out.c_str()); }
+                else printf("%s", j.c_str());
+                bool complete = false; sost::psst::Assemble(p, &complete);
+                printf("complete: %s\n", complete ? "yes (run verifytx, then sendrawtransaction)" : "no (collect more signatures, then combinetx)");
+                return 0;
+            }
+        }
+    }
+
+    // V17 wallet rules (spec §10.3): a multisig address (MSH) is valid only in an
+    // OUT_MULTISIG output. Refuse it as an HTLC claimant/refund key, a BOND/ESCROW
+    // lock or a destination of the legacy single-key builders.
+    {
+        auto any_ms = [&]() {
+            for (int i = arg_start + 1; i < argc; ++i) if (sost::LooksLikeMultisigAddress(argv[i])) return true;
+            return sost::LooksLikeMultisigAddress(g_send_to);
+        };
+        if ((cmd == "createhtlclock" || cmd == "claimhtlc" || cmd == "refundhtlc") && any_ms()) {
+            fprintf(stderr, "Error: a multisig address cannot be an HTLC claimant or refund key (funds would be unspendable)\n"); return 1;
+        }
+        if ((cmd == "create-escrow" || cmd == "create-bond") && any_ms()) {
+            fprintf(stderr, "Error: a multisig address cannot be placed in a BOND/ESCROW lock (funds would be unspendable)\n"); return 1;
+        }
+        if ((cmd == "send" || cmd == "createtx" || cmd == "sendmany") && any_ms()) {
+            fprintf(stderr, "Error: multisig destinations are paid with a version-2 transaction: use  sost-cli --from-address <sost1..> buildtx <sostms..> <amount> --out tx.json\n");
+            return 1;
+        }
     }
 
     // =====================================================================

@@ -54,6 +54,9 @@ bool MsNetworkFromName(const std::string& name, MsNetwork& out);
 const char* MsNetworkName(MsNetwork n);          // "mainnet" | "testnet" | "dev"
 const ChainId& ChainIdFor(MsNetwork n);
 const char* MultisigHrp(MsNetwork n);            // "sostms" | "tsostms" | "dsostms"
+// MULTISIG_HEIGHT of each network profile (wallet tooling: refuse to build v2 /
+// OUT_MULTISIG before activation). Pinned against params.h by static_assert.
+int64_t MultisigHeightFor(MsNetwork n);
 
 // ---------------------------------------------------------------------------
 // Policy (§4)

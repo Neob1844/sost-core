@@ -64,6 +64,7 @@
 #include "sost/jackpot_block.h"    // V15 (J) live wiring: block-level jackpot validation (validate BEFORE mutate)
 #include "sost/beacon.h"
 #include "sost/beacon_p2p.h"
+#include "sost/multisig.h"     // V17 — sostms addresses in the address RPCs
 
 #include <fstream>
 #include <sys/socket.h>
@@ -2765,12 +2766,23 @@ static std::string handle_getassetbalance(const std::string& id, const std::vect
     return rpc_result(id,s.str());
 }
 
+// V17: address RPCs accept a single-key "sost1..." address or a bech32m multisig
+// address of THIS build's network ("sostms1" / "tsostms1" / "dsostms1"). A multisig
+// address matches only OUT_MULTISIG outputs whose lock is its MSH.
+static bool decode_rpc_address(const std::string& addr, PubKeyHash& pkh, bool& is_ms) {
+    is_ms = false;
+    if (address_valid(addr)) return address_decode(addr, pkh);
+    if (sost::MultisigAddressDecode(addr, sost::ActiveMsNetwork(), pkh)) { is_ms = true; return true; }
+    return false;
+}
+
 static std::string handle_validateaddress(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
-    bool valid=address_valid(p[0]); bool mine=g_wallet.has_address(p[0]);
+    PubKeyHash vp{}; bool is_ms = false;
+    bool valid=decode_rpc_address(p[0], vp, is_ms); bool mine=!is_ms && g_wallet.has_address(p[0]);
     std::ostringstream s;
     s<<"{\"isvalid\":"<<(valid?"true":"false")<<",\"address\":\""<<json_escape(p[0])
-     <<"\",\"ismine\":"<<(mine?"true":"false")<<"}";
+     <<"\",\"ismine\":"<<(mine?"true":"false")<<",\"ismultisig\":"<<(is_ms?"true":"false")<<"}";
     return rpc_result(id,s.str());
 }
 
@@ -3429,17 +3441,15 @@ static std::string handle_getaddressbalance(const std::string& id, const std::ve
 static std::string handle_getaddressutxos(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
     std::string addr = p[0];
-    if(!address_valid(addr)) return rpc_error(id,-8,"invalid address");
-
-    PubKeyHash pkh{};
-    address_decode(addr, pkh);
+    PubKeyHash pkh{}; bool is_ms = false;
+    if(!decode_rpc_address(addr, pkh, is_ms)) return rpc_error(id,-8,"invalid address");
 
     std::ostringstream s;
     s << "[";
     bool first = true;
     const auto& umap = g_utxo_set.GetMap();
     for(const auto& kv : umap){
-        if(kv.second.pubkey_hash == pkh){
+        if(kv.second.pubkey_hash == pkh && (kv.second.type == OUT_MULTISIG) == is_ms){
             if(!first) s << ",";
             first = false;
             bool mature = !kv.second.is_coinbase ||
@@ -3479,16 +3489,15 @@ static std::string handle_getaddressutxos(const std::string& id, const std::vect
 static std::string handle_getmempoolspends(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
     const std::string addr = p[0];
-    if(!address_valid(addr)) return rpc_error(id,-8,"invalid address");
-    PubKeyHash pkh{};
-    address_decode(addr, pkh);
+    PubKeyHash pkh{}; bool is_ms = false;
+    if(!decode_rpc_address(addr, pkh, is_ms)) return rpc_error(id,-8,"invalid address");
 
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     std::ostringstream s;
     s << "{\"address\":\"" << addr << "\",\"mempool_size\":" << g_mempool.Size() << ",\"spent\":[";
     bool first = true;
     for(const auto& kv : g_utxo_set.GetMap()){
-        if(kv.second.pubkey_hash != pkh) continue;
+        if(kv.second.pubkey_hash != pkh || (kv.second.type == OUT_MULTISIG) != is_ms) continue;
         Hash256 by{};
         if(!g_mempool.SpentBy(kv.first, by)) continue;
         if(!first) s << ",";

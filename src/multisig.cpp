@@ -105,6 +105,21 @@ const char* MultisigHrp(MsNetwork n) {
     switch (n) { case MsNetwork::TESTNET: return "tsostms"; case MsNetwork::DEVNET: return "dsostms"; default: return "sostms"; }
 }
 
+int64_t MultisigHeightFor(MsNetwork n) {
+    switch (n) {
+        case MsNetwork::TESTNET: return INT64_MAX;
+        case MsNetwork::DEVNET:  return 60;
+        default:                 return 40000;
+    }
+}
+#if defined(SOST_DEVNET_FORKS)
+static_assert(MULTISIG_HEIGHT == 60, "MultisigHeightFor(DEVNET) must equal the devnet MULTISIG_HEIGHT");
+#elif defined(SOST_TESTNET_FORKS)
+static_assert(MULTISIG_HEIGHT == INT64_MAX, "MultisigHeightFor(TESTNET) must equal the testnet MULTISIG_HEIGHT");
+#else
+static_assert(MULTISIG_HEIGHT == 40000, "MultisigHeightFor(MAINNET) must equal the mainnet MULTISIG_HEIGHT");
+#endif
+
 // ---------------------------------------------------------------------------
 // policy
 // ---------------------------------------------------------------------------
