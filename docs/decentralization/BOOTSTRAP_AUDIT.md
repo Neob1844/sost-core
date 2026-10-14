@@ -13,6 +13,32 @@ effect — nothing here is to be applied now).
 code location it came from. Where a claimed feature could not be found, that is
 stated explicitly rather than assumed.
 
+> **UPDATE 2026-10-14 — this audit is stale in parts; read this box first.**
+>
+> *Released binaries (v16.x, the code running on mainnet today):* there IS a persistent peer
+> store (`peers.txt`, mode 600, atomic, saved every 30 s) and ADDR/GETADDR gossip (VERS
+> capability byte, bounded, fuzz-tested) — §1.5/§1.6 below predate them. But three
+> consequences make them weak in the default configuration
+> (`docs/v40000/DECENTRALIZATION_ACTION_PLAN_40000.md` §0):
+> 1. the store keeps the **dialed string**, i.e. `seed-*.sostcore.com:19333` for a node that
+>    bootstrapped from the seeds, so it is useless once sostcore.com DNS is gone;
+> 2. gossip delivers almost no dialable addresses: hostnames are dropped by mainnet
+>    receivers, inbound peers are never shared and no node advertises its listen address;
+> 3. gossiped candidates are dialed only after losing **every** peer, so a node with 1–3
+>    peers never grows past them.
+>
+> *Branch `feat/v40k-p2p` (not released, not deployed)* implements P1–P7 of the action plan:
+> the store becomes an address book of RESOLVED `ip:port` entries (bounded 256, last-success,
+> 14-day failure expiry, gossip persisted only after a handshake); outbound target 8 with at
+> most 2 per /16, maintained every 30 s; listen port + self-connection nonce appended to VERS
+> (old nodes interoperate, lab-tested both directions) with feeler verification before an
+> inbound peer's address is shared; `--externalip`; `--addnode` (discovery stays on) next to
+> the exclusive `--connect`; a compiled-in fallback-IP list (empty until independent seed
+> operators with evidence exist); `getpeerinfo` `source`/`subnet16` and `getaddrbookinfo`.
+> A five-node line-topology lab with no DNS (seeds unreachable) is in
+> `tests/p2p/run_p2p_lab.py`. **None of this changes who runs the nodes**: there are still
+> 0 independent seeds and every default seed is under sostcore.com.
+
 ---
 
 ## 1. What the code actually does

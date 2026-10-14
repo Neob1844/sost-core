@@ -144,38 +144,70 @@ RPC at all — a good offline integrity check — use `--dry-run-replay`:
 
 ## 3. Peer discovery (and not depending on sostcore.com)
 
+> The behaviour below is the one on branch `feat/v40k-p2p` (P1–P7 of
+> `docs/v40000/DECENTRALIZATION_ACTION_PLAN_40000.md`). Released binaries up to
+> v16.x do NOT have it: their `peers.txt` keeps the dialed hostnames, gossip is
+> only used after losing every peer, and there is no `--addnode`.
+
 ### 3.1 Automatic (default)
 
-When you pass no `--connect`, the node bootstraps from a small set of
-geographically distributed default DNS seeds:
+With no `--connect`, the node bootstraps in this order and stops the automatic
+sources once 3 peers are connected:
 
-- `seed-eu.sostcore.com`
-- `seed-apac.sostcore.com`
-- `seed-us.sostcore.com`
-- `seed.sostcore.com` (backward-compatible alias)
+1. `--addnode` peers (always dialed, see 3.2);
+2. the **address book** `peers.txt` next to `--chain` (most recently successful first);
+3. `seeds.txt` next to `--chain` (one `host` or `host:port` per line, operator-supplied);
+4. the default DNS seeds `seed-eu`, `seed-apac`, `seed-us`, `seed` `.sostcore.com`;
+5. compiled-in fallback IPv4 literals (`FALLBACK_SEED_IPS`, empty until independent
+   seed operators with evidence exist — none are invented).
 
-It connects to up to three of them, then grows the mesh through peer exchange —
-once connected to *any* peer, it learns about others automatically. The seeds
-are a convenience for first contact, **not** an authority on the chain.
+After that the node keeps discovering peers while it is connected: every 30 s, while
+it has fewer than **8 outbound** peers, it dials up to 2 new addresses from its address
+book, from addresses learned by gossip, and from inbound peers' advertised listen
+addresses, with at most **2 outbound peers per /16** and an exponential retry back-off.
+The seeds are a convenience for first contact, **not** an authority on the chain.
 
-### 3.2 Manual (no reliance on sostcore.com seeds)
+**Address book (`peers.txt`, mode 600).** It holds the *resolved* `ip:port` of peers that
+completed a handshake with this node — never the hostname that was dialed, so a node
+that first connected through `seed-eu.sostcore.com` can redial its peers even if
+sostcore.com DNS disappears. At most 256 entries; an entry that has failed for 14 days
+is dropped; a gossiped address is written only after this node completed a handshake
+with it. Format: `ip:port last_success last_attempt fails first_fail source`. An older
+binary reading this file still gets `ip:port` from each line, and the new binary reads
+an old one-address-per-line file (hostname lines are dialed once and not kept).
 
-You can bootstrap entirely without the sostcore.com seeds. Point the node at
-any peer(s) you already trust or have been given — another independent node, a
-friend's node, your own second machine:
+**Self-advertisement.** The version message carries the node's listen port. A peer that
+connects to you learns `your_ip:listen_port`, verifies it with its own short "feeler"
+connection, and only then stores and gossips it. If your public address is not the one
+peers see (NAT, multiple addresses), pass `--externalip <ipv4>`. Old nodes ignore the
+extra bytes.
+
+### 3.2 `--addnode` (add peers, keep discovery) vs `--connect` (only these peers)
 
 ```bash
-# Connect to specific peers instead of the default seeds.
-# --connect may be repeated.
+# Add peers you trust; the address book, seeds.txt, DNS seeds, fallback IPs and
+# gossip all stay active. --addnode may be repeated; the node keeps them connected.
 ./sost-node --profile mainnet \
-  --connect 203.0.113.10:19333 \
-  --connect 198.51.100.22:19333
+  --addnode 203.0.113.10:19333 \
+  --addnode 198.51.100.22:19333
+
+# Connect ONLY to these peers (exclusive): no address book / seeds.txt / DNS seeds at
+# boot and no outbound discovery. Use for labs or a node behind your own gateway.
+./sost-node --profile mainnet --connect 203.0.113.10:19333
 ```
 
-As soon as one reachable peer is supplied, peer exchange takes over and the node
-discovers the rest of the network on its own. If you ever see
-`[P2P] WARNING: no default seed reachable`, supplying one working `--connect`
-peer is the fix.
+If you ever see `[P2P] WARNING: no stored peer, seeds.txt entry, default seed or fallback
+IP reachable`, one working `--addnode` peer is the fix; the node learns the rest by gossip
+and remembers it in `peers.txt`.
+
+### 3.3 Where your peers came from
+
+`getpeerinfo` reports, per peer, `source` (connect / addnode / store / seedsfile / dns /
+fallback / gossip / inbound), `subnet16` (only the first two octets, like the masked
+`addr`), the advertised `listen_port` and whether it is a short `feeler` connection.
+`getaddrbookinfo` returns counts only: address-book entries, failing entries, distinct
+/16s, entries by source, gossip candidates, pending feelers, outbound/inbound and the
+outbound target. No full address is exposed over RPC.
 
 Optional P2P link encryption is available via `--p2p-enc off|on|required`
 (default `off`); set it consistently with the peers you connect to.
