@@ -1459,6 +1459,36 @@ inline constexpr bool node_participation_active_at(int64_t height) {
 }
 
 // =============================================================================
+// V17 — BLOCK #40,000 CONSENSUS PACKAGE (owner-frozen 2026-10-14).
+// Single shared activation constant for every V17 rule (reward split 80/15/5 with
+// the Jackpot accumulator J, native multisig, live block-structure limits, ...).
+// Blocks below V17_HEIGHT validate EXACTLY as before.
+//   MAINNET : 40000
+//   TESTNET : INT64_MAX until the testnet soak release sets it
+//   DEVNET  : 60 (low, deterministic; a jackpot height: 24,30,...,54,60,66,...;
+//             after HIST_JACKPOT_V2_HEIGHT 42 so every V17 jackpot is a V2 jackpot)
+// Reward split normative spec: docs/v40000/V17_ECONOMICS_NORMATIVE.md
+// (pure helpers: include/sost/v17_economics.h).
+// =============================================================================
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V17_HEIGHT = 60;          // DEVNET_FAST ONLY
+#elif defined(SOST_TESTNET_FORKS)
+inline constexpr int64_t V17_HEIGHT = INT64_MAX;   // TESTNET: set by the testnet soak release
+#else
+inline constexpr int64_t V17_HEIGHT = 40000;       // MAINNET — OWNER-FROZEN
+#endif
+inline constexpr bool v17_active_at(int64_t height) {
+    return V17_HEIGHT != INT64_MAX && height >= V17_HEIGHT;
+}
+#if !defined(SOST_TESTNET_FORKS)
+static_assert(V17_HEIGHT > HIST_JACKPOT_V2_HEIGHT,
+              "V17 must activate after Jackpot V2: every V17 jackpot is a V2 jackpot "
+              "(winner independent of the current miner)");
+static_assert(V17_HEIGHT > V15_HEIGHT,
+              "V17 must activate after V15 (every-block DTD draw, Gold Vault/PoPC emission stopped)");
+#endif
+
+// =============================================================================
 // V15 DTD RECENCY GATE — active ONLY from V15_HEIGHT (pre-V15 replay byte-identical).
 // A DTD candidate must have mined at least one block within a recency window:
 //   - normal (non-jackpot) blocks: DTD_RECENCY_WINDOW  (5000 blocks)

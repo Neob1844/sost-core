@@ -1169,3 +1169,10 @@ target_link_libraries(cx-variance PRIVATE sost-core)
 
 add_executable(eq-benchmark tools/eq-benchmark.cpp)
 target_link_libraries(eq-benchmark PRIVATE sost-core)
+
+# V17 (block #40,000) — 80/15/5 subsidy split, Jackpot accumulator J, H-then-J
+# jackpot funding: pure rules, coinbase validator, block jackpot rule, DTD
+# scenarios, long UTXO simulation with exact supply conservation, reorg.
+add_executable(test-v17-economics tests/test_v17_economics.cpp)
+target_link_libraries(test-v17-economics PRIVATE sost-core)
+add_test(NAME v17-economics COMMAND test-v17-economics)

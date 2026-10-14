@@ -15,6 +15,7 @@
 #include "sost/popc_v15.h"    // P5 — PoPC V15 on-chain carrier output (0-value marker) exemption
 #include "sost/crypto.h"      // OTC-1 — sha256() for HTLC preimage verification (R21)
 #include "sost/jackpot.h"     // V15 (BLOCKER 2) — reserve freeze: is_reserve_output + gate
+#include "sost/v17_economics.h" // V17 — 80/15/5 subsidy split + Jackpot accumulator J
 #include "sost/tx_signer.h"   // OTC-1 — SpentOutput / VerifyTransactionInput (HTLC spend dispatch)
 #include "sost/params.h"       // V30000 — native_assets_active_at gate
 #include "sost/native_assets.h"
@@ -960,6 +961,144 @@ TxValidationResult ValidateTransactionPolicy(
 }
 
 // =============================================================================
+// V17 coinbase rules (height >= V17_HEIGHT). Normative: docs/v40000/V17_ECONOMICS_NORMATIVE.md
+//
+//   amounts      : sost::v17::coinbase_amounts(subsidy, fees)
+//                  miner_total = miner_subsidy + fees; dtd_subsidy; jackpot_j
+//   output[0]    : OUT_COINBASE_MINER, amount == miner_total (any pkh: the miner)
+//   DTD output   : present iff ctx.paid_out (== v17::dtd_paid_out(...)):
+//                  OUT_COINBASE_LOTTERY, amount == dtd_subsidy + pending_before,
+//                  pkh == ctx.expected_winner_pkh; pending_after == 0.
+//                  Absent: pending_after == pending_before + dtd_subsidy.
+//   J output     : present iff ctx.jackpot_j_payout > 0 (only at a jackpot height):
+//                  OUT_COINBASE_JACKPOT, amount == jackpot_j_payout <= j_before,
+//                  pkh == ctx.jackpot_winner_pkh.
+//   order        : MINER, [LOTTERY], [JACKPOT], then any recognized trailing
+//                  governance markers (inactive on mainnet)
+//   J_BALANCE    : expected_j_after == j_before - jackpot_j_payout + jackpot_j
+//   invariant    : sum(outputs) + Δpending + ΔJ == subsidy + fees  (exact, __int128)
+// Every output: empty payload, 0 < amount <= SUPPLY_MAX_STOCKS.
+// =============================================================================
+static TxValidationResult ValidateCoinbaseV17(const Transaction& tx,
+                                              int64_t subsidy,
+                                              int64_t total_fees,
+                                              size_t real_outs,
+                                              const Phase2CoinbaseContext* ctx)
+{
+    if (!ctx) {
+        return TxValidationResult::Fail(TxValCode::CB15_V17_JACKPOT_J,
+            "CB15: V17 coinbase validation requires the chain context");
+    }
+    const auto amt = sost::v17::coinbase_amounts(subsidy, total_fees);
+    if (!amt.ok) {
+        return TxValidationResult::Fail(TxValCode::CB12_LOTTERY_AMOUNT,
+            "CB12: V17 coinbase amounts out of range (subsidy=" + std::to_string(subsidy) +
+            ", fees=" + std::to_string(total_fees) + ")");
+    }
+    const bool dtd_out = ctx->paid_out;
+    const bool j_out   = ctx->jackpot_j_payout > 0;
+    if (ctx->jackpot_j_payout < 0 || ctx->j_before < 0 || ctx->jackpot_j_payout > ctx->j_before) {
+        return TxValidationResult::Fail(TxValCode::CB15_V17_JACKPOT_J,
+            "CB15: V17 jackpot J payout " + std::to_string(ctx->jackpot_j_payout) +
+            " outside [0, J_before=" + std::to_string(ctx->j_before) + "]");
+    }
+    const size_t expected_outs = 1 + (dtd_out ? 1 : 0) + (j_out ? 1 : 0);
+    if (real_outs != expected_outs) {
+        return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
+            "CB11: V17 coinbase must have exactly " + std::to_string(expected_outs) +
+            " outputs, got " + std::to_string(real_outs));
+    }
+    // output[0] — miner
+    if (tx.outputs[0].type != OUT_COINBASE_MINER) {
+        return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
+            "CB4: V17 output[0] must be OUT_COINBASE_MINER (0x01)", -1, 0);
+    }
+    if (tx.outputs[0].amount != amt.miner_total) {
+        return TxValidationResult::Fail(TxValCode::CB12_LOTTERY_AMOUNT,
+            "CB12: V17 miner amount " + std::to_string(tx.outputs[0].amount) +
+            " != miner_subsidy + fees = " + std::to_string(amt.miner_total), -1, 0);
+    }
+    size_t k = 1;
+    // DTD output
+    int64_t expected_pending_after = ctx->pending_before + amt.dtd_subsidy;
+    if (dtd_out) {
+        const int64_t expected_lottery = amt.dtd_subsidy + ctx->pending_before;
+        if (tx.outputs[k].type != OUT_COINBASE_LOTTERY) {
+            return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
+                "CB4: V17 output[1] must be OUT_COINBASE_LOTTERY (0x04)", -1, (int32_t)k);
+        }
+        if (tx.outputs[k].amount != expected_lottery || ctx->lottery_payout != expected_lottery) {
+            return TxValidationResult::Fail(TxValCode::CB12_LOTTERY_AMOUNT,
+                "CB12: V17 DTD amount " + std::to_string(tx.outputs[k].amount) +
+                " != dtd_subsidy + pending_before = " + std::to_string(expected_lottery), -1, (int32_t)k);
+        }
+        if (tx.outputs[k].pubkey_hash != ctx->expected_winner_pkh) {
+            return TxValidationResult::Fail(TxValCode::CB13_LOTTERY_WINNER,
+                "CB13: V17 OUT_COINBASE_LOTTERY does not pay the deterministic DTD winner", -1, (int32_t)k);
+        }
+        expected_pending_after = 0;
+        ++k;
+    }
+    if (ctx->expected_pending_after != expected_pending_after) {
+        return TxValidationResult::Fail(TxValCode::CB14_LOTTERY_INVARIANT,
+            "CB14: V17 expected_pending_after " + std::to_string(ctx->expected_pending_after) +
+            " != " + std::to_string(expected_pending_after));
+    }
+    // J output
+    if (j_out) {
+        if (tx.outputs[k].type != OUT_COINBASE_JACKPOT) {
+            return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
+                "CB4: V17 jackpot output must be OUT_COINBASE_JACKPOT (0x05) after MINER/LOTTERY",
+                -1, (int32_t)k);
+        }
+        if (tx.outputs[k].amount != ctx->jackpot_j_payout) {
+            return TxValidationResult::Fail(TxValCode::CB15_V17_JACKPOT_J,
+                "CB15: OUT_COINBASE_JACKPOT amount " + std::to_string(tx.outputs[k].amount) +
+                " != V17 J part " + std::to_string(ctx->jackpot_j_payout), -1, (int32_t)k);
+        }
+        if (tx.outputs[k].pubkey_hash != ctx->jackpot_winner_pkh) {
+            return TxValidationResult::Fail(TxValCode::CB15_V17_JACKPOT_J,
+                "CB15: OUT_COINBASE_JACKPOT does not pay the jackpot winner", -1, (int32_t)k);
+        }
+        ++k;
+    }
+    // No other output type may appear among the real outputs (in particular no
+    // OUT_COINBASE_JACKPOT when no J payout is due, no GOLD/POPC).
+    for (size_t i = 0; i < real_outs; ++i) {
+        if (!tx.outputs[i].payload.empty()) {
+            return TxValidationResult::Fail(TxValCode::CB10_CB_PAYLOAD,
+                "CB10: coinbase output[" + std::to_string(i) + "] must have empty payload", -1, (int32_t)i);
+        }
+        if (tx.outputs[i].amount <= 0) {
+            return TxValidationResult::Fail(TxValCode::R5_ZERO_AMOUNT,
+                "R5: V17 coinbase output[" + std::to_string(i) + "] amount <= 0", -1, (int32_t)i);
+        }
+        if (tx.outputs[i].amount > SUPPLY_MAX_STOCKS) {
+            return TxValidationResult::Fail(TxValCode::R6_AMOUNT_OVERFLOW,
+                "R6: V17 coinbase output[" + std::to_string(i) + "] amount exceeds supply max", -1, (int32_t)i);
+        }
+    }
+    // J_BALANCE transition
+    const __int128 j_after = (__int128)ctx->j_before - ctx->jackpot_j_payout + amt.jackpot_j;
+    if (j_after != (__int128)ctx->expected_j_after) {
+        return TxValidationResult::Fail(TxValCode::CB15_V17_JACKPOT_J,
+            "CB15: V17 expected_j_after " + std::to_string(ctx->expected_j_after) +
+            " != J_before - J_paid + jackpot_j");
+    }
+    // Exact emission invariant.
+    int64_t sum_outputs = 0;
+    for (size_t i = 0; i < real_outs; ++i) sum_outputs += tx.outputs[i].amount;  // each <= SUPPLY_MAX, <= 3 outputs
+    if (!sost::v17::v17_block_invariant(subsidy, total_fees, sum_outputs,
+                                        ctx->pending_before, ctx->expected_pending_after,
+                                        ctx->j_before, ctx->expected_j_after)) {
+        return TxValidationResult::Fail(TxValCode::CB14_LOTTERY_INVARIANT,
+            "CB14: V17 emission invariant broken: sum(outputs)=" + std::to_string(sum_outputs) +
+            " + dPending + dJ != subsidy + fees");
+    }
+    return TxValidationResult::Ok();
+}
+
+// =============================================================================
 // ValidateCoinbaseConsensus (CB1-CB10 + V11 Phase 2 CB11-CB14)
 // =============================================================================
 
@@ -1066,6 +1205,15 @@ TxValidationResult ValidateCoinbaseConsensus(
         }
     }
     const size_t real_outs = tx.outputs.size() - gov_markers;
+
+    // -------------------------------------------------------------------------
+    // V17 (height >= V17_HEIGHT): 80/15/5 subsidy split + Jackpot accumulator J.
+    // Selected by height alone; every height below V17_HEIGHT continues through
+    // the unchanged paths below.
+    // -------------------------------------------------------------------------
+    if (sost::v17_active_at(height)) {
+        return ValidateCoinbaseV17(tx, subsidy, total_fees, real_outs, phase2_ctx);
+    }
 
     // -------------------------------------------------------------------------
     // V11 Phase 2 (C8) — height-gated branch.

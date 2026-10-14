@@ -257,19 +257,18 @@ inline ReserveSelection select_reserve_utxos(const std::vector<ReserveUtxo>& sor
 // fills out_tx iff a payout tx is required (jackpot height, winner exists,
 // reserve non-empty, payout > 0). `sorted_reserve` MUST be pre-sorted by
 // reserve_utxo_less. Deterministic: identical chain state -> identical tx.
-inline bool build_canonical_jackpot_tx(int64_t height,
-                                       bool winner_exists,
-                                       const PubKeyHash& winner_pkh,
-                                       int64_t reserve_before,
-                                       int64_t rollover_before,
-                                       const std::vector<ReserveUtxo>& sorted_reserve,
-                                       const PubKeyHash& reserve_change_pkh,
-                                       Transaction& out_tx) {
-    const JackpotResult r = hist_jackpot_apply(height, winner_exists,
-                                               reserve_before, rollover_before);
-    if (!r.is_jackpot_block || !r.paid || r.payout <= 0) return false;
-
-    const ReserveSelection sel = select_reserve_utxos(sorted_reserve, r.payout);
+// Build the TX_TYPE_JACKPOT that pays exactly `payout` stocks from the frozen
+// reserve to `winner_pkh` (oldest-first reserve selection, change back to the
+// canonical reserve sink). Returns false iff payout <= 0 or the reserve cannot
+// cover it. Shared by the pre-V17 path (payout = hist_jackpot_apply().payout) and
+// the V17 path (payout = the H part from v17::jackpot_funding). Deterministic.
+inline bool build_jackpot_tx_for_payout(int64_t payout,
+                                        const PubKeyHash& winner_pkh,
+                                        const std::vector<ReserveUtxo>& sorted_reserve,
+                                        const PubKeyHash& reserve_change_pkh,
+                                        Transaction& out_tx) {
+    if (payout <= 0) return false;
+    const ReserveSelection sel = select_reserve_utxos(sorted_reserve, payout);
     if (!sel.sufficient || sel.indices.empty()) return false;  // must be covered
 
     out_tx = Transaction{};
@@ -290,14 +289,14 @@ inline bool build_canonical_jackpot_tx(int64_t height,
 
     // Output 0: payout -> winner (ordinary spendable OUT_TRANSFER).
     TxOutput w;
-    w.amount = r.payout;
+    w.amount = payout;
     w.type = OUT_TRANSFER;
     w.pubkey_hash = winner_pkh;
     out_tx.outputs.push_back(w);
 
     // Output 1 (only when change > 0): remainder -> canonical reserve sink,
     // re-entering the reserve set as an OUT_COINBASE_GOLD output (spec §5b).
-    const int64_t change = sel.total - r.payout;
+    const int64_t change = sel.total - payout;
     if (change > 0) {
         TxOutput c;
         c.amount = change;
@@ -308,23 +307,25 @@ inline bool build_canonical_jackpot_tx(int64_t height,
     return true;
 }
 
-// True iff `tx` is EXACTLY the canonical jackpot tx for this chain state. If no
-// jackpot tx is expected (not a jackpot block / no winner / empty reserve), any
-// tx is a mismatch. This is the whole A1 authorization model.
-inline bool jackpot_tx_matches_canonical(const Transaction& tx,
-                                         int64_t height,
-                                         bool winner_exists,
-                                         const PubKeyHash& winner_pkh,
-                                         int64_t reserve_before,
-                                         int64_t rollover_before,
-                                         const std::vector<ReserveUtxo>& sorted_reserve,
-                                         const PubKeyHash& reserve_change_pkh) {
-    Transaction expected;
-    if (!build_canonical_jackpot_tx(height, winner_exists, winner_pkh,
-                                    reserve_before, rollover_before,
-                                    sorted_reserve, reserve_change_pkh, expected)) {
-        return false;
-    }
+inline bool build_canonical_jackpot_tx(int64_t height,
+                                       bool winner_exists,
+                                       const PubKeyHash& winner_pkh,
+                                       int64_t reserve_before,
+                                       int64_t rollover_before,
+                                       const std::vector<ReserveUtxo>& sorted_reserve,
+                                       const PubKeyHash& reserve_change_pkh,
+                                       Transaction& out_tx) {
+    const JackpotResult r = hist_jackpot_apply(height, winner_exists,
+                                               reserve_before, rollover_before);
+    if (!r.is_jackpot_block || !r.paid || r.payout <= 0) return false;
+    return build_jackpot_tx_for_payout(r.payout, winner_pkh, sorted_reserve,
+                                       reserve_change_pkh, out_tx);
+}
+
+// Field-exact comparison of a candidate jackpot tx against the reconstruction:
+// version, tx_type, inputs (outpoints + all-zero signature/pubkey) and outputs
+// (amount, type, pkh, empty payload).
+inline bool jackpot_tx_equals_expected(const Transaction& tx, const Transaction& expected) {
     // V15 FINAL — pin tx.version too. The canonical jackpot is EXEMPT from
     // ValidateTransactionConsensus in the node's block path (it is keyless, and
     // R2 forbids its type in the standalone validator), so R1's version check
@@ -357,6 +358,26 @@ inline bool jackpot_tx_matches_canonical(const Transaction& tx,
         if (!a.payload.empty())             return false;
     }
     return true;
+}
+
+// True iff `tx` is EXACTLY the canonical jackpot tx for this chain state. If no
+// jackpot tx is expected (not a jackpot block / no winner / empty reserve), any
+// tx is a mismatch. This is the whole A1 authorization model.
+inline bool jackpot_tx_matches_canonical(const Transaction& tx,
+                                         int64_t height,
+                                         bool winner_exists,
+                                         const PubKeyHash& winner_pkh,
+                                         int64_t reserve_before,
+                                         int64_t rollover_before,
+                                         const std::vector<ReserveUtxo>& sorted_reserve,
+                                         const PubKeyHash& reserve_change_pkh) {
+    Transaction expected;
+    if (!build_canonical_jackpot_tx(height, winner_exists, winner_pkh,
+                                    reserve_before, rollover_before,
+                                    sorted_reserve, reserve_change_pkh, expected)) {
+        return false;
+    }
+    return jackpot_tx_equals_expected(tx, expected);
 }
 
 } // namespace sost::jackpot
