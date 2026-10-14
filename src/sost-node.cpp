@@ -2776,6 +2776,13 @@ static bool decode_rpc_address(const std::string& addr, PubKeyHash& pkh, bool& i
     return false;
 }
 
+// Display address of an output: OUT_MULTISIG locks are MSHs and show as the build's
+// bech32m multisig address, everything else as "sost1" + hex(pkh).
+static std::string rpc_out_address(const TxOutput& o) {
+    if (o.type == OUT_MULTISIG) return sost::MultisigAddressEncode(o.pubkey_hash, sost::ActiveMsNetwork());
+    return address_encode(o.pubkey_hash);
+}
+
 static std::string handle_validateaddress(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
     PubKeyHash vp{}; bool is_ms = false;
@@ -2968,7 +2975,7 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
     for(size_t i=0;i<entry->tx.outputs.size();++i){
         if(i)s<<",";
         const auto& o=entry->tx.outputs[i];
-        s<<"{\"value\":"<<format_sost(o.amount)<<",\"n\":"<<i<<",\"address\":\""<<address_encode(o.pubkey_hash)<<"\"}";
+        s<<"{\"value\":"<<format_sost(o.amount)<<",\"n\":"<<i<<",\"address\":\""<<rpc_out_address(o)<<"\"}";
     }
     s<<"]}";
     return rpc_result(id,s.str());
@@ -3174,7 +3181,7 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
         for(size_t i=0;i<mentry->tx.outputs.size();++i){
             if(i)s<<",";
             const auto&o=mentry->tx.outputs[i];
-            s<<"{\"address\":\""<<address_encode(o.pubkey_hash)
+            s<<"{\"address\":\""<<rpc_out_address(o)
              <<"\",\"amount\":"<<format_sost(o.amount)
              <<",\"type\":"<<(int)o.type;
             if(!o.payload.empty()){
@@ -3268,7 +3275,7 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
                 if(decode_tx_hex(g_blocks[ibh].tx_hexes[itpos],iraw)){
                     Transaction itx; std::string ie;
                     if(Transaction::Deserialize(iraw,itx,&ie)&&in.prev_index<itx.outputs.size()){
-                        in_addr=address_encode(itx.outputs[in.prev_index].pubkey_hash);
+                        in_addr=rpc_out_address(itx.outputs[in.prev_index]);
                         in_amt=itx.outputs[in.prev_index].amount;
                     }
                 }
@@ -3282,7 +3289,7 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
     for(size_t i=0;i<tx.outputs.size();++i){
         if(i)s<<",";
         const auto&o=tx.outputs[i];
-        s<<"{\"address\":\""<<address_encode(o.pubkey_hash)
+        s<<"{\"address\":\""<<rpc_out_address(o)
          <<"\",\"amount\":"<<format_sost(o.amount)
          <<",\"type\":"<<(int)o.type;
         if(!o.payload.empty()){

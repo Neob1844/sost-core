@@ -154,7 +154,11 @@ static void sign_all(Transaction& tx, const std::vector<SpentOutput>& spent, con
         if (tx.inputs[i].auth_kind == AUTH_SINGLE) SignInputV2Single(tx, i, spent, cid, GENESIS, priv(1));
 }
 static TxValidationContext ctx_at(int64_t h, const ChainId& cid = CHAIN_ID_MAINNET) {
-    TxValidationContext c; c.genesis_hash = GENESIS; c.spend_height = h; c.chain_id = cid; return c;
+    TxValidationContext c; c.genesis_hash = GENESIS; c.spend_height = h; c.chain_id = cid;
+    // devnet builds activate multisig (60) long before the mainnet capsule height (7350);
+    // the tests reason about capsule-era heights, so open capsules there too (no-op on mainnet).
+    if (c.capsule_activation_height > h) c.capsule_activation_height = 1;
+    return c;
 }
 static TxValidationResult validate(const Transaction& tx, const IUtxoView& v, int64_t h = MH,
                                    const ChainId& cid = CHAIN_ID_MAINNET) {
@@ -1038,6 +1042,56 @@ static void g_mempool() {
     CHECK(pol.ok, "3-of-5 spend is relay-standard: " + codestr(pol));
 }
 
+// ===========================================================================
+// group: fuzzlite — deterministic mutation campaign (not the >= 1e7 libFuzzer run)
+// ===========================================================================
+static void g_fuzzlite() {
+    std::printf("-- fuzzlite\n");
+    const auto seed_tx = unhex(V("v2tx1_signed_hex"));
+    const auto seed_tpl = unhex(V("v2tx1_unsigned_template_hex"));
+    uint64_t x = 0x9E3779B97F4A7C15ULL;
+    auto rnd = [&]() { x ^= x << 13; x ^= x >> 7; x ^= x << 17; return x; };
+    int parsed = 0, roundtrip_bad = 0, policy_calls = 0;
+    const int ITER = 300000;
+    for (int it = 0; it < ITER; ++it) {
+        std::vector<Byte> b = (it & 1) ? seed_tx : seed_tpl;
+        int nm = 1 + (int)(rnd() % 4);
+        for (int k = 0; k < nm; ++k) {
+            switch (rnd() % 4) {
+                case 0: b[rnd() % b.size()] ^= (Byte)(1u << (rnd() % 8)); break;
+                case 1: b[rnd() % b.size()] = (Byte)rnd(); break;
+                case 2: if (b.size() > 8) b.resize(b.size() - 1 - rnd() % 8); break;
+                default: b.insert(b.begin() + (long)(rnd() % b.size()), (Byte)rnd()); break;
+            }
+        }
+        Transaction t;
+        if (Transaction::Deserialize(b, t, nullptr)) {
+            ++parsed;
+            std::vector<Byte> again;
+            bool big = false; for (const auto& o : t.outputs) if (o.payload.size() > 512) big = true;
+            const bool sok = t.Serialize(again);
+            if (big ? sok : (!sok || again != b)) ++roundtrip_bad;   // canonical: one encoding per tx (R13-invalid >512 payloads cannot re-serialize)
+            for (const auto& in : t.inputs) if (in.auth_kind == AUTH_MULTISIG) { CheckMultisigPolicy(in.ms_m, in.ms_pubkeys); ++policy_calls; }
+            (void)TxSigchecks(t); (void)TxSerializedSizeExact(t);
+            if (TxSerializedSizeExact(t) != b.size()) ++roundtrip_bad;
+        }
+    }
+    CHECK(roundtrip_bad == 0, "every parseable mutation re-serializes byte-identically and its exact size == length (" +
+          std::to_string(parsed) + " parsed of " + std::to_string(ITER) + ")");
+    CHECK(parsed > 1000 && policy_calls > 1000, "mutation campaign reached the v2 parser and the policy checker");
+    // bech32m decoder on random strings over the alphabet + noise
+    int dec_ok = 0;
+    const std::string base = V("addr35_sostms");
+    for (int it = 0; it < 200000; ++it) {
+        std::string a = base;
+        int nm = 1 + (int)(rnd() % 3);
+        for (int k = 0; k < nm; ++k) a[7 + rnd() % (a.size() - 7)] = "qpzry9x8gf2tvdw0s3jn54khce6mua7lQB1-"[rnd() % 36];
+        if (a == base) continue;                               // mutation was a no-op
+        PubKeyHash o{}; if (MultisigAddressDecode(a, MsNetwork::MAINNET, o)) ++dec_ok;
+    }
+    CHECK(dec_ok == 0, "random 1-3 character corruptions of an address are rejected (accepted " + std::to_string(dec_ok) + " of 200000)");
+}
+
 int main(int argc, char** argv) {
     if (argc < 3) { std::printf("usage: test-multisig-v17 <source-dir> <group>\n"); return 2; }
     std::string root = argv[1], group = argv[2];
@@ -1058,6 +1112,7 @@ int main(int argc, char** argv) {
     else if (group == "activation") g_activation();
     else if (group == "reorg") g_reorg();
     else if (group == "mempool") g_mempool();
+    else if (group == "fuzzlite") g_fuzzlite();
     else { std::printf("unknown group\n"); return 2; }
     std::printf("=== %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

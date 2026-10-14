@@ -1087,7 +1087,7 @@ add_test(NAME type-registry COMMAND test-type-registry ${CMAKE_CURRENT_SOURCE_DI
 # ctest per group. The activation group asserts mainnet heights (39998..40001).
 add_executable(test-multisig-v17 tests/test_multisig_v17.cpp)
 target_link_libraries(test-multisig-v17 PRIVATE sost-core)
-foreach(_msg vectors serial policy bech32m sighash validation sigchecks activation reorg mempool)
+foreach(_msg vectors serial policy bech32m sighash validation sigchecks activation reorg mempool fuzzlite)
     add_test(NAME multisig-${_msg} COMMAND test-multisig-v17 ${CMAKE_CURRENT_SOURCE_DIR} ${_msg})
 endforeach()
 add_executable(test-multisig-psst tests/test_multisig_psst.cpp)

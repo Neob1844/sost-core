@@ -1743,7 +1743,7 @@ int main(int argc, char** argv) {
     {
         std::vector<std::string> ms_pos;
         std::string ms_out, ms_policy, ms_network = ms_default_network(), ms_pass_file;
-        int ms_pass_fd = -1; bool ms_skip_mempool = false, ms_has_policy = false;
+        int ms_pass_fd = -1; bool ms_skip_mempool = false, ms_has_policy = false, ms_allow_early = false;
         bool ms_bad_flag = false;
         const bool ms_cmd = (cmd == "createmultisig" || cmd == "combinetx" || cmd == "verifytx" || cmd == "getpubkey" ||
                              cmd == "buildtx" || cmd == "signtx");
@@ -1756,6 +1756,7 @@ int main(int argc, char** argv) {
                 else if (a == "--passphrase-file" && i + 1 < argc) ms_pass_file = argv[++i];
                 else if (a == "--passphrase-fd" && i + 1 < argc) ms_pass_fd = atoi(argv[++i]);
                 else if (a == "--skip-mempool-check") ms_skip_mempool = true;
+                else if (a == "--allow-before-activation") ms_allow_early = true;   // test networks: build anyway, the node still enforces
                 else if (a == "--yes" || a == "-y") g_yes_flag = true;
                 else if (!a.empty() && a[0] == '-') { ms_bad_flag = true; ms_pos.push_back(a); }
                 else ms_pos.push_back(a);
@@ -1915,8 +1916,12 @@ int main(int argc, char** argv) {
             if (height < 0) { fprintf(stderr, "Error: cannot connect to node at %s:%d\n", g_node_host.c_str(), g_node_port); return 1; }
             const int64_t mh = sost::MultisigHeightFor(ms_net);
             if (height + 1 < mh) {
-                fprintf(stderr, "Error: native multisig is not active on %s before block %lld (next block %lld) — refusing to build\n",
-                        ms_network.c_str(), (long long)mh, (long long)(height + 1)); return 1;
+                if (!ms_allow_early) {
+                    fprintf(stderr, "Error: native multisig is not active on %s before block %lld (next block %lld) — refusing to build\n",
+                            ms_network.c_str(), (long long)mh, (long long)(height + 1)); return 1;
+                }
+                fprintf(stderr, "WARNING: --allow-before-activation: building for block %lld although multisig activates at %lld;\n"
+                                "         every node rejects this transaction until then.\n", (long long)(height + 1), (long long)mh);
             }
             // candidate inputs
             const std::string src = ms_has_policy ? pol.address : g_from_address;
