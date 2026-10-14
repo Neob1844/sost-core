@@ -5986,11 +5986,11 @@ static bool apply_node_state_for_block(const std::vector<Transaction>& txs, int6
         auto k = np::classify_node_tx(txs[i]);
         if (k == np::NodeTxKind::Bind) {
             np::NodeBindTx b; const char* r = nullptr;
-            if (!np::extract_bind(txs[i], b, &r)) { err = std::string("node_bind_encoding:") + (r?r:""); return false; }
+            if (!np::extract_bind_at(txs[i], height, b, &r)) { err = std::string("node_bind_encoding:") + (r?r:""); return false; }
             bnt.binds.push_back(b);
         } else if (k == np::NodeTxKind::Heartbeat) {
             np::NodeHeartbeatTx hb; const char* r = nullptr;
-            if (!np::extract_heartbeat(txs[i], hb, &r)) { err = std::string("node_hb_encoding:") + (r?r:""); return false; }
+            if (!np::extract_heartbeat_at(txs[i], height, hb, &r)) { err = std::string("node_hb_encoding:") + (r?r:""); return false; }
             bnt.heartbeats.push_back(hb);
         }
     }
@@ -7148,6 +7148,20 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             return false;
         }
         txs.push_back(std::move(tx));
+    }
+
+    // V17 (spec §7.1, D4, D9): live-path block limits — tx count <= 65,536, serialized
+    // tx bytes <= 1,000,000 and sigchecks <= 12,000 — checked right after parsing and
+    // BEFORE merkle / coinbase / jackpot / node-tx / signature work. This is the ONE
+    // block acceptance path: normal relay, submitblock and reorg_connect (fork blocks
+    // replayed by try_reorganize) all pass here. No-op below V17_HEIGHT.
+    {
+        std::string lim;
+        if(!CheckBlockLimitsV17(txs, height, &lim)){
+            printf("[BLOCK] REJECTED: %s at height %lld\n", lim.c_str(), (long long)height);
+            record_block_reject(lim);
+            return false;
+        }
     }
 
     // Validate merkle root from txs
@@ -8481,6 +8495,9 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         // after an epoch boundary, bind already applied, ...). Policy only.
         if (size_t dn = g_mempool.RevalidateNodeTxs(height + 1))
             printf("[MEMPOOL] evicted %zu node tx(s) no longer valid at h=%lld\n", dn, (long long)(height + 1));
+        // V17: never keep a version-2 / OUT_MULTISIG tx when the next block is below activation.
+        if (size_t dm = g_mempool.RemoveMultisigBeforeActivation(height + 1))
+            printf("[MEMPOOL] evicted %zu multisig/v2 tx(s): next height %lld is below V17\n", dm, (long long)(height + 1));
         if(exp>0) printf("[BLOCK] Mempool: %zu expired HTLC lock(s) evicted\n", exp);
     }
 
@@ -9228,6 +9245,15 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             }
         }
     }
+
+    // V17 (spec §9.5): a reorg across activation must leave no version-2 tx and no tx
+    // creating or spending OUT_MULTISIG in the mempool while tip + 1 < MULTISIG_HEIGHT.
+    if (size_t dm = g_mempool.RemoveMultisigBeforeActivation(g_chain_height + 1))
+        printf("[REORG] Mempool: evicted %zu multisig/v2 tx(s) (next height %lld below V17)\n",
+               dm, (long long)(g_chain_height + 1));
+    if (size_t dn = g_mempool.RevalidateNodeTxs(g_chain_height + 1))
+        printf("[REORG] Mempool: evicted %zu node tx(s) no longer valid at h=%lld\n",
+               dn, (long long)(g_chain_height + 1));
 
     printf("[REORG] Success: new tip = %s at height %lld\n",
            to_hex(g_blocks.back().block_id.data(), 32).substr(0, 16).c_str(), (long long)g_chain_height);

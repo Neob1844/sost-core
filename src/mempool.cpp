@@ -14,6 +14,11 @@
 
 namespace sost {
 
+// V17: the coinbase and the jackpot cost 0 sigchecks, so the whole consensus budget
+// is available to mempool txs (node txs included). Applied at every height: no
+// historical template ever came close (500 KiB / 133 B < 4,000 sigchecks).
+static constexpr int64_t TEMPLATE_SIGCHECK_BUDGET = MAX_BLOCK_SIGCHECKS;
+
 Mempool::Mempool(size_t max_entries)
     : max_entries_(max_entries)
 {}
@@ -455,6 +460,32 @@ size_t Mempool::RevalidateNodeTxs(int64_t next_height) {
 }
 
 // ---------------------------------------------------------------------------
+// RemoveMultisigBeforeActivation (V17)
+// ---------------------------------------------------------------------------
+size_t Mempool::RemoveMultisigBeforeActivation(int64_t next_height) {
+    if (multisig_active_at(next_height)) return 0;
+    std::vector<Hash256> dead;
+    for (const auto& [txid, e] : entries_) {
+        bool ms = (e.tx.version == TX_VERSION_V2);
+        for (const auto& o : e.tx.outputs) if (o.type == OUT_MULTISIG) ms = true;
+        // A tx spending OUT_MULTISIG must be version 2 (S16), so it is covered above.
+        if (ms) dead.push_back(txid);
+    }
+    for (const auto& id : dead) RemoveTransaction(id);
+    // Children of evicted txs can no longer connect; drop them too (iterate to a fixpoint).
+    for (bool again = !dead.empty(); again; ) {
+        again = false;
+        std::vector<Hash256> orphaned;
+        std::set<Hash256> gone(dead.begin(), dead.end());
+        for (const auto& [txid, e] : entries_)
+            for (const auto& op : e.spent_outpoints)
+                if (gone.count(op.txid)) { orphaned.push_back(txid); break; }
+        for (const auto& id : orphaned) { RemoveTransaction(id); dead.push_back(id); again = true; }
+    }
+    return dead.size();
+}
+
+// ---------------------------------------------------------------------------
 // BuildBlockTemplate
 // ---------------------------------------------------------------------------
 
@@ -466,6 +497,7 @@ Mempool::BlockTemplate Mempool::BuildBlockTemplate(
     BlockTemplate tmpl;
     const bool htlc_expiry_filter =
         next_height > 0 && atomic_swap_relay_active_at(next_height);
+    int64_t tmpl_sigchecks = 0;
 
     for (auto it = fee_rate_index_.rbegin(); it != fee_rate_index_.rend(); ++it) {
         if (tmpl.txs.size() >= max_txs) break;
@@ -482,6 +514,12 @@ Mempool::BlockTemplate Mempool::BuildBlockTemplate(
         // the template-poisoning that degraded mining in the first swap deploy.
         if (htlc_expiry_filter && tx_has_expired_htlc_lock(entry.tx, next_height))
             continue;
+
+        // V17 (spec §9.4): the template keeps the block within MAX_BLOCK_SIGCHECKS.
+        // The coinbase costs 0, the jackpot 0; node txs are budgeted here as well.
+        const int64_t sc = TxSigchecksOf(entry.tx);
+        if (tmpl_sigchecks + sc > TEMPLATE_SIGCHECK_BUDGET) continue;
+        tmpl_sigchecks += sc;
 
         tmpl.txs.push_back(entry.tx);
         tmpl.txids.push_back(entry.txid);
@@ -580,6 +618,7 @@ Mempool::BlockTemplate Mempool::BuildBlockTemplateCPFP(
     // Step 4: Select transactions, ensuring ancestors are included before children
     BlockTemplate tmpl;
     std::set<Hash256> included;
+    int64_t cpfp_sigchecks = 0;
 
     for (const auto& se : sorted) {
         if (tmpl.txs.size() >= max_txs) break;
@@ -616,6 +655,15 @@ Mempool::BlockTemplate Mempool::BuildBlockTemplateCPFP(
 
         if (tmpl.txs.size() + needed_count > max_txs) continue;
         if (tmpl.total_size + needed_size > max_block_size) continue;
+        // V17 (spec §9.4): keep the template within the block sigcheck budget.
+        int64_t needed_sc = 0;
+        for (const auto& anc : info.ancestors) {
+            if (included.count(anc)) continue;
+            auto it = entries_.find(anc);
+            if (it != entries_.end()) needed_sc += TxSigchecksOf(it->second.tx);
+        }
+        if (cpfp_sigchecks + needed_sc > TEMPLATE_SIGCHECK_BUDGET) continue;
+        cpfp_sigchecks += needed_sc;
 
         // Add ancestors first (topological: parents before children)
         // Simple approach: add all ancestors that aren't yet included

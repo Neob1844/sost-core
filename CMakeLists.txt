@@ -235,6 +235,8 @@ add_library(sost-core STATIC
     src/addressbook.cpp
     src/wallet_policy.cpp
     src/hd_wallet.cpp
+    # V17 — native M-of-N multisig (policy, sighash v2, sigchecks, bech32m)
+    src/multisig.cpp
     # Phase 8: PoPC application layer (no consensus)
     src/popc.cpp
     src/popc_tx_builder.cpp
@@ -1079,6 +1081,14 @@ add_test(NAME hd-wallet COMMAND test-hd-wallet)
 add_executable(test-type-registry tests/test_type_registry.cpp)
 target_link_libraries(test-type-registry PRIVATE sost-core)
 add_test(NAME type-registry COMMAND test-type-registry ${CMAKE_CURRENT_SOURCE_DIR})
+
+# V17 native multisig (docs/v40000/NATIVE_MULTISIG_SPEC_40000.md): one binary, one
+# ctest per group. The activation group asserts mainnet heights (39998..40001).
+add_executable(test-multisig-v17 tests/test_multisig_v17.cpp)
+target_link_libraries(test-multisig-v17 PRIVATE sost-core)
+foreach(_msg vectors serial policy bech32m sighash validation sigchecks activation reorg mempool)
+    add_test(NAME multisig-${_msg} COMMAND test-multisig-v17 ${CMAKE_CURRENT_SOURCE_DIR} ${_msg})
+endforeach()
 
 add_executable(test-popc tests/test_popc.cpp)
 target_link_libraries(test-popc PRIVATE sost-core)

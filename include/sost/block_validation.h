@@ -61,6 +61,22 @@ bool ValidateBlockStructure(
     std::string* err = nullptr);
 
 // ---------------------------------------------------------------------------
+// L1b — V17 live-path block limits (spec §7.1, D4, D9). Evaluated right after
+// every transaction is deserialized and BEFORE merkle, coinbase, jackpot,
+// node-tx and any signature verification, at h >= V17_HEIGHT only:
+//   a. txcount <= MAX_BLOCK_TXS_CONSENSUS (65,536)        else BLOCK_TOO_MANY_TXS
+//   b. sum tx_size <= MAX_BLOCK_SIZE_CONSENSUS (1,000,000) else BLOCK_TX_BYTES_EXCEEDED
+//      (exact canonical tx bytes incl. the coinbase; header / JSON not counted)
+//   c. sum sigchecks <= MAX_BLOCK_SIGCHECKS (12,000)       else BLOCK_TOO_MANY_SIGCHECKS
+// Below V17_HEIGHT it returns true without looking (history unchanged). On
+// failure `reason` is exactly one of the three strings above.
+// ---------------------------------------------------------------------------
+bool CheckBlockLimitsV17(
+    const std::vector<Transaction>& txs,
+    int64_t height,
+    std::string* reason = nullptr);
+
+// ---------------------------------------------------------------------------
 // L2 — Header context validation (prev-link, time rules, expected difficulty)
 // ---------------------------------------------------------------------------
 bool ValidateBlockHeaderContext(

@@ -109,8 +109,32 @@ constexpr uint8_t OUT_ASSET_BURN        = 0x42; // unspendable: provably destroy
 constexpr uint8_t OUT_ASSET_GENESIS_DEF = 0x43; // asset definition (symbol/name/decimals/policy/cap/manifest)
 
 // -----------------------------------------------------------------------------
+// V17 native multisig (spec docs/v40000/NATIVE_MULTISIG_SPEC_40000.md). Active
+// only from MULTISIG_HEIGHT (params.h, == V17_HEIGHT). Below it R11/S9 reject
+// OUT_MULTISIG and R1 rejects version 2, so historical replay is unchanged.
+//   * OUT_MULTISIG (0x50): output locked to MSH = RIPEMD160(SHA256("SOST-MS1" ||
+//     policy)); spendable only by a version-2 input with auth_kind 0x01.
+//     0x51-0x5F are reserved custody codes with no meaning (R11 rejects them).
+//   * Transaction version 2: valid only with tx_type STANDARD; every input carries
+//     an auth_kind (0x00 single-sig, 0x01 multisig). The input layout depends on
+//     the version byte alone (== 2 -> input_v2, anything else -> input_v1).
+// -----------------------------------------------------------------------------
+constexpr uint8_t  OUT_MULTISIG   = 0x50;
+constexpr uint32_t TX_VERSION_V1  = 1;
+constexpr uint32_t TX_VERSION_V2  = 2;
+constexpr uint8_t  AUTH_SINGLE    = 0x00;
+constexpr uint8_t  AUTH_MULTISIG  = 0x01;
+constexpr size_t   MAX_MULTISIG_N = 15;
+
+// -----------------------------------------------------------------------------
 // TxInput
 // -----------------------------------------------------------------------------
+
+// One multisig signature: the index of the policy key it was made with + compact sig.
+struct MsSignature {
+    uint8_t key_index{0};
+    std::array<Byte, 64> sig{};
+};
 
 struct TxInput {
     Hash256 prev_txid{};                 // 32 bytes raw
@@ -118,9 +142,30 @@ struct TxInput {
     std::array<Byte, 64> signature{};    // compact ECDSA (r||s), or coinbase field
     std::array<Byte, 33> pubkey{};       // compressed pubkey (or 0x00*33 for coinbase)
 
+    // ---- version-2 inputs only (never serialized for a version != 2 tx) ----
+    //   auth_kind 0x00: signature + pubkey above (97-byte auth)
+    //   auth_kind 0x01: M || N || PK x N || K || (key_index || sig) x K
+    uint8_t auth_kind{AUTH_SINGLE};
+    uint8_t ms_m{0};
+    std::vector<std::array<Byte, 33>> ms_pubkeys;   // N policy keys, as on the wire
+    std::vector<MsSignature> ms_sigs;               // K signatures, as on the wire
+
+    // input_v1 layout (133 bytes)
     void SerializeTo(std::vector<Byte>& out) const;
 
     static bool DeserializeFrom(
+        const std::vector<Byte>& in,
+        size_t& offset,
+        TxInput& out_txin,
+        std::string* err = nullptr);
+
+    // input_v2 layout: prev_txid || prev_index || auth_kind || auth.
+    // Fails (no output) if N or K does not fit the wire format (N 1..255, K 0..255).
+    bool SerializeV2To(std::vector<Byte>& out, std::string* err = nullptr) const;
+
+    // Parse rules X1 truncated, X3 unknown_auth_kind, X4 policy_n_range (N = 0 or
+    // N > 15), X5 sig_count_range (K > 15). M and K = 0 are not parse errors.
+    static bool DeserializeV2From(
         const std::vector<Byte>& in,
         size_t& offset,
         TxInput& out_txin,

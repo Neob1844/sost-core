@@ -119,6 +119,11 @@ public:
     // Returns the number of entries removed.
     size_t RevalidateNodeTxs(int64_t next_height);
 
+    // V17 (spec §9.5): when the next block height is below MULTISIG_HEIGHT, evict every
+    // version-2 tx and every tx creating or spending OUT_MULTISIG (a reorg across the
+    // activation). No-op at/after activation. Returns the number of evicted txs.
+    size_t RemoveMultisigBeforeActivation(int64_t next_height);
+
     // Enable/disable full RBF (default: enabled)
     void SetRBFEnabled(bool enabled) { rbf_enabled_ = enabled; }
     bool RBFEnabled() const { return rbf_enabled_; }

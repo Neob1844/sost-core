@@ -1572,4 +1572,63 @@ inline constexpr int32_t effective_profile_ceiling_at(int64_t height) {
     return CASERT_HARD_PROFILE_CEILING;                                                     // H10
 }
 
+// =============================================================================
+// V17 — BLOCK #40,000 CONSENSUS PACKAGE (owner-frozen 2026-10-14)
+//
+// V17_HEIGHT is the single shared activation constant of the #40,000 package.
+//   MAINNET 40000 (the only allowed fallback is 50000, spec §11);
+//   TESTNET INT64_MAX until the testnet soak release sets it (spec §2.1);
+//   DEVNET  60 (SOST_DEVNET_FORKS; low so a local devnet crosses it in minutes).
+// Blocks < V17_HEIGHT validate exactly as before.
+//
+// Native multisig (docs/v40000/NATIVE_MULTISIG_SPEC_40000.md) activates here:
+// OUT_MULTISIG 0x50, transaction version 2 (STANDARD only), the NODE_BIND /
+// NODE_HEARTBEAT outer-version fence (R30), and the live-path block limits
+// (<= 1,000,000 serialized tx bytes, <= 65,536 txs, <= 12,000 sigchecks).
+// =============================================================================
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V17_HEIGHT = 60;          // DEVNET_FAST ONLY
+#elif defined(SOST_TESTNET_FORKS)
+inline constexpr int64_t V17_HEIGHT = INT64_MAX;   // TESTNET: set by the testnet soak release
+#else
+inline constexpr int64_t V17_HEIGHT = 40000;       // MAINNET (fallback 50000 only)
+#endif
+inline constexpr int64_t MULTISIG_HEIGHT = V17_HEIGHT;
+
+#if !defined(SOST_DEVNET_FORKS) && !defined(SOST_TESTNET_FORKS)
+static_assert(MULTISIG_HEIGHT == 40000 || MULTISIG_HEIGHT == 50000,
+              "mainnet MULTISIG_HEIGHT must be 40000 or the documented fallback 50000");
+#endif
+static_assert(MULTISIG_HEIGHT > HIST_JACKPOT_V2_HEIGHT, "MULTISIG_HEIGHT must follow Jackpot V2");
+static_assert(MULTISIG_HEIGHT > V15_HEIGHT,              "MULTISIG_HEIGHT must follow V15");
+static_assert(MULTISIG_HEIGHT >= NODE_BIND_V2_HEIGHT || NODE_BIND_V2_HEIGHT == INT64_MAX,
+              "MULTISIG_HEIGHT must not precede NODE_BIND v2");
+
+// Multisig rules (OUT_MULTISIG, version 2, R25-R30, S16-S18) apply at h >= MULTISIG_HEIGHT.
+inline constexpr bool multisig_active_at(int64_t height) { return height >= MULTISIG_HEIGHT; }
+// Live-path block limits (D9) and the sigcheck cap (D4) apply at h >= V17_HEIGHT.
+inline constexpr bool v17_block_limits_active_at(int64_t height) { return height >= V17_HEIGHT; }
+// NODE_BIND / NODE_HEARTBEAT outer Transaction.version must be 1 at h >= V17_HEIGHT (D2, R30).
+inline constexpr bool node_tx_version_fence_at(int64_t height) { return height >= V17_HEIGHT; }
+
+// Per-network CHAIN_ID committed by the v2 sighash (spec §2.2). Frozen literals:
+// never computed at runtime, never read from a file, flag or profile name.
+// Provenance (informative): SHA256("SOST-CHAIN-ID-V1|<net>|<genesis hex>").
+inline constexpr std::array<uint8_t, 32> CHAIN_ID_MAINNET = {
+    0x3e,0xd1,0x27,0x3b,0x38,0xad,0x28,0xc6,0x1f,0x59,0x1f,0xed,0x49,0xdd,0x8e,0xc8,
+    0xf4,0x68,0x49,0x53,0xf1,0x7a,0xd3,0x71,0xf5,0xc3,0xd7,0x41,0xc1,0xd1,0xa2,0xe4};
+inline constexpr std::array<uint8_t, 32> CHAIN_ID_TESTNET = {
+    0x30,0x1a,0x71,0xe1,0x09,0xf7,0x72,0x8f,0x83,0xc4,0xfd,0x96,0xd1,0x14,0x23,0x1c,
+    0x13,0xfa,0xfd,0x98,0xa6,0xcb,0x15,0x33,0xca,0xa1,0x26,0x7f,0xd3,0x85,0xbe,0xc3};
+inline constexpr std::array<uint8_t, 32> CHAIN_ID_DEVNET = {
+    0x9d,0x65,0x1d,0x4c,0x8a,0xad,0xa0,0xdd,0xe1,0xb7,0xf1,0x7c,0xf6,0x80,0xc0,0x5b,
+    0x76,0xfa,0xbf,0xf8,0x71,0x1d,0x23,0x2c,0xb8,0x70,0xcb,0x55,0xda,0x00,0x7f,0xbe};
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr const std::array<uint8_t, 32>& ACTIVE_CHAIN_ID = CHAIN_ID_DEVNET;
+#elif defined(SOST_TESTNET_FORKS)
+inline constexpr const std::array<uint8_t, 32>& ACTIVE_CHAIN_ID = CHAIN_ID_TESTNET;
+#else
+inline constexpr const std::array<uint8_t, 32>& ACTIVE_CHAIN_ID = CHAIN_ID_MAINNET;
+#endif
+
 } // namespace sost

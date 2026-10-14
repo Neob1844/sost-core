@@ -18,6 +18,7 @@
 #include "sost/tx_signer.h"   // OTC-1 — SpentOutput / VerifyTransactionInput (HTLC spend dispatch)
 #include "sost/params.h"       // V30000 — native_assets_active_at gate
 #include "sost/native_assets.h"
+#include "sost/multisig.h"       // V17 — native multisig (policy, sighash v2, sigchecks, exact size)
 
 // V30000 restricted developer mode (S14): a native-asset tx is admin-authorised
 // iff it carries an input whose pubkey hashes to the admin authority pkh. That
@@ -69,6 +70,10 @@ static bool IsActiveOutputType(uint8_t type, int64_t height, int64_t bond_activa
          type == OUT_ASSET_BURN     || type == OUT_ASSET_GENESIS_DEF) &&
         native_assets_active_at(height))
         return true;
+    // V17 — OUT_MULTISIG (0x50) is active from MULTISIG_HEIGHT. 0x51-0x5F stay
+    // inactive forever (reserved custody codes). Pre-activation R11 rejects 0x50.
+    if (type == OUT_MULTISIG && multisig_active_at(height))
+        return true;
     return false;
 }
 
@@ -101,6 +106,10 @@ static std::string HexU32(uint32_t v) {
 // Output: amount(8) + type(1) + pubkey_hash(20) + payload_len(2) + payload(N)
 
 size_t EstimateTxSerializedSize(const Transaction& tx) {
+    // V17 (D11): exact canonical length. A version-2 input is not 133 bytes (a
+    // 15-of-15 multisig input is 1,510), so the fixed estimate must never be used
+    // for it. For version != 2 the historical formula below is kept verbatim.
+    if (tx.version == TX_VERSION_V2) return TxSerializedSizeExact(tx);
     size_t size = 0;
     size += 4;  // version
     size += 1;  // tx_type
@@ -117,6 +126,8 @@ size_t EstimateTxSerializedSize(const Transaction& tx) {
     return size;
 }
 
+int64_t TxSigchecksOf(const Transaction& tx) { return TxSigchecks(tx); }
+
 // =============================================================================
 // Structural validation (R1-R14) — no UTXO access needed
 // =============================================================================
@@ -125,10 +136,19 @@ static TxValidationResult ValidateStructure(
     const Transaction& tx,
     const TxValidationContext& ctx)
 {
-    // R1: version == 1
-    if (tx.version != 1) {
+    // R1: version == 1. V17: from MULTISIG_HEIGHT version 2 is also valid.
+    const bool ms_active = multisig_active_at(ctx.spend_height);
+    if (tx.version != 1 && !(ms_active && tx.version == TX_VERSION_V2)) {
         return TxValidationResult::Fail(TxValCode::R1_BAD_VERSION,
-            "R1: version must be 1, got " + std::to_string(tx.version));
+            std::string(ms_active ? "R1: version must be 1 or 2, got " : "R1: version must be 1, got ") +
+            std::to_string(tx.version));
+    }
+
+    // R25 (V17): version 2 is valid only for TX_TYPE_STANDARD (HTLC, asset and every
+    // other tx type stay version 1, so they can never carry a multisig input).
+    if (ms_active && tx.version == TX_VERSION_V2 && tx.tx_type != TX_TYPE_STANDARD) {
+        return TxValidationResult::Fail(TxValCode::R25_V2_TX_TYPE,
+            "R25: version 2 is valid only with tx_type STANDARD; got tx_type 0x" + HexStr(&tx.tx_type, 1));
     }
 
     // R2: tx_type in {0x00, 0x01}; HTLC_CLAIM (0x10) / HTLC_REFUND (0x11) are
@@ -234,6 +254,23 @@ static TxValidationResult ValidateStructure(
                 "R11: output[" + std::to_string(i) + "] type 0x" +
                 HexStr(&out.type, 1) + " is not active at height " +
                 std::to_string(ctx.spend_height), -1, (int32_t)i);
+        }
+
+        // R29 (V17): OUT_MULTISIG output — amount >= MULTISIG_DUST and the payload is
+        // empty or a byte-level capsule v1 envelope (spec §7.3, D10). Only reachable
+        // once R11 has accepted 0x50 (h >= MULTISIG_HEIGHT).
+        if (out.type == OUT_MULTISIG) {
+            if (out.amount < MULTISIG_DUST) {
+                return TxValidationResult::Fail(TxValCode::R29_MULTISIG_OUTPUT,
+                    "R29: OUT_MULTISIG output[" + std::to_string(i) + "] amount " +
+                    std::to_string(out.amount) + " < " + std::to_string(MULTISIG_DUST),
+                    -1, (int32_t)i);
+            }
+            if (!MultisigOutputPayloadOk(out.payload)) {
+                return TxValidationResult::Fail(TxValCode::R29_MULTISIG_OUTPUT,
+                    "R29: OUT_MULTISIG output[" + std::to_string(i) +
+                    "] payload is neither empty nor a capsule v1 envelope", -1, (int32_t)i);
+            }
         }
 
         // R15: BOND_LOCK payload must be exactly 8 bytes (lock_until)
@@ -342,6 +379,8 @@ static TxValidationResult ValidateStructure(
                 payload_allowed = true; // validated in R17 above (OTC-1)
             } else if (out.type == OUT_HTLC_CLAIM_WITNESS && atomic_swap_htlc_active_at(ctx.spend_height)) {
                 payload_allowed = true; // validated in R18 above (OTC-1)
+            } else if (out.type == OUT_MULTISIG && ms_active) {
+                payload_allowed = true; // V17: validated by R29 above (envelope only)
             } else if (native_assets_active_at(ctx.spend_height) &&
                        (out.type == OUT_ASSET_TRANSFER || out.type == OUT_ASSET_ISSUE_AUTH ||
                         out.type == OUT_ASSET_BURN     || out.type == OUT_ASSET_GENESIS_DEF)) {
@@ -373,6 +412,38 @@ static TxValidationResult ValidateStructure(
                         ? " payload forbidden before capsule activation"
                         : " only OUT_TRANSFER/BOND_LOCK/ESCROW_LOCK may carry payload"),
                     -1, (int32_t)i);
+            }
+        }
+    }
+
+    // R26 / R27 / R28 (V17): structural rules of every multisig input (spec §7.2).
+    if (tx.version == TX_VERSION_V2) {
+        for (size_t i = 0; i < tx.inputs.size(); ++i) {
+            const auto& in = tx.inputs[i];
+            if (in.auth_kind == AUTH_SINGLE) continue;
+            if (in.auth_kind != AUTH_MULTISIG) {     // unreachable from bytes (X3)
+                return TxValidationResult::Fail(TxValCode::R26_MS_POLICY,
+                    "R26: input[" + std::to_string(i) + "] unknown auth_kind", (int32_t)i);
+            }
+            std::string perr;
+            if (!CheckMultisigPolicy(in.ms_m, in.ms_pubkeys, &perr)) {
+                return TxValidationResult::Fail(TxValCode::R26_MS_POLICY,
+                    "R26: input[" + std::to_string(i) + "] non-canonical multisig policy: " + perr,
+                    (int32_t)i);
+            }
+            if (in.ms_sigs.size() != (size_t)in.ms_m) {
+                return TxValidationResult::Fail(TxValCode::R27_MS_SIG_COUNT,
+                    "R27: input[" + std::to_string(i) + "] carries " + std::to_string(in.ms_sigs.size()) +
+                    " signatures, policy requires exactly M = " + std::to_string((int)in.ms_m),
+                    (int32_t)i);
+            }
+            for (size_t k = 0; k < in.ms_sigs.size(); ++k) {
+                const uint8_t idx = in.ms_sigs[k].key_index;
+                if (idx >= in.ms_pubkeys.size() || (k > 0 && idx <= in.ms_sigs[k - 1].key_index)) {
+                    return TxValidationResult::Fail(TxValCode::R28_MS_KEY_INDEX,
+                        "R28: input[" + std::to_string(i) + "] key indexes must be strictly increasing and < N",
+                        (int32_t)i);
+                }
             }
         }
     }
@@ -417,6 +488,13 @@ static TxValidationResult ValidateInputs(
     int64_t& out_input_sum)
 {
     out_input_sum = 0;
+
+    // V17: version-2 transactions sign the v2 sighash, which commits to EVERY spent
+    // output; it is computed once per transaction (linear hashing, spec §5.2).
+    const bool is_v2 = (tx.version == TX_VERSION_V2);
+    std::vector<SpentOutput> v2_spent;
+    SighashV2Precomp v2_pre;
+    bool v2_pre_ready = false;
 
     for (size_t i = 0; i < tx.inputs.size(); ++i) {
         const auto& txin = tx.inputs[i];
@@ -494,6 +572,19 @@ static TxValidationResult ValidateInputs(
                     (int32_t)i);
             }
             // Lock expired — output is spendable by the owner (pubkey_hash match)
+        }
+
+        // S16 (V17, spec §6): the input's auth kind must match the spent UTXO type.
+        // OUT_MULTISIG is spendable ONLY by a version-2 auth_kind 0x01 input, and an
+        // auth_kind 0x01 input spends ONLY an OUT_MULTISIG output. (A version-2
+        // single-sig input spending an HTLC LOCK is left to R20 below.)
+        {
+            const uint8_t ak = is_v2 ? txin.auth_kind : AUTH_SINGLE;
+            if ((utxo.type == OUT_MULTISIG) != (ak == AUTH_MULTISIG)) {
+                return TxValidationResult::Fail(TxValCode::S16_AUTH_KIND_MISMATCH,
+                    "S16: input[" + std::to_string(i) + "] auth kind 0x" + HexStr(&ak, 1) +
+                    " cannot spend output type 0x" + HexStr(&utxo.type, 1), (int32_t)i);
+            }
         }
 
         // -------------------------------------------------------------------
@@ -667,6 +758,86 @@ static TxValidationResult ValidateInputs(
             }
         }
 
+        // ---------------------------------------------------------------
+        // V17 — version-2 authorization (spec §7.4 steps 4-5).
+        // ---------------------------------------------------------------
+        if (is_v2) {
+            if (!v2_pre_ready) {
+                v2_spent.resize(tx.inputs.size());
+                for (size_t j = 0; j < tx.inputs.size(); ++j) {
+                    OutPoint oj{tx.inputs[j].prev_txid, tx.inputs[j].prev_index};
+                    auto uj = utxos.GetUTXO(oj);
+                    if (!uj.has_value()) {
+                        return TxValidationResult::Fail(TxValCode::S1_UTXO_NOT_FOUND,
+                            "S1: input[" + std::to_string(j) + "] references missing UTXO", (int32_t)j);
+                    }
+                    v2_spent[j].amount = uj->amount;
+                    v2_spent[j].type = uj->type;
+                    v2_spent[j].pubkey_hash = uj->pubkey_hash;
+                    v2_spent[j].payload = uj->payload;
+                }
+                v2_pre = PrecomputeSighashV2(tx, v2_spent);
+                if (!v2_pre.ok) {
+                    return TxValidationResult::Fail(TxValCode::INTERNAL_ERROR,
+                        "v2 sighash precompute failed", (int32_t)i);
+                }
+                v2_pre_ready = true;
+            }
+            const Hash256 h = ComputeSighashV2(tx, i, v2_spent[i], v2_pre, ctx.chain_id, ctx.genesis_hash);
+            if (txin.auth_kind == AUTH_SINGLE) {
+                if (ComputePubKeyHash(txin.pubkey) != utxo.pubkey_hash) {
+                    return TxValidationResult::Fail(TxValCode::S2_PKH_MISMATCH,
+                        "S2: input[" + std::to_string(i) + "] pubkey hash mismatch", (int32_t)i);
+                }
+                switch (VerifyEcdsaLowS(txin.pubkey, h, txin.signature)) {
+                    case SigVerdict::OK: break;
+                    case SigVerdict::ZERO:
+                        return TxValidationResult::Fail(TxValCode::S4_ZERO_SIGNATURE,
+                            "S4: input[" + std::to_string(i) + "] signature is all zeros", (int32_t)i);
+                    case SigVerdict::RANGE:
+                        return TxValidationResult::Fail(TxValCode::S5_HIGH_S,
+                            "S5: input[" + std::to_string(i) + "] r/s out of range or high-S", (int32_t)i);
+                    default:
+                        return TxValidationResult::Fail(TxValCode::S6_VERIFY_FAIL,
+                            "S6: input[" + std::to_string(i) + "] ECDSA verification failed (v2 sighash)",
+                            (int32_t)i);
+                }
+            } else {
+                if (ComputeMultisigPolicyHash(txin.ms_m, txin.ms_pubkeys) != utxo.pubkey_hash) {
+                    return TxValidationResult::Fail(TxValCode::S17_MSH_MISMATCH,
+                        "S17: input[" + std::to_string(i) + "] MSH(policy) does not match the UTXO lock",
+                        (int32_t)i);
+                }
+                // Exactly M verifications, each against the key it names (R27/R28
+                // already checked count and index order). No key is tried twice.
+                for (size_t k = 0; k < txin.ms_sigs.size(); ++k) {
+                    const auto& ms = txin.ms_sigs[k];
+                    switch (VerifyEcdsaLowS(txin.ms_pubkeys[ms.key_index], h, ms.sig)) {
+                        case SigVerdict::OK: break;
+                        case SigVerdict::ZERO:
+                            return TxValidationResult::Fail(TxValCode::S4_ZERO_SIGNATURE,
+                                "S4: input[" + std::to_string(i) + "] multisig signature " +
+                                std::to_string(k) + " is all zeros", (int32_t)i);
+                        case SigVerdict::RANGE:
+                            return TxValidationResult::Fail(TxValCode::S5_HIGH_S,
+                                "S5: input[" + std::to_string(i) + "] multisig signature " +
+                                std::to_string(k) + " r/s out of range or high-S", (int32_t)i);
+                        default:
+                            return TxValidationResult::Fail(TxValCode::S18_MS_SIG_INVALID,
+                                "S18: input[" + std::to_string(i) + "] multisig signature " +
+                                std::to_string(k) + " does not verify against PK[" +
+                                std::to_string((int)ms.key_index) + "]", (int32_t)i);
+                    }
+                }
+            }
+            out_input_sum += utxo.amount;
+            if (out_input_sum > SUPPLY_MAX_STOCKS || out_input_sum < 0) {
+                return TxValidationResult::Fail(TxValCode::R7_SUM_OVERFLOW,
+                    "input sum overflow at input[" + std::to_string(i) + "]", (int32_t)i);
+            }
+            continue;
+        }
+
         SpentOutput spent;
         spent.amount = utxo.amount;
         spent.type = utxo.type;
@@ -780,6 +951,11 @@ TxValidationResult ValidateTransactionConsensus(
             allowed = (t == OUT_ASSET_TRANSFER || t == OUT_ASSET_ISSUE_AUTH ||
                        t == OUT_ASSET_BURN     || t == OUT_ASSET_GENESIS_DEF);
         }
+        // V17 — from MULTISIG_HEIGHT OUT_MULTISIG is allowed for every tx type
+        // validated here (STANDARD v1/v2, HTLC_CLAIM/REFUND, asset txs when active).
+        if (!allowed && multisig_active_at(ctx.spend_height)) {
+            allowed = (t == OUT_MULTISIG);
+        }
         // EMERGENCY 2026-10-08 (CRITICAL #3): the asset allowance above is bound to the
         // ASSET_* tx types. A STANDARD/HTLC tx carrying an asset output (which would burn
         // SOST into an unspendable OUT_ASSET_BURN, counterfeit units via OUT_ASSET_TRANSFER,
@@ -832,6 +1008,16 @@ TxValidationResult ValidateTransactionPolicy(
                     "TX_TYPE_JACKPOT may spend the Historical Jackpot reserve.",
                     (int32_t)i);
             }
+        }
+    }
+
+    // V17 policy: at most MAX_TX_SIGCHECKS_STANDARD signature checks per relayed tx.
+    {
+        const int64_t sc = TxSigchecks(tx);
+        if (sc > MAX_TX_SIGCHECKS_STANDARD) {
+            return TxValidationResult::Fail(TxValCode::P_TOO_MANY_SIGCHECKS,
+                "Policy: tx sigchecks " + std::to_string(sc) + " exceed standard " +
+                std::to_string(MAX_TX_SIGCHECKS_STANDARD));
         }
     }
 

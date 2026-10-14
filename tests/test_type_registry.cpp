@@ -5,8 +5,8 @@
 // 2. Run time: sweeps the CURRENT validators (R2 tx-type allow-list, R11 output-type
 //    allow-list) over all 256 codes at representative mainnet-build heights and
 //    checks they accept exactly the set the registry says is creatable there. In
-//    particular 0x50 (planned OUT_MULTISIG) and 0x20 (OUT_BURN) are rejected at
-//    every height, including 40,000.
+//    particular 0x20 (OUT_BURN) is rejected at every height, and 0x50 (OUT_MULTISIG)
+//    and tx version 2 are rejected below MULTISIG_HEIGHT (40,000) and accepted from it.
 // 3. Legacy fence: the legacy script engine (script.h / OUT_SCRIPT_HASH = 0x30, which
 //    collided with the live OUT_NODE_PROTOCOL = 0x30) and the PSBT library have been
 //    DELETED (spec §2.3 step 3). The fence now asserts the files do not exist and that
@@ -74,6 +74,7 @@ static std::set<int> expected_r11_active(int64_t h) {
         for (const auto& e : type_registry::OUTPUT_TYPES)
             if (e.status == type_registry::Status::DORMANT) s.insert(e.code);
     }
+    if (multisig_active_at(h)) s.insert(OUT_MULTISIG);
     return s;
 }
 static std::set<int> expected_r2_allowed(int64_t h) {
@@ -118,20 +119,34 @@ static void sweep(int64_t h) {
     CHECK(tx_mismatch == 0, msg);
 
     // Explicit pins.
-    auto r50 = ValidateTransactionConsensus(base_tx(TX_TYPE_STANDARD, type_registry::OUT_MULTISIG_PLANNED), v, ctx);
-    std::snprintf(msg, sizeof msg, "0x50 (planned OUT_MULTISIG) rejected by R11 at h=%lld", (long long)h);
-    CHECK(!r50.ok && r50.code == TxValCode::R11_INACTIVE_TYPE, msg);
+    auto r50 = ValidateTransactionConsensus(base_tx(TX_TYPE_STANDARD, OUT_MULTISIG), v, ctx);
+    const bool r50_r11 = (!r50.ok && r50.code == TxValCode::R11_INACTIVE_TYPE);
+    std::snprintf(msg, sizeof msg, "0x50 OUT_MULTISIG %s R11 at h=%lld",
+                  multisig_active_at(h) ? "passes" : "rejected by", (long long)h);
+    CHECK(r50_r11 == !multisig_active_at(h), msg);
+    for (int c = 0x51; c <= 0x5F; ++c) {
+        auto rr = ValidateTransactionConsensus(base_tx(TX_TYPE_STANDARD, (uint8_t)c), v, ctx);
+        if (rr.ok || rr.code != TxValCode::R11_INACTIVE_TYPE) {
+            std::snprintf(msg, sizeof msg, "reserved custody code 0x%02x not rejected by R11 at h=%lld", c, (long long)h);
+            CHECK(false, msg);
+        }
+    }
     auto r20 = ValidateTransactionConsensus(base_tx(TX_TYPE_STANDARD, OUT_BURN), v, ctx);
     std::snprintf(msg, sizeof msg, "0x20 OUT_BURN rejected by R11 at h=%lld", (long long)h);
     CHECK(!r20.ok && r20.code == TxValCode::R11_INACTIVE_TYPE, msg);
     auto r30 = ValidateTransactionConsensus(base_tx(TX_TYPE_STANDARD, OUT_NODE_PROTOCOL), v, ctx);
     std::snprintf(msg, sizeof msg, "0x30 OUT_NODE_PROTOCOL not creatable by a standard tx at h=%lld", (long long)h);
     CHECK(!r30.ok && r30.code == TxValCode::R11_INACTIVE_TYPE, msg);
-    // Version 2 is not a valid transaction version today, at any height.
+    // Version 2 is valid only from MULTISIG_HEIGHT; version 3 never.
     auto tv2 = base_tx(TX_TYPE_STANDARD, OUT_TRANSFER); tv2.version = 2;
     auto rv2 = ValidateTransactionConsensus(tv2, v, ctx);
-    std::snprintf(msg, sizeof msg, "tx version 2 rejected by R1 at h=%lld", (long long)h);
-    CHECK(!rv2.ok && rv2.code == TxValCode::R1_BAD_VERSION, msg);
+    std::snprintf(msg, sizeof msg, "tx version 2 %s R1 at h=%lld",
+                  multisig_active_at(h) ? "passes" : "rejected by", (long long)h);
+    CHECK((!rv2.ok && rv2.code == TxValCode::R1_BAD_VERSION) == !multisig_active_at(h), msg);
+    auto tv3 = base_tx(TX_TYPE_STANDARD, OUT_TRANSFER); tv3.version = 3;
+    auto rv3 = ValidateTransactionConsensus(tv3, v, ctx);
+    std::snprintf(msg, sizeof msg, "tx version 3 rejected by R1 at h=%lld", (long long)h);
+    CHECK(!rv3.ok && rv3.code == TxValCode::R1_BAD_VERSION, msg);
 }
 
 // ---- legacy fence (source scan) -------------------------------------------
@@ -212,7 +227,7 @@ int main(int argc, char** argv) {
     std::printf("  non-mainnet build: runtime sweep skipped (mainnet heights only)\n");
 #else
     for (int64_t h : {(int64_t)7349, (int64_t)15999, (int64_t)16000, (int64_t)30000,
-                      (int64_t)39999, (int64_t)40000, (int64_t)50000})
+                      (int64_t)39998, (int64_t)39999, (int64_t)40000, (int64_t)40001, (int64_t)50000})
         sweep(h);
 #endif
     if (argc >= 2) legacy_fence(argv[1]);

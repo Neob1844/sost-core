@@ -91,6 +91,7 @@ inline constexpr Entry OUTPUT_TYPES[] = {
     {OUT_ASSET_ISSUE_AUTH,   "OUT_ASSET_ISSUE_AUTH",   Status::DORMANT},
     {OUT_ASSET_BURN,         "OUT_ASSET_BURN",         Status::DORMANT},  // issued assets only, never native SOST
     {OUT_ASSET_GENESIS_DEF,  "OUT_ASSET_GENESIS_DEF",  Status::DORMANT},
+    {OUT_MULTISIG,           "OUT_MULTISIG",           Status::ACTIVE},   // >= MULTISIG_HEIGHT (V17, mainnet 40000)
 };
 
 // Codes that must never be allocated (documentation hazard): 0x14 was named
@@ -100,13 +101,13 @@ inline constexpr uint8_t OUTPUT_DO_NOT_USE[] = {0x14};
 // ---- Reserved ranges -------------------------------------------------------
 inline constexpr Range OUTPUT_RESERVED[] = {
     {0x40, 0x4F, "native assets (0x40-0x43 allocated, dormant)"},
-    {0x50, 0x5F, "custody: 0x50 = OUT_MULTISIG (spec only, not implemented), 0x51-0x5F reserved"},
+    {0x50, 0x5F, "custody: 0x50 = OUT_MULTISIG (V17), 0x51-0x5F reserved (no meaning, R11 rejects)"},
 };
 inline constexpr Range TX_RESERVED[] = {
     {0x30, 0x3F, "native assets (0x30-0x33 allocated, dormant)"},
 };
-// The planned multisig output code. NOT allocated yet: it is absent from
-// OUTPUT_TYPES and R11 rejects it at every height on every network today.
+// The multisig output code, allocated by the V17 implementation (active from
+// MULTISIG_HEIGHT). Kept as an alias so the allocation stays pinned to 0x50.
 inline constexpr uint8_t OUT_MULTISIG_PLANNED = 0x50;
 
 // Cross-namespace numeric overlaps that already exist. They are not parse
@@ -161,8 +162,8 @@ static_assert(cross_namespace_exact(),
 
 // Reserved output ranges hold only their own allocations.
 static_assert(count_in_range(OUTPUT_TYPES, 0x40, 0x4F) == 4, "0x40-0x4F is reserved for native assets (0x40-0x43)");
-static_assert(count_in_range(OUTPUT_TYPES, 0x50, 0x5F) == 0, "0x50-0x5F is reserved for custody; nothing is allocated yet");
-static_assert(!contains(OUTPUT_TYPES, OUT_MULTISIG_PLANNED), "OUT_MULTISIG must not be allocated before its implementation");
+static_assert(count_in_range(OUTPUT_TYPES, 0x50, 0x5F) == 1, "0x50-0x5F is custody: only 0x50 = OUT_MULTISIG is allocated");
+static_assert(OUT_MULTISIG == OUT_MULTISIG_PLANNED && contains(OUTPUT_TYPES, OUT_MULTISIG), "OUT_MULTISIG is 0x50");
 static_assert(count_in_range(TX_TYPES, 0x30, 0x3F) == 4, "tx 0x30-0x3F is reserved for native assets (0x30-0x33)");
 static_assert(count_in_range(TX_TYPES, 0x50, 0x5F) == 0, "no tx type may use 0x50-0x5F (custody uses tx version 2, not a tx type)");
 static_assert(!contains(OUTPUT_TYPES, OUTPUT_DO_NOT_USE[0]), "0x14 must never be allocated");
@@ -181,7 +182,7 @@ static_assert(OUT_TRANSFER == 0x00 && OUT_COINBASE_MINER == 0x01 && OUT_COINBASE
               OUT_HTLC_LOCK == 0x12 && OUT_HTLC_CLAIM_WITNESS == 0x13 &&
               OUT_BURN == 0x20 && OUT_NODE_PROTOCOL == 0x30 &&
               OUT_ASSET_TRANSFER == 0x40 && OUT_ASSET_ISSUE_AUTH == 0x41 &&
-              OUT_ASSET_BURN == 0x42 && OUT_ASSET_GENESIS_DEF == 0x43,
+              OUT_ASSET_BURN == 0x42 && OUT_ASSET_GENESIS_DEF == 0x43 && OUT_MULTISIG == 0x50,
               "output type literal drift");
 
 // Pinned statuses that matter for safety.

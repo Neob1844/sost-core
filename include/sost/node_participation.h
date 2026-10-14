@@ -87,6 +87,15 @@ NodeTxKind classify_node_tx(const Transaction&);
 bool extract_bind(const Transaction&, NodeBindTx& out, const char** reason = nullptr);
 bool extract_heartbeat(const Transaction&, NodeHeartbeatTx& out, const char** reason = nullptr);
 
+// V17 (spec §7.6, D2, R30): from V17_HEIGHT a NODE_BIND / NODE_HEARTBEAT must carry
+// OUTER Transaction.version == 1 (reason "node_tx_bad_version"); below it any outer
+// version is accepted exactly as before. The NODE_BIND payload's own version byte
+// is a different field and is unchanged. The *_at extractors are the ONE predicate
+// shared by the block path, the mempool validator and template revalidation.
+bool node_tx_outer_version_ok(const Transaction& tx, int64_t height);
+bool extract_bind_at(const Transaction&, int64_t height, NodeBindTx& out, const char** reason = nullptr);
+bool extract_heartbeat_at(const Transaction&, int64_t height, NodeHeartbeatTx& out, const char** reason = nullptr);
+
 // ---- Structural validation (activation guard + fields + signature) ----------
 struct BindCheck { bool ok{false}; PubKeyHash mining_pkh{}; const char* reason{"ok"}; };
 // Verifies: activation guard (height >= HIST_JACKPOT_V2_HEIGHT); mining_sig over

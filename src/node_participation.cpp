@@ -120,6 +120,18 @@ bool extract_heartbeat(const Transaction& tx, NodeHeartbeatTx& out, const char**
     return true;
 }
 
+bool node_tx_outer_version_ok(const Transaction& tx, int64_t height) {
+    return !node_tx_version_fence_at(height) || tx.version == 1;
+}
+bool extract_bind_at(const Transaction& tx, int64_t height, NodeBindTx& out, const char** reason) {
+    if (!node_tx_outer_version_ok(tx, height)) { if (reason) *reason = "node_tx_bad_version"; return false; }
+    return extract_bind(tx, out, reason);
+}
+bool extract_heartbeat_at(const Transaction& tx, int64_t height, NodeHeartbeatTx& out, const char** reason) {
+    if (!node_tx_outer_version_ok(tx, height)) { if (reason) *reason = "node_tx_bad_version"; return false; }
+    return extract_heartbeat(tx, out, reason);
+}
+
 // ---- signing messages ------------------------------------------------------
 Bytes32 bind_message(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey, uint64_t bind_seq) {
     std::vector<uint8_t> m;
@@ -348,14 +360,14 @@ NodeTxVerdict judge_node_tx(const NodeTxPolicyContext& c, const NodeState& live,
     if (!c.active)             { v.reason = "node_tx_before_activation"; return v; }
     if (k == NodeTxKind::Bind) {
         NodeBindTx b;
-        if (!extract_bind(tx, b, &r)) { v.reason = std::string("node_bind_encoding:") + (r ? r : ""); return v; }
+        if (!extract_bind_at(tx, c.height, b, &r)) { v.reason = std::string("node_bind_encoding:") + (r ? r : ""); return v; }
         BindCheck bc = check_bind(b, c.height);
         if (!bc.ok) { v.reason = bc.reason; return v; }
         if (!bind_acceptable_in(c.preblock, bc.mining_pkh, b.node_pubkey, b.bind_seq)) { v.reason = "bind_not_acceptable"; return v; }
         v.kind = NodeTxKind::Bind; v.mining_pkh = bc.mining_pkh; v.node_pubkey = b.node_pubkey;
     } else {
         NodeHeartbeatTx h;
-        if (!extract_heartbeat(tx, h, &r)) { v.reason = std::string("node_hb_encoding:") + (r ? r : ""); return v; }
+        if (!extract_heartbeat_at(tx, c.height, h, &r)) { v.reason = std::string("node_hb_encoding:") + (r ? r : ""); return v; }
         if (!c.have_tip) { v.reason = "no_tip_ref"; return v; }
         HeartbeatCheck hc = check_heartbeat(h, c.height, c.A, c.L, c.expected_tip);
         if (!hc.ok) { v.reason = hc.reason; return v; }
@@ -378,12 +390,12 @@ bool node_txs_valid_for_block(const NodeState& live, const std::vector<const Tra
         switch (classify_node_tx(*t)) {
         case NodeTxKind::Bind: {
             NodeBindTx b;
-            if (!extract_bind(*t, b, &r)) { if (why) *why = std::string("node_bind_encoding:") + (r ? r : ""); return false; }
+            if (!extract_bind_at(*t, height, b, &r)) { if (why) *why = std::string("node_bind_encoding:") + (r ? r : ""); return false; }
             bnt.binds.push_back(b);
             break; }
         case NodeTxKind::Heartbeat: {
             NodeHeartbeatTx h;
-            if (!extract_heartbeat(*t, h, &r)) { if (why) *why = std::string("node_hb_encoding:") + (r ? r : ""); return false; }
+            if (!extract_heartbeat_at(*t, height, h, &r)) { if (why) *why = std::string("node_hb_encoding:") + (r ? r : ""); return false; }
             bnt.heartbeats.push_back(h);
             break; }
         default:
