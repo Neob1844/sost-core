@@ -712,7 +712,9 @@ static bool g_full_verify_mode = false;
 static bool g_full_verify_anchored_history = false;
 // --full-verify classification counters (blocks accepted by process_block in
 // this process; blocks loaded from chain.json at startup are not counted).
-static uint64_t g_fv_count[3] = {0, 0, 0};       // indexed by FullVerifyClass
+static uint64_t g_fv_count[3] = {0, 0, 0};
+static uint64_t g_trusted_binding_checked = 0;   // G2: trusted blocks whose profile binding was checked
+static uint64_t g_trusted_binding_bound = 0;     // G2: ... of which the commit binding was computed       // indexed by FullVerifyClass
 static int64_t  g_fv_assumed_unanchored_from = -1; // lowest ASSUMED height not yet pinned by a hard checkpoint
 static int64_t  g_fv_assumed_anchored_through = -1;
 static void fv_print_summary(const char* when) {
@@ -6663,6 +6665,86 @@ static std::vector<RoundWitness> parse_round_witnesses_json(const std::string& b
     return round_witnesses_vec;
 }
 
+// G2 (docs/p2p/BLOCK_ID_COMMITMENT_AUDIT.md): inside the fast-sync trust (height <= assumevalid,
+// no --full-verify) the expensive ConvergenceX transcript is skipped, but the declared
+// profile_index is stored and becomes the parent profile of the next cASERT decision. Bind it
+// with the cheap Phase 5 commit check (two SHA-256), exactly as verify_cx_proof does:
+//   commit == SHA256(magic||"COMMIT"||hc72||seed||final_state||x_bytes||checkpoints_root||
+//                    segments_root||stability_metric u64||profile_index i8)
+// Which blocks are bound:
+//   * profile_index present                        -> bound to the declared value;
+//   * absent, MAINNET height > 3300 or DEV profile -> bound to B0 (the value that is stored);
+//   * absent, MAINNET height <= 3300               -> unbound, stored as B0, exactly as before:
+//     those blocks travel without the field and 953 of them are not B0
+//     (docs/verification/FULL_VERIFY_EARLY_CHAIN.md), so no binding is possible there;
+//   * TESTNET: bound only when the field is present (no testnet history replay exists).
+// On MAINNET and DEV the commit data (x_bytes, final_state, segments_root) is required, so a
+// stripped body cannot carry an unbound profile either. A full mainnet replay of 1..3554
+// passed these checks before they were enabled (every real block binds).
+// Validation only: no consensus rule, activation height or block id changes; every real
+// block of the trusted window passes, so the accepted chain is the same.
+static bool trusted_cx_binding_check(const std::string& block_json, const uint8_t hc72[72],
+                                     uint32_t nonce, uint32_t extra, const Bytes32& commit,
+                                     const Bytes32& croot, int64_t height, std::string& why,
+                                     bool* bound_out = nullptr) {
+    if (bound_out) *bound_out = false;
+    const bool strict = (sost::ACTIVE_PROFILE == sost::Profile::MAINNET ||
+                         sost::ACTIVE_PROFILE == sost::Profile::DEV);
+    const std::string x_hex  = jstr(block_json, "x_bytes");
+    const std::string fs_hex = jstr(block_json, "final_state");
+    const std::string sr_hex = jstr(block_json, "segments_root");
+    const bool cx_present = !x_hex.empty() && !fs_hex.empty() && !sr_hex.empty();
+    const bool pi_present = (block_json.find("\"profile_index\"") != std::string::npos);
+    if (strict && !cx_present) { why = "trusted block without CX commit data (x_bytes/final_state/segments_root)"; return false; }
+    int32_t pi;
+    if (pi_present) {
+        pi = (int32_t)jint(block_json, "profile_index");
+    } else {
+        const bool bind_absent = (sost::ACTIVE_PROFILE == sost::Profile::DEV) ||
+            (sost::ACTIVE_PROFILE == sost::Profile::MAINNET && height > sost::FULL_VERIFY_TRANSCRIPTLESS_LAST_HEIGHT);
+        if (!bind_absent) return true;
+        pi = 0;   // B0, the value process_block stores for a block without the field
+    }
+    if (pi < -128 || pi > 127) { why = "profile_index out of bounds"; return false; }
+    if (!cx_present) {
+        why = "profile_index present on a trusted block without CX commit data"; return false;
+    }
+    std::vector<uint8_t> x_raw; x_raw.reserve(x_hex.size() / 2);
+    {
+        auto hx = [](char c) -> int {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+            if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+            return -1; };
+        if (x_hex.size() % 2) { why = "trusted block: malformed x_bytes"; return false; }
+        for (size_t i = 0; i + 1 < x_hex.size(); i += 2) {
+            int a = hx(x_hex[i]), b = hx(x_hex[i + 1]);
+            if (a < 0 || b < 0) { why = "trusted block: malformed x_bytes"; return false; }
+            x_raw.push_back((uint8_t)((a << 4) | b));
+        }
+    }
+    Bytes32 prev_h; std::memcpy(prev_h.data(), hc72, 32);
+    Bytes32 bk = compute_block_key(prev_h);
+    std::vector<uint8_t> sbuf; append_magic(sbuf); append(sbuf, "SEED", 4);
+    append(sbuf, hc72, 72); append(sbuf, bk);
+    append_u32_le(sbuf, nonce); append_u32_le(sbuf, extra);
+    Bytes32 seed = sha256(sbuf);
+    std::vector<uint8_t> cbuf; append_magic(cbuf); append(cbuf, "COMMIT", 6);
+    append(cbuf, hc72, 72); append(cbuf, seed); append(cbuf, from_hex(fs_hex));
+    append(cbuf, x_raw.data(), x_raw.size());
+    append(cbuf, croot); append(cbuf, from_hex(sr_hex));
+    append_u64_le(cbuf, juint(block_json, "stability_metric"));
+    cbuf.push_back((uint8_t)(int8_t)pi);
+    if (sha256(cbuf) != commit) {
+        why = "trusted block: profile_index " + std::to_string(pi) +
+              (pi_present ? "" : " (absent, B0)") + " not bound by commit";
+        return false;
+    }
+    if (bound_out) *bound_out = true;
+    return true;
+}
+
+
 // Pre-storage check for blocks that do NOT extend the active tip (fork candidates and
 // orphans). Such blocks are kept in g_block_index / the known-set before they are connected,
 // so whatever is stored under an id must be the block that id names, and must carry real
@@ -6747,7 +6829,7 @@ static bool fork_block_precheck(const std::string& block_json, const std::string
     const bool optimistic_anchor = sost::has_assumevalid_anchor() &&
                                    (uint32_t)height <= sost::get_assumevalid_height();
     if (sost::can_skip_cx_recomputation((uint32_t)height, bid, optimistic_anchor, g_full_verify_mode))
-        return true;
+        return trusted_cx_binding_check(block_json, hc72, nonce, extra, commit, croot, height, why);   // G2
     const std::string x_hex  = jstr(block_json, "x_bytes");
     const std::string fs_hex = jstr(block_json, "final_state");
     const std::string sr_hex = jstr(block_json, "segments_root");
@@ -7165,38 +7247,13 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     // Decode txs (coinbase included)
     std::vector<std::string> tx_hexes = json_get_tx_hexes(block_json);
     if(tx_hexes.empty()){
-        if(is_trusted_height){
-            // Trusted block with missing tx data — accept with header-only validation
-            // Reconstruct minimal coinbase from block fields for UTXO accounting
-            printf("[BLOCK] fast-sync height=%lld (trusted, tx data missing — header-only accept)\n",
-                   (long long)height);
-            StoredBlock sb{};
-            sb.block_id=from_hex(bid); sb.prev_hash=from_hex(prev);
-            sb.merkle_root=from_hex(mrkl); sb.commit=from_hex(commit_hex);
-            sb.checkpoints_root=from_hex(croot_hex);
-            sb.timestamp=ts64; sb.bits_q=bits_q; sb.nonce=nonce;
-            sb.extra_nonce=extra; sb.height=height; sb.subsidy=subsidy;
-            sb.miner_reward=jint(block_json,"miner");
-            sb.gold_vault_reward=jint(block_json,"gold_vault");
-            sb.popc_pool_reward=jint(block_json,"popc_pool");
-            sb.stability_metric=juint(block_json,"stability_metric");
-            sb.x_bytes_hex=jstr(block_json,"x_bytes");
-            sb.final_state_hex=jstr(block_json,"final_state");
-            sb.segments_root_hex=jstr(block_json,"segments_root");
-            sb.raw_block_json=block_json;
-            sb.cumulative_work = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
-            g_blocks.push_back(sb);
-            // REORG FIX: keep g_block_undos height-aligned with g_blocks. This
-            // fast-sync/assumevalid header-only accept has no tx data and thus no
-            // real undo; an empty slot is correct (these blocks sit below the
-            // reorg-able range) and prevents a permanent off-by-one in the undo
-            // vector that would abort later reorgs.
-            g_block_undos.push_back(BlockUndo{});
-            g_chain_height = height;
-            mark_block_known(bid);
-            // Note: chain auto-saved when next normal block arrives
-            return true;
-        }
+        // G1 (docs/p2p/BLOCK_ID_COMMITMENT_AUDIT.md): the old header-only accept of a trusted
+        // block without transactions is removed. Such a block was appended with no id
+        // recomputation, merkle, PoW, coinbase or UTXO update, so a peer serving a syncing
+        // node could feed stripped or fabricated blocks <= assumevalid. Honest peers never
+        // send a block without its transactions (p2p_send_block refuses), and a full mainnet
+        // replay of 1..3554 showed every real block carries them.
+        (void)is_trusted_height;
         printf("[BLOCK] REJECTED: missing transactions[] (must include coinbase)\n");
         record_block_reject("missing transactions");
         return false;
@@ -7841,6 +7898,29 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                ACTIVE_PROFILE==Profile::TESTNET?"TESTNET":"DEV");
         record_block_reject("block_id mismatch");
         return false;
+    }
+
+    // G2: a block whose ConvergenceX transcript is skipped (fast-sync trust or exact hard
+    // checkpoint) must still bind its declared profile_index to the commit (cheap Phase 5).
+    {
+        const bool optimistic = trust_shortcuts_ok && sost::has_assumevalid_anchor() &&
+                                (uint32_t)height <= sost::get_assumevalid_height();
+        if (height > 0 && sost::can_skip_cx_recomputation((uint32_t)height, to_hex(computed_bid.data(), 32),
+                                                           optimistic, g_full_verify_mode)) {
+            std::string why; bool bound = false;
+            if (!trusted_cx_binding_check(block_json, hc72, nonce, extra, commit32, croot32, height, why, &bound)) {
+                printf("[BLOCK] REJECTED: %s (height %lld)\n", why.c_str(), (long long)height);
+                record_block_reject("trusted profile binding");
+                return false;
+            }
+            ++g_trusted_binding_checked;
+            if (bound) ++g_trusted_binding_bound;
+            if (g_trusted_binding_checked % 500 == 0 || (uint32_t)height == sost::get_assumevalid_height())
+                printf("[BLOCK] trusted-range binding: %llu block(s) checked (%llu commit-bound, %llu historical "
+                       "without profile_index), last height %lld\n",
+                       (unsigned long long)g_trusted_binding_checked, (unsigned long long)g_trusted_binding_bound,
+                       (unsigned long long)(g_trusted_binding_checked - g_trusted_binding_bound), (long long)height);
+        }
     }
 
     // Confirmación de la excepción de bits_q. El id ya está recomputado a partir

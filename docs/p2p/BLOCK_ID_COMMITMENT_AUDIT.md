@@ -175,3 +175,58 @@ reorg there: MAX_REORG_DEPTH 500, SACS V2 deferred on mainnet). Per the task rul
 3. Longer term: grant fast-sync trust only to blocks proven to be ancestors of the
    assumevalid/checkpoint block (headers-first), as the reorg path on this branch already
    does (`g_reorg_trust_anchored`).
+
+## 6. G1/G2 closed (branch `feat/v40k-p2p`) — validation only, proven on the real chain first
+
+**Order of work.** The stricter checks were first built into a test binary and the real
+mainnet chain was replayed through them over P2P (server = a copy of the 30,428-block
+`chain.json`, client from genesis, default fast sync, mainnet build flags). Only after every
+real block passed were they kept.
+
+Replay result (`tests/p2p/run_trusted_range_mutations.py` covers the negative side, the
+replay itself is a plain genesis sync):
+
+| item | result |
+|---|---|
+| blocks 1..3554 inside the trust | 3554/3554 accepted, 0 rejects |
+| blocks carrying `transactions` | 3554/3554 (G1 removal cannot affect honest sync) |
+| blocks carrying x_bytes / final_state / segments_root | 3554/3554 |
+| commit binding computed (profile_index present, 3301..3554) | 254/254 bind |
+| historical blocks without profile_index (1..3300) | 3300, stored as B0 exactly as before (unbound: 953 of them are not B0) |
+| block ids 0..3700 vs the server chain | 0 mismatches |
+| full sync genesis -> 30,428 with the final binary | see the branch report (state dump sha256 identical to the validated state) |
+
+**G1 — fixed.** `process_block` no longer has a header-only accept: a block without
+`transactions` is rejected at every height (`src/sost-node.cpp`, the `tx_hexes.empty()`
+branch). `fork_block_precheck` already refused it.
+
+**G2 — fixed.** `trusted_cx_binding_check` (`src/sost-node.cpp`) runs for every block whose
+ConvergenceX transcript is skipped (fast-sync trust or exact hard checkpoint), on the tip path
+(right after the block id is recomputed) and in `fork_block_precheck`. It recomputes the
+cheap Phase 5 binding (seed + commit, two SHA-256) with the declared profile_index:
+
+* profile_index present -> must bind;
+* absent, MAINNET height > 3300 or DEV -> must bind as B0 (the value that is stored);
+* absent, MAINNET height <= 3300 -> unchanged (B0, unbound; the historical window);
+* MAINNET/DEV: x_bytes, final_state and segments_root are required inside the trust, so a
+  stripped body can no longer leave the previous block's profile in `g_last_accepted_profile`;
+* TESTNET: binds when the field is present; absent stays as before (no testnet replay exists).
+
+Side effect, intended: inside the trust, a same-id copy with a changed `stability_metric`,
+`x_bytes`, `final_state` or `segments_root` is now rejected wherever the binding is computed
+(they are commit inputs). `checkpoint_leaves`, `segment_proofs`, `round_witnesses` remain
+unverified inside the trust (not read by any rule there).
+
+**Before / after on real mainnet blocks** (tip path, submitblock, mainnet build):
+
+| mutation | base `4d8f9899` | this branch |
+|---|---|---|
+| block 100 / 3301 without transactions | ACCEPTED (header-only) | rejected |
+| block 3301 profile_index -1 | ACCEPTED, stored | rejected |
+| block 100 / 3301 without x_bytes | ACCEPTED (profile not bound, previous profile kept) | rejected |
+| genuine block after the rejected copies | accepted | accepted |
+
+`tests/p2p/run_trusted_range_mutations.py` (heights 100, 1777, 3300, 3301, 3400, 3554): 44/44
+checks pass on this branch. Devnet: `run_deep_fork_devnet.py` s22 now asserts the default-mode
+rejections. No block id, consensus rule or activation height changes; the accepted mainnet
+chain is the same.

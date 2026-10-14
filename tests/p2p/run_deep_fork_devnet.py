@@ -22,7 +22,7 @@ Run:
   python3 tests/p2p/run_deep_fork_devnet.py --bin <build> --work <new empty dir> [--only s1,s2]
 
 Ports: P2P base..base+19, RPC base+100.., isolated P2P base+200.. (default base 21100;
-any base with base..base+300 inside 21000-25999 is accepted).
+any base with base..base+300 inside 21000-25999 or 32000-32999 is accepted).
 Every process this script starts is stopped by its recorded PID (argv[0] checked).
 """
 import argparse
@@ -805,6 +805,17 @@ def scn_blockid_mutation(scn, base):
             a.stop()
     check(scn, "relay path: no same-id mutated copy prevents the genuine branch or gets the honest "
                "peer penalised", not poison_fail, ", ".join(poison_fail)[:300])
+    # G1/G2 (docs/p2p/BLOCK_ID_COMMITMENT_AUDIT.md): inside the fast-sync trust (default mode,
+    # devnet heights < assumevalid) the tip path must now refuse a block without transactions
+    # and any copy whose profile_index / commit data is not bound by its commit.
+    tip_default = {name: fate for mode, path, name, fate in table if mode == "default" and path == "tip"}
+    must_reject = ["transactions (drop all)", "profile_index", "stability_metric", "x_bytes",
+                   "final_state", "segments_root"]
+    if int(gj.get("profile_index", 0)) != 0:
+        must_reject.append("profile_index (removed)")
+    bad = [n for n in must_reject if tip_default.get(n) != "rejected"]
+    check(scn, "[default] G1/G2: header-only and unbound-profile copies rejected inside the trust",
+          not bad, ", ".join(f"{n}={tip_default.get(n)}" for n in bad)[:300])
     log("\n  ---- block_id mutation table ----")
     for row in table:
         log("  %-12s %-5s %-30s %s" % row)
@@ -853,8 +864,8 @@ def main():
     ap.add_argument("--only", default="")
     A = ap.parse_args()
     A.bin, A.work = os.path.abspath(A.bin), os.path.abspath(A.work)
-    if not (21000 <= A.base and A.base + 300 <= 25999):
-        sys.exit("--base must keep every port (base..base+300) inside 21000-25999")
+    if not ((21000 <= A.base and A.base + 300 <= 25999) or (32000 <= A.base and A.base + 300 <= 32999)):
+        sys.exit("--base must keep every port (base..base+300) inside 21000-25999 or 32000-32999")
     if os.path.exists(A.work) and os.listdir(A.work):
         sys.exit(f"{A.work} is not empty")
     os.makedirs(A.work, exist_ok=True)
