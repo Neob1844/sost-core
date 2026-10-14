@@ -173,6 +173,7 @@ enum class TxValCode : int {
     CB12_LOTTERY_AMOUNT        = 312,  // miner or lottery output amount mismatch
     CB13_LOTTERY_WINNER        = 313,  // OUT_COINBASE_LOTTERY pkh != expected winner
     CB14_LOTTERY_INVARIANT     = 314,  // sum(outputs) + Δpending != subsidy + fees
+    CB15_V17_JACKPOT_J         = 315,  // V17: OUT_COINBASE_JACKPOT / J_BALANCE accounting mismatch
 
     // Policy (not consensus-critical)
     P_TX_TOO_LARGE         = 401,
@@ -325,6 +326,21 @@ struct Phase2CoinbaseContext {
     int64_t      lottery_payout{0};
     PubKeyHash   expected_winner_pkh{};
     int64_t      expected_pending_after{0};
+
+    // V17 (height >= V17_HEIGHT) — 80/15/5 subsidy split + Jackpot accumulator J.
+    // The validator selects the V17 rules from `height` alone (v17_active_at);
+    // these fields carry the caller's chain-derived expectations:
+    //   j_before               : J_BALANCE after the parent block
+    //   jackpot_j_payout       : J part of this block's jackpot payment
+    //                            (sost::v17::jackpot_funding(...).j_part; 0 if none)
+    //   jackpot_winner_pkh     : Jackpot V2 winner (pkh of the OUT_COINBASE_JACKPOT)
+    //   expected_j_after       : j_before - jackpot_j_payout + jackpot_j(subsidy)
+    // On V17 heights `paid_out` must follow sost::v17::dtd_paid_out and
+    // `lottery_payout` is dtd_subsidy + pending_before.
+    int64_t      j_before{0};
+    int64_t      jackpot_j_payout{0};
+    PubKeyHash   jackpot_winner_pkh{};
+    int64_t      expected_j_after{0};
 };
 
 } // namespace sost

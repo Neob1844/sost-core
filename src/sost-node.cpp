@@ -63,6 +63,7 @@
 #include "sost/jackpot.h"
 #include "sost/jackpot_reserve.h"  // V15 (J) live wiring: reserve discovery / balance
 #include "sost/jackpot_block.h"    // V15 (J) live wiring: block-level jackpot validation (validate BEFORE mutate)
+#include "sost/v17_economics.h"    // V17 — 80/15/5 subsidy split + Jackpot accumulator J_BALANCE
 #include "sost/beacon.h"
 #include "sost/beacon_p2p.h"
 #include "sost/multisig.h"     // V17 — sostms addresses in the address RPCs
@@ -238,12 +239,36 @@ struct StoredBlock {
     // 0 here; from height 10000 onwards triggered blocks may carry a
     // non-zero rollover amount.
     int64_t pending_lottery_after{0};
+    // V17 — Jackpot accumulator J_BALANCE AFTER this block (consensus state, stocks).
+    // Always 0 below V17_HEIGHT. From V17_HEIGHT:
+    //   j_after = j_before - J paid by this block's coinbase OUT_COINBASE_JACKPOT
+    //             + subsidy * 5 / 100 (integer division)
+    // It is a pure function of the block data (subsidy schedule + coinbase), so it is
+    // recomputed on every connect path (process_block, chain load / reindex) and the
+    // per-block value acts as the undo record: disconnecting a block (reorg) truncates
+    // g_blocks and the parent's j_balance_after becomes the live J again.
+    int64_t j_balance_after{0};
     // Raw JSON for the full block (includes segment_proofs, round_witnesses, etc.)
     // Stored once on acceptance, used for P2P relay and chain.json persistence.
     // This avoids re-serializing complex nested proof structures.
     std::string raw_block_json;
 };
 static std::vector<StoredBlock> g_blocks;
+
+// V17 — Historical Jackpot funding plan for one height (H first, then J), derived
+// from PRE-BLOCK chain state only. Defined next to validate_live_jackpot.
+struct V17JackpotPlan {
+    sost::v17::JackpotFunding f{};
+    bool winner_exists{false};
+    PubKeyHash winner_pkh{};
+    std::vector<sost::jackpot::ReserveUtxo> reserve;
+    int64_t reserve_before{0};
+    int64_t j_before{0};
+    int64_t rollover_before{0};
+};
+static int64_t chain_j_balance_tip();
+static bool jackpot_event_paid_at(int64_t h);
+static V17JackpotPlan compute_v17_jackpot_plan(int64_t height);
 
 // === REORG INFRASTRUCTURE ===
 // best chain = highest cumulative valid work (NOT longest chain by height)
@@ -1581,6 +1606,49 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
              <<",\"gold_vault_reward\":"<<b.gold_vault_reward
              <<",\"popc_pool_reward\":"<<b.popc_pool_reward
              <<",\"tx_count\":"<<b.tx_hexes.size();
+            // V17 reward breakdown (only for blocks >= V17_HEIGHT; older output unchanged).
+            if(sost::v17_active_at(b.height) && !b.tx_hexes.empty()){
+                const auto sp = sost::v17::subsidy_split(b.subsidy);
+                int64_t miner_total = 0, dtd_paid = 0, j_paid = 0, h_paid = 0;
+                std::string dtd_winner, jp_winner;
+                std::vector<Byte> craw; std::string cerr;
+                if(decode_tx_hex(b.tx_hexes[0], craw)){
+                    Transaction cb;
+                    if(Transaction::Deserialize(craw, cb, &cerr)){
+                        for(const auto& o : cb.outputs){
+                            if(o.type == OUT_COINBASE_MINER) miner_total += o.amount;
+                            else if(o.type == OUT_COINBASE_LOTTERY){ dtd_paid += o.amount; dtd_winner = address_encode(o.pubkey_hash); }
+                            else if(o.type == OUT_COINBASE_JACKPOT){ j_paid += o.amount; jp_winner = address_encode(o.pubkey_hash); }
+                        }
+                    }
+                }
+                if(b.tx_hexes.size() >= 2){
+                    std::vector<Byte> jraw; std::string jerr;
+                    if(decode_tx_hex(b.tx_hexes[1], jraw)){
+                        Transaction jt;
+                        if(Transaction::Deserialize(jraw, jt, &jerr) && jt.tx_type == TX_TYPE_JACKPOT && !jt.outputs.empty()){
+                            h_paid = jt.outputs[0].amount;
+                            jp_winner = address_encode(jt.outputs[0].pubkey_hash);
+                        }
+                    }
+                }
+                const int64_t j_before = (b.height > 0 && (size_t)(b.height - 1) < g_blocks.size())
+                                         ? g_blocks[(size_t)(b.height - 1)].j_balance_after : 0;
+                s<<",\"v17_reward\":{\"subsidy\":"<<b.subsidy
+                 <<",\"fees\":"<<(miner_total - sp.miner_subsidy)
+                 <<",\"miner_subsidy\":"<<sp.miner_subsidy
+                 <<",\"miner_total\":"<<miner_total
+                 <<",\"dtd_subsidy\":"<<sp.dtd_subsidy
+                 <<",\"dtd_paid\":"<<dtd_paid
+                 <<",\"dtd_winner\":\""<<dtd_winner<<"\""
+                 <<",\"jackpot_j_alloc\":"<<sp.jackpot_j
+                 <<",\"jackpot_h_paid\":"<<h_paid
+                 <<",\"jackpot_j_paid\":"<<j_paid
+                 <<",\"jackpot_winner\":\""<<jp_winner<<"\""
+                 <<",\"j_balance_before\":"<<j_before
+                 <<",\"j_balance_after\":"<<b.j_balance_after
+                 <<",\"pending_lottery_after\":"<<b.pending_lottery_after<<"}";
+            }
             // Extract miner address from coinbase tx, or from UTXO set for genesis
             if(!b.tx_hexes.empty()){
                 std::vector<Byte> cbraw; std::string cberr;
@@ -1860,8 +1928,11 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     const bool lottery_triggered =
         phase2_active && sost::lottery::is_lottery_block(height_next, phase2_h);
 
+    // V17: the DTD share is subsidy*15/100 (integer division) (fees are never split from V17).
+    const bool v17_next = sost::v17_active_at(height_next);
+    const auto v17amt = sost::v17::coinbase_amounts(subsidy, 0);
     const int64_t current_lottery_amount =
-        lottery_triggered ? split_no_fees.lottery_share : 0;
+        lottery_triggered ? (v17_next ? v17amt.dtd_subsidy : split_no_fees.lottery_share) : 0;
 
     // ---- Eligibility scan + winner pick (only if triggered) ------------
     int64_t eligible_count = 0;
@@ -1936,7 +2007,18 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     int64_t lottery_payout = 0;
     int64_t expected_pending_after = pending_before;
 
-    if (!lottery_triggered && height_next >= sost::V15_HEIGHT) {
+    if (v17_next && lottery_triggered) {
+        // V17: MINER (miner_subsidy + fees) [+ LOTTERY dtd_subsidy + pending]; the 5% J
+        // share is withheld into J_BALANCE. A J-funded jackpot output, when due, is
+        // reported by getblocktemplate (it depends on the jackpot plan, not on DTD).
+        const bool paid = sost::v17::dtd_paid_out(!eligibility_empty, v17amt.dtd_subsidy, pending_before);
+        shape          = paid ? "PAYOUT" : "UPDATE_EMPTY";
+        miner_amount   = v17amt.miner_subsidy;
+        gold_amount    = 0;
+        popc_amount    = 0;
+        lottery_payout = paid ? (v17amt.dtd_subsidy + pending_before) : 0;
+        expected_pending_after = paid ? 0 : (pending_before + v17amt.dtd_subsidy);
+    } else if (!lottery_triggered && height_next >= sost::V15_HEIGHT) {
         // V15 emission transition (T): post-V15 non-triggered block. Gold
         // Vault / PoPC are no longer funded; the non-miner half is redirected
         // to the DTD lottery pending. Same miner-only UPDATE shape the miner
@@ -2053,8 +2135,18 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
       << ",\"cooldown_window\":" << cooldown_window
       << ",\"previous_cooldown_block_winners\":" << prev_arr.str()
       << ",\"expected_pending_after\":" << expected_pending_after
-      << ",\"subsidy\":" << subsidy
-      << "}";
+      << ",\"subsidy\":" << subsidy;
+    if (v17_next) {
+        // V17 fields (only from V17_HEIGHT, so pre-V17 output is unchanged).
+        s << ",\"v17_active\":true"
+          << ",\"v17_height\":" << sost::V17_HEIGHT
+          << ",\"miner_subsidy\":" << v17amt.miner_subsidy
+          << ",\"dtd_subsidy\":" << v17amt.dtd_subsidy
+          << ",\"jackpot_j_alloc\":" << v17amt.jackpot_j
+          << ",\"j_balance_before\":" << chain_j_balance_tip()
+          << ",\"fees_to_miner_pct\":100";
+    }
+    s << "}";
     return rpc_result(id, s.str());
 }
 
@@ -2158,12 +2250,19 @@ static std::string handle_gethistoricaljackpotstatus(const std::string& id, cons
             Transaction tx; std::string de;
             if (Transaction::Deserialize(raw, tx, &de) && tx.tx_type == sost::TX_TYPE_JACKPOT) return true;
         }
-        return false;
+        return sost::v17_active_at(h) && jackpot_event_paid_at(h);   // V17: J-only payment (coinbase)
     };
     const int64_t rollover = sost::jackpot::derive_rollover_before(next_jackpot_height, paid_at);
     int64_t prize = sost::HIST_JACKPOT_BASE_STOCKS + rollover;
     if (prize > sost::HIST_JACKPOT_CAP_STOCKS) prize = sost::HIST_JACKPOT_CAP_STOCKS;
-    const int64_t expected_payout = prize < reserve ? prize : reserve;
+    // V17: funded from H (reserve) first, then J_BALANCE (projected to the jackpot block).
+    const bool v17_jp = sost::v17_active_at(next_jackpot_height);
+    int64_t j_proj = g_blocks.back().j_balance_after;
+    if (v17_jp)
+        for (int64_t h = tip + 1; h < next_jackpot_height; ++h)
+            if (sost::v17_active_at(h)) j_proj += sost::v17::subsidy_split(sost_subsidy_stocks(h)).jackpot_j;
+    const int64_t fundable = v17_jp ? reserve + j_proj : reserve;
+    const int64_t expected_payout = prize < fundable ? prize : fundable;
 
     std::ostringstream s;
     s << "{\"current_height\":" << tip
@@ -2178,8 +2277,15 @@ static std::string handle_gethistoricaljackpotstatus(const std::string& id, cons
       << ",\"base_payout\":" << format_sost(sost::HIST_JACKPOT_BASE_STOCKS)
       << ",\"cap_payout\":" << format_sost(sost::HIST_JACKPOT_CAP_STOCKS)
       << ",\"rollover\":" << format_sost(rollover)
-      << ",\"expected_payout\":" << format_sost(expected_payout)
-      << ",\"winner_address\":\"" << winner_addr << "\""
+      << ",\"expected_payout\":" << format_sost(expected_payout);
+    if (v17_jp) {   // V17 fields only when the next jackpot is a V17 jackpot
+        const int64_t hp = expected_payout < reserve ? expected_payout : reserve;
+        s << ",\"j_balance_stocks\":" << g_blocks.back().j_balance_after
+          << ",\"j_balance_projected_stocks\":" << j_proj
+          << ",\"expected_h_part_stocks\":" << hp
+          << ",\"expected_j_part_stocks\":" << (expected_payout - hp);
+    }
+    s << ",\"winner_address\":\"" << winner_addr << "\""
       << ",\"eligible_count\":" << eligible.size()
       << ",\"eligible_addresses\":[";
     for (size_t i = 0; i < eligible.size(); ++i) { if (i) s << ","; s << "\"" << address_encode(eligible[i].pkh) << "\""; }
@@ -2206,6 +2312,97 @@ static std::string handle_gethistoricaljackpotstatus(const std::string& id, cons
     return rpc_result(id, s.str());
 }
 
+// getjackpotstate [height]
+// V17 — Historical Jackpot funding state, H and J reported SEPARATELY (never merged).
+//   no param : live state after the tip + a funding preview for the next jackpot
+//              (H = live frozen reserve UTXOs, J = J_BALANCE after the tip, rollover
+//              derived from history, J projected to the next jackpot by adding the
+//              deterministic 5% allocations of the blocks in between).
+//   height   : J_BALANCE / pending after that block and what it paid (H part, J part).
+// Read-only; consensus values come from the same helpers the validator uses.
+static std::string handle_getjackpotstate(const std::string& id, const std::vector<std::string>& p) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    const int64_t tip = (int64_t)g_blocks.size() - 1;
+    if (tip < 0) return rpc_error(id, -1, "empty chain");
+    std::ostringstream s;
+    if (!p.empty() && !p[0].empty()) {
+        int64_t h = -1; try { h = std::stoll(p[0]); } catch (...) { return rpc_error(id, -8, "invalid height"); }
+        if (h < 0 || h > tip) return rpc_error(id, -8, "height out of range");
+        const StoredBlock& b = g_blocks[(size_t)h];
+        int64_t j_paid = 0, h_paid = 0;
+        if (!b.tx_hexes.empty()) {
+            std::vector<Byte> raw; std::string de;
+            if (decode_tx_hex(b.tx_hexes[0], raw)) { Transaction cb; if (Transaction::Deserialize(raw, cb, &de)) j_paid = sost::v17::coinbase_jackpot_j_paid(cb); }
+        }
+        if (b.tx_hexes.size() >= 2) {
+            std::vector<Byte> raw; std::string de;
+            if (decode_tx_hex(b.tx_hexes[1], raw)) { Transaction t; if (Transaction::Deserialize(raw, t, &de) && t.tx_type == TX_TYPE_JACKPOT && !t.outputs.empty()) h_paid = t.outputs[0].amount; }
+        }
+        s << "{\"height\":" << h
+          << ",\"v17_height\":" << sost::V17_HEIGHT
+          << ",\"v17_active\":" << (sost::v17_active_at(h) ? "true" : "false")
+          << ",\"is_jackpot_height\":" << (sost::is_hist_jackpot_height(h) ? "true" : "false")
+          << ",\"jackpot_paid\":" << (jackpot_event_paid_at(h) ? "true" : "false")
+          << ",\"jackpot_h_paid_stocks\":" << h_paid
+          << ",\"jackpot_j_paid_stocks\":" << j_paid
+          << ",\"jackpot_j_alloc_stocks\":" << (sost::v17_active_at(h) ? sost::v17::subsidy_split(sost_subsidy_stocks(h)).jackpot_j : 0)
+          << ",\"j_balance_before_stocks\":" << (h > 0 ? g_blocks[(size_t)(h - 1)].j_balance_after : 0)
+          << ",\"j_balance_after_stocks\":" << b.j_balance_after
+          << ",\"pending_lottery_after_stocks\":" << b.pending_lottery_after << "}";
+        return rpc_result(id, s.str());
+    }
+    auto next_jp = [](int64_t h)->int64_t{
+        if (h < sost::HIST_JACKPOT_FIRST_HEIGHT) return sost::HIST_JACKPOT_FIRST_HEIGHT;
+        int64_t k = ((h - sost::HIST_JACKPOT_FIRST_HEIGHT) / sost::HIST_JACKPOT_CADENCE_BLOCKS) + 1;
+        return sost::HIST_JACKPOT_FIRST_HEIGHT + k * sost::HIST_JACKPOT_CADENCE_BLOCKS;
+    };
+    const int64_t nj = next_jp(tip);
+    PubKeyHash gold_pkh{}, popc_pkh{};
+    address_decode(ADDR_GOLD_VAULT, gold_pkh);
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+    const auto reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
+    const int64_t H = sost::jackpot::reserve_balance(reserve);
+    const int64_t J = g_blocks.back().j_balance_after;
+    int64_t j_proj = J;                       // J_before at the next jackpot (no payout in between)
+    for (int64_t h = tip + 1; h < nj; ++h)
+        if (sost::v17_active_at(h)) j_proj += sost::v17::subsidy_split(sost_subsidy_stocks(h)).jackpot_j;
+    const int64_t rollover = sost::jackpot::derive_rollover_before(nj, jackpot_event_paid_at);
+    int64_t prize = sost::HIST_JACKPOT_BASE_STOCKS + rollover;
+    if (prize > sost::HIST_JACKPOT_CAP_STOCKS) prize = sost::HIST_JACKPOT_CAP_STOCKS;
+    const bool v17_next_j = sost::v17_active_at(nj);
+    sost::v17::JackpotFunding f;
+    if (v17_next_j) f = sost::v17::jackpot_funding(nj, true, H, j_proj, rollover);
+    s << "{\"tip_height\":" << tip
+      << ",\"v17_height\":" << sost::V17_HEIGHT
+      << ",\"v17_active\":" << (sost::v17_active_at(tip + 1) ? "true" : "false")
+      << ",\"h_reserve_stocks\":" << H
+      << ",\"h_reserve_utxos\":" << reserve.size()
+      << ",\"j_balance_stocks\":" << J
+      << ",\"pending_lottery_stocks\":" << g_blocks.back().pending_lottery_after
+      << ",\"next_jackpot_height\":" << nj
+      << ",\"blocks_remaining\":" << (nj - tip)
+      << ",\"cadence\":" << sost::HIST_JACKPOT_CADENCE_BLOCKS
+      << ",\"base_stocks\":" << sost::HIST_JACKPOT_BASE_STOCKS
+      << ",\"cap_stocks\":" << sost::HIST_JACKPOT_CAP_STOCKS
+      << ",\"rollover_before_stocks\":" << rollover
+      << ",\"prize_stocks\":" << prize
+      << ",\"next_jackpot_v17_funding\":" << (v17_next_j ? "true" : "false");
+    if (v17_next_j) {
+        s << ",\"j_balance_projected_at_next_jackpot_stocks\":" << j_proj
+          << ",\"preview_if_winner\":{\"payout_stocks\":" << f.payout
+          << ",\"h_part_stocks\":" << f.h_part
+          << ",\"j_part_stocks\":" << f.j_part
+          << ",\"underfunded\":" << (f.underfunded ? "true" : "false")
+          << ",\"h_after_stocks\":" << f.h_after
+          << ",\"j_after_payment_stocks\":" << f.j_after_payment << "}";
+    } else {
+        s << ",\"preview_if_winner\":{\"payout_stocks\":" << (prize < H ? prize : H)
+          << ",\"h_part_stocks\":" << (prize < H ? prize : H) << ",\"j_part_stocks\":0}";
+    }
+    s << "}";
+    return rpc_result(id, s.str());
+}
+
 static std::string handle_getjackpotv2audit(const std::string& id, const std::vector<std::string>& p){
   if(p.empty()) return rpc_error(id,-1,"missing height");
   int64_t height=0; try{height=std::stoll(p[0]);}catch(...){return rpc_error(id,-8,"invalid height");}
@@ -2227,10 +2424,7 @@ static std::string handle_getjackpotv2audit(const std::string& id, const std::ve
   PubKeyHash gold_pkh{}, popc_pkh{}; address_decode(ADDR_GOLD_VAULT,gold_pkh); address_decode(ADDR_POPC_POOL,popc_pkh);
   const auto rez = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
   const int64_t reserve_before = sost::jackpot::reserve_balance(rez);
-  const int64_t rollover_before = sost::jackpot::derive_rollover_before(height, [](int64_t h)->bool{
-      if(h<0||h>=(int64_t)g_blocks.size())return false; const StoredBlock&b=g_blocks[(size_t)h];
-      if(b.tx_hexes.size()<2)return false; std::vector<Byte> raw; if(!decode_tx_hex(b.tx_hexes[1],raw))return false;
-      Transaction t; std::string de; if(!Transaction::Deserialize(raw,t,&de))return false; return t.tx_type==TX_TYPE_JACKPOT; });
+  const int64_t rollover_before = sost::jackpot::derive_rollover_before(height, jackpot_event_paid_at);
   const int64_t pot = std::min(sost::HIST_JACKPOT_BASE_STOCKS + rollover_before, sost::HIST_JACKPOT_CAP_STOCKS);
   s<<",\"completed_epochs\":"<<comp
    <<",\"heartbeat_required\":"<<sost::jackpot_v2::jv2_heartbeat_required(comp)
@@ -2597,12 +2791,14 @@ static int64_t supply_dtd_lottery_distributed(int64_t tip) {
     int64_t sum = 0;
     for (int64_t h = sost::V11_PHASE2_HEIGHT; h <= tip; ++h)
         if (sost::lottery::is_lottery_block(h, sost::V11_PHASE2_HEIGHT))
-            sum += sost::lottery::phase2_coinbase_split(sost_subsidy_stocks(h)).lottery_share;
+            sum += sost::v17_active_at(h)
+                 ? sost::v17::subsidy_split(sost_subsidy_stocks(h)).dtd_subsidy        // V17: 15%
+                 : sost::lottery::phase2_coinbase_split(sost_subsidy_stocks(h)).lottery_share;
     return sum;
 }
 
 static std::string handle_getsupplyinfo(const std::string& id, const std::vector<std::string>&) {
-    int64_t h = 0, vault = 0, pool = 0;
+    int64_t h = 0, vault = 0, pool = 0, jbal = 0;
     {
         std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
         h = g_chain_height;
@@ -2617,10 +2813,12 @@ static std::string handle_getsupplyinfo(const std::string& id, const std::vector
         }
         vault = supply_balance_of_address(sost::ADDR_GOLD_VAULT);
         pool  = supply_balance_of_address(sost::ADDR_POPC_POOL);
+        jbal  = g_blocks.empty() ? 0 : g_blocks.back().j_balance_after;
     }
     const int64_t total       = sost::sost_cumulative_emission_stocks(h);
     const int64_t dtd         = supply_dtd_lottery_distributed(h);
-    const int64_t circ        = total - vault - pool;
+    // V17: J_BALANCE is emitted-but-unallocated (no UTXO); it is not circulating.
+    const int64_t circ        = total - vault - pool - jbal;
     const int64_t circ_mining = circ - dtd;
 
     std::ostringstream s;
@@ -2637,8 +2835,12 @@ static std::string handle_getsupplyinfo(const std::string& id, const std::vector
       << ",\"popc_pool_balance_stocks\":"       << pool
       << ",\"dtd_lottery_distributed_stocks\":" << dtd
       << ",\"circulating_supply_stocks\":"      << circ
-      << ",\"circulating_mining_stocks\":"      << circ_mining
-      << "}";
+      << ",\"circulating_mining_stocks\":"      << circ_mining;
+    if (sost::v17_active_at(h)) {   // V17 fields only once the tip is a V17 block
+        s << ",\"jackpot_j_balance\":"        << format_sost(jbal)
+          << ",\"jackpot_j_balance_stocks\":" << jbal;
+    }
+    s << "}";
     return rpc_result(id, s.str());
 }
 
@@ -3167,7 +3369,24 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
     // recomputes a different winner and rejects the block — so identity stays coupled to the
     // real coinbase. Emitted first in the transactions array → block index 1 after coinbase.
     std::string jackpot_hex;
-    if (sost::is_hist_jackpot_height(next_height) && !p.empty() && !p[0].empty()) {
+    // V17: the jackpot is funded H first (TX_TYPE_JACKPOT, below) then J (a coinbase
+    // OUT_COINBASE_JACKPOT the miner must add: amount jackpot_j_payout, pkh
+    // jackpot_winner_pkh). The V2 winner does not depend on the miner address.
+    const bool v17_next = sost::v17_active_at(next_height);
+    V17JackpotPlan v17_plan;
+    if (v17_next) {
+        v17_plan = compute_v17_jackpot_plan(next_height);
+        if (v17_plan.f.ok && v17_plan.f.h_part > 0) {
+            PubKeyHash gold_pkh{};
+            address_decode(ADDR_GOLD_VAULT, gold_pkh);
+            Transaction jtx;
+            if (sost::jackpot::build_jackpot_tx_for_payout(v17_plan.f.h_part, v17_plan.winner_pkh,
+                                                           v17_plan.reserve, gold_pkh, jtx)) {
+                std::vector<Byte> jraw; std::string jerr;
+                if (jtx.Serialize(jraw, &jerr)) jackpot_hex = to_hex(jraw.data(), jraw.size());
+            }
+        }
+    } else if (sost::is_hist_jackpot_height(next_height) && !p.empty() && !p[0].empty()) {
         PubKeyHash miner_pkh{};
         if (address_decode(p[0], miner_pkh)) {
             Transaction jtx;
@@ -3213,8 +3432,25 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
     }
     const size_t tmpl_count = tmpl.txs.size() + (jackpot_hex.empty() ? 0 : 1);
     s << "],\"total_fees\":" << tmpl.total_fees
-      << ",\"has_jackpot\":" << (jackpot_hex.empty() ? "false" : "true")
-      << ",\"count\":" << tmpl_count
+      << ",\"has_jackpot\":" << (jackpot_hex.empty() ? "false" : "true");
+    if (v17_next) {
+        const auto amt = sost::v17::coinbase_amounts(subsidy, tmpl.total_fees);
+        const auto jt  = sost::v17::j_transition(next_height, v17_plan.j_before, subsidy, v17_plan.f.j_part);
+        s << ",\"v17_active\":true"
+          << ",\"miner_subsidy\":" << amt.miner_subsidy
+          << ",\"miner_total\":" << amt.miner_total
+          << ",\"dtd_subsidy\":" << amt.dtd_subsidy
+          << ",\"jackpot_j_alloc\":" << amt.jackpot_j
+          << ",\"j_balance_before\":" << v17_plan.j_before
+          << ",\"j_balance_after\":" << (jt.ok ? jt.j_after : -1)
+          << ",\"jackpot_height\":" << (sost::is_hist_jackpot_height(next_height) ? "true" : "false")
+          << ",\"jackpot_h_payout\":" << v17_plan.f.h_part
+          << ",\"jackpot_j_payout\":" << v17_plan.f.j_part
+          << ",\"jackpot_winner_pkh\":\""
+          << (v17_plan.f.payout > 0 ? to_hex(v17_plan.winner_pkh.data(), v17_plan.winner_pkh.size()) : std::string())
+          << "\"";
+    }
+    s << ",\"count\":" << tmpl_count
       << ",\"max_block_tx_bytes\":" << NODE_MAX_BLOCK_TX_BYTES
       << ",\"mempool_size\":" << g_mempool.Size() << "}";
     return rpc_result(id, s.str());
@@ -5258,16 +5494,7 @@ static std::string handle_dev_jackpotstate(const std::string& id, const std::vec
     const int64_t reserve_before = sost::jackpot::reserve_balance(reserve);
     const int64_t rollover_before = sost::jackpot::derive_rollover_before(
         height,
-        [](int64_t h) -> bool {                          // a past event paid iff its block carries tx[1]==JACKPOT
-            if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
-            const StoredBlock& b = g_blocks[(size_t)h];
-            if (b.tx_hexes.size() < 2) return false;
-            std::vector<Byte> raw;
-            if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
-            Transaction t; std::string de;
-            if (!Transaction::Deserialize(raw, t, &de)) return false;
-            return t.tx_type == TX_TYPE_JACKPOT;
-        });
+        jackpot_event_paid_at);  // tx[1]==JACKPOT, or (>= V17) a coinbase OUT_COINBASE_JACKPOT
     const bool is_j = sost::is_hist_jackpot_height(height);
     const int64_t BASE = sost::HIST_JACKPOT_BASE_STOCKS;
     const int64_t CAP  = sost::HIST_JACKPOT_CAP_STOCKS;
@@ -5297,6 +5524,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getlotterystate",handle_getlotterystate},
     {"getlotteryaudit",handle_getlotteryaudit},
     {"getjackpotv2audit",handle_getjackpotv2audit},
+    {"getjackpotstate",handle_getjackpotstate},
     {"checkhistoricaljackpoteligibility",handle_checkhistoricaljackpoteligibility},
     {"gethistoricaljackpotstatus",handle_gethistoricaljackpotstatus},
     {"getbeaconnotices",handle_getbeaconnotices},
@@ -5955,7 +6183,101 @@ static std::vector<V2Cand> v2_report(const std::vector<sost::lottery::LotteryMin
     return out;
 }
 
+// ===========================================================================
+// V17 — Jackpot accumulator J and H-then-J jackpot funding (live wiring).
+// Normative: docs/v40000/V17_ECONOMICS_NORMATIVE.md. Pure rules: v17_economics.h.
+// ===========================================================================
+// J_BALANCE after the active tip (= J_before for the block being connected / built).
+// Every caller holds g_chain_mu and connects/builds the block at tip+1.
+static int64_t chain_j_balance_tip() {
+    return g_blocks.empty() ? 0 : g_blocks.back().j_balance_after;
+}
+
+// Did the jackpot EVENT at height h pay out? (rollover derivation input)
+// Pre-V17: iff tx[1] is TX_TYPE_JACKPOT — the exact historical predicate.
+// From V17: additionally iff the coinbase carries an OUT_COINBASE_JACKPOT output
+// (a J-only payment has no TX_TYPE_JACKPOT). Below V17 the coinbase is not even
+// decoded, so the predicate is byte-identical on every historical block.
+static bool jackpot_event_paid_at(int64_t h) {
+    if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
+    const StoredBlock& b = g_blocks[(size_t)h];
+    bool tx1_is_jackpot = false;
+    if (b.tx_hexes.size() >= 2) {
+        std::vector<Byte> raw;
+        if (decode_tx_hex(b.tx_hexes[1], raw)) {
+            Transaction t; std::string de;
+            if (Transaction::Deserialize(raw, t, &de)) tx1_is_jackpot = (t.tx_type == TX_TYPE_JACKPOT);
+        }
+    }
+    int64_t j_outputs = 0;
+    if (!tx1_is_jackpot && sost::v17_active_at(h) && !b.tx_hexes.empty()) {
+        std::vector<Byte> raw;
+        if (decode_tx_hex(b.tx_hexes[0], raw)) {
+            Transaction cb; std::string de;
+            if (Transaction::Deserialize(raw, cb, &de)) j_outputs = sost::v17::count_jackpot_j_outputs(cb);
+        }
+    }
+    return sost::v17::jackpot_event_paid(h, tx1_is_jackpot, j_outputs);
+}
+
+// Lottery history view of the active chain strictly below `height`.
+static std::vector<sost::lottery::LotteryMinedBlockView> lottery_history_before(int64_t height) {
+    std::vector<sost::lottery::LotteryMinedBlockView> history;
+    history.reserve(g_blocks.size());
+    for (const auto& b : g_blocks) {
+        if (b.height >= height) break;
+        if (b.tx_hexes.empty()) continue;
+        std::vector<Byte> raw;
+        if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
+        Transaction cb; std::string de;
+        if (!Transaction::Deserialize(raw, cb, &de) || cb.outputs.empty()) continue;
+        sost::lottery::LotteryMinedBlockView v;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        history.push_back(v);
+    }
+    return history;
+}
+
+// V17 funding plan for the block at `height` (= tip + 1), from PRE-BLOCK state:
+//   H  = discover_reserve_utxos (frozen Gold Vault / PoPC reserve), unchanged
+//   J  = J_BALANCE after the tip
+//   R  = derive_rollover_before(height, jackpot_event_paid_at)
+//   winner = Jackpot V2 winner (V17_HEIGHT > HIST_JACKPOT_V2_HEIGHT, static_assert)
+// Non-jackpot heights return a zero plan (f.h_part == f.j_part == 0) without
+// scanning the UTXO set.
+static V17JackpotPlan compute_v17_jackpot_plan(int64_t height) {
+    V17JackpotPlan p;
+    p.j_before = chain_j_balance_tip();
+    if (!sost::is_hist_jackpot_height(height)) {
+        p.f = sost::v17::jackpot_funding(height, false, 0, p.j_before, 0);
+        return p;
+    }
+    PubKeyHash gold_pkh{}, popc_pkh{};
+    address_decode(ADDR_GOLD_VAULT, gold_pkh);
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+    p.reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
+    p.reserve_before = sost::jackpot::reserve_balance(p.reserve);
+    const auto history = lottery_history_before(height);
+    if (sost::is_hist_jackpot_v2_height(height))
+        compute_v2_jackpot_winner(history, height, p.winner_pkh, p.winner_exists);
+    p.rollover_before = sost::jackpot::derive_rollover_before(height, jackpot_event_paid_at);
+    p.f = sost::v17::jackpot_funding(height, p.winner_exists, p.reserve_before, p.j_before,
+                                     p.rollover_before);
+    return p;
+}
+
 static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, Transaction& out_tx) {
+    if (sost::v17_active_at(height)) {
+        // V17: the TX_TYPE_JACKPOT carries ONLY the H part (reserve spend); the J part is
+        // a coinbase output the miner adds (getblocktemplate reports it). No tx if H part 0.
+        (void)cur_miner;   // the V2 winner does not depend on the current miner
+        const V17JackpotPlan plan = compute_v17_jackpot_plan(height);
+        if (!plan.f.ok || plan.f.h_part <= 0) return false;
+        PubKeyHash gold_pkh{};
+        address_decode(ADDR_GOLD_VAULT, gold_pkh);
+        return sost::jackpot::build_jackpot_tx_for_payout(plan.f.h_part, plan.winner_pkh,
+                                                          plan.reserve, gold_pkh, out_tx);
+    }
     if (!sost::is_hist_jackpot_height(height)) return false;
     PubKeyHash gold_pkh{}, popc_pkh{};
     address_decode(ADDR_GOLD_VAULT, gold_pkh);
@@ -5988,22 +6310,27 @@ static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, T
     }
     const int64_t rollover_before = sost::jackpot::derive_rollover_before(
         height,
-        [](int64_t h) -> bool {
-            if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
-            const StoredBlock& b = g_blocks[(size_t)h];
-            if (b.tx_hexes.size() < 2) return false;
-            std::vector<Byte> raw;
-            if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
-            Transaction t; std::string de;
-            if (!Transaction::Deserialize(raw, t, &de)) return false;
-            return t.tx_type == TX_TYPE_JACKPOT;
-        });
+        jackpot_event_paid_at);  // tx[1]==JACKPOT, or (>= V17) a coinbase OUT_COINBASE_JACKPOT
     // gold_pkh is the canonical reserve-change destination (same as the validator uses).
     return sost::jackpot::build_canonical_jackpot_tx(
         height, winner_exists, winner_pkh, reserve_before, rollover_before, reserve, gold_pkh, out_tx);
 }
 
 static bool validate_live_jackpot(const std::vector<Transaction>& txs, int64_t height, std::string& err) {
+    if (sost::v17_active_at(height)) {
+        // V17: every height (jackpot or not) is checked — zero jackpot txs / J outputs
+        // unless the H-then-J funding plan requires them, byte-exact when required.
+        // This also runs on chain load and reorg restore (the coinbase validator does not),
+        // so a tampered J payout can never be loaded.
+        if (txs.empty()) { err = "empty block"; return false; }
+        const V17JackpotPlan plan = compute_v17_jackpot_plan(height);
+        PubKeyHash gold_pkh{};
+        address_decode(ADDR_GOLD_VAULT, gold_pkh);
+        const auto jr = sost::jackpot::validate_block_jackpot_v17(txs, plan.f, plan.winner_pkh,
+                                                                  plan.reserve, gold_pkh);
+        if (!jr.ok) { err = jr.reason; return false; }
+        return true;
+    }
     if (!sost::is_hist_jackpot_height(height) && sost::jackpot::count_jackpot_txs(txs) == 0)
         return true;   // fast path: no jackpot due and none present
     PubKeyHash gold_pkh{}, popc_pkh{};
@@ -6040,16 +6367,7 @@ static bool validate_live_jackpot(const std::vector<Transaction>& txs, int64_t h
     }
     const int64_t rollover_before = sost::jackpot::derive_rollover_before(
         height,
-        [](int64_t h) -> bool {                          // a past event paid iff its block carries tx[1]==JACKPOT
-            if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
-            const StoredBlock& b = g_blocks[(size_t)h];
-            if (b.tx_hexes.size() < 2) return false;
-            std::vector<Byte> raw;
-            if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
-            Transaction t; std::string de;
-            if (!Transaction::Deserialize(raw, t, &de)) return false;
-            return t.tx_type == TX_TYPE_JACKPOT;
-        });
+        jackpot_event_paid_at);  // tx[1]==JACKPOT, or (>= V17) a coinbase OUT_COINBASE_JACKPOT
     const auto jr = sost::jackpot::validate_block_jackpot(
         txs, height, reserve, winner_exists, winner_pkh, reserve_before, rollover_before, gold_pkh);
     if (!jr.ok) { err = jr.reason; return false; }
@@ -6835,7 +7153,10 @@ static bool fork_block_precheck(const std::string& block_json, const std::string
         const int64_t miner_r = jint(block_json, "miner");
         const int64_t gold_r  = jint(block_json, "gold_vault");
         const int64_t popc_r  = jint(block_json, "popc_pool");
-        const bool ok = (outs.size() == 3)
+        // V17: a coinbase may carry MINER + LOTTERY + JACKPOT (3 outputs) with no Gold
+        // Vault / PoPC outputs, so the legacy "3 outputs == 50/25/25" reading does not apply.
+        const bool legacy3 = (outs.size() == 3) && !sost::v17_active_at(height);
+        const bool ok = legacy3
             ? (outs[0].amount == miner_r && outs[1].amount == gold_r && outs[2].amount == popc_r)
             : (outs[0].amount == miner_r && gold_r == 0 && popc_r == 0);
         if (!ok) { why = "JSON rewards mismatch"; return false; }
@@ -7269,6 +7590,8 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         // node could feed stripped or fabricated blocks <= assumevalid. Honest peers never
         // send a block without its transactions (p2p_send_block refuses), and a full mainnet
         // replay of 1..3554 showed every real block carries them.
+        // This also covers V17: J_BALANCE is derived from the coinbase, so no block at/after
+        // V17_HEIGHT could ever be accepted without its transactions.
         (void)is_trusted_height;
         printf("[BLOCK] REJECTED: missing transactions[] (must include coinbase)\n");
         record_block_reject("missing transactions");
@@ -7744,7 +8067,34 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 sost::lottery_exclusion_window_at(height));
 
             const auto p2split = sost::lottery::phase2_coinbase_split(subsidy + total_fees);
-            if (eligible.empty()) {
+            if (sost::v17_active_at(height)) {
+                // V17: DTD share = subsidy*15/100 (integer division); fees are NOT split (100% miner).
+                // Eligibility + winner selection below are the unchanged helpers.
+                const auto v17amt = sost::v17::coinbase_amounts(subsidy, total_fees);
+                if (!v17amt.ok) {
+                    printf("[BLOCK] REJECTED: V17 coinbase amounts out of range\n");
+                    record_block_reject("V17 coinbase amounts");
+                    return false;
+                }
+                const bool v17_dtd_paid = sost::v17::dtd_paid_out(
+                    !eligible.empty(), v17amt.dtd_subsidy, phase2_ctx.pending_before);
+                if (!v17_dtd_paid) {
+                    phase2_ctx.paid_out = false;
+                    phase2_ctx.expected_pending_after =
+                        phase2_ctx.pending_before + v17amt.dtd_subsidy;
+                } else {
+                    int64_t winner_index = sost::lottery::select_lottery_winner_index_from_history(
+                        eligible, history, height);
+                    if (winner_index < 0 || winner_index >= (int64_t)eligible.size()) {
+                        printf("[BLOCK] REJECTED: lottery winner index invalid\n");
+                        return false;
+                    }
+                    phase2_ctx.paid_out = true;
+                    phase2_ctx.expected_winner_pkh = eligible[(size_t)winner_index].pkh;
+                    phase2_ctx.lottery_payout = v17amt.dtd_subsidy + phase2_ctx.pending_before;
+                    phase2_ctx.expected_pending_after = 0;
+                }
+            } else if (eligible.empty()) {
                 phase2_ctx.paid_out = false;
                 phase2_ctx.expected_pending_after =
                     phase2_ctx.pending_before + p2split.lottery_share;
@@ -7774,6 +8124,38 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         phase2_ctx_ptr = &phase2_ctx;
     }
 
+    // V17 — Jackpot accumulator J: expected J payout (J part of a jackpot payment, H first)
+    // and the J_BALANCE transition for this block, all from PRE-BLOCK state.
+    const bool v17_block = sost::v17_active_at(height);
+    int64_t v17_j_after = 0;
+    if (v17_block) {
+        if (!phase2_ctx_ptr || !phase2_ctx.triggered) {
+            printf("[BLOCK] REJECTED: V17 block without a triggered DTD context\n");
+            record_block_reject("V17 context");
+            return false;
+        }
+        const V17JackpotPlan plan = compute_v17_jackpot_plan(height);
+        if (!plan.f.ok) {
+            printf("[BLOCK] REJECTED: V17 jackpot funding: impossible pre-block state "
+                   "(H=%lld J=%lld rollover=%lld)\n", (long long)plan.reserve_before,
+                   (long long)plan.j_before, (long long)plan.rollover_before);
+            record_block_reject("V17 jackpot funding impossible state");
+            return false;
+        }
+        const auto jt = sost::v17::j_transition(height, plan.j_before, subsidy, plan.f.j_part);
+        if (!jt.ok) {
+            printf("[BLOCK] REJECTED: V17 J_BALANCE transition invalid (J=%lld paid=%lld)\n",
+                   (long long)plan.j_before, (long long)plan.f.j_part);
+            record_block_reject("V17 J_BALANCE transition");
+            return false;
+        }
+        phase2_ctx.j_before = plan.j_before;
+        phase2_ctx.jackpot_j_payout = plan.f.j_part;
+        phase2_ctx.jackpot_winner_pkh = plan.winner_pkh;
+        phase2_ctx.expected_j_after = jt.j_after;
+        v17_j_after = jt.j_after;
+    }
+
     // Validate coinbase amounts/destinations against subsidy+fees
     PubKeyHash gold_pkh{}, popc_pkh{};
     address_decode(ADDR_GOLD_VAULT, gold_pkh);
@@ -7791,7 +8173,19 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     // 3-output 50/25/25 shape — route it to the UPDATE branch below.
     const bool v15_idle_hardening =
         phase2_ctx_ptr && !phase2_ctx.triggered && height >= sost::V15_HEIGHT;
-    if ((!phase2_ctx_ptr || !phase2_ctx.triggered) && !v15_idle_hardening) {
+    if (v17_block) {
+        // V17 shape: MINER, [LOTTERY], [JACKPOT] — no Gold Vault / PoPC outputs.
+        const int64_t want = 1 + (phase2_ctx.paid_out ? 1 : 0) + (phase2_ctx.jackpot_j_payout > 0 ? 1 : 0);
+        if ((int64_t)txs[0].outputs.size() != want) {
+            printf("[BLOCK] REJECTED: V17 coinbase outputs != %lld\n", (long long)want);
+            return false;
+        }
+        if (txs[0].outputs[0].amount != miner_r || gold_r != 0 || popc_r != 0) {
+            printf("[BLOCK] REJECTED: V17 JSON rewards mismatch\n");
+            record_block_reject("JSON rewards mismatch");
+            return false;
+        }
+    } else if ((!phase2_ctx_ptr || !phase2_ctx.triggered) && !v15_idle_hardening) {
         if((int64_t)txs[0].outputs.size()!=3){
             printf("[BLOCK] REJECTED: coinbase outputs != 3\n");
             return false;
@@ -8549,6 +8943,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     sb.popc_pool_reward = popc_r;
     sb.pending_lottery_after =
         phase2_ctx_ptr ? phase2_ctx.expected_pending_after : 0;
+    sb.j_balance_after = v17_block ? v17_j_after : 0;   // V17 J_BALANCE (0 below V17_HEIGHT)
     sb.stability_metric = stb;
     sb.x_bytes_hex = x_bytes_hex;
     sb.final_state_hex = final_state_hex;
@@ -9447,11 +9842,29 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             auto it = g_block_index.find(h);
             if (it != g_block_index.end()) it->second.status = BlockStatus::ACTIVE;
         }
-        // Mark old active blocks as FORK (they're no longer on main chain)
+        // Mark old active blocks as FORK (they're no longer on main chain). An ACTIVE
+        // index entry carries no raw_json (and a block loaded from chain.json has no
+        // index entry at all), so keep the disconnected body here: without it a later
+        // reorg BACK to this branch fails ("missing/invalid required hex fields") and the
+        // node could not return to the branch it just left.
         for (const auto& dsb : disconnected) {
             std::string h = to_hex(dsb.block_id.data(), 32);
             auto it = g_block_index.find(h);
-            if (it != g_block_index.end()) it->second.status = BlockStatus::FORK;
+            if (it != g_block_index.end()) {
+                it->second.status = BlockStatus::FORK;
+                if (it->second.raw_json.empty()) it->second.raw_json = dsb.raw_block_json;
+            } else if (!dsb.raw_block_json.empty()) {
+                BlockIndexEntry e;
+                e.block_id = dsb.block_id;
+                e.prev_hash = dsb.prev_hash;
+                e.height = dsb.height;
+                e.bits_q = dsb.bits_q;
+                e.block_work = compute_block_work(dsb.bits_q);
+                e.cumulative_work = dsb.cumulative_work;
+                e.status = BlockStatus::FORK;
+                e.raw_json = dsb.raw_block_json;
+                g_block_index[h] = e;
+            }
         }
     }
 
@@ -10650,6 +11063,24 @@ static bool load_chain(const std::string& path) {
                 chain_load_fail(path, height, "Historical Jackpot mismatch: " + jerr); break;
             }
         }
+        // V17 — J_BALANCE is recomputed from the block data (never trusted from the file):
+        // j_after = j_before - coinbase OUT_COINBASE_JACKPOT + subsidy*5/100 (integer division) from
+        // V17_HEIGHT, and exactly 0 (with no J output) below it. A persisted value that
+        // disagrees is reported and ignored (the raw block JSON is not committed by the
+        // block id, so it is never an authority for consensus state).
+        {
+            const int64_t j_before = g_blocks.empty() ? 0 : g_blocks.back().j_balance_after;
+            const auto jt = sost::v17::j_transition(height, j_before, sost_subsidy_stocks(height),
+                                                    sost::v17::coinbase_jackpot_j_paid(txs[0]));
+            if (!jt.ok) { chain_load_fail(path, height, "V17 J_BALANCE transition invalid"); break; }
+            sb.j_balance_after = jt.j_after;
+            if (bj.find("\"v17_j_balance_after\"") != std::string::npos &&
+                jint(bj, "v17_j_balance_after") != jt.j_after) {
+                printf("[CHAIN-LOAD] WARNING: h=%lld persisted v17_j_balance_after=%lld differs from "
+                       "recomputed %lld; using the recomputed value\n", (long long)height,
+                       (long long)jint(bj, "v17_j_balance_after"), (long long)jt.j_after);
+            }
+        }
         {
             std::string nerr;
             if (!apply_node_state_for_block(txs, height, nerr)) {        // atomic on failure
@@ -10773,6 +11204,7 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "getaddressflows",
         "getlotteryaudit",
         "gethistoricaljackpotstatus",
+        "getjackpotstate",   // V17: read-only H / J jackpot funding state
         "getpopcv15status"   // P5: read-only PoPC V15 lifecycle observability (soak)
     };
     return kReadOnly.count(m) > 0;
@@ -11082,6 +11514,16 @@ static bool save_chain_internal(const std::string& path) {
                 if (end != std::string::npos) {
                     raw.insert(end, ",\"pending_lottery_after\":"
                                + std::to_string(b.pending_lottery_after));
+                }
+            }
+            // V17 — persist J_BALANCE after every V17 block (informational on load: the
+            // loader recomputes it from the block data and cross-checks this field).
+            if (sost::v17_active_at(b.height)
+                && raw.find("\"v17_j_balance_after\"") == std::string::npos) {
+                size_t end = raw.rfind('}');
+                if (end != std::string::npos) {
+                    raw.insert(end, ",\"v17_j_balance_after\":"
+                               + std::to_string(b.j_balance_after));
                 }
             }
             f << "    " << raw;

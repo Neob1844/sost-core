@@ -58,6 +58,14 @@ constexpr uint8_t OUT_COINBASE_POPC = 0x03;
 // Phase 2 activates at V11_PHASE2_HEIGHT = 10000 (params.h, set by C10);
 // this output type appears on triggered chain blocks from height 10000.
 constexpr uint8_t OUT_COINBASE_LOTTERY = 0x04;
+// V17 (V17_HEIGHT, block #40,000) — J-funded part of a Historical Jackpot payout.
+// COINBASE ONLY, only at a jackpot height >= V17_HEIGHT, at most one per coinbase,
+// paying the Jackpot V2 winner exactly the j_part computed by
+// sost::v17::jackpot_funding (include/sost/v17_economics.h). It materializes value
+// withheld earlier into the consensus accumulator J_BALANCE. Never valid in a
+// non-coinbase transaction (R11) and never valid below V17_HEIGHT (coinbase shape).
+// Spendable like any coinbase output (COINBASE_MATURITY applies).
+constexpr uint8_t OUT_COINBASE_JACKPOT = 0x05;
 
 // Reserved (inactive in v1, activation by height in consensus validation)
 constexpr uint8_t OUT_BOND_LOCK     = 0x10;

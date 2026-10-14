@@ -80,6 +80,7 @@ inline constexpr Entry OUTPUT_TYPES[] = {
     {OUT_COINBASE_GOLD,      "OUT_COINBASE_GOLD",      Status::ACTIVE},
     {OUT_COINBASE_POPC,      "OUT_COINBASE_POPC",      Status::ACTIVE},
     {OUT_COINBASE_LOTTERY,   "OUT_COINBASE_LOTTERY",   Status::ACTIVE},   // coinbase only
+    {OUT_COINBASE_JACKPOT,   "OUT_COINBASE_JACKPOT",   Status::ACTIVE},   // coinbase only, >= V17_HEIGHT (J-funded jackpot part)
     {OUT_BOND_LOCK,          "OUT_BOND_LOCK",          Status::ACTIVE},
     {OUT_ESCROW_LOCK,        "OUT_ESCROW_LOCK",        Status::ACTIVE},
     {OUT_HTLC_LOCK,          "OUT_HTLC_LOCK",          Status::ACTIVE},
@@ -178,6 +179,7 @@ static_assert(TX_TYPE_STANDARD == 0x00 && TX_TYPE_COINBASE == 0x01 && TX_TYPE_JA
               "tx type literal drift");
 static_assert(OUT_TRANSFER == 0x00 && OUT_COINBASE_MINER == 0x01 && OUT_COINBASE_GOLD == 0x02 &&
               OUT_COINBASE_POPC == 0x03 && OUT_COINBASE_LOTTERY == 0x04 &&
+              OUT_COINBASE_JACKPOT == 0x05 &&
               OUT_BOND_LOCK == 0x10 && OUT_ESCROW_LOCK == 0x11 &&
               OUT_HTLC_LOCK == 0x12 && OUT_HTLC_CLAIM_WITNESS == 0x13 &&
               OUT_BURN == 0x20 && OUT_NODE_PROTOCOL == 0x30 &&

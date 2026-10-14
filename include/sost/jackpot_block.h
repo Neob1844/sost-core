@@ -22,6 +22,7 @@
 #include <string>
 #include "sost/jackpot.h"        // canonical build + exact-match, ReserveUtxo
 #include "sost/transaction.h"    // Transaction, TX_TYPE_JACKPOT
+#include "sost/v17_economics.h"  // V17 H-then-J jackpot funding
 
 namespace sost::jackpot {
 
@@ -89,6 +90,87 @@ inline BlockJackpotResult validate_block_jackpot(const std::vector<Transaction>&
         return r;
     }
     return r;  // ok
+}
+
+// =============================================================================
+// V17 (height >= V17_HEIGHT) — block-level jackpot rule with H-then-J funding.
+// `f` is sost::v17::jackpot_funding(height, winner_exists, H_before, J_before,
+// rollover_before) computed from PRE-BLOCK state; `winner_pkh` the Jackpot V2
+// winner. Enforced, in addition to the coinbase shape rules:
+//   * f.h_part > 0  -> EXACTLY ONE TX_TYPE_JACKPOT, at index 1, byte-exact to
+//                      build_jackpot_tx_for_payout(f.h_part, winner, reserve, sink)
+//     f.h_part == 0 -> ZERO TX_TYPE_JACKPOT in the block
+//   * f.j_part > 0  -> EXACTLY ONE coinbase output of type OUT_COINBASE_JACKPOT,
+//                      amount == f.j_part, pkh == winner, empty payload
+//     f.j_part == 0 -> ZERO OUT_COINBASE_JACKPOT outputs in the coinbase
+//   * no TX other than the coinbase may carry an OUT_COINBASE_JACKPOT output
+//     (R11 already rejects it in standard txs; checked here for every tx type)
+// Non-jackpot V17 heights get f with h_part == j_part == 0, so the same rule
+// requires zero jackpot txs and zero J outputs.
+// =============================================================================
+inline BlockJackpotResult validate_block_jackpot_v17(const std::vector<Transaction>& txs,
+                                                     const sost::v17::JackpotFunding& f,
+                                                     const PubKeyHash& winner_pkh,
+                                                     const std::vector<ReserveUtxo>& sorted_reserve,
+                                                     const PubKeyHash& reserve_change_pkh) {
+    BlockJackpotResult r;
+    if (!f.ok) { r.ok = false; r.reason = "V17 jackpot funding: impossible pre-block state"; return r; }
+    if (txs.empty()) { r.ok = false; r.reason = "empty block"; return r; }
+    for (size_t i = 1; i < txs.size(); ++i) {
+        for (const auto& o : txs[i].outputs) {
+            if (o.type == OUT_COINBASE_JACKPOT) {
+                r.ok = false; r.reason = "OUT_COINBASE_JACKPOT outside the coinbase"; return r;
+            }
+        }
+    }
+    // ---- H part: canonical TX_TYPE_JACKPOT ----
+    const int n = count_jackpot_txs(txs);
+    r.jackpot_required = f.h_part > 0;
+    if (!r.jackpot_required) {
+        if (n != 0) {
+            r.ok = false;
+            r.reason = "TX_TYPE_JACKPOT present but none is authorized for this block (V17 H part = 0)";
+            return r;
+        }
+    } else {
+        if (n != 1) {
+            r.ok = false; r.reason = "expected exactly one TX_TYPE_JACKPOT, got " + std::to_string(n); return r;
+        }
+        if (txs.size() < 2 || txs[1].tx_type != TX_TYPE_JACKPOT) {
+            r.ok = false; r.reason = "TX_TYPE_JACKPOT must be at index 1 (immediately after the coinbase)"; return r;
+        }
+        Transaction expected;
+        if (!build_jackpot_tx_for_payout(f.h_part, winner_pkh, sorted_reserve, reserve_change_pkh, expected)) {
+            r.ok = false; r.reason = "V17 H part cannot be built from the reserve (impossible state)"; return r;
+        }
+        if (!jackpot_tx_equals_expected(txs[1], expected)) {
+            r.ok = false; r.reason = "TX_TYPE_JACKPOT does not match the canonical V17 H-part reconstruction"; return r;
+        }
+    }
+    // ---- J part: coinbase OUT_COINBASE_JACKPOT ----
+    const Transaction& cb = txs[0];
+    const int nj = sost::v17::count_jackpot_j_outputs(cb);
+    if (f.j_part <= 0) {
+        if (nj != 0) { r.ok = false; r.reason = "OUT_COINBASE_JACKPOT present but the V17 J part is 0"; return r; }
+    } else {
+        if (nj != 1) {
+            r.ok = false; r.reason = "expected exactly one OUT_COINBASE_JACKPOT, got " + std::to_string(nj); return r;
+        }
+        for (const auto& o : cb.outputs) {
+            if (o.type != OUT_COINBASE_JACKPOT) continue;
+            if (o.amount != f.j_part) {
+                r.ok = false; r.reason = "OUT_COINBASE_JACKPOT amount " + std::to_string(o.amount) +
+                                         " != V17 J part " + std::to_string(f.j_part); return r;
+            }
+            if (o.pubkey_hash != winner_pkh) {
+                r.ok = false; r.reason = "OUT_COINBASE_JACKPOT does not pay the jackpot winner"; return r;
+            }
+            if (!o.payload.empty()) {
+                r.ok = false; r.reason = "OUT_COINBASE_JACKPOT payload must be empty"; return r;
+            }
+        }
+    }
+    return r;
 }
 
 } // namespace sost::jackpot

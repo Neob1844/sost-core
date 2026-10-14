@@ -133,7 +133,8 @@ bool Wallet::is_mature(const WalletUTXO& u, int64_t chain_height) {
 
     bool is_cb = (u.output_type == OUT_COINBASE_MINER ||
                   u.output_type == OUT_COINBASE_GOLD  ||
-                  u.output_type == OUT_COINBASE_POPC);
+                  u.output_type == OUT_COINBASE_POPC  ||
+                  u.output_type == OUT_COINBASE_JACKPOT);   // V17 J-funded jackpot payout (coinbase)
     if (!is_cb) return true;
 
     if (u.height < 0) return false;  // unconfirmed coinbase = never mature
