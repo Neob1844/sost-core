@@ -1,5 +1,11 @@
 # ECONOMICS 80 / 15 / 5 — research simulation on the real mainnet chain
 
+> **Update 2026-10-14:** the owner froze 80/15/5 of the block subsidy (fees 100 % to the
+> miner, 5 % into the consensus accumulator J, jackpot funded from H first then J) for
+> V17 at block #40,000. The normative rules are in
+> [`V17_ECONOMICS_NORMATIVE.md`](V17_ECONOMICS_NORMATIVE.md). The research text below is
+> kept unchanged as the record of the pre-decision analysis.
+
 Status: **RESEARCH ONLY**. Nothing here changes consensus. No reward rule is
 proposed for activation by this document. #40,000 is a target, not a commitment.
 
