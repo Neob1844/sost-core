@@ -17,7 +17,24 @@ trusted themselves — the hashes are the trust anchor.
     sha256sum -c SHA256SUMS.txt        # must print: sost-node: OK / sost-miner: OK / sost-cli: OK
     # if a single byte differs → STOP, do not run it.
 
+## Download + verify from several mirrors (scripted)
+`scripts/release/fetch-and-verify.sh` takes any number of mirrors (`--mirror <https base URL>`,
+repeatable, or `--mirrors-file release/MIRRORS.txt`). It authenticates `SHA256SUMS` with the
+release public key first, then accepts each file only if its sha256 matches; a mirror that is
+down or serves a bad copy is skipped. This is how a user gets a verified release with
+sostcore.com unreachable:
+
+    scripts/release/fetch-and-verify.sh --tag <tag> --out ./rel --backend openssl \
+        --pubkey keys/sost-release.pem --mirror https://github.com/Neob1844/sost-core/releases/download/<tag> \
+        --mirror https://<independent mirror>/sost/<tag>
+
+`release/MIRRORS.txt` lists only publication points that exist (today the GitHub release
+assets); add an independent mirror there once it is operated. Accepted forms: static HTTPS on
+another domain, an IPFS gateway URL for the release CID, a second forge's release assets, or
+`file://` for offline media. Plain `http://` is refused.
+
 ## (Future, optional) authenticity on top of integrity
 Sign SHA256SUMS.txt (minisign/GPG) with an OFFLINE key and publish the PUBLIC key on ≥2
 independent hosts. Then operators verify the signature before trusting the manifest.
-(See the deferred release-signing tooling: scripts/sign-release.sh, verify-release.sh.)
+Tooling: scripts/release/make-sha256sums.sh, scripts/sign-release.sh (minisign/gpg/openssl),
+scripts/verify-release.sh, scripts/release/fetch-and-verify.sh — see docs/RELEASE_SIGNING.md.

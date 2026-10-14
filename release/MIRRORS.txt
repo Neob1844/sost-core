@@ -1,0 +1,16 @@
+# SOST release mirrors — base URLs tried IN ORDER by scripts/release/fetch-and-verify.sh.
+# "{tag}" is replaced by --tag (e.g. v16.2.3). A file is fetched as <base>/<name>.
+#
+# Mirrors are TRANSPORT ONLY. Nothing downloaded is trusted until:
+#   1. SHA256SUMS verifies against the pinned release PUBLIC key (any mirror may serve it), and
+#   2. every file matches that authenticated SHA256SUMS.
+# A mirror that serves a bad copy is skipped and the next one is tried.
+#
+# Existing publication point outside sostcore.com (GitHub release assets):
+https://github.com/Neob1844/sost-core/releases/download/{tag}
+#
+# Independent mirrors are added here only once they exist and are operated (see
+# docs/RELEASE_MIRROR_RUNBOOK.md). Formats the script accepts, for reference:
+#   https://<independent-host>/sost/{tag}          static HTTPS mirror (other operator/domain)
+#   https://ipfs.io/ipfs/<CID>                     IPFS gateway for a published release CID
+#   https://<second-forge>/<owner>/sost-core/releases/download/{tag}

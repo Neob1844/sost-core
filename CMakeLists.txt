@@ -1143,6 +1143,10 @@ add_test(NAME d1-addr-fuzz COMMAND d1-addr-fuzz)
 add_executable(d1-gossip-filter tests/d1_gossip_filter_test.cpp)
 target_include_directories(d1-gossip-filter PRIVATE include)
 add_test(NAME d1-gossip-filter COMMAND d1-gossip-filter)
+# Release integrity: SHA256SUMS creation, detached-signature verification (gpg / openssl
+# Ed25519, throwaway keys generated in a temp dir — no real key) and multi-mirror
+# fetch-and-verify with a down / tampered / forged mirror.
+add_test(NAME release-integrity COMMAND bash ${CMAKE_SOURCE_DIR}/tests/release/test_release_integrity.sh)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)

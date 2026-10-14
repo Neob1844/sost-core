@@ -1,7 +1,10 @@
 # SOST Release Signing
 
-**Status:** tooling added (`scripts/sign-release.sh`, `scripts/verify-release.sh`).
-No real release key is created, stored, or shipped by this change.
+**Status:** tooling added (`scripts/release/make-sha256sums.sh`, `scripts/sign-release.sh`,
+`scripts/verify-release.sh`, `scripts/release/fetch-and-verify.sh`), tested by
+`tests/release/test_release_integrity.sh` (ctest `release-integrity`) with throwaway keys
+generated in a temporary directory. No real release key is created, stored, read or
+shipped by this change; no release has been signed yet.
 **Scope:** adds cryptographic **authenticity** on top of the existing
 `SHA256SUMS` **integrity** files. No consensus, binary, or RC change.
 
@@ -80,6 +83,53 @@ scripts/verify-release.sh --gpg docs/v16/SHA256SUMS_v16.2.3 keys/sost-release.as
 ```
 
 ---
+
+## 4b. Backend without extra packages: OpenSSL Ed25519
+
+`openssl` (>= 1.1.1) is present on every supported system, so this backend needs nothing
+extra. The secret key is a PEM file on the OFFLINE machine.
+
+```sh
+# One-time, OFFLINE machine only (documentation; this repository never runs it):
+openssl genpkey -algorithm ed25519 -out sost-release.key.pem
+openssl pkey -in sost-release.key.pem -pubout -out sost-release.pem    # PUBLIC, publish
+
+# Sign (owner, offline)
+scripts/sign-release.sh --openssl SHA256SUMS /media/usb/sost-release.key.pem   # -> SHA256SUMS.sig
+
+# Verify (anyone)
+scripts/verify-release.sh --openssl SHA256SUMS keys/sost-release.pem --check-sums
+```
+
+For GPG, `verify-release.sh` also accepts `--fingerprint <hex>`: the signature must be a
+valid signature made by that exact key (checked from `gpg --status-fd` VALIDSIG), so a
+signature by any other key, or a substituted public-key file, is rejected.
+
+## 4c. Producing SHA256SUMS
+
+```sh
+scripts/release/make-sha256sums.sh SHA256SUMS sost-node sost-miner sost-cli
+```
+
+Canonical output (basenames, `LC_ALL=C` sort, two spaces), so two people building the same
+reproducible build (`docs/decentralization/REPRODUCIBLE_BUILD.md`) get byte-identical sums
+and can both sign them. `verify-release.sh --check-sums` runs `sha256sum --strict -c` in
+the directory of the sums file and refuses entries with an absolute path or `..`.
+
+## 4d. Downloading from mirrors
+
+`scripts/release/fetch-and-verify.sh` downloads `SHA256SUMS` + signature from each mirror
+in order until one verifies against the pinned public key, then fetches every listed file
+from the mirrors in order, discarding any copy whose hash differs. Mirrors are listed in
+`release/MIRRORS.txt` (today: the GitHub release assets, which are outside sostcore.com);
+a mirror that is down, serves a tampered binary or a forged `SHA256SUMS` is skipped, and if
+none serves a verifiable copy the script fails without leaving unverified files.
+
+```sh
+scripts/release/fetch-and-verify.sh --tag v40000.0 --out ./sost-release \
+  --backend openssl --pubkey keys/sost-release.pem \
+  --mirrors-file release/MIRRORS.txt --mirror https://<independent-mirror>/sost/v40000.0
+```
 
 ## 5. Where the PUBLIC key lives (placeholder paths)
 
