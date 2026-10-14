@@ -1135,8 +1135,10 @@ add_test(NAME v13-gold-vault-slice1 COMMAND test-v13-gold-vault-slice1)
 # D1/D2 peer-autonomy tests (standalone — no consensus link). Run under ctest so the
 # release battery covers peer store, ADDR parsing fuzz, and the gossip SSRF/DNS filter.
 add_executable(d1-peer-store tests/d1_peer_store_test.cpp)
+target_include_directories(d1-peer-store PRIVATE include)
 add_test(NAME d1-peer-store COMMAND d1-peer-store)
 add_executable(d1-addr-fuzz tests/d1_addr_gossip_fuzz.cpp)
+target_include_directories(d1-addr-fuzz PRIVATE include)
 add_test(NAME d1-addr-fuzz COMMAND d1-addr-fuzz)
 add_executable(d1-gossip-filter tests/d1_gossip_filter_test.cpp)
 target_include_directories(d1-gossip-filter PRIVATE include)

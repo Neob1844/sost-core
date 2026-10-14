@@ -144,7 +144,9 @@ def measure_peers(peerinfo: Sequence[Dict[str, Any]],
     peers = list(peerinfo or [])
     outbound = [p for p in peers if p.get("direction") == "outbound"]
     acked = [p for p in peers if p.get("version_acked")]
-    nets = [net16_of(str(p.get("addr", ""))) for p in peers]
+    # P7: nodes from feat/v40k-p2p report "subnet16" (of the RESOLVED address, so an
+    # outbound peer dialed by hostname still has a /16) and "source" (bootstrap provenance).
+    nets = [(str(p["subnet16"]) if p.get("subnet16") else net16_of(str(p.get("addr", "")))) for p in peers]
     ip_nets = [n for n in nets if n]
     c16 = Counter(ip_nets)
     res: Dict[str, Any] = {
@@ -156,6 +158,8 @@ def measure_peers(peerinfo: Sequence[Dict[str, Any]],
         "distinct_16": len(c16),
         "largest_16_share": (max(c16.values()) / len(ip_nets)) if ip_nets else None,
         "nets_16": dict(sorted(c16.items())),
+        "provenance_reported": sum(1 for p in peers if "source" in p),
+        "by_source": dict(sorted(Counter(str(p["source"]) for p in peers if "source" in p).items())),
     }
     if asn_map is not None:
         asns, providers, regions = set(), set(), set()

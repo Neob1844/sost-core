@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <random>
+#include "sost/p2p_addrbook.h"
 static uint32_t read_u32(const uint8_t* p){ return (uint32_t)p[0]<<24|(uint32_t)p[1]<<16|(uint32_t)p[2]<<8|p[3]; }
 static void     write_u32(uint8_t* p,uint32_t v){ p[0]=v>>24;p[1]=v>>16;p[2]=v>>8;p[3]=v; }
 static const uint32_t ADDR_MAX_RECV = 1000;   // reject lists larger than this (DoS bound)
@@ -69,6 +70,27 @@ int main(){
         if(rr.size()>ADDR_MAX_RECV){ crashes++; } // bound invariant
     }
     CK(crashes==0,"fuzz 200k: bound invariant held, no OOB");
+    // ===== FUZZ the address-book file parser and the VERS extension parser (P2/P4) =====
+    int book_viol=0, vers_viol=0;
+    const char alphabet[] = "0123456789.: \t\n#abcxyz-\x01\x7f";
+    for(int it=0; it<50000; ++it){
+        size_t n = rng()%600; std::string txt; txt.reserve(n);
+        for(size_t k=0;k<n;k++) txt.push_back(alphabet[rng()%(sizeof(alphabet)-1)]);
+        if((rng()&7)==0) txt += "1.2.3."+std::to_string(rng()%300)+":"+std::to_string(rng()%70000)+" "+std::to_string((int)rng())+" x y z gossip\n";
+        sost::AddrBook b; std::vector<std::string> legacy;
+        b.parse(txt, &legacy);
+        if(b.size()>sost::AddrBook::MAX || legacy.size()>64) book_viol++;
+        for(const auto& e: b.entries()) if(!sost::parse_ipv4_hostport(e.addr,nullptr,nullptr)) book_viol++;
+        sost::AddrBook b2; b2.parse(b.serialize(), nullptr);       // serialize/parse is a fixed point
+        if(b2.serialize()!=b.serialize()) book_viol++;
+    }
+    for(int it=0; it<100000; ++it){
+        size_t n = rng()%80; std::vector<uint8_t> v(n); for(auto& x: v) x=(uint8_t)rng();
+        sost::VersExt e = sost::parse_vers_ext(v.data(), v.size());
+        if(e.present && n < sost::VERS_EXT_LEN) vers_viol++;
+    }
+    CK(book_viol==0,"fuzz 50k peers.txt: bounded, IPv4-only entries, serialize/parse fixed point");
+    CK(vers_viol==0,"fuzz 100k VERS: extension never read past the payload");
     printf("ADDR parser: %d passed, %d failed (fuzz 200k clean)\n",pass,fail);
     return fail?1:0;
 }

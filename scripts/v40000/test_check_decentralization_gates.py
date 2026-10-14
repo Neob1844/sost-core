@@ -88,6 +88,17 @@ class Peers(unittest.TestCase):
         r = cdg.measure_peers([{"addr": "100.64.xxx.xxx:19333", "direction": "outbound"}], self.amap)
         self.assertEqual(r["unmapped"], 1)
 
+    def test_peer_provenance_fields(self):
+        r = cdg.measure_peers([
+            {"addr": "seed-eu.sostcore.xxx.xxx:19333", "direction": "outbound", "source": "dns", "subnet16": "212.132"},
+            {"addr": "203.0.xxx.xxx:19333", "direction": "outbound", "source": "gossip", "subnet16": "203.0"},
+            {"addr": "198.51.xxx.xxx:40000", "direction": "inbound"},
+        ])
+        self.assertEqual(r["non_ip_addrs"], 0)
+        self.assertEqual(r["distinct_16"], 3)
+        self.assertEqual(r["provenance_reported"], 2)
+        self.assertEqual(r["by_source"], {"dns": 1, "gossip": 1})
+
     def test_empty(self):
         r = cdg.measure_peers([])
         self.assertEqual(r["total"], 0)

@@ -28,6 +28,7 @@
 #include "sost/address.h"
 #include "sost/params.h"
 #include "sost/p2p_addr_filter.h"
+#include "sost/p2p_addrbook.h"
 #include "sost/transaction.h"
 #include "sost/types.h"
 #include "sost/utxo_set.h"
@@ -75,6 +76,7 @@
 #include <unistd.h>
 #include <sys/stat.h>   // chmod (D1 peer store)
 #include <fcntl.h>
+#include <poll.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -446,6 +448,11 @@ struct Peer {
     bool supports_addr{false}; // D1: peer advertised ADDR-gossip capability in VERS
     bool gadr_sent{false};     // D1: we already asked this peer for addresses once
     time_t last_addr_serve{0}; // D1: rate-limit ADDR responses we send
+    time_t last_gadr{0};       // P4: last time we asked this peer for addresses
+    std::string resolved;      // P1: outbound = "ip:port" from getpeername(); inbound = "" until VERS
+    sost::PeerSource source{sost::PeerSource::UNKNOWN}; // P7: how this connection came about
+    uint16_t listen_port{0};   // P4: listen port the peer advertised in VERS (0 = none/unknown)
+    bool feeler{false};        // P4: short probe connection, closed after the handshake
     std::shared_ptr<std::mutex> write_mu{std::make_shared<std::mutex>()}; // per-fd write serialization
 };
 static std::vector<Peer> g_peers;
@@ -509,52 +516,72 @@ static std::string peer_store_path(const std::string& chain_path){
     }
     return dir + "/peers.txt";
 }
-// Persist GOOD outbound peers (dialable, handshake-complete), deduped + capped,
-// atomic write (tmp+rename), mode 600. Lets a node redial known-good peers after a
-// restart or after losing all peers — WITHOUT any new wire message (full backward compat).
+// P6: compiled-in fallback IPv4 literals, tried after the DNS seeds when none answered.
+// Deliberately EMPTY: entries are added only for vetted INDEPENDENT seed operators with G4
+// evidence (docs/v40000/DECENTRALIZATION_ACTION_PLAN_40000.md, D-1). Format "a.b.c.d:port".
+// Never invent operators. The mechanism (bootstrap_plan, zero-peer redial) is live and
+// unit-tested with a test list, so adding entries needs no code change.
+static const std::vector<std::string> FALLBACK_SEED_IPS = {
+};
+// ---- P1/P2 persistent address book (peers.txt) --------------------------------------
+// Holds RESOLVED IPv4 "ip:port" of peers that completed a VERS handshake (outbound, or an
+// inbound peer's advertised listen address verified by our own feeler dial). Bounded (256),
+// with last-success / failure tracking and 14-day expiry. See include/sost/p2p_addrbook.h.
+static sost::AddrBook g_addrbook;
+static std::mutex g_addrbook_mu;
+static bool g_addrbook_dirty = false;
+static std::vector<std::string> g_legacy_store_hosts;   // hostname lines of an old peers.txt (dial once)
+static std::set<std::string> g_self_addrs;              // addresses that turned out to be ourselves
+static uint64_t g_local_nonce = 0;                       // P4: VERS self-connection nonce
+static uint16_t g_listen_port = 0;                       // P4: advertised listen port (0 = none)
+static std::string g_external_ip;                        // P4: --externalip, shared in ADDR
+static const size_t OUTBOUND_TARGET = 8;                 // P3: outbound peers to maintain
+static const size_t OUTBOUND_DIALS_PER_CYCLE = 2;        // P3: new dials per 30 s cycle
+static const int    GADR_REFRESH_SECS = 120;             // P4: re-ask capable peers for addrs
+static std::vector<std::string> g_probe_queue;           // P4: inbound listen addrs to verify
+static std::mutex g_probe_mu;
+static const size_t PROBE_QUEUE_MAX = 64;
+
+static void addrbook_load(const std::string& chain_path){
+    std::lock_guard<std::mutex> lk(g_addrbook_mu);
+    g_legacy_store_hosts.clear();
+    g_addrbook.load_file(peer_store_path(chain_path), &g_legacy_store_hosts);
+    g_addrbook.expire((int64_t)time(nullptr));
+    printf("[P2P] address book: %zu entr%s loaded from %s (%zu legacy hostname line(s))\n",
+           g_addrbook.size(), g_addrbook.size()==1?"y":"ies", peer_store_path(chain_path).c_str(),
+           g_legacy_store_hosts.size());
+}
+static void addrbook_note_success(const std::string& resolved, sost::PeerSource src){
+    if(resolved.empty()) return;
+    std::lock_guard<std::mutex> lk(g_addrbook_mu);
+    if(g_self_addrs.count(resolved)) return;
+    g_addrbook.mark_success(resolved, src, (int64_t)time(nullptr));
+    g_addrbook_dirty = true;
+}
+// Refresh last_success of every connected, handshake-complete outbound peer, expire stale
+// entries and persist when anything changed. Never wipes a good file with an empty book.
 static void save_peer_store(const std::string& chain_path){
-    std::vector<std::string> addrs;
+    std::vector<std::pair<std::string, sost::PeerSource> > live;
     {
         std::lock_guard<std::mutex> lk(g_peers_mu);
-        for(const auto& p : g_peers){
-            if(p.outbound && p.version_acked && !p.addr.empty()){
-                if(std::find(addrs.begin(),addrs.end(),p.addr)==addrs.end())
-                    addrs.push_back(p.addr);
-                if(addrs.size()>=PEER_STORE_MAX) break;
-            }
-        }
+        for(const auto& p : g_peers)
+            if(p.outbound && p.version_acked && !p.resolved.empty()) live.push_back({p.resolved, p.source});
     }
-    if(addrs.empty()) return;   // never wipe a good store with an empty set
-    std::string path = peer_store_path(chain_path);
-    std::string tmp  = path + ".tmp";
-    FILE* fp = fopen(tmp.c_str(),"w");
-    if(!fp) return;
-    bool werr=false;
-    for(const auto& a : addrs) if(fprintf(fp,"%s\n",a.c_str())<0){ werr=true; break; }
-    // Durability: flush+fsync and verify no write error BEFORE the atomic rename, so a
-    // full-disk / IO failure mid-write can never rename a truncated tmp over a good store.
-    if(fflush(fp)!=0) werr=true;
-    if(!werr && fsync(fileno(fp))!=0) werr=true;
-    fclose(fp);
-    if(werr){ unlink(tmp.c_str()); return; }   // keep the previous good store intact
-    chmod(tmp.c_str(),0600);
-    rename(tmp.c_str(),path.c_str());
+    std::lock_guard<std::mutex> lk(g_addrbook_mu);
+    int64_t now = (int64_t)time(nullptr);
+    for(const auto& l : live) if(!g_self_addrs.count(l.first)) g_addrbook.mark_success(l.first, l.second, now);
+    if(g_addrbook.expire(now) > 0) g_addrbook_dirty = true;
+    if(!live.empty()) g_addrbook_dirty = true;
+    if(!g_addrbook_dirty) return;
+    if(g_addrbook.save_file(peer_store_path(chain_path))) g_addrbook_dirty = false;
 }
-// Load stored peer addresses (bounded, validated). Returns "host:port" strings.
-static std::vector<std::string> load_peer_store(const std::string& chain_path){
-    std::vector<std::string> out;
-    std::string path = peer_store_path(chain_path);
-    FILE* fp = fopen(path.c_str(),"r");
-    if(!fp) return out;
-    char line[256];
-    while(fgets(line,sizeof(line),fp) && out.size()<PEER_STORE_MAX){
-        std::string ln(line);
-        while(!ln.empty() && (ln.back()=='\n'||ln.back()=='\r'||ln.back()==' ')) ln.pop_back();
-        if(ln.empty() || ln.find(':')==std::string::npos) continue;  // need host:port
-        bool ok=true; for(char c: ln){ if((unsigned char)c<32){ ok=false; break; } }
-        if(ok) out.push_back(ln);
-    }
-    fclose(fp);
+// Dial list from the store: book entries (most recent success first) + legacy hostnames.
+static std::vector<std::string> load_peer_store(const std::string& /*chain_path*/){
+    std::lock_guard<std::mutex> lk(g_addrbook_mu);
+    std::vector<std::string> out = g_addrbook.by_recency();
+    for(const auto& h : g_legacy_store_hosts)
+        if(std::find(out.begin(),out.end(),h)==out.end()) out.push_back(h);
+    if(out.size() > PEER_STORE_MAX) out.resize(PEER_STORE_MAX);
     return out;
 }
 // fwd decls (defined later in the P2P section)
@@ -618,16 +645,24 @@ static void add_addr_candidates(const std::vector<std::string>& addrs){
         g_addr_candidates.push_back(a);
     }
 }
-// Snapshot of addresses we can share (verified outbound peers + stored peers), bounded.
-static std::vector<std::string> addrs_to_share(const std::string& chain_path){
+// Snapshot of addresses we can share, bounded to 100, all IPv4 "ip:port" literals:
+//   * our own --externalip:listen_port (operator-declared self-advertisement, P4);
+//   * the RESOLVED address of every handshake-complete outbound peer (P1: never a hostname,
+//     which mainnet receivers would drop);
+//   * address-book entries, i.e. addresses that completed a handshake with US — this is how
+//     an inbound peer's listen address spreads, but only after our own feeler dial verified
+//     it (P4).
+static std::vector<std::string> addrs_to_share(const std::string& /*chain_path*/){
     std::vector<std::string> out;
+    auto push = [&](const std::string& a){
+        if(out.size()>=100 || a.empty()) return;
+        if(std::find(out.begin(),out.end(),a)==out.end()) out.push_back(a);
+    };
+    if(!g_external_ip.empty() && g_listen_port) push(g_external_ip + ":" + std::to_string(g_listen_port));
     { std::lock_guard<std::mutex> lk(g_peers_mu);
-      for(const auto& p: g_peers) if(p.outbound && p.version_acked && !p.addr.empty()){
-          if(std::find(out.begin(),out.end(),p.addr)==out.end()) out.push_back(p.addr);
-          if(out.size()>=100) break; } }
-    if(out.size()<100){ for(const auto& a: load_peer_store(chain_path)){
-          if(out.size()>=100) break;
-          if(std::find(out.begin(),out.end(),a)==out.end()) out.push_back(a); } }
+      for(const auto& p: g_peers) if(p.outbound && p.version_acked && !p.feeler) push(p.resolved); }
+    { std::lock_guard<std::mutex> lk(g_addrbook_mu);
+      for(const auto& a: g_addrbook.by_recency()) if(!g_self_addrs.count(a)) push(a); }
     return out;
 }
 // =====================================================================================
@@ -2983,8 +3018,15 @@ static std::string handle_getpeerinfo(const std::string& id, const std::vector<s
     for(size_t i=0;i<g_peers.size();++i){
         if(i)s<<",";
         auto& p=g_peers[i];
+        // P7: provenance. subnet16 is the /16 of the RESOLVED address (outbound hostname
+        // peers resolve to an IP), so it never reveals more than mask_addr already does.
+        std::string s16 = sost::subnet16_of(!p.resolved.empty() ? p.resolved : p.addr);
         s<<"{\"addr\":\""<<mask_addr(p.addr)<<"\""
          <<",\"direction\":\""<<(p.outbound?"outbound":"inbound")<<"\""
+         <<",\"source\":\""<<sost::peer_source_name(p.source)<<"\""
+         <<",\"subnet16\":\""<<s16<<"\""
+         <<",\"listen_port\":"<<p.listen_port
+         <<",\"feeler\":"<<(p.feeler?"true":"false")
          <<",\"height\":"<<p.their_height
          <<",\"version_acked\":"<<(p.version_acked?"true":"false")
          <<",\"connected\":true"
@@ -2994,6 +3036,30 @@ static std::string handle_getpeerinfo(const std::string& id, const std::vector<s
          <<"}";
     }
     s<<"]"; return rpc_result(id,s.str());
+}
+
+// P7: address-book summary (counts only — no addresses are exposed over RPC).
+static std::string handle_getaddrbookinfo(const std::string& id, const std::vector<std::string>&) {
+    std::map<std::string,int> by_src; size_t total=0, failing=0, legacy=0, selfn=0;
+    std::set<std::string> s16;
+    { std::lock_guard<std::mutex> lk(g_addrbook_mu);
+      for(const auto& e: g_addrbook.entries()){ ++total; by_src[sost::peer_source_name(e.source)]++;
+          if(e.fails) ++failing; s16.insert(sost::subnet16_of(e.addr)); }
+      legacy = g_legacy_store_hosts.size(); selfn = g_self_addrs.size(); }
+    size_t cand=0, probes=0;
+    { std::lock_guard<std::mutex> lk(g_addr_cand_mu); cand = g_addr_candidates.size(); }
+    { std::lock_guard<std::mutex> lk(g_probe_mu); probes = g_probe_queue.size(); }
+    size_t outb=0, inb=0;
+    { std::lock_guard<std::mutex> lk(g_peers_mu); for(const auto& p: g_peers){ if(p.feeler) continue; if(p.outbound) ++outb; else ++inb; } }
+    std::ostringstream o;
+    o<<"{\"entries\":"<<total<<",\"failing\":"<<failing<<",\"distinct_subnet16\":"<<s16.size()
+     <<",\"legacy_hostnames\":"<<legacy<<",\"self_addresses\":"<<selfn
+     <<",\"gossip_candidates\":"<<cand<<",\"pending_feelers\":"<<probes
+     <<",\"outbound\":"<<outb<<",\"inbound\":"<<inb<<",\"outbound_target\":"<<OUTBOUND_TARGET
+     <<",\"by_source\":{";
+    bool first=true; for(const auto& kv: by_src){ if(!first)o<<","; first=false; o<<"\""<<kv.first<<"\":"<<kv.second; }
+    o<<"}}";
+    return rpc_result(id,o.str());
 }
 
 static std::string handle_submitblock(const std::string& id, const std::vector<std::string>& p) {
@@ -5232,6 +5298,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getrawmempool",handle_getrawmempool},
     {"getrawtransaction",handle_getrawtransaction},
     {"getpeerinfo",handle_getpeerinfo},
+    {"getaddrbookinfo",handle_getaddrbookinfo},
     {"getsacsstatus",handle_getsacsstatus},
     {"getsacsevents",handle_getsacsevents},
     {"submitblock",handle_submitblock},
@@ -5488,11 +5555,14 @@ static bool p2p_recv_encrypted(int fd, PeerCrypto& crypto, P2PMsg& msg) {
 }
 
 static void p2p_send_version(int fd) {
-    uint8_t buf[41];
+    uint8_t buf[sost::VERS_EXT_LEN];
     write_i64(buf, g_chain_height);
     memcpy(buf+8, g_genesis_hash.data(), 32);
     buf[40] = CAP_ADDR;   // D1: advertise ADDR-gossip capability (old peers ignore the extra byte)
-    p2p_send(fd, "VERS", buf, 41);
+    // P4: listen port + self-connection nonce appended (51 bytes). Old nodes parse only
+    // bytes 0..40 (they require >= 40) and ignore the rest, so this stays interoperable.
+    sost::write_vers_ext(buf, g_listen_port, g_local_nonce);
+    p2p_send(fd, "VERS", buf, sost::VERS_EXT_LEN);
 }
 
 // Forward declaration for encryption-aware send
@@ -9387,15 +9457,25 @@ static bool p2p_send_adaptive(int fd, PeerCrypto& crypto, const char* cmd,
 }
 
 // Handle one peer connection
-static void handle_peer(int fd, const std::string& addr, bool outbound) {
+struct PeerDialMeta {
+    std::string resolved;                                  // outbound: "ip:port" from getpeername
+    sost::PeerSource source{sost::PeerSource::UNKNOWN};
+    bool feeler{false};
+};
+static void handle_peer(int fd, const std::string& addr, bool outbound, PeerDialMeta meta = PeerDialMeta{}) {
     {
         std::lock_guard<std::mutex> lk(g_peers_mu);
         Peer p; p.fd=fd; p.addr=addr; p.their_height=-1;
         p.version_sent=false; p.version_acked=false;
         p.outbound=outbound; p.last_seen=time(nullptr); p.conntime=time(nullptr); p.ban_score=0;
+        p.resolved = meta.resolved;
+        p.source = outbound ? meta.source : sost::PeerSource::INBOUND;
+        p.feeler = meta.feeler;
         g_peers.push_back(p);
     }
-    printf("[P2P] Peer connected: %s (%s)\n",addr.c_str(),outbound?"outbound":"inbound");
+    printf("[P2P] Peer connected: %s (%s, source=%s%s%s)\n",addr.c_str(),outbound?"outbound":"inbound",
+           sost::peer_source_name(outbound ? meta.source : sost::PeerSource::INBOUND),
+           meta.resolved.empty() ? "" : ", resolved=", meta.resolved.c_str());
 
     // P2P encryption handshake
     PeerCrypto crypto{};
@@ -9675,20 +9755,61 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     return false;
                 }
                 bool peer_caps_addr = (msg.payload.size() >= 41) && (msg.payload[40] & CAP_ADDR);
+                // P4: optional VERS extension (listen port + self-connection nonce).
+                sost::VersExt vext = sost::parse_vers_ext(msg.payload.data(), msg.payload.size());
+                std::string my_resolved; sost::PeerSource my_src = sost::PeerSource::UNKNOWN; bool my_feeler = false;
+                {
+                    std::lock_guard<std::mutex> lk(g_peers_mu);
+                    for (auto& p : g_peers) if (p.fd == fd) { my_resolved = p.resolved; my_src = p.source; my_feeler = p.feeler; break; }
+                }
+                if (vext.present && vext.nonce != 0 && vext.nonce == g_local_nonce) {
+                    printf("[P2P] %s: connected to ourselves (VERS nonce), disconnecting\n", addr.c_str());
+                    if (outbound) {
+                        std::lock_guard<std::mutex> lk(g_addrbook_mu);
+                        g_self_addrs.insert(my_resolved);
+                        g_self_addrs.insert(addr);
+                    }
+                    return false;
+                }
                 bool send_gadr = false;
                 {
                     std::lock_guard<std::mutex> lk(g_peers_mu);
                     for (auto& p : g_peers) if (p.fd == fd) {
                         p.their_height = their_h; p.version_acked = true;
                         p.supports_addr = peer_caps_addr;
-                        if (peer_caps_addr && !p.gadr_sent) { p.gadr_sent = true; send_gadr = true; }
+                        p.listen_port = vext.listen_port;
+                        if (!outbound && vext.listen_port) p.resolved = peer_ip(addr) + ":" + std::to_string(vext.listen_port);
+                        if (peer_caps_addr && !p.gadr_sent) { p.gadr_sent = true; send_gadr = true; p.last_gadr = time(nullptr); }
                         break;
                     }
                 }
                 p2p_send_adaptive(fd, crypto, "VACK", nullptr, 0);
-                // D1: ask capable peers for addresses ONCE (old peers never get GADR -> no penalty).
+                // D1: ask capable peers for addresses (old peers never get GADR -> no penalty).
                 if (send_gadr) { p2p_send_adaptive(fd, crypto, "GADR", nullptr, 0); printf("[P2P] %s: sent GADR (peer supports ADDR)\n", addr.c_str()); }
-                printf("[P2P] %s: version OK, their height=%lld\n", addr.c_str(), (long long)their_h);
+                printf("[P2P] %s: version OK, their height=%lld%s\n", addr.c_str(), (long long)their_h,
+                       vext.present ? (" listen_port=" + std::to_string(vext.listen_port)).c_str() : "");
+                if (outbound) {
+                    // P1/P2: a completed handshake puts the RESOLVED ip:port in the address book.
+                    addrbook_note_success(my_resolved, my_src);
+                    if (my_feeler) {
+                        printf("[P2P] %s: feeler OK (%s verified, added to address book), closing\n",
+                               addr.c_str(), my_resolved.c_str());
+                        return false;
+                    }
+                } else if (vext.listen_port) {
+                    // P4: an inbound peer that accepts connections. Verify its listen address
+                    // with our own dial (feeler) before it can enter the book / be shared.
+                    std::string la = peer_ip(addr) + ":" + std::to_string(vext.listen_port);
+                    bool known;
+                    { std::lock_guard<std::mutex> lk(g_addrbook_mu); known = g_addrbook.contains(la) || g_self_addrs.count(la); }
+                    if (!known) {
+                        std::lock_guard<std::mutex> lk(g_probe_mu);
+                        if (std::find(g_probe_queue.begin(), g_probe_queue.end(), la) == g_probe_queue.end()) {
+                            if (g_probe_queue.size() >= PROBE_QUEUE_MAX) g_probe_queue.erase(g_probe_queue.begin());
+                            g_probe_queue.push_back(la);
+                        }
+                    }
+                }
 
                 if (their_h > g_chain_height) {
                     printf("[SYNC] Peer %s has height %lld, we have %lld — requesting blocks %lld..%lld\n",
@@ -10169,6 +10290,23 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         // 4. Check sync progress on EVERY iteration (the key fix)
         check_sync_advance();
 
+        // 4b. P4: periodically re-ask ADDR-capable peers for addresses, so addresses that
+        //     became known after the handshake (new feeler-verified listeners) propagate.
+        //     Sent from this thread so the per-peer encryption state stays consistent.
+        {
+            bool ask = false; time_t now_g = time(nullptr);
+            {
+                std::lock_guard<std::mutex> lk(g_peers_mu);
+                for (auto& p : g_peers) if (p.fd == fd) {
+                    if (p.version_acked && p.supports_addr && !p.feeler && now_g - p.last_gadr >= GADR_REFRESH_SECS) {
+                        p.last_gadr = now_g; ask = true;
+                    }
+                    break;
+                }
+            }
+            if (ask) p2p_send_adaptive(fd, crypto, "GADR", nullptr, 0);
+        }
+
         // 5. Guard against recv_buf growing without bound (bad peer)
         if (recv_buf.size() > 16 * 1024 * 1024) {
             printf("[P2P] recv buffer overflow from %s (%zu bytes), disconnecting\n",
@@ -10493,6 +10631,7 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "getrawmempool",
         "getrawtransaction",
         "getpeerinfo",
+        "getaddrbookinfo",
         "validateaddress",
         "gettxout",
         "getblocktemplate",
@@ -10729,12 +10868,31 @@ static void p2p_server_thread(int port) {
 // spawned; false on resolve/socket/connect failure. (Existing call sites that
 // ignore the return value are unaffected — this is purely additive so the
 // multi-seed bootstrap below can report which seeds connected vs failed.)
-static bool connect_peer(const std::string& host, int port) {
+// P1: the RESOLVED peer address (getpeername) is handed to the peer handler, so the address
+// book stores an IPv4 literal even when a hostname was dialed. P3: connect() is bounded by
+// CONNECT_TIMEOUT_SECS so one unreachable address cannot stall the maintenance loop.
+static const int CONNECT_TIMEOUT_SECS = 5;
+static bool connect_peer(const std::string& host, int port,
+                         sost::PeerSource source = sost::PeerSource::UNKNOWN, bool feeler = false) {
+    std::string target = host + ":" + std::to_string(port);
+    bool literal = sost::parse_ipv4_hostport(target, nullptr, nullptr);
+    {
+        std::lock_guard<std::mutex> lk(g_addrbook_mu);
+        if (g_self_addrs.count(target)) return false;
+        if (literal) g_addrbook.mark_attempt(target, (int64_t)time(nullptr));
+    }
+    auto note_fail = [&](){
+        if (!literal) return;
+        std::lock_guard<std::mutex> lk(g_addrbook_mu);
+        g_addrbook.mark_failure(target, (int64_t)time(nullptr));
+        g_addrbook_dirty = true;
+    };
     struct addrinfo hints{}, *res;
     hints.ai_family=AF_INET; hints.ai_socktype=SOCK_STREAM;
+    if (literal) hints.ai_flags = AI_NUMERICHOST;   // never a DNS query for an IP literal
     std::string port_str=std::to_string(port);
     if(getaddrinfo(host.c_str(),port_str.c_str(),&hints,&res)!=0){
-        printf("[P2P] Cannot resolve %s\n",host.c_str()); return false;
+        printf("[P2P] Cannot resolve %s\n",host.c_str()); note_fail(); return false;
     }
     int fd=socket(res->ai_family,res->ai_socktype,res->ai_protocol);
     if(fd<0){freeaddrinfo(res);return false;}
@@ -10745,13 +10903,34 @@ static bool connect_peer(const std::string& host, int port) {
             if(bind(fd,(struct sockaddr*)&src,sizeof(src))<0){ /* best-effort source IP */ }
         }
     }
-    if(connect(fd,res->ai_addr,res->ai_addrlen)<0){
+    int fl = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, fl | O_NONBLOCK);
+    int rc = connect(fd,res->ai_addr,res->ai_addrlen);
+    bool ok = (rc == 0);
+    if (rc < 0 && errno == EINPROGRESS) {
+        struct pollfd pfd{}; pfd.fd = fd; pfd.events = POLLOUT;
+        if (poll(&pfd, 1, CONNECT_TIMEOUT_SECS * 1000) == 1) {
+            int err = 0; socklen_t el = sizeof(err);
+            if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &el) == 0 && err == 0) ok = true;
+        }
+    }
+    fcntl(fd, F_SETFL, fl);   // back to blocking: handle_peer manages its own modes
+    if(!ok){
         printf("[P2P] Cannot connect to %s:%d\n",host.c_str(),port);
-        close(fd); freeaddrinfo(res); return false;
+        close(fd); freeaddrinfo(res); note_fail(); return false;
     }
     freeaddrinfo(res);
+    PeerDialMeta meta; meta.source = source; meta.feeler = feeler;
+    {
+        struct sockaddr_in pa{}; socklen_t pl = sizeof(pa);
+        if (getpeername(fd, (struct sockaddr*)&pa, &pl) == 0 && pa.sin_family == AF_INET) {
+            char ip[INET_ADDRSTRLEN];
+            if (inet_ntop(AF_INET, &pa.sin_addr, ip, sizeof(ip)))
+                meta.resolved = std::string(ip) + ":" + std::to_string(ntohs(pa.sin_port));
+        }
+    }
     std::string addr=host+":"+std::to_string(port);
-    std::thread([fd,addr](){handle_peer(fd,addr,true);}).detach();
+    std::thread([fd,addr,meta](){handle_peer(fd,addr,true,meta);}).detach();
     return true;
 }
 
@@ -10899,6 +11078,7 @@ int main(int argc, char** argv) {
     std::string genesis_path="genesis_block.json";
     std::string chain_path="";
     std::vector<std::string> connect_addrs;
+    std::vector<std::string> addnode_addrs;   // P5: --addnode (does NOT disable discovery)
 
     for(int i=1;i<argc;++i){
         if(!strcmp(argv[i],"--wallet")&&i+1<argc) g_wallet_path=argv[++i];
@@ -10907,6 +11087,13 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--genesis")&&i+1<argc) genesis_path=argv[++i];
         else if(!strcmp(argv[i],"--chain")&&i+1<argc) chain_path=argv[++i];
         else if(!strcmp(argv[i],"--connect")&&i+1<argc) connect_addrs.push_back(argv[++i]);
+        else if(!strcmp(argv[i],"--addnode")&&i+1<argc) addnode_addrs.push_back(argv[++i]);
+        else if(!strcmp(argv[i],"--externalip")&&i+1<argc){
+            std::string ip=argv[++i];
+            if(!sost::parse_ipv4_hostport(ip+":1",nullptr,nullptr)){
+                fprintf(stderr,"--externalip needs an IPv4 literal (got '%s')\n",ip.c_str()); return 1; }
+            g_external_ip=ip;
+        }
         else if(!strcmp(argv[i],"--p2p-bind")&&i+1<argc) g_p2p_bind_ip=argv[++i];
         else if(!strcmp(argv[i],"--rpc-user")&&i+1<argc) g_rpc_user=argv[++i];
         else if(!strcmp(argv[i],"--rpc-pass")&&i+1<argc) g_rpc_pass=argv[++i];
@@ -11004,7 +11191,13 @@ int main(int argc, char** argv) {
             printf("  --chain <path>             Chain JSON to load/save\n");
             printf("  --port <n>                 P2P port (default: 19333)\n");
             printf("  --rpc-port <n>             RPC port (default: 18232)\n");
-            printf("  --connect <host:port>      Connect to peer\n");
+            printf("  --connect <host:port>      Connect ONLY to this peer (repeatable). Exclusive: the\n");
+            printf("                             address book, seeds.txt and DNS seeds are not used at\n");
+            printf("                             boot and no outbound discovery runs.\n");
+            printf("  --addnode <host:port>      Also connect to this peer (repeatable) and keep it\n");
+            printf("                             connected; autonomous discovery stays ON (address\n");
+            printf("                             book, seeds.txt, DNS seeds, fallback IPs, gossip).\n");
+            printf("  --externalip <ipv4>        Advertise <ipv4>:<--port> in address gossip\n");
             printf("  --rpc-user <u>             RPC Basic Auth user (required by default)\n");
             printf("  --rpc-pass <p>             RPC Basic Auth pass (required by default)\n");
             printf("  --rpc-pass-file <path>     RPC pass read from a PRIVATE file (mode 600).\n");
@@ -11282,62 +11475,53 @@ int main(int argc, char** argv) {
     // fail closed and are skipped, so this degrades gracefully to EU-only until
     // the seed-apac/seed-us DNS records + nodes exist. Peer exchange grows the
     // mesh from whatever connects, so 2-3 bootstrap seeds is plenty.
+    // P1/P2/P4/P5/P6: address book, self-advertisement and the bootstrap plan.
+    g_listen_port = (p2p_port > 0 && p2p_port < 65536) ? (uint16_t)p2p_port : 0;
+    while (g_local_nonce == 0) {
+        if (RAND_bytes((unsigned char*)&g_local_nonce, sizeof(g_local_nonce)) != 1) g_local_nonce = (uint64_t)time(nullptr) ^ ((uint64_t)getpid() << 32);
+    }
+    addrbook_load(chain_path);
+    const bool discovery_on = connect_addrs.empty() && !g_noseed;   // P3 outbound maintenance
+    auto split_hp = [](const std::string& a, std::string& host, int& port){
+        auto colon=a.rfind(':');
+        host = (colon==std::string::npos) ? a : a.substr(0,colon);
+        port = (colon==std::string::npos) ? P2P_PORT_DEFAULT : atoi(a.substr(colon+1).c_str());
+    };
     if(g_noseed){
         // Isolation mode: no DNS seed resolution, no external auto-connections.
-        // Only explicit --connect peers (dialed just below) are used. This makes
-        // ZERO getaddrinfo() calls to the default seed hostnames.
+        // Only explicit --connect / --addnode peers are used. This makes ZERO
+        // getaddrinfo() calls to the default seed hostnames.
         printf("[P2P] --noseed: DNS seeds and external auto-connect DISABLED. "
-               "Using only %zu explicit --connect peer(s).\n", connect_addrs.size());
+               "Using only %zu explicit --connect and %zu --addnode peer(s).\n",
+               connect_addrs.size(), addnode_addrs.size());
     }
-    else if(connect_addrs.empty()){
-        const int WANT = 3;        // connect to up to 3 peers
+    {
+        std::vector<std::string> seedsfile, dns, fallback(FALLBACK_SEED_IPS.begin(), FALLBACK_SEED_IPS.end());
+        for(const auto& e: load_extra_seeds(chain_path)) seedsfile.push_back(e.first + ":" + std::to_string(e.second));
+        for(int i=0;i<NUM_DEFAULT_SEEDS;++i) dns.push_back(std::string(DEFAULT_SEEDS[i]) + ":" + std::to_string(P2P_PORT_DEFAULT));
+        std::vector<std::string> conn_norm, add_norm;
+        for(const auto& a: connect_addrs) conn_norm.push_back(a.find(':')==std::string::npos ? a + ":" + std::to_string(P2P_PORT_DEFAULT) : a);
+        for(const auto& a: addnode_addrs) add_norm.push_back(a.find(':')==std::string::npos ? a + ":" + std::to_string(P2P_PORT_DEFAULT) : a);
+        auto plan = sost::bootstrap_plan(conn_norm, add_norm, load_peer_store(chain_path), seedsfile, dns, fallback, g_noseed);
+        const int WANT = 3;        // auto-sources stop once 3 peers connected
         int connected = 0;
-        // D1: redial known-good peers from the persistent store FIRST (survives restart
-        // and reduces dependence on the seed DNS). No wire change — we just dial them.
-        std::vector<std::string> stored = load_peer_store(chain_path);
-        if(!stored.empty()){
-            printf("[P2P] peer store: trying up to %d of %zu stored peer(s)...\n", WANT, stored.size());
-            for(size_t i=0;i<stored.size() && connected<WANT;++i){
-                auto colon=stored[i].rfind(':');
-                std::string host = (colon==std::string::npos)? stored[i] : stored[i].substr(0,colon);
-                int port = (colon==std::string::npos)? P2P_PORT_DEFAULT : atoi(stored[i].substr(colon+1).c_str());
-                if(connect_peer(host, port)){ printf("[P2P]   stored peer connected: %s\n", stored[i].c_str()); ++connected; }
+        for(const auto& t: plan){
+            const bool explicit_peer = (t.source==sost::PeerSource::CONNECT || t.source==sost::PeerSource::ADDNODE);
+            if(!explicit_peer && connected>=WANT) break;
+            std::string host; int port; split_hp(t.hostport, host, port);
+            if(connect_peer(host, port, t.source)){
+                printf("[P2P]   %s peer connected: %s\n", sost::peer_source_name(t.source), t.hostport.c_str());
+                ++connected;
+            } else if(!explicit_peer){
+                printf("[P2P]   %s peer unavailable: %s\n", sost::peer_source_name(t.source), t.hostport.c_str());
             }
         }
-        // D2: operator-supplied independent seeds (seeds.txt) — tried before defaults.
-        if(connected<WANT){
-            auto extra = load_extra_seeds(chain_path);
-            if(!extra.empty()){
-                printf("[P2P] trying %zu operator seed(s) from seeds.txt...\n", extra.size());
-                for(size_t i=0;i<extra.size() && connected<WANT;++i)
-                    if(connect_peer(extra[i].first, extra[i].second)){ printf("[P2P]   seeds.txt connected: %s:%d\n", extra[i].first.c_str(), extra[i].second); ++connected; }
-            }
-        }
-        // Fill remaining slots from the default seeds.
-        if(connected<WANT){
-            printf("[P2P] trying %d default seeds (want up to %d, have %d)...\n", NUM_DEFAULT_SEEDS, WANT, connected);
-            for(int i=0;i<NUM_DEFAULT_SEEDS && connected<WANT;++i){
-                if(connect_peer(DEFAULT_SEEDS[i], P2P_PORT_DEFAULT)){
-                    printf("[P2P]   seed connected: %s\n", DEFAULT_SEEDS[i]); ++connected;
-                } else {
-                    printf("[P2P]   seed unavailable: %s\n", DEFAULT_SEEDS[i]);
-                }
-            }
-        }
-        if(connected==0)
-            printf("[P2P] WARNING: no stored peer or default seed reachable — pass --connect <host:port> to bootstrap.\n");
+        if(connected==0 && connect_addrs.empty() && !g_noseed)
+            printf("[P2P] WARNING: no stored peer, seeds.txt entry, default seed or fallback IP reachable — "
+                   "pass --addnode <host:port> to bootstrap.\n");
         else
-            printf("[P2P] bootstrapped from %d peer(s) (store+seeds).\n", connected);
-    }
-    for(const auto& a:connect_addrs){
-        auto colon=a.rfind(':');
-        if(colon!=std::string::npos){
-            std::string host=a.substr(0,colon);
-            int port=atoi(a.substr(colon+1).c_str());
-            connect_peer(host, port);
-        } else {
-            connect_peer(a, P2P_PORT_DEFAULT);
-        }
+            printf("[P2P] bootstrapped from %d peer(s) (%s).\n", connected,
+                   connect_addrs.empty() ? "addnode+store+seeds" : "connect, exclusive");
     }
 
     printf("Node running. Ctrl+C to stop.\n\n");
@@ -11358,42 +11542,145 @@ int main(int argc, char** argv) {
                 }
                 need_reconnect = g_peers.empty();
             }
-            // D1: persist good outbound peers every cycle (own lock inside).
+            // D1/P2: refresh + persist the address book every cycle (own lock inside).
             save_peer_store(chain_path);
-            // D1: if we have NO peers, redial from (a) explicit --connect, (b) the peer
-            // store, (c) the default seeds (unless --noseed). Done OUTSIDE the peers lock
-            // so the blocking connect() never stalls other peer writers. This closes the
-            // old gap where a seed-only node that lost all peers never redialed.
+            // D1: if we have NO peers, redial from (a) explicit --connect/--addnode, (b) the
+            // address book, (c) gossip candidates, (d) seeds.txt, DNS seeds and fallback IPs
+            // (unless --noseed). Done OUTSIDE the peers lock so a connect() never stalls other
+            // peer writers.
             if(need_reconnect){
                 int want=3, got=0;
-                printf("[P2P] No peers connected, attempting reconnect (connect/store/seeds)...\n");
+                printf("[P2P] No peers connected, attempting reconnect (connect/addnode/store/gossip/seeds)...\n");
                 for(const auto& a:connect_addrs){
                     if(got>=want) break;
-                    auto colon=a.rfind(':');
-                    if(colon!=std::string::npos){ if(connect_peer(a.substr(0,colon), atoi(a.substr(colon+1).c_str()))) ++got; }
-                    else { if(connect_peer(a, P2P_PORT_DEFAULT)) ++got; }
+                    std::string host; int port; split_hp(a, host, port);
+                    if(connect_peer(host, port, sost::PeerSource::CONNECT)) ++got;
+                }
+                for(const auto& a:addnode_addrs){
+                    std::string host; int port; split_hp(a, host, port);
+                    if(connect_peer(host, port, sost::PeerSource::ADDNODE)) ++got;
                 }
                 std::vector<std::string> stored = load_peer_store(chain_path);
                 for(size_t i=0;i<stored.size() && got<want;++i){
-                    auto colon=stored[i].rfind(':');
-                    std::string host=(colon==std::string::npos)?stored[i]:stored[i].substr(0,colon);
-                    int port=(colon==std::string::npos)?P2P_PORT_DEFAULT:atoi(stored[i].substr(colon+1).c_str());
-                    if(connect_peer(host,port)) ++got;
+                    std::string host; int port; split_hp(stored[i], host, port);
+                    if(connect_peer(host,port,sost::PeerSource::STORE)) ++got;
                 }
                 // D1: gossiped candidates (bounded, never persisted raw)
                 std::vector<std::string> cand; { std::lock_guard<std::mutex> lk(g_addr_cand_mu); cand=g_addr_candidates; }
                 for(size_t i=0;i<cand.size() && got<want;++i){
-                    auto colon=cand[i].rfind(':');
-                    std::string host=(colon==std::string::npos)?cand[i]:cand[i].substr(0,colon);
-                    int port=(colon==std::string::npos)?P2P_PORT_DEFAULT:atoi(cand[i].substr(colon+1).c_str());
+                    std::string host; int port; split_hp(cand[i], host, port);
                     if(!gossip_target_ok(host)) continue;   // defense-in-depth SSRF/DNS guard on gossiped targets
-                    if(connect_peer(host,port)) ++got;
+                    if(connect_peer(host,port,sost::PeerSource::GOSSIP)) ++got;
                 }
                 if(!g_noseed){
                     for(const auto& es: load_extra_seeds(chain_path)){ if(got>=want) break;
-                        if(connect_peer(es.first, es.second)) ++got; }
+                        if(connect_peer(es.first, es.second, sost::PeerSource::SEEDSFILE)) ++got; }
                     for(int i=0;i<NUM_DEFAULT_SEEDS && got<want;++i){
-                        if(connect_peer(DEFAULT_SEEDS[i], P2P_PORT_DEFAULT)) ++got;
+                        if(connect_peer(DEFAULT_SEEDS[i], P2P_PORT_DEFAULT, sost::PeerSource::DNS)) ++got;
+                    }
+                    for(size_t i=0;i<FALLBACK_SEED_IPS.size() && got<want;++i){
+                        std::string host; int port; split_hp(FALLBACK_SEED_IPS[i], host, port);
+                        if(connect_peer(host, port, sost::PeerSource::FALLBACK)) ++got;
+                    }
+                }
+            } else {
+                // P5: keep --addnode peers connected (they are dialed in addition to discovery).
+                std::set<std::string> have_dialed;
+                { std::lock_guard<std::mutex> lk(g_peers_mu);
+                  for(const auto& p: g_peers) if(p.outbound) have_dialed.insert(p.addr); }
+                for(const auto& a: addnode_addrs){
+                    std::string norm = a.find(':')==std::string::npos ? a + ":" + std::to_string(P2P_PORT_DEFAULT) : a;
+                    if(have_dialed.count(norm)) continue;
+                    std::string host; int port; split_hp(norm, host, port);
+                    if(connect_peer(host, port, sost::PeerSource::ADDNODE))
+                        printf("[P2P] addnode peer reconnected: %s\n", norm.c_str());
+                }
+            }
+            // P3: outbound target maintenance (only with autonomous discovery: no --connect,
+            // no --noseed). While outbound < OUTBOUND_TARGET, dial up to 2 new candidates per
+            // cycle from the address book, verified-later inbound listeners and gossip, with at
+            // most 2 outbound per /16 (devnet lab on loopback exempt) and per-address back-off.
+            // P4: one feeler per cycle verifies an inbound peer's advertised listen address
+            // even when the target is met (closed right after the handshake).
+            if(discovery_on && !need_reconnect){
+                std::set<std::string> exclude;
+                std::map<std::string,int> per16;
+                size_t outbound_n = 0;
+                {
+                    std::lock_guard<std::mutex> lk(g_peers_mu);
+                    for(const auto& p: g_peers){
+                        if(!p.outbound) continue;   // an inbound peer's listen address may still be dialed/probed
+                        if(!p.resolved.empty()) exclude.insert(p.resolved);
+                        exclude.insert(p.addr);
+                        if(!p.feeler){
+                            ++outbound_n;
+                            std::string g = sost::subnet16_of(!p.resolved.empty() ? p.resolved : p.addr);
+                            if(!g.empty()) per16[g]++;
+                        }
+                    }
+                }
+                { std::lock_guard<std::mutex> lk(g_addrbook_mu); for(const auto& a: g_self_addrs) exclude.insert(a); }
+                if(!g_external_ip.empty() && g_listen_port) exclude.insert(g_external_ip + ":" + std::to_string(g_listen_port));
+                if(!g_p2p_bind_ip.empty() && g_listen_port) exclude.insert(g_p2p_bind_ip + ":" + std::to_string(g_listen_port));
+                std::vector<std::string> probes;
+                { std::lock_guard<std::mutex> lk(g_probe_mu); probes = g_probe_queue; }
+                std::vector<std::string> cands = load_peer_store(chain_path);
+                for(const auto& pr: probes) cands.push_back(pr);
+                { std::lock_guard<std::mutex> lk(g_addr_cand_mu); for(const auto& c: g_addr_candidates) cands.push_back(c); }
+                // gossip-learned and inbound-advertised targets are untrusted: screen them.
+                std::vector<std::string> screened;
+                std::set<std::string> book_set;
+                { std::lock_guard<std::mutex> lk(g_addrbook_mu); for(const auto& e: g_addrbook.entries()) book_set.insert(e.addr); }
+                for(const auto& c: cands){
+                    std::string host; int port; split_hp(c, host, port);
+                    if(is_banned(host)) continue;                       // never redial a banned IP
+                    if(!book_set.count(c) && !gossip_target_ok(host)) continue;
+                    if(!book_set.count(c) && !sost::parse_ipv4_hostport(c, nullptr, nullptr)) continue;
+                    screened.push_back(c);
+                }
+                const bool enforce16 = (ACTIVE_PROFILE != sost::Profile::DEV);
+                std::vector<std::string> picks;
+                if(outbound_n < OUTBOUND_TARGET){
+                    sost::AddrBook book_copy;
+                    { std::lock_guard<std::mutex> lk(g_addrbook_mu); book_copy = g_addrbook; }
+                    size_t room = std::min(OUTBOUND_DIALS_PER_CYCLE, OUTBOUND_TARGET - outbound_n);
+                    picks = sost::select_outbound_candidates(screened, exclude, book_copy, per16,
+                                                             (int64_t)time(nullptr), room, enforce16, 2);
+                }
+                for(const auto& c: picks){
+                    std::string host; int port; split_hp(c, host, port);
+                    bool from_book = book_set.count(c) > 0;
+                    bool from_probe = std::find(probes.begin(), probes.end(), c) != probes.end();
+                    sost::PeerSource src = from_book ? sost::PeerSource::STORE
+                                         : (from_probe ? sost::PeerSource::INBOUND : sost::PeerSource::GOSSIP);
+                    if(connect_peer(host, port, src))
+                        printf("[P2P] outbound maintenance: dialed %s (%s), outbound %zu -> target %zu\n",
+                               c.c_str(), sost::peer_source_name(src), outbound_n + 1, OUTBOUND_TARGET);
+                    else if(src == sost::PeerSource::GOSSIP){
+                        // an unreachable gossiped address is dropped (it never entered the book)
+                        std::lock_guard<std::mutex> lk(g_addr_cand_mu);
+                        g_addr_candidates.erase(std::remove(g_addr_candidates.begin(), g_addr_candidates.end(), c),
+                                                g_addr_candidates.end());
+                    }
+                    exclude.insert(c);
+                    if(from_probe){ std::lock_guard<std::mutex> lk(g_probe_mu);
+                        g_probe_queue.erase(std::remove(g_probe_queue.begin(), g_probe_queue.end(), c), g_probe_queue.end()); }
+                }
+                // feeler: verify one pending inbound listen address even at the target
+                std::string fe;
+                { std::lock_guard<std::mutex> lk(g_probe_mu);
+                  while(!g_probe_queue.empty()){
+                      std::string c = g_probe_queue.front(); g_probe_queue.erase(g_probe_queue.begin());
+                      // already connected outbound (or just dialed above): that handshake verifies it
+                      if(exclude.count(c)) continue;
+                      fe = c; break; } }
+                if(!fe.empty()){
+                    std::string host; int port; split_hp(fe, host, port);
+                    if(gossip_target_ok(host)){
+                        bool keep = outbound_n + picks.size() < OUTBOUND_TARGET;
+                        if(connect_peer(host, port, sost::PeerSource::INBOUND, /*feeler=*/!keep))
+                            printf("[P2P] %s %s (inbound peer's advertised listen address)\n",
+                                   keep ? "outbound maintenance: dialed" : "feeler probe:", fe.c_str());
                     }
                 }
             }
