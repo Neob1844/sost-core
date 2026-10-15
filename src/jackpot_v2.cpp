@@ -120,6 +120,18 @@ Bytes32 jv2_seed(const std::vector<Bytes32>& entropy_hashes, int64_t height) {
     return sha256(buf);
 }
 
+Bytes32 jv2_seed_v17(const std::vector<Bytes32>& pow_commits, int64_t height) {
+    std::vector<uint8_t> buf;
+    const size_t domain_len = sizeof(JACKPOT_V2_DOMAIN_V17) - 1;
+    buf.reserve(domain_len + pow_commits.size() * 32 + 8);
+    buf.insert(buf.end(),
+               reinterpret_cast<const uint8_t*>(JACKPOT_V2_DOMAIN_V17),
+               reinterpret_cast<const uint8_t*>(JACKPOT_V2_DOMAIN_V17) + domain_len);
+    for (const auto& c : pow_commits) append(buf, c);
+    append_u64_le(buf, (uint64_t)height);
+    return sha256(buf);
+}
+
 int64_t jv2_select_winner_index(const std::vector<JackpotV2Weighted>& sorted,
                                 const Bytes32& seed) {
     if (sorted.empty()) return -1;

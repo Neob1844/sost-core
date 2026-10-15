@@ -48,6 +48,9 @@ using NodePubKey = std::array<uint8_t, 33>;
 
 // Domain-separation tags (never reuse the DTD seed).
 inline constexpr char JACKPOT_V2_DOMAIN[]  = "SOST_HIST_JACKPOT";
+// V17 (DTD-F1): jackpot draws at heights >= V17_HEIGHT hash the PoW commits of
+// [h-16, h-1] under this tag instead of the block_ids (see jv2_seed_v17).
+inline constexpr char JACKPOT_V2_DOMAIN_V17[] = "SOST_HIST_JACKPOT_V17";
 inline constexpr char NODE_BIND_DOMAIN[]   = "SOST_NODE_BIND";
 inline constexpr char NODE_BIND_NODEKEY_DOMAIN[] = "SOST_NODE_BIND_NODEKEY_V2";  // node-key proof (NODE_BIND v2)
 inline constexpr char NODE_HB_DOMAIN[]     = "SOST_NODE_HEARTBEAT";
@@ -201,6 +204,22 @@ inline int64_t jv2_total_weight(const std::vector<JackpotV2Weighted>& s) {
 // selector uses), but under the V2 domain tag so the two draws are independent.
 // ---------------------------------------------------------------------------
 Bytes32 jv2_seed(const std::vector<Bytes32>& entropy_hashes, int64_t height);
+
+// V17 (DTD-F1), heights >= V17_HEIGHT:
+//   seed = sha256( "SOST_HIST_JACKPOT_V17" || pow_commit[h-16..h-1] || height_le )
+// The PoW commit does not cover the SbPoW miner_signature, so re-signing a block
+// (new block_id, same PoW) cannot change the draw; every committed field needs a
+// new PoW. Same weighting / order / roll as jv2_seed.
+Bytes32 jv2_seed_v17(const std::vector<Bytes32>& pow_commits, int64_t height);
+
+// Height dispatch used by the node: block_ids + jv2_seed below V17_HEIGHT,
+// pow_commits + jv2_seed_v17 from V17_HEIGHT. Both vectors hold the same
+// [h-16, h-1] window in ascending height order.
+inline Bytes32 jv2_seed_at(const std::vector<Bytes32>& block_ids,
+                           const std::vector<Bytes32>& pow_commits, int64_t height) {
+    return v17_active_at(height) ? jv2_seed_v17(pow_commits, height)
+                                 : jv2_seed(block_ids, height);
+}
 
 // Weighted draw over a CANONICALLY-SORTED weighted set.
 //   roll = read_u64_le(seed) % total_weight

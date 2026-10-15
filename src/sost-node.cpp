@@ -135,7 +135,7 @@ static sost::sbpow::MinerPubkey  g_node_pubkey{};   // 33B compressed (derived)
 // V16 — RPC report helper (defined after compute_v2_jackpot_winner).
 struct V2Cand { PubKeyHash pkh; int64_t pow_blocks; bool node_bound; int64_t hb; int64_t hb_required; bool eligible; int64_t weight; };
 static std::vector<V2Cand> v2_report(const std::vector<sost::lottery::LotteryMinedBlockView>& history, int64_t height);
-static void compute_v2_jackpot_winner(const std::vector<sost::lottery::LotteryMinedBlockView>& history, int64_t height, PubKeyHash& winner_pkh, bool& winner_exists);
+static void compute_v2_jackpot_winner(const std::vector<sost::lottery::LotteryMinedBlockView>& history, int64_t height, PubKeyHash& winner_pkh, bool& winner_exists, sost::Bytes32* seed_out = nullptr);
 static bool         g_dry_run_replay = false;  // --dry-run-replay: replay chain, print UTXO root, exit
 static Mempool      g_mempool;
 static std::string  g_wallet_path = "wallet.json";
@@ -1939,6 +1939,7 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     int64_t winner_index   = -1;
     PubKeyHash winner_pkh{};
     bool eligibility_empty = true;
+    std::string dtd_seed_hex;   // diagnostic: seed of the draw at height_next (DTD-F1 aware)
 
     if (lottery_triggered) {
         // Project g_blocks into LotteryMinedBlockView. The lottery
@@ -1975,7 +1976,7 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
             sost::lottery::LotteryMinedBlockView v;
             v.height     = b.height;
             v.miner_pkh  = cb.outputs[0].pubkey_hash;
-            v.block_hash = b.block_id;
+            v.block_hash = b.block_id; v.pow_commit = b.commit;
             history.push_back(v);
         }
 
@@ -1997,6 +1998,8 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
                 winner_pkh = eligible[(size_t)winner_index].pkh;
             }
         }
+        const Bytes32 sd = sost::lottery::lottery_seed_from_history(history, height_next);
+        dtd_seed_hex = to_hex(sd.data(), 32);
     }
 
     // ---- Coinbase shape decision -------------------------------------
@@ -2122,6 +2125,9 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
       << ",\"phase2_height\":" << phase2_h
       << ",\"phase2_active\":" << (phase2_active ? "true" : "false")
       << ",\"lottery_triggered\":" << (lottery_triggered ? "true" : "false")
+      << ",\"seed_rule\":\"" << (sost::lottery::lottery_seed_uses_pow_commit(height_next)
+                                     ? "V17_POW_COMMIT" : "V11_BLOCK_ID") << "\""
+      << ",\"seed_hex\":\"" << dtd_seed_hex << "\""
       << ",\"pending_lottery_before\":" << pending_before
       << ",\"current_lottery_amount\":" << current_lottery_amount
       << ",\"coinbase_shape\":\"" << shape << "\""
@@ -2214,7 +2220,7 @@ static std::string handle_gethistoricaljackpotstatus(const std::string& id, cons
         Transaction cb; std::string derr;
         if (!Transaction::Deserialize(raw, cb, &derr) || cb.outputs.empty()) continue;
         sost::lottery::LotteryMinedBlockView v;
-        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id; v.pow_commit = b.commit;
         history.push_back(v);
     }
 
@@ -2415,10 +2421,10 @@ static std::string handle_getjackpotv2audit(const std::string& id, const std::ve
     <<",\"epoch_length\":"<<sost::NODE_EPOCH_LENGTH;
   if(!isv2){ s<<"}"; return rpc_result(id,s.str()); }
   std::vector<sost::lottery::LotteryMinedBlockView> history;
-  for(const auto& b:g_blocks){ if(b.height>=height)break; if(b.tx_hexes.empty())continue; std::vector<Byte> raw; if(!decode_tx_hex(b.tx_hexes[0],raw))continue; Transaction cb; std::string de; if(!Transaction::Deserialize(raw,cb,&de)||cb.outputs.empty())continue; sost::lottery::LotteryMinedBlockView v; v.height=b.height; v.miner_pkh=cb.outputs[0].pubkey_hash; v.block_hash=b.block_id; history.push_back(v); }
+  for(const auto& b:g_blocks){ if(b.height>=height)break; if(b.tx_hexes.empty())continue; std::vector<Byte> raw; if(!decode_tx_hex(b.tx_hexes[0],raw))continue; Transaction cb; std::string de; if(!Transaction::Deserialize(raw,cb,&de)||cb.outputs.empty())continue; sost::lottery::LotteryMinedBlockView v; v.height=b.height; v.miner_pkh=cb.outputs[0].pubkey_hash; v.block_hash=b.block_id; v.pow_commit=b.commit; history.push_back(v); }
   auto rp=v2_report(history,height);
   int64_t total=0,elig=0; for(auto&c:rp){ total+=c.weight; if(c.eligible)elig++; }
-  PubKeyHash win{}; bool we=false; compute_v2_jackpot_winner(history,height,win,we);
+  PubKeyHash win{}; bool we=false; sost::Bytes32 jseed{}; compute_v2_jackpot_winner(history,height,win,we,&jseed);
   int64_t comp=sost::jackpot_v2::jv2_completed_epochs_before(sost::HIST_JACKPOT_V2_HEIGHT,sost::NODE_EPOCH_LENGTH,height);
   // Pot / rollover / reserve (same computation the payout path uses).
   PubKeyHash gold_pkh{}, popc_pkh{}; address_decode(ADDR_GOLD_VAULT,gold_pkh); address_decode(ADDR_POPC_POOL,popc_pkh);
@@ -2435,6 +2441,9 @@ static std::string handle_getjackpotv2audit(const std::string& id, const std::ve
    <<",\"base_stocks\":"<<sost::HIST_JACKPOT_BASE_STOCKS
    <<",\"cap_stocks\":"<<sost::HIST_JACKPOT_CAP_STOCKS
    <<",\"total_weight\":"<<total<<",\"eligible_count\":"<<elig
+   <<",\"seed_rule\":\""<<(sost::v17_active_at(height)?"V17_POW_COMMIT":"V11_BLOCK_ID")<<"\""
+   <<",\"seed_domain\":\""<<(sost::v17_active_at(height)?sost::jackpot_v2::JACKPOT_V2_DOMAIN_V17:sost::jackpot_v2::JACKPOT_V2_DOMAIN)<<"\""
+   <<",\"seed_hex\":\""<<to_hex(jseed.data(),32)<<"\""
    <<",\"winner_address\":\""<<(we?address_encode(win):std::string(""))<<"\""
    <<",\"candidates\":[";
   for(size_t i=0;i<rp.size();++i){ auto&c=rp[i]; if(i)s<<","; s<<"{\"address\":\""<<address_encode(c.pkh)<<"\",\"pow_blocks\":"<<c.pow_blocks<<",\"node_bound\":"<<(c.node_bound?"true":"false")<<",\"heartbeats\":"<<c.hb<<",\"heartbeats_required\":"<<c.hb_required<<",\"eligible\":"<<(c.eligible?"true":"false")<<",\"weight\":"<<c.weight<<"}"; }
@@ -2448,7 +2457,7 @@ static std::string handle_checkhistoricaljackpoteligibility(const std::string& i
   int64_t tip=g_chain_height; int64_t nextJ=-1;
   for(int64_t hh=tip+1; hh<tip+1+2*sost::HIST_JACKPOT_CADENCE_BLOCKS; ++hh){ if(sost::is_hist_jackpot_v2_height(hh)){ nextJ=hh; break; } }
   std::vector<sost::lottery::LotteryMinedBlockView> history;
-  for(const auto& b:g_blocks){ if(b.tx_hexes.empty())continue; std::vector<Byte> raw; if(!decode_tx_hex(b.tx_hexes[0],raw))continue; Transaction cb; std::string de; if(!Transaction::Deserialize(raw,cb,&de)||cb.outputs.empty())continue; sost::lottery::LotteryMinedBlockView v; v.height=b.height; v.miner_pkh=cb.outputs[0].pubkey_hash; v.block_hash=b.block_id; history.push_back(v); }
+  for(const auto& b:g_blocks){ if(b.tx_hexes.empty())continue; std::vector<Byte> raw; if(!decode_tx_hex(b.tx_hexes[0],raw))continue; Transaction cb; std::string de; if(!Transaction::Deserialize(raw,cb,&de)||cb.outputs.empty())continue; sost::lottery::LotteryMinedBlockView v; v.height=b.height; v.miner_pkh=cb.outputs[0].pubkey_hash; v.block_hash=b.block_id; v.pow_commit=b.commit; history.push_back(v); }
   int64_t H = nextJ>0?nextJ:(tip+1);
   auto rp=v2_report(history,H);
   std::ostringstream s; s<<"{\"address\":\""<<p[0]<<"\",\"next_v2_jackpot_height\":"<<nextJ<<",\"eval_height\":"<<H<<",\"pow_minimum\":"<<sost::JACKPOT_V2_MIN_BLOCKS;
@@ -2521,7 +2530,7 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
         sost::lottery::LotteryMinedBlockView v;
         v.height     = b.height;
         v.miner_pkh  = cb.outputs[0].pubkey_hash;
-        v.block_hash = b.block_id;
+        v.block_hash = b.block_id; v.pow_commit = b.commit;
         history.push_back(v);
     }
 
@@ -2541,8 +2550,9 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
         }
     }
 
-    // Reconstruct the exact seed input used by select_lottery_winner_index_from_history.
-    // The lo..hi window must mirror the helper byte-for-byte.
+    // Reconstruct the exact seed input used by select_lottery_winner_index_from_history:
+    // the SAME library function the consensus path hashes (V17 DTD-F1: PoW commits under
+    // "SOST_DTD_V17" from V17_HEIGHT, block_ids under "SOST_LOTTERY_V11" below it).
     const int64_t lo = height - sost::lottery::LOTTERY_RNG_HISTORY_BLOCKS;
     const int64_t hi = height - 1;
     std::vector<sost::lottery::LotteryMinedBlockView> window;
@@ -2554,17 +2564,8 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
                  const sost::lottery::LotteryMinedBlockView& b) {
                   return a.height < b.height;
               });
-    std::vector<uint8_t> seed_input;
-    seed_input.reserve(sost::lottery::LOTTERY_RNG_DOMAIN_LEN + window.size() * 32 + 8);
-    for (size_t i = 0; i < sost::lottery::LOTTERY_RNG_DOMAIN_LEN; ++i) {
-        seed_input.push_back((uint8_t)sost::lottery::LOTTERY_RNG_DOMAIN[i]);
-    }
-    for (const auto& w : window) {
-        for (size_t i = 0; i < 32; ++i) seed_input.push_back(w.block_hash[i]);
-    }
-    for (int i = 0; i < 8; ++i) {
-        seed_input.push_back((uint8_t)((uint64_t)height >> (i * 8)));
-    }
+    const bool seed_v17 = sost::lottery::lottery_seed_uses_pow_commit(height);
+    std::vector<uint8_t> seed_input = sost::lottery::lottery_seed_input_from_history(history, height);
     Bytes32 seed = sha256(seed_input);
     uint64_t roll = 0;
     for (int i = 0; i < 8; ++i) {
@@ -2614,9 +2615,13 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
     for (size_t i = 0; i < window.size(); ++i) {
         if (i) s << ",";
         s << "{\"height\":" << window[i].height
-          << ",\"hash\":\"" << to_hex(window[i].block_hash.data(), 32) << "\"}";
+          << ",\"hash\":\"" << to_hex(window[i].block_hash.data(), 32) << "\""
+          << ",\"commit\":\"" << to_hex(window[i].pow_commit.data(), 32) << "\"}";
     }
-    s << "],\"seed_input_hex\":\"" << to_hex(seed_input.data(), seed_input.size()) << "\""
+    s << "],\"seed_rule\":\"" << (seed_v17 ? "V17_POW_COMMIT" : "V11_BLOCK_ID") << "\""
+      << ",\"seed_domain\":\"" << (seed_v17 ? sost::lottery::LOTTERY_RNG_DOMAIN_V17
+                                               : sost::lottery::LOTTERY_RNG_DOMAIN) << "\""
+      << ",\"seed_input_hex\":\"" << to_hex(seed_input.data(), seed_input.size()) << "\""
       << ",\"seed_hex\":\""        << to_hex(seed.data(), 32) << "\""
       << ",\"roll_le_u64\":\""     << roll << "\""
       << ",\"cooldown_addresses\":[";
@@ -6136,7 +6141,7 @@ static sost::GvG3bState gv_g3b_derive_state(const PubKeyHash& vault_pkh) {
 // Reads pre-block g_node_state (bindings/heartbeats from blocks < height).
 static void compute_v2_jackpot_winner(
     const std::vector<sost::lottery::LotteryMinedBlockView>& history,
-    int64_t height, PubKeyHash& winner_pkh, bool& winner_exists) {
+    int64_t height, PubKeyHash& winner_pkh, bool& winner_exists, sost::Bytes32* seed_out) {
     namespace jv2 = sost::jackpot_v2;
     const int64_t A = sost::HIST_JACKPOT_V2_HEIGHT, L = sost::NODE_EPOCH_LENGTH;
     const int64_t lo = height - sost::JACKPOT_V2_POW_WINDOW, hi = height - 1;
@@ -6153,11 +6158,17 @@ static void compute_v2_jackpot_winner(
         cands.push_back(c);
     }
     auto weighted = jv2::jv2_build_weighted_set(cands, A, L, height);
-    // entropy = the LOTTERY_RNG_HISTORY_BLOCKS most-recent block hashes (ascending)
+    // entropy = the LOTTERY_RNG_HISTORY_BLOCKS most-recent blocks (ascending):
+    //   pre-V17 : block_ids under "SOST_HIST_JACKPOT"            (historical rule, unchanged)
+    //   V17+    : PoW commits under "SOST_HIST_JACKPOT_V17"       (DTD-F1: signature-independent)
     const int64_t elo = height - sost::lottery::LOTTERY_RNG_HISTORY_BLOCKS, ehi = height - 1;
-    std::vector<sost::Bytes32> entropy;
-    for (const auto& v : history) if (v.height >= elo && v.height <= ehi) entropy.push_back(v.block_hash);
-    const sost::Bytes32 seed = jv2::jv2_seed(entropy, height);   // domain "SOST_HIST_JACKPOT"
+    std::vector<sost::Bytes32> entropy_ids, entropy_commits;
+    for (const auto& v : history) if (v.height >= elo && v.height <= ehi) {
+        entropy_ids.push_back(v.block_hash);
+        entropy_commits.push_back(v.pow_commit);
+    }
+    const sost::Bytes32 seed = jv2::jv2_seed_at(entropy_ids, entropy_commits, height);
+    if (seed_out) *seed_out = seed;
     winner_exists = false;
     const int64_t wi = jv2::jv2_select_winner_index(weighted, seed);
     if (wi >= 0) { winner_pkh = weighted[(size_t)wi].pkh; winner_exists = true; }
@@ -6235,7 +6246,7 @@ static std::vector<sost::lottery::LotteryMinedBlockView> lottery_history_before(
         Transaction cb; std::string de;
         if (!Transaction::Deserialize(raw, cb, &de) || cb.outputs.empty()) continue;
         sost::lottery::LotteryMinedBlockView v;
-        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id; v.pow_commit = b.commit;
         history.push_back(v);
     }
     return history;
@@ -6297,7 +6308,7 @@ static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, T
         Transaction cb; std::string de;
         if (!Transaction::Deserialize(raw, cb, &de) || cb.outputs.empty()) continue;
         sost::lottery::LotteryMinedBlockView v;
-        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id; v.pow_commit = b.commit;
         history.push_back(v);
     }
     PubKeyHash winner_pkh{}; bool winner_exists = false;
@@ -6352,7 +6363,7 @@ static bool validate_live_jackpot(const std::vector<Transaction>& txs, int64_t h
         Transaction cb; std::string de;
         if (!Transaction::Deserialize(raw, cb, &de) || cb.outputs.empty()) continue;
         sost::lottery::LotteryMinedBlockView v;
-        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id; v.pow_commit = b.commit;
         history.push_back(v);
     }
     PubKeyHash winner_pkh{}; bool winner_exists = false;
@@ -8052,7 +8063,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 sost::lottery::LotteryMinedBlockView v;
                 v.height = b.height;
                 v.miner_pkh = cb.outputs[0].pubkey_hash;
-                v.block_hash = b.block_id;
+                v.block_hash = b.block_id; v.pow_commit = b.commit;
                 history.push_back(v);
             }
 
@@ -10937,6 +10948,47 @@ static bool load_genesis(const std::string& path) {
 // advance, every hook of the failed block is undone by the caller), the damaged file is
 // kept aside for forensics, and the missing blocks are re-downloaded from peers.
 static int64_t g_chain_load_failed_height = -1;
+// V17 DTD-F1 — a persisted block whose PoW commit feeds a V17 draw (height >=
+// V17_HEIGHT - LOTTERY_RNG_HISTORY_BLOCKS) must carry the commit its block_id names:
+// block_id = sha256(full_header || "ID" || commit) is recomputed from the stored header
+// fields. process_block enforces this on acceptance; this re-check on load means a
+// truncated or edited chain.json (missing or altered "commit") fails closed instead of
+// silently feeding a wrong value to the DTD / Jackpot seed. Blocks below that height are
+// not read by any commit-seeded draw and load exactly as before.
+static bool stored_commit_binds_block_id(const std::string& bj, int64_t height, std::string& why) {
+    if (!sost::v17_active_at(height + sost::lottery::LOTTERY_RNG_HISTORY_BLOCKS)) return true;
+    auto hex32 = [](const std::string& h, Bytes32& out) -> bool {
+        if (h.size() != 64) return false;
+        for (char c : h) if (!std::isxdigit((unsigned char)c)) return false;
+        out = from_hex(h); return true;
+    };
+    Bytes32 bid{}, prev{}, mrkl{}, commit{}, croot{};
+    if (!hex32(jstr(bj, "block_id"), bid) || !hex32(jstr(bj, "prev_hash"), prev) ||
+        !hex32(jstr(bj, "merkle_root"), mrkl) || !hex32(jstr(bj, "commit"), commit) ||
+        !hex32(jstr(bj, "checkpoints_root"), croot)) { why = "V17 seed block: missing/invalid header or commit"; return false; }
+    const bool     ver_present = (bj.find("\"version\"") != std::string::npos);
+    const int64_t  ver_raw     = ver_present ? jint(bj, "version") : 0;
+    const uint32_t version     = (ver_raw <= 0) ? 1u : (uint32_t)ver_raw;
+    sost::sbpow::MinerPubkey pk{}; sost::sbpow::MinerSignature sig{};
+    if (version >= 2) {
+        const std::string pk_hex = jstr(bj, "miner_pubkey"), sig_hex = jstr(bj, "miner_signature");
+        auto all_hex = [](const std::string& h) { for (char c : h) if (!std::isxdigit((unsigned char)c)) return false; return true; };
+        if (pk_hex.size() != 66 || sig_hex.size() != 128 || !all_hex(pk_hex) || !all_hex(sig_hex)) {
+            why = "V17 seed block: missing SbPoW header fields"; return false;
+        }
+        for (size_t i = 0; i < pk.size(); ++i)  pk[i]  = (uint8_t)std::stoul(pk_hex.substr(2 * i, 2), nullptr, 16);
+        for (size_t i = 0; i < sig.size(); ++i) sig[i] = (uint8_t)std::stoul(sig_hex.substr(2 * i, 2), nullptr, 16);
+    }
+    uint8_t hc72[72];
+    build_hc72(hc72, prev, mrkl, (uint32_t)jint(bj, "timestamp"), (uint32_t)jint(bj, "bits_q"));
+    auto hdr = build_full_header_bytes(hc72, croot, (uint32_t)jint(bj, "nonce"), (uint32_t)jint(bj, "extra_nonce"),
+                                       version, version >= 2 ? &pk : nullptr, version >= 2 ? &sig : nullptr);
+    if (compute_block_id(hdr.data(), hdr.size(), commit) != bid) {
+        why = "V17 seed block: stored commit does not reproduce block_id"; return false;
+    }
+    return true;
+}
+
 static void chain_load_fail(const std::string& path, int64_t height, const std::string& why) {
     g_chain_load_failed_height = height;
     printf("[CHAIN-LOAD] FATAL: cannot replay block h=%lld from %s: %s\n"
@@ -11060,6 +11112,10 @@ static bool load_chain(const std::string& path) {
             txs.push_back(std::move(tx));
         }
         if (!fail.empty()) { chain_load_fail(path, height, fail); break; }
+        {
+            std::string cerr;
+            if (!stored_commit_binds_block_id(bj, height, cerr)) { chain_load_fail(path, height, cerr); break; }
+        }
 
         // Reindex hardening: a persisted jackpot block must STILL match the canonical
         // reconstruction, so a tampered datadir cannot inject a fraudulent reserve

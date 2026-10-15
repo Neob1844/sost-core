@@ -95,6 +95,32 @@ inline constexpr size_t  LOTTERY_RNG_DOMAIN_LEN  = sizeof(LOTTERY_RNG_DOMAIN) - 
 inline constexpr int64_t LOTTERY_RNG_HISTORY_BLOCKS = 16;
 
 // ---------------------------------------------------------------------------
+// V17 (block #40,000) — DTD-F1: the draw entropy is the PoW commit, not block_id.
+//
+// Below V17_HEIGHT the seed hashes the block_id of [h-16, h-1]. block_id covers
+// the 64-byte BIP-340 miner_signature, which the PoW commit does NOT cover, so the
+// miner of h-1 could re-sign one PoW solution without limit and pick the winner at h.
+// From V17_HEIGHT the seed hashes the ConvergenceX `commit` of the same 16 blocks
+// (the value the PoW inequality is checked on; it binds prev, merkle (every tx and
+// the coinbase/miner pkh), timestamp, bits, nonce, extra_nonce, checkpoints_root,
+// segments_root, stability metric and profile_index). A new signature leaves the
+// commit unchanged; changing any committed field needs a new PoW solution.
+//
+//   pre-V17 : sha256("SOST_LOTTERY_V11" || block_id[h-16..h-1] || u64le(h))
+//   V17+    : sha256("SOST_DTD_V17"     || commit[h-16..h-1]   || u64le(h))
+//
+// The rule is chosen from the height of the DRAW (h) only, so in a reorg every
+// block is evaluated with the rule of its own height. Eligibility, amounts,
+// cooldown, anti-dominance and the `roll % E` reduction are unchanged.
+// Normative spec: docs/v40000/DTD_F1_SEED_POW_COMMIT.md
+// ---------------------------------------------------------------------------
+inline constexpr char    LOTTERY_RNG_DOMAIN_V17[]   = "SOST_DTD_V17";
+inline constexpr size_t  LOTTERY_RNG_DOMAIN_V17_LEN = sizeof(LOTTERY_RNG_DOMAIN_V17) - 1;
+inline constexpr bool lottery_seed_uses_pow_commit(int64_t height) {
+    return v17_active_at(height);
+}
+
+// ---------------------------------------------------------------------------
 // V11 Phase 2 — height-only lottery trigger rule (C5, real, pure).
 //
 // Implementation is `inline` so this stays a header-only function and
@@ -173,6 +199,10 @@ struct LotteryMinedBlockView {
     int64_t    height{0};
     PubKeyHash miner_pkh{};
     Bytes32    block_hash{};
+    // V17 DTD-F1: the block's ConvergenceX PoW commit (StoredBlock::commit).
+    // Seed entropy for draws at heights >= V17_HEIGHT. Every node-side history
+    // builder MUST fill it; pre-V17 draws never read it.
+    Bytes32    pow_commit{};
 };
 
 // One entry in the lottery eligibility set.
@@ -304,10 +334,29 @@ inline bool popc_eligibility_enforced(int64_t height, bool gate_active) {
 //
 // The current block hash is deliberately NOT included: the winner must
 // be known before the coinbase is built.
+//
+// V17 (DTD-F1): from V17_HEIGHT the seed is
+//   sha256(LOTTERY_RNG_DOMAIN_V17 || recent_pow_commits || height_le)
+// over the same window (see lottery_seed_input_from_history).
 int64_t select_lottery_winner_index_from_history(
     const std::vector<LotteryEligibilityEntry>& eligible,
     const std::vector<LotteryMinedBlockView>&   blocks,
     int64_t                                     height);
+
+// The exact seed preimage the draw at `height` hashes, chosen by height:
+//   height <  V17_HEIGHT : LOTTERY_RNG_DOMAIN     || block_hash[window] || u64le(height)
+//   height >= V17_HEIGHT : LOTTERY_RNG_DOMAIN_V17 || pow_commit[window] || u64le(height)
+// window = the entries of `blocks` with height in [height-16, height-1], ascending.
+// select_lottery_winner_index_from_history, the node RPCs and the audit tools all
+// hash this one buffer, so the consensus path and every report agree byte-for-byte.
+std::vector<uint8_t> lottery_seed_input_from_history(
+    const std::vector<LotteryMinedBlockView>& blocks,
+    int64_t                                   height);
+
+// sha256(lottery_seed_input_from_history(blocks, height)).
+Bytes32 lottery_seed_from_history(
+    const std::vector<LotteryMinedBlockView>& blocks,
+    int64_t                                   height);
 
 // Select the winning index into a lex-sorted eligibility vector.
 //

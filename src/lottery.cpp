@@ -320,13 +320,10 @@ int64_t select_lottery_winner_index(
     return (int64_t)(roll % n);
 }
 
-int64_t select_lottery_winner_index_from_history(
-    const std::vector<LotteryEligibilityEntry>& eligible,
-    const std::vector<LotteryMinedBlockView>&   blocks,
-    int64_t                                     height)
+std::vector<uint8_t> lottery_seed_input_from_history(
+    const std::vector<LotteryMinedBlockView>& blocks,
+    int64_t                                   height)
 {
-    if (eligible.empty()) return -1;
-
     std::vector<LotteryMinedBlockView> window;
     window.reserve((size_t)LOTTERY_RNG_HISTORY_BLOCKS);
     const int64_t lo = height - LOTTERY_RNG_HISTORY_BLOCKS;
@@ -341,19 +338,41 @@ int64_t select_lottery_winner_index_from_history(
                   return a.height < b.height;
               });
 
+    // V17 DTD-F1: the rule is a function of the draw height only.
+    const bool v17 = lottery_seed_uses_pow_commit(height);
+    const char*  domain     = v17 ? LOTTERY_RNG_DOMAIN_V17     : LOTTERY_RNG_DOMAIN;
+    const size_t domain_len = v17 ? LOTTERY_RNG_DOMAIN_V17_LEN : LOTTERY_RNG_DOMAIN_LEN;
+
     std::vector<uint8_t> buf;
-    buf.reserve(LOTTERY_RNG_DOMAIN_LEN + window.size() * 32 + 8);
+    buf.reserve(domain_len + window.size() * 32 + 8);
     buf.insert(buf.end(),
-               reinterpret_cast<const uint8_t*>(LOTTERY_RNG_DOMAIN),
-               reinterpret_cast<const uint8_t*>(LOTTERY_RNG_DOMAIN)
-                   + LOTTERY_RNG_DOMAIN_LEN);
+               reinterpret_cast<const uint8_t*>(domain),
+               reinterpret_cast<const uint8_t*>(domain) + domain_len);
 
     for (const auto& b : window) {
-        append(buf, b.block_hash);
+        // pre-V17: block_id (covers the miner signature; historical rule, unchanged)
+        // V17+   : PoW commit (signature-independent)
+        append(buf, v17 ? b.pow_commit : b.block_hash);
     }
     append_u64_le(buf, (uint64_t)height);
+    return buf;
+}
 
-    Bytes32 seed = sha256(buf);
+Bytes32 lottery_seed_from_history(
+    const std::vector<LotteryMinedBlockView>& blocks,
+    int64_t                                   height)
+{
+    return sha256(lottery_seed_input_from_history(blocks, height));
+}
+
+int64_t select_lottery_winner_index_from_history(
+    const std::vector<LotteryEligibilityEntry>& eligible,
+    const std::vector<LotteryMinedBlockView>&   blocks,
+    int64_t                                     height)
+{
+    if (eligible.empty()) return -1;
+
+    Bytes32 seed = lottery_seed_from_history(blocks, height);
     const uint64_t roll = read_u64_le(seed.data());
     const uint64_t n    = (uint64_t)eligible.size();
     return (int64_t)(roll % n);
