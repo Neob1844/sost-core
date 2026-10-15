@@ -13,7 +13,10 @@
 #   * reorg ACROSS ACTIVATION: branch B (fork #59, no heartbeat) replaces branch A
 #     (J rolled back), then branch A' (A mines on to #66) replaces branch B again.
 #   * #66: first paid V17 jackpot = H (whole reserve) + J (all of J): H+J mixed.
-#   * adversarial: a DEV-only mutated jackpot block at #66 is rejected first.
+#   * adversarial: 28 DEV-only mutated blocks (H-part jackpot tx and V17 coinbase / J
+#     output) at #66 and #67 are mined with a valid DEV PoW over the MUTATED tx list and
+#     each must be rejected by its intended rule (the node's REJECTED reason is asserted);
+#     an unmutated control #66 is then accepted.
 #   * fee-bearing transactions; J-only jackpots at #72, #78, #84, #90.
 #   * reorg ACROSS a J-only payment (#72): J debit rolled back and re-applied.
 #   * restart after the mixed payment; final independent audit of the whole chain
@@ -152,11 +155,63 @@ start_node n3 "$WORK/a62.json" $((PB+21)) "$R3"
 [[ "$(bhash "$R3" 62)" == "$BH62" && "$(jstate "$R3")" == "$S62" ]] && ok "restart at #62 (after activation, fresh node on n1's chain.json): J recomputed on load == live n1" || bad "n3 load state"
 mine "$R3" "$A" "$WORK/a.json" 3                       # 63..65
 read -r H65 J65 P65 T65 < <(jstate "$R3" | tr -d '(),')
-# adversarial DEV-only mutated jackpot at #66 must be rejected
-nice -n 19 timeout 240 "$MINER" --profile dev --rpc "127.0.0.1:$R3" --address "$A" --wallet "$WORK/a.json" \
-   --mining-key-label default --blocks 1 --threads 2 --realtime --attack-jackpot wrong-winner >>"$WORK/miner_attack.log" 2>&1
-[[ "$(height "$R3")" == 65 ]] && ok "DEV mutated V17 jackpot (wrong winner on the H part) rejected at #66" || bad "mutated jackpot accepted?"
-mine "$R3" "$A" "$WORK/a.json" 1                       # 66
+# adversarial DEV-only mutations at #66 (H+J mixed jackpot height, with a fee-paying tx in the
+# template): the miner re-derives the submitted block from the MUTATED tx list, recomputes the
+# merkle root and mines a valid DEV PoW, so the node must reject each block by the jackpot /
+# coinbase rule the mutation targets (asserted from the node's own REJECTED line), never by
+# merkle_root / block_id / JSON-field consistency. An unmutated control block is then accepted.
+"$CLI" --wallet "$WORK/b.json" --rpc "127.0.0.1:$R3" --yes send "$A" 1 >>"$WORK/cli.log" 2>&1 \
+  && ok "fee-paying transfer B->A in n3's mempool before the #66 attack matrix" || bad "send B->A on n3 failed"
+attack(){ # rpc nodelog label expected-ERE miner-args...
+  local port="$1" nlog="$2" label="$3" want="$4"; shift 4
+  local h0 n0 m0 rc seg mseg; h0="$(height "$port")"; n0=$(wc -c <"$nlog"); touch "$WORK/miner_attack.log"; m0=$(wc -c <"$WORK/miner_attack.log")
+  memcheck
+  nice -n 19 timeout 300 "$MINER" --profile dev --rpc "127.0.0.1:$port" --address "$A" --wallet "$WORK/a.json" \
+     --mining-key-label default --blocks 1 --threads 2 --realtime --dev-exit-after-submit "$@" >>"$WORK/miner_attack.log" 2>&1; rc=$?
+  seg="$(tail -c +$((n0+1)) "$nlog" | grep -m1 -E '^\[BLOCK\] REJECTED' || true)"
+  mseg="$(tail -c +$((m0+1)) "$WORK/miner_attack.log" | grep -E '^\[ATTACK\]' | tr '\n' ' ')"
+  [[ "$(height "$port")" == "$h0" ]] || die "$label: a block was CONNECTED under an attack flag (rc=$rc) - matrix aborted"
+  if [[ "$rc" == 3 && -n "$seg" && "$seg" =~ $want \
+        && ! "$seg" =~ (merkle_root|block_id|JSON rewards) && ! "$mseg" =~ (NOT\ APPLICABLE|unknown\ mutation) ]]; then
+    ok "#$((h0+1)) $label rejected by the intended rule: ${seg#\[BLOCK\] REJECTED: }"
+  else
+    bad "#$((h0+1)) $label: rc=$rc tip=$(height "$port") node='${seg}' miner='${mseg}'"
+  fi; }
+HJ='Historical Jackpot: TX_TYPE_JACKPOT does not match the canonical V17 H-part reconstruction'
+VC='jackpot value conservation'
+DS='intra-block connect failed: SpendUTXO: not found'          # double spend / outpoint not in the UTXO set
+MI='jackpot input\[[0-9]+\] references missing UTXO'
+attack "$R3" "$WORK/n3.log" "H-part: wrong winner"              "$HJ" --attack-jackpot wrong-winner
+attack "$R3" "$WORK/n3.log" "H-part: payout +1"                 "$VC" --attack-jackpot payout-plus
+attack "$R3" "$WORK/n3.log" "H-part: payout -1 (miner claims the 1 stock)"   "$HJ" --attack-jackpot payout-minus
+attack "$R3" "$WORK/n3.log" "H-part: payout 0 (miner claims the whole H)"    "$HJ" --attack-jackpot payout-zero
+attack "$R3" "$WORK/n3.log" "H-part: inputs reversed"           "$HJ" --attack-jackpot reverse-inputs
+attack "$R3" "$WORK/n3.log" "H-part: one reserve input removed" "$VC" --attack-jackpot remove-input
+attack "$R3" "$WORK/n3.log" "H-part: reserve input duplicated"  "$DS" --attack-jackpot dup-input
+attack "$R3" "$WORK/n3.log" "H-part: foreign input added"       "$MI" --attack-jackpot foreign-input
+attack "$R3" "$WORK/n3.log" "H-part: extra output"              "$VC" --attack-jackpot extra-output
+attack "$R3" "$WORK/n3.log" "H-part: moved to tx[2]"            'Historical Jackpot: TX_TYPE_JACKPOT must be at index 1' --attack-jackpot move-jackpot
+attack "$R3" "$WORK/n3.log" "H-part: duplicated"                'duplicate txid within block' --attack-jackpot dup-jackpot
+attack "$R3" "$WORK/n3.log" "H-part: removed"                   'Historical Jackpot: expected exactly one TX_TYPE_JACKPOT, got 0' --attack-jackpot remove-jackpot
+attack "$R3" "$WORK/n3.log" "H-part: input vout bumped"         "$DS" --attack-jackpot input-index-bump
+attack "$R3" "$WORK/n3.log" "H-part: input txid flipped"        "$MI" --attack-jackpot input-txid-flip
+attack "$R3" "$WORK/n3.log" "H-part: payout INT64_MAX"          "$VC" --attack-jackpot payout-intmax
+attack "$R3" "$WORK/n3.log" "H-part: every reserve input twice" "$DS" --attack-jackpot dup-all-inputs
+CB12='coinbase invalid: CB12: V17 miner amount [0-9]+ != miner_subsidy \+ fees'
+attack "$R3" "$WORK/n3.log" "coinbase J output +1"              'coinbase invalid: CB15: OUT_COINBASE_JACKPOT amount [0-9]+ != V17 J part' --attack-coinbase j-plus
+attack "$R3" "$WORK/n3.log" "coinbase J output -1"              'coinbase invalid: CB15: OUT_COINBASE_JACKPOT amount [0-9]+ != V17 J part' --attack-coinbase j-minus
+attack "$R3" "$WORK/n3.log" "coinbase J output to another key"  'coinbase invalid: CB15: OUT_COINBASE_JACKPOT does not pay the jackpot winner' --attack-coinbase j-winner
+attack "$R3" "$WORK/n3.log" "coinbase J output dropped"         'coinbase invalid: CB11: V17 coinbase must have exactly 3 outputs, got 2' --attack-coinbase j-drop
+attack "$R3" "$WORK/n3.log" "coinbase: fees moved into DTD"     "$CB12" --attack-coinbase fees-to-dtd
+attack "$R3" "$WORK/n3.log" "coinbase: fees moved into J"       "$CB12" --attack-coinbase fees-to-j
+attack "$R3" "$WORK/n3.log" "coinbase: miner +1"                "$CB12" --attack-coinbase miner-plus
+attack "$R3" "$WORK/n3.log" "coinbase: DTD +1"                  'coinbase invalid: CB12: V17 DTD amount [0-9]+ != dtd_subsidy \+ pending_before' --attack-coinbase dtd-plus
+attack "$R3" "$WORK/n3.log" "coinbase: 1 stock DTD -> miner"    "$CB12" --attack-coinbase dtd-to-miner
+attack "$R3" "$WORK/n3.log" "coinbase: miner keeps the 5% J share" "$CB12" --attack-coinbase j-to-miner
+attack "$R3" "$WORK/n3.log" "coinbase miner output to another key" 'SbPoW: coinbase miner-output pkh does not match' --attack-jackpot coinbase-mutate
+[[ "$(height "$R3")" == 65 ]] && ok "after the attack matrix n3 is still at #65 (no mutated block connected)" || bad "n3 tip moved during attacks"
+mine "$R3" "$A" "$WORK/a.json" 1                       # 66 (unmutated control)
+ok "unmutated control block #66 accepted by the same node right after the attack matrix"
 HP=$(v17r "$R3" 66 jackpot_h_paid); JP=$(v17r "$R3" 66 jackpot_j_paid)
 log "#66 jackpot: H part=$HP J part=$JP (H_before=$H65 J_before=$J65)"
 [[ "$HP" == "$H65" && "$JP" == "$J65" && "$HP" -gt 0 && "$JP" -gt 0 ]] && ok "#66 H+J MIXED payment: whole H ($HP) then all of J ($JP) in the same block (prize 500 > H+J)" || bad "#66 funding"
@@ -174,6 +229,7 @@ stop_node n1; start_node n1 "$WORK/c1.json" $((PB+1)) "$R1"
 # ---- fee-bearing blocks, J-only jackpots, reorg across a J-only payment ------
 heartbeat "$R1" 4
 pay "$R1" 1 && ok "fee-paying transfer A->B accepted into the mempool" || bad "send failed"
+attack "$R1" "$WORK/n1.log" "coinbase J output at a NON-jackpot height" 'coinbase invalid: CB11: V17 coinbase must have exactly 2 outputs, got 3' --attack-coinbase j-at-nonjackpot
 mine "$R1" "$A" "$WORK/a.json" 1                       # 67 (fee-bearing)
 pay "$R1" 2 && ok "second fee-paying transfer accepted" || bad "send 2 failed"
 mine "$R1" "$A" "$WORK/a.json" 3                       # 68..70

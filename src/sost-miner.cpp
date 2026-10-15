@@ -34,6 +34,9 @@
 #include "sost/sbpow.h"      // V11 Phase 2 — Schnorr signing helpers
 #include "sost/lottery.h"    // V11 Phase 2 (C11) — phase2_coinbase_split helper
 #include "sost/v17_economics.h" // V17 — 80/15/5 subsidy split + J-funded jackpot coinbase output
+#ifdef SOST_DEVNET_FORKS
+#include "sost/multisig.h"   // DEV test-only: TxSerializedSizeExact for --dev-pad-to-bytes
+#endif
 
 #include <fstream>
 #include <cstdio>
@@ -121,6 +124,10 @@ static std::string g_attack_jackpot = "";  // DEVNET_FAST test-only: adversarial
 #ifdef SOST_DEVNET_FORKS
 static std::string g_dump_block_file = "";  // DEV test-only: write each submitted block's exact JSON here (byte-exact replay, e.g. re-submit a rejected attack after restart)
 static std::string g_inject_tx1_file = "";  // DEV test-only: insert a captured raw tx at block_txs[1] before merkle+PoW (M02 non-event-height / M03 stale-replay attacks)
+static std::string g_attack_coinbase = "";  // DEV test-only: V17 coinbase economic mutation (80/15/5, fees, J output)
+static long long   g_dev_bits_q_delta = 0;  // DEV test-only: mine with bits_q + delta (block fails the difficulty rule)
+static long long   g_dev_pad_to_bytes = 0;  // DEV test-only: append unsigned filler txs until total serialized tx bytes == N
+static bool        g_dev_exit_after_submit = false;  // DEV test-only: exit after the first submitblock (0 accepted, 3 rejected)
 #endif
 #endif
 // V13 SbPoW hardening: chain-specific salt for the v13 signing preimage.
@@ -947,6 +954,14 @@ static int rpc_submit_block_full(
 
     if (nr <= 0) return -1; // connection lost during read
     const std::string resp(rbuf);
+#ifdef SOST_DEVNET_FORKS
+    if (g_dev_exit_after_submit) {
+        const bool acc = resp.find("\"result\":true") != std::string::npos;
+        printf("[DEV] exit after the first submission: %s\n", acc ? "ACCEPTED" : "REJECTED");
+        fflush(stdout);
+        std::exit(acc ? 0 : 3);
+    }
+#endif
     if (resp.find("\"result\":true") != std::string::npos) return 1;
     // A 401 is not a consensus rejection: the block was never even looked at.
     // Say so once, loudly — otherwise a wrong RPC password looks like a bad block.
@@ -1307,6 +1322,13 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         }
     }
     params = casert_apply_profile(params, cdec, h);
+#ifdef SOST_DEVNET_FORKS
+    if (g_dev_bits_q_delta != 0) {
+        const uint32_t honest = bits_q;
+        bits_q = (uint32_t)((long long)bits_q + g_dev_bits_q_delta);
+        printf("[ATTACK] DEV-only difficulty mutation: bits_q %u -> %u\n", honest, bits_q);
+    }
+#endif
     g_mining_profile = cdec.profile_index;
     g_node_profile = cdec.profile_index;
 
@@ -1545,6 +1567,17 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     for (const auto& mtx : mempool_txs) block_txs.push_back(mtx);
 
 #ifdef SOST_DEVNET_FORKS
+    // Serialized tx list before any DEV mutation: a mutation that changes nothing (e.g. the
+    // jackpot mutations at a height without a TX_TYPE_JACKPOT, or "winner-self" when the miner
+    // IS the canonical winner) must never turn into an honest block mined under an attack flag.
+    const bool dev_tx_attack = !g_attack_jackpot.empty() || !g_inject_tx1_file.empty() ||
+                               !g_attack_coinbase.empty() || g_dev_pad_to_bytes > 0;
+    auto dev_ser = [](const std::vector<Transaction>& v) {
+        std::vector<std::string> out;
+        for (const auto& t : v) { std::vector<Byte> r; std::string e; t.Serialize(r, &e); out.push_back(to_hex_str(r.data(), r.size())); }
+        return out;
+    };
+    const std::vector<std::string> dev_pre_attack = dev_tx_attack ? dev_ser(block_txs) : std::vector<std::string>{};
     // DEVNET_FAST test-only adversarial mutation. Compiled ONLY into the devnet miner
     // (never mainnet/testnet). It mutates the canonical Historical Jackpot (block_txs[1])
     // or block structure, then lets the NORMAL path below recompute the merkle root and
@@ -1555,6 +1588,8 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         block_txs[1].tx_type == TX_TYPE_JACKPOT) {
         const std::string& m = g_attack_jackpot;
         Transaction& j = block_txs[1];
+        int64_t jk_out_before = 0;
+        for (const auto& o : j.outputs) jk_out_before += o.amount;
         printf("[ATTACK] DEV-only jackpot mutation: %s\n", m.c_str());
         if      (m=="wrong-winner"  && !j.outputs.empty()) j.outputs[0].pubkey_hash[0] ^= 0xFF;              // A01
         else if (m=="winner-self"   && !j.outputs.empty() && !block_txs[0].outputs.empty())
@@ -1580,6 +1615,19 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         else if (m=="payout-intmax"    && !j.outputs.empty()) j.outputs[0].amount = 0x7fffffffffffffffLL;     // serialization/overflow bound: payout = INT64_MAX
         else if (m=="dup-all-inputs")  { size_t n=j.inputs.size(); for(size_t k=0;k<n;k++) j.inputs.push_back(j.inputs[k]); } // bulk double-spend of every reserve UTXO
         else printf("[ATTACK] unknown mutation '%s' (no-op)\n", m.c_str());
+        // A mutation that only LOWERS the jackpot outputs would leave the difference as an
+        // implicit fee, which the V17 coinbase rule (fees 100% to the miner) catches first. A
+        // consistent attacker claims it in the coinbase, so only the jackpot rule can stop it.
+        if ((m == "payout-minus" || m == "payout-zero" || m == "remove-winner-output") &&
+            block_txs.size() >= 2 && !block_txs[0].outputs.empty()) {
+            int64_t leaked = jk_out_before;
+            for (const auto& o : block_txs[1].outputs) leaked -= o.amount;
+            if (leaked > 0) {
+                block_txs[0].outputs[0].amount += leaked;
+                printf("[ATTACK] coinbase miner output +%lld (the value the mutation took out of the jackpot)\n",
+                       (long long)leaked);
+            }
+        }
     }
 
     // DEV/test-only raw-tx injection at block_txs[1] (before merkle+PoW): lets a harness replay a
@@ -1607,6 +1655,104 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 printf("[ATTACK] injected raw tx at block_txs[1] (%zu bytes, tx_type=%d)\n", _raw.size(), (int)_it.tx_type);
             }
         }
+    }
+
+    // DEV/test-only V17 coinbase economic mutation (80/15/5 of the subsidy, fees 100% to the
+    // miner, J-funded jackpot output). Applied before merkle+PoW like the jackpot mutations.
+    if (!g_attack_coinbase.empty() && !block_txs.empty()) {
+        Transaction& cb = block_txs[0];
+        const std::string& a = g_attack_coinbase;
+        auto find = [&](uint8_t t) -> TxOutput* { for (auto& o : cb.outputs) if (o.type == t) return &o; return nullptr; };
+        TxOutput* mo = find(OUT_COINBASE_MINER);
+        TxOutput* lo = find(OUT_COINBASE_LOTTERY);
+        TxOutput* jo = find(OUT_COINBASE_JACKPOT);
+        bool done = false;
+        if      (a == "j-plus"   && jo) { jo->amount += 1; done = true; }
+        else if (a == "j-minus"  && jo) { jo->amount -= 1; done = true; }
+        else if (a == "j-winner" && jo) { jo->pubkey_hash[0] ^= 0xFF; done = true; }
+        else if (a == "j-drop"   && jo) {
+            for (size_t k = 0; k < cb.outputs.size(); ++k)
+                if (cb.outputs[k].type == OUT_COINBASE_JACKPOT) { cb.outputs.erase(cb.outputs.begin() + (long)k); break; }
+            done = true; }
+        else if (a == "j-at-nonjackpot" && !jo && mo) {
+            TxOutput x = *mo; x.type = OUT_COINBASE_JACKPOT; x.amount = 1; mo->amount -= 1; cb.outputs.push_back(x); done = true; }
+        else if (a == "fees-to-dtd" && mo && lo && total_fees > 0) { mo->amount -= total_fees; lo->amount += total_fees; done = true; }
+        else if (a == "fees-to-j"   && mo && jo && total_fees > 0) { mo->amount -= total_fees; jo->amount += total_fees; done = true; }
+        else if (a == "miner-plus"  && mo) { mo->amount += 1; done = true; }
+        else if (a == "dtd-plus"    && lo) { lo->amount += 1; done = true; }
+        else if (a == "dtd-to-miner" && lo && mo) { lo->amount -= 1; mo->amount += 1; done = true; }
+        else if (a == "j-to-miner"  && mo) {   // miner takes 80% + the 5% J share (J never allocated)
+            mo->amount += (int64_t)(((__int128)subsidy * 5) / 100); done = true; }
+        printf("[ATTACK] DEV-only coinbase mutation: %s %s (fees=%lld)\n", a.c_str(),
+               done ? "APPLIED" : "NOT APPLICABLE", (long long)total_fees);
+    }
+
+    // DEV/test-only oversize block: append unsigned v1 filler txs (dummy input, payload-carrying
+    // outputs) until the total serialized tx bytes of the block reaches g_dev_pad_to_bytes
+    // (exactly, except when fewer than 171 bytes are left for a new filler). The fillers are
+    // not valid spends; they exist to exercise the V17 size gate, which runs before tx checks.
+    if (g_dev_pad_to_bytes > 0) {
+        const long long N = g_dev_pad_to_bytes;
+        long long total = 0;
+        for (const auto& t : block_txs) total += (long long)sost::TxSerializedSizeExact(t);
+        size_t fillers = 0;
+        while (total < N) {
+            Transaction t; t.version = 1; t.tx_type = TX_TYPE_STANDARD;
+            TxInput in; in.prev_txid.fill(0xEE); in.prev_txid[0] = (uint8_t)(fillers & 0xFF); in.prev_index = (uint32_t)fillers;
+            t.inputs.push_back(in);
+            while (t.outputs.size() < 250) {
+                TxOutput o; o.amount = 1; o.type = OUT_TRANSFER; o.pubkey_hash.fill(0x11);
+                t.outputs.push_back(o);
+                long long now = total + (long long)sost::TxSerializedSizeExact(t);
+                if (now >= N) {
+                    // empty payload already reaches N: take the overshoot out of the previous output
+                    const long long over = now - N;
+                    if (over > 0 && t.outputs.size() >= 2 &&
+                        (long long)t.outputs[t.outputs.size() - 2].payload.size() >= over)
+                        t.outputs[t.outputs.size() - 2].payload.resize(t.outputs[t.outputs.size() - 2].payload.size() - (size_t)over);
+                    break;
+                }
+                t.outputs.back().payload.assign((size_t)std::min<long long>(512, N - now), 0x5A);
+                if (total + (long long)sost::TxSerializedSizeExact(t) >= N) break;
+            }
+            total += (long long)sost::TxSerializedSizeExact(t);
+            block_txs.push_back(t);
+            ++fillers;
+        }
+        printf("[ATTACK] DEV-only padding: %zu filler tx(s), total serialized tx bytes %lld (target %lld)\n",
+               fillers, total, N);
+    }
+
+    // Whatever the mutations above did to block_txs is what the merkle root below commits to,
+    // so it must also be what is SUBMITTED (coinbase + tx list) and what the JSON reward fields
+    // report; otherwise the node stops the block at "merkle_root mismatch" / "JSON rewards
+    // mismatch" and the rule a mutation targets is never reached.
+    if (dev_tx_attack && dev_ser(block_txs) == dev_pre_attack) {
+        printf("[ATTACK] the requested mutation changed nothing at h=%lld (not applicable here); "
+               "refusing to mine an honest block under an attack flag\n", (long long)h);
+        fflush(stdout);
+        std::exit(4);
+    }
+    if (dev_tx_attack) {
+        coinbase_tx = block_txs[0];
+        mempool_tx_hexes.clear();
+        for (size_t i = 1; i < block_txs.size(); ++i) {
+            std::vector<Byte> raw; std::string serr;
+            if (!block_txs[i].Serialize(raw, &serr)) {
+                printf("[ATTACK] mutated tx %zu cannot be serialized (%s): the mutation cannot be "
+                       "transmitted at all; not mining\n", i, serr.c_str());
+                fflush(stdout);
+                std::exit(4);
+            }
+            mempool_tx_hexes.push_back(to_hex_str(raw.data(), raw.size()));
+        }
+        const auto& co = coinbase_tx.outputs;
+        if (json_gold_reward == 0 && json_popc_reward == 0) {
+            if (!co.empty()) json_miner_reward = co[0].amount;
+        } else if (co.size() >= 3) {
+            json_miner_reward = co[0].amount; json_gold_reward = co[1].amount; json_popc_reward = co[2].amount;
+        }
+        printf("[ATTACK] submitted block re-derived from the mutated tx list (%zu txs)\n", block_txs.size());
     }
 #endif
 
@@ -2530,6 +2676,10 @@ int main(int argc, char** argv) {
 #ifdef SOST_DEVNET_FORKS
         else if (!strcmp(argv[i], "--dump-block") && i + 1 < argc) g_dump_block_file = argv[++i];  // DEV test-only
         else if (!strcmp(argv[i], "--inject-tx-at1") && i + 1 < argc) g_inject_tx1_file = argv[++i];  // DEV test-only
+        else if (!strcmp(argv[i], "--attack-coinbase") && i + 1 < argc) g_attack_coinbase = argv[++i];  // DEV test-only
+        else if (!strcmp(argv[i], "--dev-bits-q-delta") && i + 1 < argc) g_dev_bits_q_delta = atoll(argv[++i]);  // DEV test-only
+        else if (!strcmp(argv[i], "--dev-pad-to-bytes") && i + 1 < argc) g_dev_pad_to_bytes = atoll(argv[++i]);  // DEV test-only
+        else if (!strcmp(argv[i], "--dev-exit-after-submit")) g_dev_exit_after_submit = true;  // DEV test-only
 #endif
 #endif
         else if (!strcmp(argv[i], "--profile") && i + 1 < argc) {
