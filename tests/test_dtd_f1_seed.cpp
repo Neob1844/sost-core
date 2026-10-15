@@ -12,7 +12,7 @@
 // Sections:
 //   1. domain constants, preimage layout, height dispatch (both rules, boundary)
 //   2. pre-V17 byte identity: the legacy preimage is reproduced exactly and the
-//      new pow_commit field is never read below V17_HEIGHT
+//      new pow_commit field is never read below DTD_F1_HEIGHT
 //   3. re-signing with the REAL consensus code: one PoW solution (one commit),
 //      N fresh BIP-340 signatures, every one accepted by validate_sbpow_for_block,
 //      every one a distinct block_id. Pre-V17 the DTD/Jackpot seeds move with the
@@ -183,16 +183,17 @@ static void test_constants_and_dispatch() {
     std::set<size_t> lens;
     for (auto& d : doms) lens.insert(d.size() + 16 * 32 + 8);
     TEST("full-window preimage lengths pairwise distinct across the 4 rules", lens.size() == 4);
-    TEST("activation is V17_HEIGHT exactly (no new height)",
-         !lottery_seed_uses_pow_commit(V17_HEIGHT - 1) == (V17_HEIGHT != INT64_MAX) &&
-         lottery_seed_uses_pow_commit(V17_HEIGHT) == v17_active_at(V17_HEIGHT));
+    TEST("DTD_F1_HEIGHT == V17_HEIGHT in the V17 package (no new height)", DTD_F1_HEIGHT == V17_HEIGHT);
+    TEST("activation is DTD_F1_HEIGHT exactly",
+         !lottery_seed_uses_pow_commit(DTD_F1_HEIGHT - 1) == (DTD_F1_HEIGHT != INT64_MAX) &&
+         lottery_seed_uses_pow_commit(DTD_F1_HEIGHT) == dtd_f1_active_at(DTD_F1_HEIGHT));
 #if !defined(SOST_TESTNET_FORKS) && !defined(SOST_DEVNET_FORKS)
     TEST("mainnet V17_HEIGHT == 40000", V17_HEIGHT == 40000);
 #endif
-    if (V17_HEIGHT == INT64_MAX) return;
+    if (DTD_F1_HEIGHT == INT64_MAX) return;
 
     // V17 preimage layout = tag || 16 commits || u64le(h), built by hand
-    const int64_t H = V17_HEIGHT + 100;
+    const int64_t H = DTD_F1_HEIGHT + 100;
     std::vector<LotteryMinedBlockView> hist;
     for (int64_t x = H - 40; x < H; ++x) { LotteryMinedBlockView v; v.height = x; v.miner_pkh = P(1);
         v.block_hash = tagged("blockid", x); v.pow_commit = tagged("commit", x); hist.push_back(v); }
@@ -228,8 +229,8 @@ static void test_constants_and_dispatch() {
 
 static void test_pre_v17_identity() {
     std::printf("\n=== 2. pre-V17 byte identity ===\n");
-    // Heights below V17_HEIGHT on every network. On mainnet they are real history heights.
-    const int64_t top = (V17_HEIGHT == INT64_MAX) ? 30712 : V17_HEIGHT - 1;
+    // Heights below DTD_F1_HEIGHT on every network. On mainnet they are real history heights.
+    const int64_t top = (DTD_F1_HEIGHT == INT64_MAX) ? 30712 : DTD_F1_HEIGHT - 1;
     std::vector<LotteryMinedBlockView> hist;
     for (int64_t x = top - 40; x <= top; ++x) { LotteryMinedBlockView v; v.height = x; v.miner_pkh = P(2);
         v.block_hash = tagged("blockid", x); v.pow_commit = tagged("commit", x); hist.push_back(v); }
@@ -251,7 +252,7 @@ static void test_pre_v17_identity() {
     // implementation (tests/vectors/dtd_f1_v17.json "pre_v17_control").
     std::vector<LotteryMinedBlockView> one;
     for (int64_t x = 30696; x <= 30711; ++x) { LotteryMinedBlockView v; v.height = x; v.block_hash = tagged("mainnet-shape", x); one.push_back(v); }
-    if (!v17_active_at(30712)) {
+    if (!dtd_f1_active_at(30712)) {
         TEST("pre-V17 frozen seed (h=30712, ids=H('mainnet-shape'||x))",
              hex(lottery_seed_from_history(one, 30712)) == "6afa7625033cbfc0e55de4f01fffb1ff4814ff58171b269e0be9643e520e2434");
     }
@@ -262,12 +263,12 @@ struct ResignStats { uint64_t n{0}, sbpow_ok{0}; size_t ids{0}, pre_dtd_seeds{0}
                      size_t post_dtd_seeds{0}, post_dtd_winners{0}, post_jp_seeds{0}, post_jp_winners{0}; size_t E_pre{0}, E_post{0}, J_pre{0}, J_post{0}; };
 static ResignStats run_resign(uint64_t N, bool verbose) {
     ResignStats st; st.n = N;
-    if (V17_HEIGHT == INT64_MAX) return st;
-    // Block T = V17_HEIGHT - 2 is the re-signed block. Pre-V17 draw at T+1 = V17_HEIGHT-1 (legacy rule,
-    // window contains T's block_id). V17 draw at T+2 = V17_HEIGHT (new rule, window contains T's commit)
-    // and the jackpot draw at the first jackpot height >= V17_HEIGHT whose window contains T is not
+    if (DTD_F1_HEIGHT == INT64_MAX) return st;
+    // Block T = DTD_F1_HEIGHT - 2 is the re-signed block. Pre-V17 draw at T+1 = DTD_F1_HEIGHT-1 (legacy rule,
+    // window contains T's block_id). V17 draw at T+2 = DTD_F1_HEIGHT (new rule, window contains T's commit)
+    // and the jackpot draw at the first jackpot height >= DTD_F1_HEIGHT whose window contains T is not
     // guaranteed, so the jackpot is also evaluated at T+1 / T+2 directly (the seed is what matters).
-    Fixture f = make_fixture(V17_HEIGHT - 2, 400);
+    Fixture f = make_fixture(DTD_F1_HEIGHT - 2, 400);
     const int64_t Hpre = f.T + 1, Hpost = f.T + 2;
     // block T+1 (needed for the V17 draw at T+2)
     LotteryMinedBlockView n1; n1.height = f.T + 1; n1.miner_pkh = P(3); n1.block_hash = tagged("blockid", f.T + 1);
@@ -316,7 +317,7 @@ static ResignStats run_resign(uint64_t N, bool verbose) {
 
 static void test_resign(uint64_t N) {
     std::printf("\n=== 3. re-signing one PoW solution (N=%llu, real validate_sbpow_for_block) ===\n", (unsigned long long)N);
-    if (V17_HEIGHT == INT64_MAX) { std::printf("  (V17 not scheduled on this network: skipped)\n"); return; }
+    if (DTD_F1_HEIGHT == INT64_MAX) { std::printf("  (V17 not scheduled on this network: skipped)\n"); return; }
     ResignStats s = run_resign(N, true);
     TEST("every re-signature accepted by validate_sbpow_for_block", s.sbpow_ok == N);
     TEST("every re-signature gives a distinct block_id", s.ids == N);
@@ -400,10 +401,10 @@ static void emit(const VecOut& o, const Fixture& f) {
 
 static void test_frozen_vectors() {
     std::printf("\n=== 4. frozen normative vectors (mainnet params) ===\n");
-    if (V17_HEIGHT != 40000) { std::printf("  (not a mainnet build: frozen values skipped)\n"); return; }
+    if (DTD_F1_HEIGHT != 40000) { std::printf("  (not a mainnet build: frozen values skipped)\n"); return; }
     Fixture f = make_fixture(40265, 2400);
     VecOut o = vector_case(f);
-    TEST("vector: draw height 40266 is a V17 jackpot height", is_hist_jackpot_v2_height(40266) && v17_active_at(40266));
+    TEST("vector: draw height 40266 is a V17 jackpot height", is_hist_jackpot_v2_height(40266) && dtd_f1_active_at(40266));
     TEST("vector: eligible set size", o.elig.size() == EXP_E_40266);
     TEST("vector: DTD seed", o.dtd_seed == EXP_DTD_SEED_40266);
     TEST("vector: DTD winner index", o.dtd_wi == EXP_DTD_WI_40266);
@@ -420,7 +421,7 @@ int main(int argc, char** argv) {
     }
     uint64_t N = 2000;
     if (argc >= 3 && std::string(argv[1]) == "--resign") N = std::strtoull(argv[2], nullptr, 10);
-    std::printf("test_dtd_f1_seed  V17_HEIGHT=%lld\n", (long long)V17_HEIGHT);
+    std::printf("test_dtd_f1_seed  DTD_F1_HEIGHT=%lld\n", (long long)DTD_F1_HEIGHT);
     test_constants_and_dispatch();
     test_pre_v17_identity();
     test_resign(N);

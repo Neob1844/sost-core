@@ -2441,8 +2441,8 @@ static std::string handle_getjackpotv2audit(const std::string& id, const std::ve
    <<",\"base_stocks\":"<<sost::HIST_JACKPOT_BASE_STOCKS
    <<",\"cap_stocks\":"<<sost::HIST_JACKPOT_CAP_STOCKS
    <<",\"total_weight\":"<<total<<",\"eligible_count\":"<<elig
-   <<",\"seed_rule\":\""<<(sost::v17_active_at(height)?"V17_POW_COMMIT":"V11_BLOCK_ID")<<"\""
-   <<",\"seed_domain\":\""<<(sost::v17_active_at(height)?sost::jackpot_v2::JACKPOT_V2_DOMAIN_V17:sost::jackpot_v2::JACKPOT_V2_DOMAIN)<<"\""
+   <<",\"seed_rule\":\""<<(sost::dtd_f1_active_at(height)?"V17_POW_COMMIT":"V11_BLOCK_ID")<<"\""
+   <<",\"seed_domain\":\""<<(sost::dtd_f1_active_at(height)?sost::jackpot_v2::JACKPOT_V2_DOMAIN_V17:sost::jackpot_v2::JACKPOT_V2_DOMAIN)<<"\""
    <<",\"seed_hex\":\""<<to_hex(jseed.data(),32)<<"\""
    <<",\"winner_address\":\""<<(we?address_encode(win):std::string(""))<<"\""
    <<",\"candidates\":[";
@@ -10948,15 +10948,15 @@ static bool load_genesis(const std::string& path) {
 // advance, every hook of the failed block is undone by the caller), the damaged file is
 // kept aside for forensics, and the missing blocks are re-downloaded from peers.
 static int64_t g_chain_load_failed_height = -1;
-// V17 DTD-F1 — a persisted block whose PoW commit feeds a V17 draw (height >=
-// V17_HEIGHT - LOTTERY_RNG_HISTORY_BLOCKS) must carry the commit its block_id names:
+// V17 DTD-F1 — a persisted block whose PoW commit feeds a commit-seeded draw (height >=
+// DTD_F1_HEIGHT - LOTTERY_RNG_HISTORY_BLOCKS) must carry the commit its block_id names:
 // block_id = sha256(full_header || "ID" || commit) is recomputed from the stored header
 // fields. process_block enforces this on acceptance; this re-check on load means a
 // truncated or edited chain.json (missing or altered "commit") fails closed instead of
 // silently feeding a wrong value to the DTD / Jackpot seed. Blocks below that height are
 // not read by any commit-seeded draw and load exactly as before.
 static bool stored_commit_binds_block_id(const std::string& bj, int64_t height, std::string& why) {
-    if (!sost::v17_active_at(height + sost::lottery::LOTTERY_RNG_HISTORY_BLOCKS)) return true;
+    if (!sost::dtd_f1_active_at(height + sost::lottery::LOTTERY_RNG_HISTORY_BLOCKS)) return true;
     auto hex32 = [](const std::string& h, Bytes32& out) -> bool {
         if (h.size() != 64) return false;
         for (char c : h) if (!std::isxdigit((unsigned char)c)) return false;

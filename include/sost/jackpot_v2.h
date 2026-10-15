@@ -217,7 +217,7 @@ Bytes32 jv2_seed_v17(const std::vector<Bytes32>& pow_commits, int64_t height);
 // [h-16, h-1] window in ascending height order.
 inline Bytes32 jv2_seed_at(const std::vector<Bytes32>& block_ids,
                            const std::vector<Bytes32>& pow_commits, int64_t height) {
-    return v17_active_at(height) ? jv2_seed_v17(pow_commits, height)
+    return dtd_f1_active_at(height) ? jv2_seed_v17(pow_commits, height)
                                  : jv2_seed(block_ids, height);
 }
 

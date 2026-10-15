@@ -1480,6 +1480,14 @@ inline constexpr int64_t V17_HEIGHT = 40000;       // MAINNET — OWNER-FROZEN (
 inline constexpr bool v17_active_at(int64_t height) {
     return V17_HEIGHT != INT64_MAX && height >= V17_HEIGHT;
 }
+// DTD-F1 — DTD + Jackpot V2 seeds from the PoW commit instead of block_id
+// (docs/v40000/DTD_F1_SEED_POW_COMMIT.md). Own constant so the rule can also ship as a
+// standalone patch with its own activation height; in the V17 package it activates
+// together with V17 (DTD_F1_HEIGHT == V17_HEIGHT on every network).
+inline constexpr int64_t DTD_F1_HEIGHT = V17_HEIGHT;
+inline constexpr bool dtd_f1_active_at(int64_t height) {
+    return DTD_F1_HEIGHT != INT64_MAX && height >= DTD_F1_HEIGHT;
+}
 #if !defined(SOST_TESTNET_FORKS)
 static_assert(V17_HEIGHT > HIST_JACKPOT_V2_HEIGHT,
               "V17 must activate after Jackpot V2: every V17 jackpot is a V2 jackpot "

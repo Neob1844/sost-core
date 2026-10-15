@@ -100,7 +100,7 @@ inline constexpr int64_t LOTTERY_RNG_HISTORY_BLOCKS = 16;
 // Below V17_HEIGHT the seed hashes the block_id of [h-16, h-1]. block_id covers
 // the 64-byte BIP-340 miner_signature, which the PoW commit does NOT cover, so the
 // miner of h-1 could re-sign one PoW solution without limit and pick the winner at h.
-// From V17_HEIGHT the seed hashes the ConvergenceX `commit` of the same 16 blocks
+// From DTD_F1_HEIGHT (== V17_HEIGHT) the seed hashes the ConvergenceX `commit` of the same 16 blocks
 // (the value the PoW inequality is checked on; it binds prev, merkle (every tx and
 // the coinbase/miner pkh), timestamp, bits, nonce, extra_nonce, checkpoints_root,
 // segments_root, stability metric and profile_index). A new signature leaves the
@@ -117,7 +117,7 @@ inline constexpr int64_t LOTTERY_RNG_HISTORY_BLOCKS = 16;
 inline constexpr char    LOTTERY_RNG_DOMAIN_V17[]   = "SOST_DTD_V17";
 inline constexpr size_t  LOTTERY_RNG_DOMAIN_V17_LEN = sizeof(LOTTERY_RNG_DOMAIN_V17) - 1;
 inline constexpr bool lottery_seed_uses_pow_commit(int64_t height) {
-    return v17_active_at(height);
+    return dtd_f1_active_at(height);      // DTD_F1_HEIGHT (== V17_HEIGHT in the V17 package)
 }
 
 // ---------------------------------------------------------------------------
