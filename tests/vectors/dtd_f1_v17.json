@@ -1,0 +1,192 @@
+{
+  "name": "DTD-F1 V17 normative vector",
+  "rule": "V17_POW_COMMIT",
+  "draw_height": 40266,
+  "dtd_domain": "SOST_DTD_V17",
+  "jackpot_domain": "SOST_HIST_JACKPOT_V17",
+  "history": "heights 37866..40265; miner(x)=P(1+x%13) where P(i)=[0x10+7i, i, 0..0, 0xA5] (20 bytes); block_id(x)=sha256('blockid'||u64le(x)); commit(x)=sha256('commit'||u64le(x)); block 40265: real v2 SbPoW block, key 0x0102..20",
+  "input_commitments": [
+    {
+      "height": 40250,
+      "commit": "b0ebee8881ec173899b3bcea7f2aab83a4ce292ee764dda9449d495c6804d02b"
+    },
+    {
+      "height": 40251,
+      "commit": "806dbd1da7fc9e5ecd1347d77a5278b732ecb6afaf794cce991f3f6424a77430"
+    },
+    {
+      "height": 40252,
+      "commit": "cdf2df24725eaf5b344f46bf9edb715ba77d59adcadbc418a420788075d08ab1"
+    },
+    {
+      "height": 40253,
+      "commit": "7a5728ba73f0bdd1f6bf26969c4cce90ee409a7979fd7a34417db3d936fcefaf"
+    },
+    {
+      "height": 40254,
+      "commit": "4fcca58088278d47769a7b6870986279f6ebf6c710327afd7954bd2f43f4fb29"
+    },
+    {
+      "height": 40255,
+      "commit": "0e243fd11023197d4ea003fdc158b0f57867eff95cb813ad39fab8af6bd2fb21"
+    },
+    {
+      "height": 40256,
+      "commit": "72d2f126362f472ebb0c0c2e751dbb21d78076ec779cf44fc594cf8746fd4fd7"
+    },
+    {
+      "height": 40257,
+      "commit": "a2a03022355c36d969a90406193785c7a66fc6db31c89f1a1170289a811b0fc4"
+    },
+    {
+      "height": 40258,
+      "commit": "e5e9869b444afd0680d81e6ab59035236e5dcdf802e6497508392fe883412572"
+    },
+    {
+      "height": 40259,
+      "commit": "b6e2c4c0ea3316d4fe2bcf9d43d7a5f765759e1ef7c4a93d213183d895d4c2b7"
+    },
+    {
+      "height": 40260,
+      "commit": "a216cedc0c603027c0d49448c40d906673bc958bc8d0a4d53a41f1a662c86915"
+    },
+    {
+      "height": 40261,
+      "commit": "6b5e94866d3ecc2514b9f8182cb8f9a0df6e399670d3f811a540b9903e822002"
+    },
+    {
+      "height": 40262,
+      "commit": "e6dae291ecb6781e33c150538f7e13dd4e5cc3b5abe34738e9578381e3b07bdd"
+    },
+    {
+      "height": 40263,
+      "commit": "b0212b25daaee915bbca7410b1de31dd4d35ab0b91d6c2693b493343d2a2dadf"
+    },
+    {
+      "height": 40264,
+      "commit": "0a613d10c043470a9bedf4da20b11badd2cbd9f28cddce009ab6736bf0e731f4"
+    },
+    {
+      "height": 40265,
+      "commit": "c281c0b9325649d62f61f7da2a9680e3d8b0f3b33ea25e00b0078f56332d202c"
+    }
+  ],
+  "candidate_identities": [
+    "17010000000000000000000000000000000000a5",
+    "1e020000000000000000000000000000000000a5",
+    "25030000000000000000000000000000000000a5",
+    "2c040000000000000000000000000000000000a5",
+    "33050000000000000000000000000000000000a5",
+    "3a060000000000000000000000000000000000a5",
+    "41070000000000000000000000000000000000a5",
+    "48080000000000000000000000000000000000a5",
+    "4f090000000000000000000000000000000000a5",
+    "560a0000000000000000000000000000000000a5",
+    "587c9bfc87a837a056f716c2f9de891adbc46c90",
+    "5d0b0000000000000000000000000000000000a5",
+    "640c0000000000000000000000000000000000a5",
+    "6b0d0000000000000000000000000000000000a5"
+  ],
+  "dtd_eligible_set": [
+    "33050000000000000000000000000000000000a5",
+    "3a060000000000000000000000000000000000a5",
+    "41070000000000000000000000000000000000a5",
+    "48080000000000000000000000000000000000a5",
+    "4f090000000000000000000000000000000000a5",
+    "560a0000000000000000000000000000000000a5",
+    "5d0b0000000000000000000000000000000000a5",
+    "640c0000000000000000000000000000000000a5"
+  ],
+  "dtd_seed": "e85e76c8546c962346996fdbb0e2bc3c1afb13c5e48aa19a4600f036de796a49",
+  "dtd_winner_index": 0,
+  "dtd_winner": "33050000000000000000000000000000000000a5",
+  "jackpot_weighted_set": [
+    {
+      "pkh": "17010000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "1e020000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "25030000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "2c040000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "33050000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "3a060000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "41070000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "48080000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "4f090000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "560a0000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "5d0b0000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "640c0000000000000000000000000000000000a5",
+      "weight": 155
+    },
+    {
+      "pkh": "6b0d0000000000000000000000000000000000a5",
+      "weight": 155
+    }
+  ],
+  "jackpot_seed": "e6ad90b76d774339e62690337af5354b515bb46831d2801d9498d5b1d23c1dbe",
+  "jackpot_winner_index": 9,
+  "jackpot_winner": "560a0000000000000000000000000000000000a5",
+  "resigned_block": {
+    "height": 40265,
+    "commit": "c281c0b9325649d62f61f7da2a9680e3d8b0f3b33ea25e00b0078f56332d202c",
+    "miner_pubkey": "0284bf7562262bbd6940085748f3be6afa52ae317155181ece31b66351ccffa4b0",
+    "sbpow_message_v13": "057437e64384da8602ce05ee6d9fb44888ccc04766e2010e3f3f2b20b54a0403",
+    "variants": [
+      {
+        "aux": 0,
+        "miner_signature": "f0ff97faeae809ae1f8e4308fa125c9cc2cd1070ac6dd54967e0f483ff052ea010aff63a9e6525d88b15c1418f882eff2dee5768fe5251a5035b793a428dd8ae",
+        "block_id": "cdbd11e96fc42a666c328a5447971537bed771d81d4713112ff4d1ef520d8418"
+      },
+      {
+        "aux": 1,
+        "miner_signature": "d1b288700e9ad039fb2985d57f78fb0a92751ce4e9851c07ab41181da63ec8d4c31bfe3917f36a5f2871241a56287b6cbefd76018e37f99a2ebd23ea374b8662",
+        "block_id": "b1d7274d0a02ef072f21e690a07b06d6bc1fbb06b1e6d78051dfaf2112d5c4cd"
+      },
+      {
+        "aux": 2,
+        "miner_signature": "61d80fd53112865c20a58d2ebb714245e4cbcdd9954ded132f57899183b91a19e40637e6d40f32d8e7462c34ed28e7678cd8d777510d5f22695fa1277aeda2f7",
+        "block_id": "662c24e0e628bfb218b107dc337b225dbbaba0c33bd97a57987fef5fbf4cf5e7"
+      }
+    ],
+    "all_variants_same_dtd_seed_and_winner": true,
+    "all_variants_same_jackpot_seed_and_winner": true
+  },
+  "pre_v17_control": {
+    "height": 30712,
+    "rule": "V11_BLOCK_ID",
+    "domain": "SOST_LOTTERY_V11",
+    "block_ids": "sha256('mainnet-shape'||u64le(x)) for x in [h-16,h-1]",
+    "seed": "6afa7625033cbfc0e55de4f01fffb1ff4814ff58171b269e0be9643e520e2434"
+  }
+}

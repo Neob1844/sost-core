@@ -1019,6 +1019,17 @@ if(SOST_ENABLE_PHASE2_SBPOW)
     add_executable(test-sbpow-v13-hardening tests/test_sbpow_v13_hardening.cpp)
     target_link_libraries(test-sbpow-v13-hardening PRIVATE sost-core)
     add_test(NAME sbpow-v13-hardening COMMAND test-sbpow-v13-hardening)
+
+    # V17 DTD-F1 — DTD + Jackpot V2 seeds from the PoW commit (not block_id) at
+    # h >= V17_HEIGHT: domains, pre-V17 byte identity, re-signing one PoW solution
+    # through the real validate_sbpow_for_block, frozen normative vectors.
+    add_executable(test-dtd-f1-seed tests/test_dtd_f1_seed.cpp)
+    target_link_libraries(test-dtd-f1-seed PRIVATE sost-core)
+    add_test(NAME dtd-f1-seed COMMAND test-dtd-f1-seed)
+    # Devnet E2E helper (tests/run_v17_dtd_f1_devnet.sh): re-signs a mined block with a
+    # fresh BIP-340 signature over the same PoW commit. Test tool, not shipped.
+    add_executable(dtd-f1-resign-block tests/dtd_f1/resign_block.cpp)
+    target_link_libraries(dtd-f1-resign-block PRIVATE sost-core)
 endif()
 
 # V11 Phase 1 — component B (state-dependent dataset access)
