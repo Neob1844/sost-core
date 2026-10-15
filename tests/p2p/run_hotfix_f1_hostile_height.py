@@ -12,6 +12,12 @@ Scenarios: orphan with unknown parent at 1e11 / 1e12 / 3e12 / INT64_MAX / 0 / -5
 first, then the same block id at a sane height must still be processed); submitblock with a
 hostile height; the honest peer is never penalised and stays connected.
 
+On trees with the pre-storage check (fork_block_precheck, V17 line) an in-window fork/orphan
+block is checked before storage, so the synthetic-id fork blocks and the in-window lying
+heights are rejected there ("REJECTED before storage") and cost the sender +10 like any
+invalid block. The harness accepts that outcome, and instead asserts that every penalty is
+attributable to an IN-WINDOW rejection and none to an out-of-window drop.
+
 Run inside `unshare -rn` (loopback only), e.g.
   unshare -rn sh -c 'ip link set lo up; python3 tests/p2p/run_hotfix_f1_hostile_height.py <bin dir> <new work dir> \
       genesis_block.json <copy of mainnet chain.json truncated to 0..100> <copy truncated to 0..3700> LABEL'
@@ -24,6 +30,18 @@ MAGIC = 0x534F5354
 
 
 PENALTY_RE = re.compile(r"\[P2P\] (Misbehavior \+\d+ \(.*?\) from (\S+)|BANNED (\S+): (.*))")
+
+
+def penalty_causes(text, ip):
+    """For every misbehaviour/ban line about `ip`: the last "[FORK] Block ..." line before it."""
+    out, last = [], ""
+    for line in text.splitlines():
+        if line.startswith("[FORK] Block h="):
+            last = line
+        m = PENALTY_RE.search(line)
+        if m and (m.group(2) or m.group(3) or "").startswith(ip + ":"):
+            out.append((m.group(1), last))
+    return out
 
 
 def penalties(node, ip):
@@ -189,9 +207,14 @@ try:
     probe("orphan at tip+131553 (inside window)", real(310, h0 + 131553))
     probe("orphan at tip+131554 (outside window)", real(311, h0 + 131554))
     lg = log()
-    kept = f"[ORPHAN] Block h={h0 + 131553} stored" in lg
-    dropped = f"Block h={h0 + 131554} " in lg and f"[ORPHAN] Block h={h0 + 131554} stored" not in lg
-    check("window edge: tip+131553 stored as orphan, tip+131554 not stored", kept and dropped)
+    precheck = "REJECTED before storage" in lg      # V17 line: fork_block_precheck present
+    kept = (f"[ORPHAN] Block h={h0 + 131553} stored" in lg or
+            re.search(rf"\[FORK\] Block h={h0 + 131553} bid=\w+ REJECTED before storage", lg) is not None)
+    dropped = (re.search(rf"\[FORK\] Block h={h0 + 131554} bid=\w+ DROPPED: height outside sanity window", lg)
+               is not None and f"[ORPHAN] Block h={h0 + 131554} stored" not in lg)
+    check("window edge: tip+131553 inside the window (stored, or checked before storage), "
+          "tip+131554 dropped by the window before any work", kept and dropped,
+          "pre-storage check present" if precheck else "")
     hostile_stored = [H for H in (10**11, 10**12, 3 * 10**12, INT64_MAX) if f"[ORPHAN] Block h={H} stored" in lg]
     check("no hostile-height orphan stored", not hostile_stored, f"stored={hostile_stored}")
 
@@ -203,7 +226,14 @@ try:
     probe("fork child (prev=stored fork) at INT64_MAX", real(53, INT64_MAX, block_id="ad" * 32, prev_hash="ab" * 32))
     probe("fork child (prev=stored fork) at sane height 52", real(54, 52, block_id="ae" * 32, prev_hash="ab" * 32))
     lg = log()
-    check("fork parent at sane height stored as fork candidate", "bid=abababababababab" in lg and "Fork stored" in lg)
+    fork_sane_ok = ("bid=abababababababab" in lg and "Fork stored" in lg) or \
+        "Block h=51 bid=abababababababab REJECTED before storage: block_id mismatch" in lg
+    check("fork parent at sane height reaches the in-window path (stored as fork candidate, or rejected "
+          "before storage by the pre-storage id check)", fork_sane_ok)
+    hostile_fork = [H for H in (10**12, INT64_MAX)
+                    if re.search(rf"\[FORK\] Block h={H} bid=a[cd]\w* DROPPED: height outside sanity window", lg) is None]
+    check("hostile-height fork parent/child dropped by the window (before the pre-storage check)", not hostile_fork,
+          f"not dropped={hostile_fork}")
 
     # --- known-set poisoning: hostile copy of block 101 first, then the honest copy must still connect
     probe("block #101 id with hostile height 1e12", real(101, 10**12))
@@ -212,7 +242,7 @@ try:
     check("honest #101 (same id) accepted after the hostile copy", h1 == h0 + 1, f"tip={h1}")
     h0 = h1
 
-    pens_hostile = penalties(type("N", (), {"logtext": staticmethod(log)})(), "127.0.0.9")
+    pens_hostile = [p for (p, cause) in penalty_causes(log(), "127.0.0.9") if "DROPPED" in cause or not cause]
     check("no misbehaviour recorded against the peer for any hostile/out-of-window height probe", not pens_hostile,
           f"penalties={pens_hostile}")
     # --- same, with a wrong but in-window height (pre-existing height-not-in-id caching; informational)
@@ -234,11 +264,16 @@ try:
 
     # --- peer health
     time.sleep(1)
-    pens = penalties(type("N", (), {"logtext": staticmethod(log)})(), "127.0.0.9")
+    pens = penalty_causes(log(), "127.0.0.9")
     # the in-window wrong-height #102 copy has a KNOWN parent and a lying height: it is a really
     # invalid block (parent height != h-1) and costs +10 on every build — that one is expected.
-    check("only the genuinely invalid in-window lying block was penalised (+10), peer not banned",
-          len(pens) <= 1 and all("+10 (invalid block)" in p for p in pens), f"penalties={pens}")
+    # With the pre-storage check (V17 line) the in-window synthetic-id fork blocks and the
+    # in-window lying orphan are invalid blocks too (+10 each). Every penalty must be +10 for an
+    # IN-WINDOW rejection; none may follow an out-of-window drop; no ban.
+    allowed = 1 + (3 if precheck else 0)
+    bad = [(p, c) for (p, c) in pens if "+10 (invalid block)" not in p or "REJECTED" not in c]
+    check("only genuinely invalid in-window blocks were penalised (+10 each), none for a window drop, peer not banned",
+          len(pens) <= allowed and not bad, f"penalties={[p for p, _ in pens]} bad={bad}")
     check("peer still connected", not peer.closed and len(rpc("getpeerinfo")["result"]) >= 1)
     poll.stop = True
     allw = max(l for (_, l) in poll.samples)
