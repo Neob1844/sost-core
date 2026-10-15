@@ -1148,7 +1148,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
     </div>
     <div style="flex:1 1 340px;min-width:280px">
       <div id="pdMetrics" style="display:flex;gap:18px;flex-wrap:wrap;font-size:12px;margin-bottom:12px"></div>
-      <div style="overflow-x:auto">
+      <div id="pdListPanel" style="overflow-x:auto">
         <table class="tbl" id="pdTable" style="width:100%;font-size:12px">
           <thead><tr><th>#</th><th>PRODUCER</th><th>BLOCKS</th><th>SHARE</th><th>LAST BLOCK</th></tr></thead>
           <tbody id="pdTableBody"><tr><td colspan="5" style="color:var(--text3)">Waiting for block producer data&hellip; (populates after the chain scan)</td></tr></tbody>
@@ -1168,14 +1168,14 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
       <div class="dwz-ctl" data-kind="dtd"></div>
       <div class="dwz-donut"><canvas id="dwzDtd" width="220" height="220"></canvas><div class="dwz-empty" id="dwzDtdEmpty">Loading DTD<br>payouts&hellip;</div></div>
       <div class="dwz-met" id="dwzDtdMet"></div>
-      <div style="overflow-x:auto"><table class="tbl dwz-t"><thead><tr><th>#</th><th>WINNER</th><th>WINS</th><th>SOST</th><th>SHARE</th><th>LAST</th></tr></thead><tbody id="dwzDtdBody"></tbody></table></div>
+      <div id="dwzDtdListPanel" style="overflow-x:auto"><table class="tbl dwz-t"><thead><tr><th>#</th><th>WINNER</th><th>WINS</th><th>SOST</th><th>SHARE</th><th>LAST</th></tr></thead><tbody id="dwzDtdBody"></tbody></table></div>
     </div>
     <div class="dwz-col">
       <div class="dwz-h" style="color:#ffd166">DTD JACKPOT V2 &middot; every 288 blocks</div>
       <div class="dwz-ctl" data-kind="jp"></div>
       <div class="dwz-donut"><canvas id="dwzJp" width="220" height="220"></canvas><div class="dwz-empty" id="dwzJpEmpty">Loading jackpot<br>draws&hellip;</div></div>
       <div class="dwz-met" id="dwzJpMet"></div>
-      <div style="overflow-x:auto"><table class="tbl dwz-t"><thead><tr><th>#</th><th>WINNER</th><th>WINS</th><th>SOST</th><th>SHARE</th><th>LAST</th></tr></thead><tbody id="dwzJpBody"></tbody></table></div>
+      <div id="dwzJpListPanel" style="overflow-x:auto"><table class="tbl dwz-t"><thead><tr><th>#</th><th>WINNER</th><th>WINS</th><th>SOST</th><th>SHARE</th><th>LAST</th></tr></thead><tbody id="dwzJpBody"></tbody></table></div>
     </div>
   </div>
   <div style="font-size:10px;color:var(--text3);margin-top:10px">Periods are block-count proxies (48h = 288 blocks, 3D = 432, 1W = 1,008, 1M = 4,320, 3M = 12,960; All = everything recorded). Normal DTD: one draw per block, uniform among eligible recent miners. Jackpot V2 (from #30,000): one draw every 288 blocks, weighted by PoW blocks, NODE_BIND + heartbeats required; a draw with no eligible miner rolls over (shown grey). Read from the canonical chain.</div>
@@ -1192,7 +1192,51 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 .dwz-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--text3);line-height:1.6}
 .dwz-met{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-bottom:10px}
 .dwz-t{width:100%;font-size:12px}
+/* Collapsible producer / winner lists under the three distribution donuts (one shared component) */
+.pl-toggle{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid #2a2a2a;color:#9aa6b2;border-radius:5px;padding:4px 10px;font:11px 'Fira Code',monospace;letter-spacing:.3px;cursor:pointer;max-width:100%;text-align:left}
+.pl-toggle:hover{border-color:#22d3ee;color:#22d3ee}
+.pl-toggle:focus-visible{outline:2px solid #22d3ee;outline-offset:2px}
+.pl-toggle[aria-expanded="true"]{color:#22d3ee;border-color:rgba(34,211,238,.55);background:rgba(34,211,238,.06)}
+.pl-caret{display:inline-block;width:.9em;text-align:center}
+.pl-panel{margin-top:8px}
+.pl-panel[hidden]{display:none!important}
+.pl-panel:not([hidden]){animation:plIn .16s ease-out}
+@keyframes plIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pl-panel:not([hidden]){animation:none}}
 </style>
+<script>
+// One component for the three lists (block producers, normal DTD winners, DTD Jackpot V2
+// winners): a real <button> (aria-expanded / aria-controls) toggles its own panel via
+// `hidden`. Collapsed on load. The panel element is never re-created by the period
+// buttons (they only rewrite the <tbody>), so the open/closed state survives a period
+// switch; a MutationObserver keeps the row count in the label current.
+function createCollapsibleProducerList(panelId,noun){
+  var panel=document.getElementById(panelId); if(!panel||panel._plBuilt) return null;
+  panel._plBuilt=true;
+  var tbody=panel.querySelector('tbody');
+  var btn=document.createElement('button');
+  btn.type='button'; btn.className='pl-toggle'; btn.id=panelId+'Toggle';
+  btn.setAttribute('aria-controls',panelId);
+  panel.classList.add('pl-panel'); panel.hidden=true;
+  function rows(){ if(!tbody) return 0; var n=0; Array.prototype.forEach.call(tbody.rows,function(r){ if(!r.querySelector('td[colspan]')) n++; }); return n; }
+  function paint(){
+    var open=!panel.hidden, n=rows();
+    btn.setAttribute('aria-expanded',open?'true':'false');
+    btn.textContent='';
+    var c=document.createElement('span'); c.className='pl-caret'; c.setAttribute('aria-hidden','true'); c.textContent=open?'\u25BE':'\u25B8';
+    btn.appendChild(c);
+    btn.appendChild(document.createTextNode((open?'Hide ':'View ')+noun+(n?' ('+n+')':'')));
+  }
+  btn.addEventListener('click',function(){ panel.hidden=!panel.hidden; paint(); });
+  if(tbody&&window.MutationObserver) new MutationObserver(paint).observe(tbody,{childList:true});
+  panel.parentNode.insertBefore(btn,panel);
+  paint();
+  return btn;
+}
+createCollapsibleProducerList('pdListPanel','producer list');
+createCollapsibleProducerList('dwzDtdListPanel','winner list');
+createCollapsibleProducerList('dwzJpListPanel','winner list');
+</script>
 <script>
 (function(){
   "use strict";
