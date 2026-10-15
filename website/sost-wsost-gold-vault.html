@@ -33,7 +33,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="wSOST &amp; Gold Reserve V2 — SOST research roadmap">
 <meta name="twitter:description" content="wSOST (1 wSOST = 1 native SOST locked), Gold Reserve V2 of tokenized gold, on-chain SOST governance and the #40,000 research horizon. Research roadmap, not live: no bridge deployed, current consensus 50% miner / 50% DTD unchanged.">
-<meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
+<meta name="twitter:image" content="https://sostcore.com/assets/wsost/wsost-gold-vault-512.png?v=v553">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
 <style>
@@ -647,7 +647,7 @@
 <script src="js/nav-toggle.js?v=v564" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/sost-wordmark.css?v=v567">
+<link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
 </head>
 <body>
 
@@ -765,10 +765,10 @@
 
 <section class="section" id="wsost-hero"><div class="container"><div class="wg">
  <div class="wg-hero">
-  <img src="media/wsost-logo-512.png?v=v557" width="170" height="170" alt="wSOST emblem">
+  <img src="media/wsost-logo-512.png?v=v569" width="170" height="170" alt="wSOST &amp; Gold Vault emblem">
   <div class="t">
    <div style="font:800 12px ui-monospace,monospace;letter-spacing:2.5px;color:#ffd166">BRIDGE &middot; GOLD RESERVE &middot; GOVERNANCE</div>
-   <h1 style="font-size:34px;line-height:1.15;margin:6px 0 8px;color:#fff"><span style="color:#fff">w</span><span style="color:#ff1e28">SOST</span> &amp; <span style="color:#ffd166">Gold Reserve V2</span></h1>
+   <h1 style="font-size:34px;line-height:1.15;margin:6px 0 8px;color:#fff"><span class="wm-sost"><span style="color:#fff">w</span><span style="color:#ff1e28">SOST</span></span> <span class="wm-gold">&amp; Gold Reserve V2</span></h1>
    <span class="st res">RESEARCH / DEVELOPMENT ROADMAP</span> <span class="st res">#40,000 RESEARCH HORIZON</span> <span class="st nd">NOT AN ACTIVATION COMMITMENT</span>
    <p style="margin-top:10px">How SOST could reach Ethereum wallets, DEXs and exchanges without creating a single new coin, and how a separate, publicly verifiable reserve of tokenized gold could grow around the ecosystem &mdash; governed by the miners who also run nodes.</p>
   </div>
@@ -781,11 +781,11 @@
 </div></div></section>
 
 <section class="section" id="what"><div class="container"><div class="wg">
- <div class="section-header"><div class="section-id">BRIDGE</div><h2 class="section-title">What is <span class="accent">wSOST?</span></h2></div>
+ <div class="section-header"><div class="section-id">BRIDGE</div><h2 class="section-title">What is <span class="accent"><span class="wm-sost">wSOST</span>?</span></h2></div>
  <span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span>
  <p><b>wSOST is not another coin.</b> It is a token on Ethereum that represents native SOST one-for-one. The SOST it represents stays on the SOST blockchain, locked in a dedicated Bridge Vault, until the wSOST is turned back into SOST.</p>
  <div class="box"><div class="bt">CANONICAL RULE</div><b style="font-size:17px">1 wSOST = 1 native SOST locked</b></div>
- <h4>Example &mdash; John wraps 500 SOST</h4>
+ <h4>Example &mdash; John wraps 500 <span class="wm-sost">SOST</span></h4>
  <div class="pre">JOHN HAS           1,000 SOST
 John wraps           500 SOST
 
@@ -796,7 +796,7 @@ RESULT
   500 SOST  are locked in the Bridge Vault
   500 wSOST exist on Ethereum
 <span class="k">NO NEW SOST WAS CREATED.</span> The same 1,000 SOST still exist.</div>
- <h4>Example &mdash; John unwraps 200 wSOST</h4>
+ <h4>Example &mdash; John unwraps 200 <span class="wm-sost">wSOST</span></h4>
  <div class="pre">John burns           200 wSOST   (Ethereum)
   200 wSOST destroyed  ══▶  200 native SOST released from the Bridge Vault
                             (minus the SOST network fee)</div>
@@ -805,14 +805,14 @@ RESULT
  <div class="pre">sost-cli send &lt;BRIDGE_VAULT&gt; 500 --capsule-mode open-note \
          --capsule-text "WSOST:0x9f2c…41aa"        <span class="d"># 48 bytes of the 80-byte capsule limit</span></div>
  <p>The Ethereum recipient travels inside a <b>capsule</b>, a data field active on SOST since block 7,350. No consensus change, no new transaction type and no special wallet are needed.</p>
- <h3>Why wSOST would exist</h3>
+ <h3>Why <span class="wm-sost">wSOST</span> would exist</h3>
  <p>Integrating a brand-new Layer-1 is real work for wallets and exchanges; Ethereum and ERC-20 tokens are already integrated almost everywhere. wSOST would make SOST reachable from:</p>
  <ul><li>Ethereum wallets;</li><li>DEX liquidity pools and therefore public price discovery;</li><li>exchanges where ERC-20 support reduces Layer-1 integration work;</li><li>future DeFi compatibility.</li></ul>
  <div class="box gray"><div class="bt">WHAT IT DOES NOT DO</div>wSOST may reduce technical integration friction, but <b>listing, liquidity, legal review and exchange due diligence remain independent requirements</b>. It guarantees no listing anywhere.</div>
 </div></div></section>
 
 <section class="section" id="why-wsost"><div class="container"><div class="wg">
- <div class="section-header"><div class="section-id">ACCESS LAYER</div><h2 class="section-title">Why wSOST &mdash; and why <span class="accent">native SOST stays the real asset</span></h2></div>
+ <div class="section-header"><div class="section-id">ACCESS LAYER</div><h2 class="section-title">Why <span class="wm-sost">wSOST</span> &mdash; and why <span class="accent">native <span class="wm-sost">SOST</span> stays the real asset</span></h2></div>
  <span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span>
  <h3>The integration barrier</h3>
  <p>One practical barrier to wider SOST market access is the technical burden a centralized exchange faces when it integrates a new, independent Layer-1 blockchain. Listing native SOST would require the exchange to:</p>
@@ -874,7 +874,7 @@ XAUT / APPROVED GOLD  →  GOLD RESERVE V2
 
 Historical Gold Vault:  SEPARATE  →  DTD JACKPOT</div>
  <p><i>Native SOST remains the canonical protocol asset. wSOST is the planned Ethereum-compatible market-access representation. Gold Reserve V2 is the planned external gold-reserve layer.</i></p>
- <h3>From the Genesis Gold Vault to Gold Reserve V2</h3>
+ <h3>From the Genesis <span class="wm-gold">Gold Vault</span> to <span class="wm-gold">Gold Reserve</span> V2</h3>
  <p>The original SOST design introduced a Gold Vault concept from Genesis: part of the early block distribution accumulated in a constitutional reserve, with the long-term idea of connecting SOST with an external gold reserve. That historical architecture later changed. From block <b>#25,000</b>:</p>
  <ul>
   <li>the Gold Vault receives <b>0%</b> of new emission;</li>
@@ -883,7 +883,7 @@ Historical Gold Vault:  SEPARATE  →  DTD JACKPOT</div>
   <li>the historical Gold Vault + PoPC balances are <b>frozen and committed to the DTD Jackpot</b>.</li>
  </ul>
  <div class="box red"><div class="bt">THE HISTORICAL GOLD VAULT IS NOT REOPENED &mdash; ITS FUNDS ARE NOT REUSED</div>Gold Reserve V2 is a new and completely separate external reserve. <i>Gold Reserve V2 is intended to continue the reserve philosophy introduced at Genesis, while preserving the historical Gold Vault exactly as committed under the current DTD Jackpot architecture.</i> The old Gold Vault does <b>not</b> back wSOST, and Gold Reserve V2 does not reuse or alter its balances. <span class="st hist">HISTORICAL</span> <span class="st live">DTD JACKPOT RESERVE</span></div>
- <h3>Why wSOST helps the gold-reserve model</h3>
+ <h3>Why <span class="wm-sost">wSOST</span> helps the gold-reserve model</h3>
  <p>wSOST would give SOST an Ethereum-compatible representation, and Gold Reserve V2 would live on the same Ethereum-compatible infrastructure as tokenized gold such as XAUT. In a future, gated phase that makes mechanisms like this possible:</p>
  <div class="pre">XAUT                     →  Gold Reserve V2
 existing treasury wSOST  →  user
@@ -897,7 +897,7 @@ and without touching the historical Jackpot reserve.</div>
  <div class="section-header"><div class="section-id">USER GUIDE (DESIGN)</div><h2 class="section-title">How wrapping would feel &mdash; <span class="accent">wallets, gas and exchanges</span></h2></div>
  <span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span>
  <p>Nothing below can be done today. It describes how the planned bridge is designed to work from the user's side.</p>
- <h3>1 &middot; SOST &rarr; wSOST (wrap)</h3>
+ <h3>1 &middot; <span class="wm-sost">SOST</span> &rarr; <span class="wm-sost">wSOST</span> (wrap)</h3>
  <p>John holds <b>1,000 SOST</b> and wants 400 of them as wSOST. On the bridge page he enters the amount and an Ethereum address that will receive the wSOST:</p>
  <div class="pre">Amount               400 SOST
 Ethereum destination 0x1234…   (MetaMask, Rabby, a hardware wallet or any EVM wallet)</div>
@@ -922,7 +922,7 @@ John's wallet  400 wSOST</div>
   <tr><td>Send wSOST, use a DEX, add liquidity</td><td>You need a little <b>ETH for gas</b> in your Ethereum wallet. ETH is not backing and does not buy SOST; it only pays Ethereum to run the transaction.</td></tr>
   <tr><td><b>Unwrap</b> (wSOST &rarr; SOST)</td><td>Normally a little <b>ETH for gas</b> for the burn on Ethereum. Gas sponsorship could make this easier later.</td></tr>
  </table></div>
- <h3>2 &middot; wSOST &rarr; SOST (unwrap)</h3>
+ <h3>2 &middot; <span class="wm-sost">wSOST</span> &rarr; <span class="wm-sost">SOST</span> (unwrap)</h3>
  <div class="pre">UNWRAP   200 wSOST   →   destination sost1abc…
 
 Ethereum   200 wSOST burned (you pay the gas)
@@ -936,7 +936,7 @@ John keeps  200 wSOST  +  200 SOST back in his SOST wallet</div>
 He sells 100 wSOST on a DEX:
    500 SOST native  ·  400 wSOST  ·  plus whatever the 100 wSOST sold for
 The 400 remaining wSOST are still backed by 400 locked SOST.</div>
- <h3>If an exchange lists wSOST</h3>
+ <h3>If an exchange lists <span class="wm-sost">wSOST</span></h3>
  <p>An exchange that supports the wSOST ERC-20 does not have to integrate the SOST chain first. A user could even put <b>the exchange's own wSOST deposit address</b> as the Ethereum destination when wrapping, so the wSOST land directly in the exchange account &mdash; saving one Ethereum transaction. <b>Only do that if the exchange explicitly supports wSOST deposits</b>; tokens sent to an address that does not credit them can be lost.</p>
  <p>Trading inside an exchange (for example USDT &harr; wSOST) needs no MetaMask and no ETH: the exchange runs its own infrastructure. Ethereum only matters when you withdraw wSOST to your own wallet or use contracts directly.</p>
  <div class="pre">             SOST MAINNET
@@ -968,7 +968,7 @@ Many people do it  →  SOST demand ↑ · wSOST supply ↑  →  prices move to
 </div></div></section>
 
 <section class="section" id="value"><div class="container"><div class="wg">
- <div class="section-header"><div class="section-id">CONCEPT</div><h2 class="section-title">Five sources of <span class="accent">SOST value</span></h2></div>
+ <div class="section-header"><div class="section-id">CONCEPT</div><h2 class="section-title">Five sources of <span class="accent"><span class="wm-sost">SOST</span> value</span></h2></div>
  <div class="tw"><table>
   <tr><th>#</th><th>Source</th><th>What it means</th><th>Status</th></tr>
   <tr><td>1</td><td>Monetary scarcity</td><td>Hard cap 4,669,201 SOST, smooth decaying emission</td><td><span class="st live">LIVE</span></td></tr>
@@ -993,7 +993,7 @@ Many people do it  →  SOST demand ↑ · wSOST supply ↑  →  prices move to
 </div></div></section>
 
 <section class="section" id="historical"><div class="container"><div class="wg">
- <div class="section-header"><div class="section-id">HISTORY</div><h2 class="section-title">The historical <span class="accent">Gold Vault</span></h2></div>
+ <div class="section-header"><div class="section-id">HISTORY</div><h2 class="section-title">The historical <span class="accent"><span class="wm-gold">Gold Vault</span></span></h2></div>
  <div class="grid">
   <div class="card"><div class="h" style="color:#f59e0b">HISTORICAL &middot; BLOCKS 0&ndash;24,999</div>50% miner &middot; 25% Gold Vault &middot; 25% PoPC Pool (draw blocks from #7,100 paid 50% miner / 50% lottery). <span class="st hist">HISTORICAL</span></div>
   <div class="card"><div class="h" style="color:#39ff14">CURRENT &middot; FROM #25,000</div>50% miner &middot; 50% normal DTD. Gold Vault and PoPC receive <b>0%</b> of new emission. Their balances are <b>frozen by consensus</b> and pay the DTD Jackpot. <span class="st live">LIVE</span></div>
@@ -1003,7 +1003,7 @@ Many people do it  →  SOST demand ↑ · wSOST supply ↑  →  prices move to
 </div></div></section>
 
 <section class="section" id="grv2"><div class="container"><div class="wg">
- <div class="section-header"><div class="section-id">RESERVE</div><h2 class="section-title">Gold Reserve <span class="accent">V2</span></h2></div>
+ <div class="section-header"><div class="section-id">RESERVE</div><h2 class="section-title"><span class="wm-gold">Gold Reserve</span> <span class="accent">V2</span></h2></div>
  <span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span>
  <p>A new, external reserve on Ethereum. It receives <b>tokenized gold</b> &mdash; not newly emitted SOST &mdash; and it <b>never mints wSOST</b>.</p>
  <div class="tw"><table><tr><th>Asset</th><th>Role</th><th>Status</th></tr>
@@ -1025,7 +1025,7 @@ Informational ratio      $250,000 / 2,000,000 = <span class="g">$0.125 of gold r
 </div></div></section>
 
 <section class="section" id="desk"><div class="container"><div class="wg">
- <div class="section-header"><div class="section-id">FUTURE MODULE</div><h2 class="section-title">Gold &rarr; wSOST <span class="accent">desk</span></h2></div>
+ <div class="section-header"><div class="section-id">FUTURE MODULE</div><h2 class="section-title">Gold &rarr; <span class="wm-sost">wSOST</span> <span class="accent">desk</span></h2></div>
  <span class="st nd">NOT LIVE</span> <span class="st gated">GATED OFF</span>
  <div class="pre">Treasury holds            10,000 wSOST
 already backed by         10,000 native SOST locked
@@ -1119,7 +1119,7 @@ If ANY one fails → <span class="r">NO MIGRATION</span></div>
 </div></div></section>
 
 <section class="section" id="governance"><div class="container"><div class="wg">
- <div class="section-header"><div class="section-id">GOVERNANCE</div><h2 class="section-title">The second key: <span class="accent">SOST participants</span></h2></div>
+ <div class="section-header"><div class="section-id">GOVERNANCE</div><h2 class="section-title">The second key: <span class="accent"><span class="wm-sost">SOST</span> participants</span></h2></div>
  <span class="st res">RESEARCH</span> <span class="st res">PHASE A: ADVISORY</span>
  <h3>The proposal is frozen before anyone votes</h3>
  <div class="pre">PROPOSAL_ID          GRV2-004
@@ -1195,7 +1195,7 @@ SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
 </div></div></section>
 
 <section class="section" id="compare"><div class="container"><div class="wg">
- <div class="section-header"><div class="section-id">CONTEXT</div><h2 class="section-title">Bitcoin &middot; Ethereum &middot; <span class="accent">SOST</span></h2></div>
+ <div class="section-header"><div class="section-id">CONTEXT</div><h2 class="section-title">Bitcoin &middot; Ethereum &middot; <span class="accent"><span class="wm-sost">SOST</span></span></h2></div>
  <div class="grid">
   <div class="card"><div class="h" style="color:#f7931a">BITCOIN</div><b>Consensus:</b> PoW (SHA-256d). <b>Incentive:</b> the miner/pool receives subsidy + fees. <b>Nodes:</b> validate every rule, unpaid. <b>Wrapped:</b> external wrapped-BTC products exist. <b>Gold reserve:</b> none at protocol level.</div>
   <div class="card"><div class="h" style="color:#a5a6ff">ETHEREUM</div><b>Consensus:</b> PoS. <b>Participants:</b> validators stake ETH (32 ETH solo). <b>Execution:</b> smart contracts, ERC-20 tokens, DeFi.</div>

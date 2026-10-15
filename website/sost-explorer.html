@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-12-v557-wsost-logo">
+<meta name="explorer-html-version" content="2026-10-15-v569-wordmark">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -632,7 +632,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="stylesheet" href="css/price-cards-v2.css?v=532">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/sost-wordmark.css?v=v567">
+<link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
 </head>
 <body>
 <!-- V15 fork banner removed from Explorer only (still on index.html/docs) -->
@@ -849,12 +849,12 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 <a href="sost-wsost-gold-vault.html" class="wsost-research-card" title="wSOST &amp; Gold Vault — research roadmap (not live)" style="display:block;margin:10px 0;text-decoration:none;background:linear-gradient(90deg,rgba(255,30,40,.07),rgba(255,209,102,.05));border:1px solid #7a1b1f;border-left:4px solid #ff1e28;border-radius:8px;padding:10px 14px;color:#f3d9da">
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <img src="assets/wsost/wsost-gold-vault-128.png?v=v553" width="44" height="44" alt="" style="width:44px;height:44px;flex:0 0 auto;filter:drop-shadow(0 0 8px rgba(255,30,40,.6))">
+    <img src="assets/wsost/wsost-gold-vault-128.png?v=v569" width="44" height="44" alt="" style="width:44px;height:44px;flex:0 0 auto;filter:drop-shadow(0 0 8px rgba(255,30,40,.6))">
     <div style="flex:1 1 260px;min-width:0">
-      <div style="font:800 12px ui-monospace,monospace;letter-spacing:.6px;color:#ff5a5f"><span style="color:#fff">w</span>SOST &amp; GOLD VAULT &middot; RESEARCH ROADMAP <span style="color:#67e8f9;border:1px solid #1b5b66;border-radius:5px;padding:1px 6px;font-size:10px">NOT LIVE</span></div>
+      <div style="font:800 12px ui-monospace,monospace;letter-spacing:.6px;color:#ff5a5f"><span class="wm-sost"><span style="color:#fff">w</span>SOST</span> <span class="wm-gold">&amp; GOLD VAULT</span> &middot; RESEARCH ROADMAP <span style="color:#67e8f9;border:1px solid #1b5b66;border-radius:5px;padding:1px 6px;font-size:10px">NOT LIVE</span></div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:4px 14px;margin-top:6px;font-size:11.5px;line-height:1.5">
-        <div><b style="color:#fff">wSOST</b> &middot; planned 1:1 bridge (1 wSOST = 1 SOST locked)</div>
-        <div><b style="color:#f59e0b">Gold Vault</b> &middot; historical, frozen Jackpot reserve</div>
+        <div><b class="wm-sost" style="color:#fff">wSOST</b> &middot; planned 1:1 bridge (1 wSOST = 1 SOST locked)</div>
+        <div><b class="wm-gold">Gold Vault</b> &middot; historical, frozen Jackpot reserve</div>
         <div><b style="color:#ffd166">Gold Reserve V2</b> &middot; future external gold reserve</div>
         <div><b style="color:#39ff14">Governance</b> &middot; eligible-identity on-chain voting</div>
         <div><b style="color:#d7ff00">#40,000</b> &middot; research horizon, not a commitment</div>
@@ -867,7 +867,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </div>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-12-v557-wsost-logo';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-15-v569-wordmark';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 

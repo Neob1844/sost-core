@@ -7,4 +7,21 @@
    changes, so "SOST EXPLORER" still fits on one line exactly as before. */
 @font-face{font-family:'SOST Wordmark';src:url('../fonts/goldman-700-latin.woff2') format('woff2');font-weight:700;font-style:normal;font-display:block;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
 nav .nav-logo > span,nav .nav-logo .brand-sost{font-family:'SOST Wordmark','Space Grotesk',sans-serif !important;font-weight:700 !important;letter-spacing:var(--sost-wm-ls,-.09em) !important}
+/* Nav wordmark 25% larger (owner, v569): the text block scales x1.25 (SOST 45.76 -> 57.2px, EXPLORER 26 -> 32.5px).
+   Desktop: the shared logo block grows 407 -> 475px so "SOST EXPLORER" stays on one line, and the gap between
+   the top-row modules goes 16 -> 9px so the row (logo, 6 modules, HIDE NAV) still fits 1366px on one line.
+   Same rule on every page, so the website and Explorer navs stay identical. Phones: unchanged layout, the
+   Explorer wordmark sets on two lines inside the 110px logo height as before. */
+nav .nav-logo > span{font-size:1.25em !important}
+@media (min-width:769px){
+  html body nav.sost-canon-nav .nav-logo{flex:0 0 475px !important;width:475px !important}
+  html body nav.sost-canon-nav > .container{column-gap:9px !important}
+}
 #splash-title{font-family:'SOST Wordmark','JetBrains Mono',monospace !important}
+/* wSOST & Gold Vault brand labels: same emblem typeface as the logo's "wSOST" and "& GOLD VAULT".
+   Colour of .wm-sost is inherited from the heading; .wm-gold uses the emblem's gold. */
+.wm-sost,.wm-gold{font-family:'SOST Wordmark','Space Grotesk',sans-serif !important;font-weight:700 !important;letter-spacing:.01em}
+.wm-gold{color:#f5c518 !important;background:linear-gradient(180deg,#ffe27a 0%,#f5c518 48%,#c98a00 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none}
+/* Splash: every visible text uses the wordmark typeface (title above; terminal lines here). Sizes, colours,
+   glow, cursor and timing unchanged; the longest line fits the box at 16.8px and at the phone cap. */
+#spl-lines,.spl-line{font-family:'SOST Wordmark','JetBrains Mono',monospace !important}
