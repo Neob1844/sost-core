@@ -1,0 +1,63 @@
+SOST tip 30 · Alice 117.76512972 SOST · Bob 500.0 wSOST · WSOST 0x5FbDB2315678afecb367f032d93F642f64180aa3 HTLCv2 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+
+=== D1  SOST -> wSOST (Alice initiates, holds the secret) + E fixed vector ===
+[PASS] E0 vector: sha256(000102..1f) = 630dcd29…10dd (python hashlib)
+[PASS] E1 decodehtlc(lock) shows the hashlock bytes exactly as given (no byte reversal) — 630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd
+[PASS] D1.1 Alice SOST lock confirmed; Bob verifies hashlock/claim/refund pkh/amount/refund_height/confs via gethtlcstatus — {"txid": "ab8b6e633955ea2912ab62f9e8560b5a02796b93744adbddb48be3febaaf537a", "vout": 0, "status": "locked", "current_height": 31, "is_htlc_lock": true, "spent": false, "amount": "2.00000000", "hashloc
+[PASS] D1.2 Bob wSOST lock; Alice verifies token/amount/hashlock/claimer/refunder/refundTime via getSwap
+[PASS] E2 same 32-byte hashlock on both chains (SOST payload hex == EVM bytes32 hex)
+[PASS] D1.3 Alice claims wSOST with the preimage
+[PASS] E3 Bob's watcher extracts the preimage from the Claimed log (eth_getLogs by swapId) — 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+[PASS] D1.4 Bob claims the SOST HTLC with the extracted preimage — +1.999 SOST
+[PASS] E4 SOST node reports CLAIMED + revealed_preimage byte-identical to the EVM preimage — 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+[PASS] E5 independent extraction: decodehtlc(getrawtransaction(claim)) preimage == P
+[PASS] D1.5: wSOST supply/minted/burned/burnNonce/mintPaused + Bridge Vault SOST UNCHANGED — {}
+
+=== D2  wSOST -> SOST (Bob initiates, holds the secret) ===
+[PASS] D2.1 Bob (initiator) locks wSOST first; Alice verifies
+[PASS] D2.2 Alice locks SOST (claim=Bob, refund=Alice) with Bob's hashlock
+[PASS] D2.3 Bob claims SOST, revealing the secret on the SOST chain
+[PASS] D2.4 Alice extracts the secret from the SOST chain (gethtlcstatus revealed_preimage)
+[PASS] D2.5 Alice claims wSOST with the extracted secret
+[PASS] D2.6: wSOST supply/minted/burned/burnNonce/mintPaused + Bridge Vault SOST UNCHANGED — {}
+
+=== D3  Alice (initiator) disappears after both locks -> both refund ===
+[PASS] D3.1 Bob's early wSOST refund rejected — ('execution reverted: NOT_YET', '0x08c379a00000000000000000000000000000000000000
+[PASS] D3.2 Bob refunds wSOST after refundTime
+[PASS] D3.3 Alice's early SOST refund rejected (R24) — {'code': -25, 'message': 'consensus: R24: HTLC_REFUND at spend_height 36 < refund_height 44 (refund 
+[PASS] D3.4 Alice refunds SOST at refund_height — cd9ebd847b20b0c8f89939c915325bbcb3d6d7e57b245c4e9c220fdc0ac8195e
+[PASS] D3.5 gethtlcstatus reports refunded — refunded
+
+=== D4  Bob never locks -> Alice refunds ===
+[PASS] D4.1 Alice refunds her SOST after timeout (Bob never funded)
+
+=== D5  wrong secret / wrong key / replay ===
+[PASS] D5.1 SOST claim with wrong preimage rejected (R21) — {'code': -25, 'message': 'consensus: R21: HTLC_CLAIM preimage hash mismatch'}
+[PASS] D5.2 SOST claim signed by the refund key (not claim key) rejected — {'code': -25, 'message': 'consensus: HTLC_CLAIM input[0]: VerifyTransactionInput: pubkey h
+[PASS] D5.3 SOST refund by the claim key before timeout rejected — {'code': -25, 'message': 'consensus: R24: HTLC_REFUND at spend_height 52 < refund_height 8
+[PASS] D5.4 EVM claim with wrong preimage reverts BAD_PREIMAGE
+[PASS] D5.5 EVM claim by a third party with the right preimage reverts NOT_CLAIMER
+[PASS] D5.6 CLI refuses a non-32-byte preimage — Error: claimhtlc: preimage must be 64 hex chars (32 bytes)
+[PASS] D5.7 replay of a confirmed SOST claim rejected — {'code': -25, 'message': 'consensus: S1: input[0] references missing UTXO'}
+[PASS] D5.8 EVM double claim reverts NOT_LOCKED
+
+=== D6/D7  claim just before / refund just after timeout (SOST + EVM) ===
+[PASS] D6.1 SOST claim broadcast at tip=rh-2 is accepted and mined in block rh-1 — block 59 rh 60
+[PASS] D7.1 SOST refund at tip=rh-2 (spend height rh-1) rejected — {'code': -25, 'message': 'consensus: R24: HTLC_REFUND at spend_height 59 < refun
+[PASS] D6.2 SOST claim at tip=rh-1 (spend height rh) rejected (R22) — {'code': -25, 'message': 'consensus: R22: HTLC_CLAIM at spend_height 60 >= refun
+[PASS] D7.2 SOST refund at tip=rh-1 accepted and mined in block rh — block 60
+   EVM refundTime 31: claim@30:1, refund@30:0, claim@31:0, refund@31:1
+[PASS] D6.3 EVM claim in block refundTime-1 succeeds
+[PASS] D7.3 EVM refund in block refundTime-1 reverts (NOT_YET)
+[PASS] D6.4 EVM claim in block refundTime reverts (EXPIRED)
+[PASS] D7.4 EVM refund in block refundTime succeeds
+
+=== D8  SOST node restart in the middle of a swap ===
+[PASS] D8.1 after SIGTERM + restart the node keeps height and the open lock (gethtlcstatus identical) — h 61→61
+[PASS] D8.2 swap completes after restart; Bob recovers the secret from chain logs only (lock txid + swapId)
+
+=== D10 EVM reorg equivalent (evm_snapshot/evm_revert) ===
+[PASS] D10.1 Alice acted on a 1-block EVM lock; the EVM reorg removes it; Bob still claims SOST; Alice's wSOST claim fails (=> responders MUST wait for EVM finality; no tool enforces it) — ('execution reverted: NOT_LOCKED', '0x08c379a000000000000000
+[PASS] final: wSOST supply/minted/burned/burnNonce/mintPaused + Bridge Vault SOST UNCHANGED — {}
+
+RESULT: 43/43 PASS

@@ -1,0 +1,22 @@
+
+=== B  V17 offline signing (buildtx/signtx) against HTLC transactions ===
+[PASS] B1 V17 `sost-cli signtx` REFUSES the HTLC LOCK (OUT_HTLC_LOCK output) — offline signing of a swap lock impossible — Error: unsupported output type in transaction
+[PASS] B2 V17 `sost-cli signtx` REFUSES the HTLC CLAIM (tx_type 0x10) — Error: only standard transfers are supported by signtx
+[PASS] B3 V17 `sost-cli signtx` REFUSES the HTLC REFUND (tx_type 0x11) — Error: only standard transfers are supported by signtx
+[FAIL] B4 `sost-cli verifytx <raw hex>` on a signed HTLC lock (structure-only path) — RESULT: INVALID: R17: HTLC_LOCK output[0] refund_height 60 must be > current height 60
+[PASS] B5 in-tree `sost-signtx` (private key passed on argv) can sign an HTLC CLAIM that the node accepts — 78f16a20125f8bf2c0761b84aa50e6e0446f6492a53c2b68a7c4c7b0e9be2f5d
+
+=== D9  SOST reorg before finality: lock reorged out + funding input double-spent ===
+[PASS] D9.1 Alice's SOST lock has 1 confirmation on node A
+[PASS] D9.2 Bob locks wSOST after seeing 1 SOST confirmation (no tool enforces a depth)
+[PASS] D9.3 REAL reorg on node A: B's longer branch (with Alice's double-spend of the funding input) replaces the lock block — tip 35 lock status now unknown submit ["ERR {'code': -25, 'message': 'Block rejected'}", "ERR {'code': -25, 'message': 'Block rejected'}", 'True']
+[PASS] D9.4 Alice claims Bob's wSOST; Bob's SOST claim now fails (lock no longer exists) => Bob LOSES (responder must wait for SOST finality depth; nothing enforces it) — {'code': -25, 'message': 'consensus: S1: input[0] references missing UTXO'}
+
+=== K-TP  near-deadline HTLC CLAIM left in the mempool after the next block ===
+[PASS] K-TP.1 node A and node B share tip rh-2 — tip 37 rh 39
+[PASS] K-TP.2 claim accepted into A's mempool at tip rh-2 (valid for block rh-1) — e9e7a36b4c8ee86f65420767cf1137c4800087315ae33105efae433a4c378eae
+[PASS] K-TP.3 after block rh-1 without it, the now-EXPIRED claim (R22 at rh) stays in A's mempool and in getblocktemplate — tip 38 in_mempool True template_txs 1
+[PASS] K-TP.4 node A's miner CANNOT extend the chain while the expired claim is in the template (template poisoning) — advanced 0 block(s) in 240s; evidence: ['[SUBMITBLOCK] REJECTED by process_block', '[BLOCK] REJECTED: tx consensus fail: R22: HTLC_CLAIM at spend_height 39 >= refund_height 39 (claim window expired)', '[SUBMITBLOCK] REJECTED by process_block']
+[PASS] K-TP.5 the expired claim is still in the mempool afterwards (no eviction path for HTLC CLAIM) — 1
+
+RESULT: 13/14 PASS
