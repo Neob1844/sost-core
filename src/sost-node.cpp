@@ -5453,6 +5453,7 @@ static std::string handle_dev_set_reorg_failpoint(const std::string& id, const s
 // DEV/test-only introspection for atomicity harnesses: surfaces internal chainstate
 // invariants (g_blocks vs g_block_undos alignment; the block-index ACTIVE set) that no
 // production RPC exposes. DEV-profile-gated + compiled out of mainnet/testnet.
+static std::array<uint8_t,32> utxo_set_root_now();   // defined with the reorg integrity helpers
 static std::string handle_dev_chainstate(const std::string& id, const std::vector<std::string>&) {
     if (ACTIVE_PROFILE != sost::Profile::DEV)
         return rpc_error(id, -1, "devchainstate is DEV-profile only");
@@ -5468,6 +5469,8 @@ static std::string handle_dev_chainstate(const std::string& id, const std::vecto
     s << "{\"chain_height\":" << g_chain_height
       << ",\"blocks_size\":" << g_blocks.size()
       << ",\"undos_size\":" << g_block_undos.size()
+      << ",\"utxo_count\":" << g_utxo_set.Size()
+      << ",\"utxo_root\":\"" << to_hex(utxo_set_root_now().data(), 32) << "\""
       << ",\"active_index_count\":" << active_ids.size()
       << ",\"active_index_ids\":[";
     for (size_t i = 0; i < active_ids.size(); ++i) { if (i) s << ","; s << "\"" << active_ids[i] << "\""; }
@@ -9715,12 +9718,16 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
         // fork-chain entry to FORK, and re-assert the original blocks as ACTIVE. Mirrors
         // the success-path Step-8 cleanup so a FAILED reorg leaves ZERO index drift
         // (otherwise a stale ACTIVE fork entry survives at a height it no longer occupies).
+        // A fork block that was connected before the failure had its index entry replaced by
+        // process_block with a body-less ACTIVE entry; put back the entry captured in Step 1
+        // (body included) so the valid prefix of the branch can be reorganized onto again.
         {
             std::lock_guard<std::mutex> lk(g_block_index_mu);
             for (size_t fi = 0; fi < fork_chain.size(); ++fi) {
                 const std::string fh = to_hex(fork_chain[fi].block_id.data(), 32);
                 auto it = g_block_index.find(fh);
                 if (it == g_block_index.end()) continue;
+                if (fi < connected) it->second = fork_chain[fi];
                 if (fi == invalid_from && evict_failed_body) {
                     // The bad body goes; its id stays receivable.
                     g_block_index.erase(it);
