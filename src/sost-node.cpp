@@ -444,6 +444,11 @@ struct Peer {
     int fd;
     std::string addr;
     int64_t their_height;
+    // Highest block height THIS node has delivered to the peer (GETB batch or relay). A
+    // follower that does not mine never sends us blocks, so their_height (VERS handshake,
+    // raised only by blocks the peer sends) froze and relay to it stopped once our tip was
+    // 50 past it (F2). Relay/ping eligibility uses max(their_height, sent_height).
+    int64_t sent_height{-1};
     bool version_sent;
     bool version_acked;
     bool outbound;
@@ -458,6 +463,18 @@ struct Peer {
 };
 static std::vector<Peer> g_peers;
 static std::mutex g_peers_mu;
+
+// Best lower bound of a peer's chain height for relay decisions: what it announced/sent us,
+// or what we have already delivered to it. Caller holds g_peers_mu.
+static inline int64_t peer_progress_height(const Peer& p) {
+    return std::max(p.their_height, p.sent_height);
+}
+// A peer far behind is still syncing (it pulls blocks with GETB); do not push relays to it.
+// -1 = unknown (no handshake yet) keeps the legacy behaviour (not treated as lagging).
+static inline bool peer_is_lagging(const Peer& p, int64_t chain_size) {
+    const int64_t known = peer_progress_height(p);
+    return known >= 0 && known < chain_size - 50;
+}
 
 // Get per-fd write mutex (returns nullptr if peer not found)
 static std::shared_ptr<std::mutex> get_peer_write_mu(int fd) {
@@ -2973,6 +2990,7 @@ static std::string handle_getpeerinfo(const std::string& id, const std::vector<s
         s<<"{\"addr\":\""<<mask_addr(p.addr)<<"\""
          <<",\"direction\":\""<<(p.outbound?"outbound":"inbound")<<"\""
          <<",\"height\":"<<p.their_height
+         <<",\"sent_height\":"<<p.sent_height
          <<",\"version_acked\":"<<(p.version_acked?"true":"false")
          <<",\"connected\":true"
          <<",\"enc_mode\":\""<<(p.encrypted?"encrypted":"plaintext")<<"\""
@@ -8857,13 +8875,17 @@ static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd) {
         // an encrypted connection while the handle_peer thread is also writing
         // causes interleaved frames → corrupted TCP stream → silent block loss.
         // Syncing peers will get these blocks via the normal GETB flow.
-        if (p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50) {
+        // Lag is judged on max(their_height, sent_height): a non-mining follower that keeps
+        // receiving our relays (or pulled up to our tip by GETB) stays eligible (F2).
+        if (peer_is_lagging(p, (int64_t)g_blocks.size())) {
             continue; // skip — peer is still syncing, will get blocks via GETB
         }
+        bool ok;
         {
             std::lock_guard<std::mutex> wlk(*p.write_mu); // serialize with handle_peer writes
-            p2p_send(p.fd, "BLCK", (const uint8_t*)js.data(), js.size());
+            ok = p2p_send(p.fd, "BLCK", (const uint8_t*)js.data(), js.size());
         }
+        if (ok && sb.height > p.sent_height) p.sent_height = sb.height;
         ++sent;
     }
     if (sent > 0) {
@@ -9323,8 +9345,17 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 // overflowed int64 for from_h near INT64_MAX).
                 const int64_t getb_end = (from_h > INT64_MAX - GETB_BATCH_MAX)
                                          ? INT64_MAX : from_h + GETB_BATCH_MAX;
+                int64_t last_sent = -1;
                 for (int64_t h = from_h; h <= g_chain_height && h < getb_end; ++h) {
                     if (!p2p_send_block(fd, h, &crypto)) { batch_ok = false; break; }
+                    last_sent = h;
+                }
+                // The peer now holds (or is processing) blocks up to last_sent: credit it, so a
+                // follower that caught up through GETB keeps receiving our relays (F2).
+                if (last_sent >= 0) {
+                    std::lock_guard<std::mutex> lk_sh(g_peers_mu);
+                    for (auto& p : g_peers)
+                        if (p.fd == fd) { if (last_sent > p.sent_height) p.sent_height = last_sent; break; }
                 }
                 if (batch_ok) {
                     std::shared_ptr<std::mutex> wmu = get_peer_write_mu(fd);
@@ -10885,7 +10916,7 @@ int main(int argc, char** argv) {
             {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
                 for(auto& p:g_peers){
-                    if(p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50)
+                    if(peer_is_lagging(p, (int64_t)g_blocks.size()))
                         continue;
                     // Serialize with the peer's own writer (see note below).
                     if(p.version_acked){
