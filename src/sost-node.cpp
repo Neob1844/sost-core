@@ -309,6 +309,21 @@ static const size_t MAX_ORPHAN_BLOCKS = 200;
 // deep fork (e.g. a 1000-deep reorg = 1005 fork entries) fits without evicting the ancestors
 // try_reorganize needs.
 static const size_t MAX_FORK_INDEX_ENTRIES = 65536;
+// Height sanity window for blocks that do NOT extend the active tip (fork candidates and
+// orphans). Such a block's "height" is a JSON field that is not covered by the block id, so a
+// peer (or a submitblock caller) can attach any int64 to a real block. Before this window an
+// orphan of height 1e12 or INT64_MAX was accepted into the orphan pool as-is. Non-consensus:
+//  * a tip-extending block always has height == tip+1 and never reaches this check;
+//  * a fork block is only valid if parent_height == height-1 and its whole branch is in the
+//    fork store, which holds at most MAX_FORK_INDEX_ENTRIES (65,536) entries: a fork block more
+//    than 131,553 above our tip cannot be part of a branch this node could ever connect;
+//  * honest orphans arrive by relay (peers relay only to nodes within 50 blocks of them) or in
+//    a GETB batch (<= our tip + GETB_BATCH_MAX);
+//  * a dropped block is NOT marked known or invalid and the sender is NOT penalised, so the
+//    same block is accepted normally when it arrives again inside the window (e.g. via GETB).
+// 131,553 = one emission epoch (~2.5 years of blocks). Height < 1 cannot be a non-genesis block.
+static const int64_t NONTIP_BLOCK_HEIGHT_WINDOW = 131553;
+static const char* const REJECT_HEIGHT_WINDOW = "block height outside sanity window";
 // SACS V2 resource bound: total bytes held by NON-active fork/orphan entries (raw_json).
 // Measured basis: a coinbase-only block's raw_json ~= 4.4 KB; the absolute per-block ceiling
 // is MAX_P2P_MSG_SIZE (4 MB) with a realistic tx-loaded worst case ~1.5 MB. 256 MB caps the
@@ -7285,6 +7300,17 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                (long long)g_chain_height, (long long)(g_chain_height - height));
         fflush(stdout);
 
+        // Hostile-height guard (see NONTIP_BLOCK_HEIGHT_WINDOW): before any lookup, storage or
+        // height-dependent work. No state is touched, so a legitimate block is unaffected.
+        if (height < 1 || height > g_chain_height + NONTIP_BLOCK_HEIGHT_WINDOW) {
+            printf("[FORK] Block h=%lld bid=%s DROPPED: height outside sanity window [1, %lld]\n",
+                   (long long)height, bid.substr(0,16).c_str(),
+                   (long long)(g_chain_height + NONTIP_BLOCK_HEIGHT_WINDOW));
+            fflush(stdout);
+            record_block_reject(REJECT_HEIGHT_WINDOW);
+            return false;
+        }
+
         // Check if parent is known (in active chain or block index)
         std::string prev_hex = to_hex(prev_h.data(), 32);
         bool parent_known = false;
@@ -10414,7 +10440,11 @@ static void handle_peer(int fd, const std::string& addr, bool outbound, PeerDial
                 // frame is what turned one slow socket into a rejected block and
                 // a disconnect on the other side.
                 bool batch_ok = true;
-                for (int64_t h = from_h; h <= g_chain_height && h < from_h + GETB_BATCH_MAX; ++h) {
+                // Saturating batch end: from_h is peer-controlled (from_h + GETB_BATCH_MAX
+                // overflowed int64 for from_h near INT64_MAX).
+                const int64_t getb_end = (from_h > INT64_MAX - GETB_BATCH_MAX)
+                                         ? INT64_MAX : from_h + GETB_BATCH_MAX;
+                for (int64_t h = from_h; h <= g_chain_height && h < getb_end; ++h) {
                     if (!p2p_send_block(fd, h, &crypto)) { batch_ok = false; break; }
                 }
                 if (batch_ok) {
@@ -10552,6 +10582,10 @@ static void handle_peer(int fd, const std::string& addr, bool outbound, PeerDial
                     } else if (blk_height > sync.batch_max_placed) {
                         sync.batch_max_placed = blk_height;
                     }
+                } else if (g_last_reject_reason == REJECT_HEIGHT_WINDOW) {
+                    // Out-of-window height: dropped before any work, nothing stored. Not a
+                    // penalty (an honest peer may relay a block we are too far behind to
+                    // place); unsolicited repeats are still subject to check_block_rate.
                 } else if (blk_bid.size() != 64) {
                     if (add_misbehavior(fd, addr, 25, "malformed block")) return false;
                 } else if (blk_bitsq == 0) {
