@@ -76,10 +76,16 @@ inactive on mainnet, are unchanged):
   matters for `S <= 6` stocks at the very end of the schedule and prevents a
   zero-value output.
 * Every output: empty payload, `0 < amount <= SUPPLY_MAX_STOCKS`.
-* Normal DTD eligibility, cooldown + retry, anti-dominance, recency window,
-  SbPoW identity and the winner seed are the **unchanged** helpers
-  (`compute_lottery_eligibility_set`, `select_lottery_winner_index_from_history`).
+* Normal DTD eligibility, cooldown + retry, anti-dominance, recency window and
+  SbPoW identity are the **unchanged** helpers (`compute_lottery_eligibility_set`).
   No eligibility code was modified or refactored.
+* **Winner seed (DTD-F1, V17):** from `V17_HEIGHT` the normal DTD seed is
+  `sha256("SOST_DTD_V17" ‖ commit[h-16..h-1] ‖ u64le(h))` and the Jackpot V2 seed is
+  `sha256("SOST_HIST_JACKPOT_V17" ‖ commit[h-16..h-1] ‖ u64le(h))`, where `commit` is
+  the PoW commit, not the `block_id` (which covers the re-signable SbPoW signature).
+  Selection (`roll % E`, weighted roll) is unchanged; below `V17_HEIGHT` the
+  historical `block_id` seeds apply byte-for-byte. Normative spec:
+  `docs/v40000/DTD_F1_SEED_POW_COMMIT.md`.
 * Exact per-block invariant (CB14, `__int128`):
   `sum(outputs) + (pending_after − pending_before) + (J_after − J_before) == S + F`.
 

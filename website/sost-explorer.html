@@ -3191,7 +3191,10 @@ async function _renderDTDHistory(body,title,silent){
       + '<code>sha256(DOMAIN || hash(H-16) &hellip; hash(H-1) || H)</code> '
       + '&mdash; a single domain-separated SHA-256 over the <b>block hashes</b> '
       + 'of the 16 preceding blocks and the height, reduced modulo the size of '
-      + 'the eligible set. The same input always produces the same '
+      + 'the eligible set. From V17 (block #40,000) the input is the <b>PoW commit</b> '
+      + 'of those 16 blocks instead of the block hash: '
+      + '<code>sha256(SOST_DTD_V17 || commit(H-16) &hellip; commit(H-1) || H)</code>, '
+      + 'so re-signing a block cannot change the draw. The same input always produces the same '
       + 'winner; no randomness leaves the chain. Anyone can reproduce the '
       + 'selection locally by reading those 16 blocks &mdash; that is what '
       + 'the <b style="color:#a855f7">RUN AUDIT</b> button below does for '
@@ -3395,7 +3398,9 @@ async function _renderDTDHistory(body,title,silent){
 // loadLotteryAudit() — calls getlotteryaudit per PAYOUT block and renders
 // a table comparing the re-derived winner against the on-chain winner.
 // Each row is verifiable: seed_hex shown is sha256(SOST_LOTTERY_V11 || 16
-// prev block hashes || height_le); same input → same winner → no tampering.
+// prev block hashes || height_le) below V17 and sha256(SOST_DTD_V17 || 16 prev
+// PoW commits || height_le) from V17 (#40,000; the node reports seed_rule);
+// same input → same winner → no tampering.
 //
 // RPC scheduling: up to AUDIT_CONCURRENCY in flight at a time. With
 // thousands of PAYOUT blocks expected over Phase 2, a flat Promise.all
@@ -3442,10 +3447,10 @@ window.loadLotteryAudit = async function(){
   var TT_BLOCK='Height of the PAYOUT block being audited. Phase 2 schedules a reward payout on every 3rd reward block; only those blocks appear here.';
   var TT_MINER='Address that mined this PAYOUT block. The miner is excluded from winning the lottery on the same block (the cooldown rule covers this and the previous 4 blocks).';
   var TT_ON='Lottery winner address as recorded on-chain — the address that actually received the DTD Reward payout output in this block.';
-  var TT_AUDIT='Lottery winner address re-derived in real time from the same 16-block window the consensus rule uses (sha256(SOST_LOTTERY_V11 || prev16_hashes || height_le)). Same input → same winner. Any divergence from ON-CHAIN WINNER is evidence of selection tampering.';
+  var TT_AUDIT='Lottery winner address re-derived in real time from the same 16-block window the consensus rule uses (sha256(SOST_LOTTERY_V11 || prev16_hashes || height_le); from V17 #40,000: sha256(SOST_DTD_V17 || prev16_pow_commits || height_le)). Same input → same winner. Any divergence from ON-CHAIN WINNER is evidence of selection tampering.';
   var TT_WIDX='Index of the winner inside the eligible-set list at this block. Deterministic: idx = first 8 bytes of seed mod eligible_count.';
   var TT_ELIG='Number of eligible addresses considered for this block — coinbase-bearing addresses minus the cooldown set (recent distinct miners: 5 pre-V13, 6 from V13 / #12,000) and, from #12,100, minus the V13 anti-dominance set (any address with ≥10% of the last 288 blocks).';
-  var TT_SEED='First 12 hex chars of sha256(SOST_LOTTERY_V11 || 16 prev block hashes || height_le). Hover for the full seed and the seed-input prefix used to build it.';
+  var TT_SEED='First 12 hex chars of sha256(SOST_LOTTERY_V11 || 16 prev block hashes || height_le); from V17 (#40,000) sha256(SOST_DTD_V17 || 16 prev PoW commits || height_le). Hover for the full seed and the seed-input prefix used to build it.';
   var TT_COOL='Count of distinct miners in the cooldown window (previous 5 blocks pre-V13, 6 from V13 / #12,000) — those addresses are excluded from THIS lottery. Hover the cell for the actual addresses. Winning the lottery does NOT trigger cooldown; only mining a recent block does.';
   var TT_MATCH='OK = audit winner equals on-chain winner (selection reproduces from public chain data). MISMATCH = the on-chain payout went to a different address than the consensus rule produces — would indicate tampering.';
   var tableHead='<table class="tbl" style="font-size:10px;width:100%"><thead>'

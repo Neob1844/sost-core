@@ -401,3 +401,13 @@ the S14 work, never in the #40,000 consensus diff.
 * **DECENTRALIZATION_GATES_MET = NO.** Independent seeds 0; providers 1;
   regions 1; producers 2. The release blockers that are in core-dev control are
   listed in the action plan §3.
+
+## H. DTD-F1 added to the V17 package (2026-10-15, owner-authorized)
+
+* **Rule:** from `V17_HEIGHT` the normal DTD and Jackpot V2 seeds hash the PoW `commit` of
+  `[h-16, h-1]` instead of the `block_id` (domains `SOST_DTD_V17`, `SOST_HIST_JACKPOT_V17`).
+  Closes the CRITICAL free re-signing grind (DTD security audit A1).
+* **Unchanged:** eligibility, amounts, cooldown, anti-dominance, Jackpot weighting, cadence, base,
+  cap, rollover; every draw below `V17_HEIGHT`; no new activation height.
+* **Spec:** `docs/v40000/DTD_F1_SEED_POW_COMMIT.md`. Rotating identities (F2/F3) stay out of V17:
+  `docs/design/DTD_ROTATING_IDENTITIES.md`.
