@@ -1,0 +1,10 @@
+/* SOST wordmark typeface — Goldman Bold (SIL OFL 1.1, see fonts/OFL-Goldman.txt).
+   Closest open match to the bold, wide geometric sans of the wSOST & Gold Vault emblem.
+   Applies ONLY to the wordmark text: the nav logo block ("SOST" / "SOST EXPLORER") on
+   the website and the Explorer, and the splash title on the home page.
+   Size, colour, glow, position and the layout box are unchanged; the 407px logo block
+   (Explorer geometry) is kept by a slightly tighter letter-spacing, the only metric that
+   changes, so "SOST EXPLORER" still fits on one line exactly as before. */
+@font-face{font-family:'SOST Wordmark';src:url('../fonts/goldman-700-latin.woff2') format('woff2');font-weight:700;font-style:normal;font-display:block;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
+nav .nav-logo > span,nav .nav-logo .brand-sost{font-family:'SOST Wordmark','Space Grotesk',sans-serif !important;font-weight:700 !important;letter-spacing:var(--sost-wm-ls,-.09em) !important}
+#splash-title{font-family:'SOST Wordmark','JetBrains Mono',monospace !important}
