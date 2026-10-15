@@ -319,6 +319,11 @@ add_executable(test-chunk1 tests/test_chunk1.cpp)
 target_link_libraries(test-chunk1 PRIVATE sost-core)
 add_test(NAME chunk1 COMMAND test-chunk1)
 
+# Bounded-complexity subsidy / cumulative emission == original algorithm (hostile heights).
+add_executable(test-subsidy-bounded tests/test_subsidy_bounded.cpp)
+target_link_libraries(test-subsidy-bounded PRIVATE sost-core)
+add_test(NAME subsidy-bounded COMMAND test-subsidy-bounded)
+
 add_executable(test-chunk2 tests/test_chunk2.cpp)
 target_link_libraries(test-chunk2 PRIVATE sost-core)
 add_test(NAME chunk2 COMMAND test-chunk2)
