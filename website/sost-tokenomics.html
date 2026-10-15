@@ -717,7 +717,7 @@
 
 
 <div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
-<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
+<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). From block <b>#40,000 (V17)</b>: subsidy <b>80% miner / 15% DTD / 5% Jackpot accumulator</b>, fees <b>100% to the miner</b>, and normal-DTD eligibility also requires an active <b>NODE_BIND</b> + node heartbeats. Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
 </div>
 <section class="hero">
   <div class="container">
@@ -829,7 +829,7 @@ subsidy = (R0 &times; <span class="fn">_qpow_floor</span>(Q_NUM, epoch)) // Q_DE
       </div>
     </div>
 
-    <div style="margin-top:14px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:14px 18px;font-size:12.5px;color:var(--text-secondary);line-height:1.7"><strong style="color:#fbbf24">Note on the 25% + 25% allocations:</strong> the coinbase split above is unchanged at the consensus level, but <strong>Gold Vault</strong> and <strong>PoPC</strong> are <strong>paused indefinitely</strong> as standalone products. Their combined allocation is now redistributed on-chain to miners through the <strong>DTD / DTD Jackpot</strong> architecture (supply-neutral &mdash; no new emission). See the Roadmap for current protocol status.</div>
+    <div style="margin-top:14px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:14px 18px;font-size:12.5px;color:var(--text-secondary);line-height:1.7"><strong style="color:#fbbf24">Note on the 25% + 25% allocations:</strong> the coinbase split above is unchanged at the consensus level, but <strong>Gold Vault</strong> and <strong>PoPC</strong> are <strong>paused indefinitely</strong> as standalone products. Their combined allocation is now redistributed on-chain to miners through the <strong>DTD / DTD Jackpot</strong> architecture (supply-neutral &mdash; no new emission). See the Roadmap for current protocol status. <strong style="color:#fbbf24">From #40,000 (V17, mandatory upgrade):</strong> block subsidy 80% miner / 15% normal DTD / 5% into the Jackpot accumulator J (a consensus balance, not an address; no new supply), and transaction fees 100% to the miner. Until #39,999 the 50% miner / 50% DTD split stays in force.</div>
 
     <div class="spec-block fade-in delay-2">
       <div class="spec-header">
@@ -882,7 +882,8 @@ sum    = <span class="num">785,100,863</span> &check;
           <tr><td class="key">Miners (50%)</td><td class="val"><code>2,334,600</code> SOST</td></tr>
           <tr><td class="key">Gold Vault (25%)</td><td class="val"><code>1,167,300</code> SOST <span class="comment">// historical pre-V15 split (blocks 0&ndash;24,999); 0 since #25,000</span></td></tr>
           <tr><td class="key">PoPC Pool (25%)</td><td class="val"><code>1,167,300</code> SOST <span class="comment">// historical pre-V15 split (blocks 0&ndash;24,999); 0 since #25,000</span></td></tr>
-          <tr><td class="key">Since #25,000 (V15)</td><td class="val">50% miner / 50% DTD <span class="comment">// gold-vault &amp; PoPC shares are 0 today</span></td></tr>
+          <tr><td class="key">Since #25,000 (V15)</td><td class="val">50% miner / 50% DTD <span class="comment">// gold-vault &amp; PoPC shares are 0 today; until #39,999</span></td></tr>
+          <tr><td class="key">From #40,000 (V17)</td><td class="val">80% miner / 15% normal DTD / 5% Jackpot accumulator J <span class="comment">// subsidy only; fees 100% to the miner; no new supply</span></td></tr>
           <tr><td class="key">Maximum supply</td><td class="val"><code>4,669,201</code> SOST (hard cap)</td></tr>
           <tr><td class="key">Premine</td><td class="val"><code>0</code> SOST &mdash; zero</td></tr>
           <tr><td class="key">ICO / VCs</td><td class="val">None</td></tr>
@@ -921,7 +922,7 @@ sum    = <span class="num">785,100,863</span> &check;
           <tr><td class="key">Initial reward</td><td class="val">BTC: <code>50</code>/block &middot; SOST: <code>7.851</code>/block</td></tr>
           <tr><td class="key">Decay method</td><td class="val">BTC: halving every 210k blocks &middot; SOST: smooth 9.03% annual</td></tr>
           <tr><td class="key">Decay events</td><td class="val">BTC: cliff (50% overnight) &middot; SOST: continuous (no cliffs)</td></tr>
-          <tr><td class="key">Mining allocation</td><td class="val">BTC: 100% miner &middot; SOST: 50% miner, 25% gold, 25% PoPC (blocks 0&ndash;24,999; 50% miner / 50% DTD since #25,000)</td></tr>
+          <tr><td class="key">Mining allocation</td><td class="val">BTC: 100% miner &middot; SOST: 50% miner, 25% gold, 25% PoPC (blocks 0&ndash;24,999; 50% miner / 50% DTD since #25,000; from #40,000: 80% miner / 15% DTD / 5% Jackpot accumulator J, fees 100% miner)</td></tr>
           <tr><td class="key">Smallest unit</td><td class="val">BTC: 1 satoshi (10&#x207B;&#x2078;) &middot; SOST: 1 stock (10&#x207B;&#x2078;)</td></tr>
           <tr><td class="key">~95% emission</td><td class="val">BTC: ~2036 (year 28) &middot; SOST: ~2056 (year 30)</td></tr>
         </table>
@@ -1004,7 +1005,7 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->

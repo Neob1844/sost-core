@@ -203,7 +203,7 @@ sha256sum sost-node sost-miner sost-cli
 
     <div style="margin:12px 0;padding:12px 14px;border:1px solid rgba(34,211,238,.5);border-radius:8px;background:rgba(34,211,238,.05);font-size:12.5px;line-height:1.65;color:#cfd8e3">
       <div style="font-weight:800;color:#22d3ee;letter-spacing:.4px;margin-bottom:6px">NODE_BIND &mdash; IMPORTANT AFTER ACTIVATION</div>
-      If you operate a node and want DTD Jackpot eligibility:
+      If you operate a node and want DTD Jackpot eligibility (and, from <b>#40,000 (V17)</b>, normal-DTD eligibility too):
       <ol style="margin:6px 0 6px 18px">
         <li>Register your <b>NODE_BIND</b> after activation (#30,000) with the FINAL build:<br><code>sost-cli --wallet &lt;wallet.json&gt; --mining-key-label &lt;label&gt; createnodebind 1 --node-key-file ~/.sost/node.key</code></li>
         <li>Verify that the registered owner/address is <b>your</b> intended mining address.</li>
@@ -213,14 +213,14 @@ sha256sum sost-node sost-miner sost-cli
       <div style="margin:8px 0;padding:8px 11px;border:2px solid #39ff14;border-radius:7px;background:rgba(57,255,20,.07)"><b style="color:#39ff14">&#10004; NODE_BIND IS OPEN &mdash; GO-AHEAD GIVEN (11 OCT 2026).</b> The first two-signature NODE_BIND confirmed in block <b>#30,194</b>, its first automatic NODE_HEARTBEAT in <b>#30,196</b>, and the chain has kept building on both. Miners on <b>V30000 FINAL</b> can register now: create the bind with the command above, broadcast it, and run your node with <code>--node-key-file</code> so it emits its own heartbeat once per 288-block epoch. Eligibility for each draw is decided by consensus &mdash; check it with <code>checkhistoricaljackpoteligibility</code>.</div>
       <b>New ownership protection, active from #30,000:</b> a NODE_BIND must be signed by <b>both</b> your mining key and
       your <b>node key</b>, so only the holder of a node key can bind it, and a bind cannot be copied to another miner.
-      NODE_BIND affects <b>Jackpot eligibility only</b>. It does <b>NOT</b> give access to your wallet, does <b>NOT</b> allow
+      Until #39,999 NODE_BIND affects <b>Jackpot eligibility only</b>; from <b>#40,000 (V17)</b> the same NODE_BIND + heartbeats are also required for the <b>normal DTD</b>. It does <b>NOT</b> give access to your wallet, does <b>NOT</b> allow
       another party to spend your SOST, and can <b>NOT</b> create or burn SOST.
     </div>
     <div style="margin:12px 0;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.04);font-size:12.5px;line-height:1.7;color:#cfd8e3">
       <div style="font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:6px">V30000 SAFETY STATUS (MAINNET)</div>
       <b>Native Assets:</b> DEFERRED / FAIL-CLOSED on mainnet.<br>
       <b>SACS V2:</b> DEFERRED on mainnet for compatibility.<br>
-      <b>Current monetary consensus:</b> 50% Miner / 50% DTD.<br>
+      <b>Current monetary consensus:</b> 50% Miner / 50% DTD (until #39,999). From <b>#40,000 (V17)</b>: subsidy 80% Miner / 15% DTD / 5% Jackpot accumulator, fees 100% to the miner.<br>
       <b>SOST native burn:</b> NONE &mdash; not supported, not planned. SOST has no burn mechanism.
     </div>
 
@@ -300,8 +300,8 @@ sha256sum sost-node sost-miner sost-cli
 
     <div class="sost-v16-h">What does NOT change</div>
     <ul>
-      <li>Normal DTD: <b>payout logic, every-block cadence, uniform selection and seed</b> &mdash; untouched. Its <b>eligibility</b> does change (288-block window, conditional cooldown, conditional anti-dominance).</li>
-      <li>The 50% miner / 50% DTD emission structure.</li>
+      <li>Normal DTD: <b>payout logic, every-block cadence, uniform selection and seed</b> &mdash; untouched. Its <b>eligibility</b> does change (288-block window, conditional cooldown, conditional anti-dominance). From <b>#40,000 (V17)</b> it also requires NODE_BIND + heartbeats and uses a PoW-protected seed (DTD-F1).</li>
+      <li>The 50% miner / 50% DTD emission structure (it changes later, at <b>#40,000 (V17)</b>: 80% / 15% / 5% Jackpot accumulator, fees 100% to the miner).</li>
       <li>The DTD Jackpot cadence of 288 blocks.</li>
       <li>The Jackpot funding source: the existing historical reserve. <b>No new emission is created.</b></li>
       <li>Ordinary SOST transfers and balances &mdash; unaffected by the admin-gated asset layer.</li>

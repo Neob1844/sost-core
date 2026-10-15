@@ -250,7 +250,7 @@
 
 <!-- HERO -->
 <div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
-<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
+<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). From block <b>#40,000 (V17)</b>: subsidy <b>80% miner / 15% DTD / 5% Jackpot accumulator</b>, fees <b>100% to the miner</b>, and normal-DTD eligibility also requires an active <b>NODE_BIND</b> + node heartbeats. Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
 </div>
 <section class="hero">
   <div class="container">
@@ -502,7 +502,7 @@
         <table class="code-table">
           <tr><th>Rule</th><th>Provision</th></tr>
           <tr><td class="highlight">C1</td><td class="value">Total supply upper-bounded by ~4,669,201 SOST by construction. Only issuance is subsidy(height).</td></tr>
-          <tr><td class="highlight">C2</td><td class="value">Coinbase split immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc. <em style="color:#c084fc;">Historical (superseded since V15 / #25,000): the gold and PoPC shares ended at #25,000; the split is now 50% miner / 50% DTD.</em></td></tr>
+          <tr><td class="highlight">C2</td><td class="value">Coinbase split immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc. <em style="color:#c084fc;">Historical (superseded since V15 / #25,000): the gold and PoPC shares ended at #25,000; the split is now 50% miner / 50% DTD. From #40,000 (V17): 80% miner / 15% DTD / 5% Jackpot accumulator, fees 100% to the miner.</em></td></tr>
           <tr><td class="highlight">C3</td><td class="value">Gold Funding Vault destination immutable. Heritage Reserve sealed. Emergency dual gate only.</td></tr>
           <tr><td class="highlight">C4</td><td class="value">Reserve shall not be sold except under Emergency Catastrophe (E2) or Dissolution.</td></tr>
           <tr><td class="highlight">C5</td><td class="value">Dissolution requires 90 days zero blocks + 60-day public timelock.</td></tr>
@@ -639,7 +639,7 @@
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->

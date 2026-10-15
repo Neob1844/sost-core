@@ -91,7 +91,7 @@
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v567">
 </head>
 <body><div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
-<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
+<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). From block <b>#40,000 (V17)</b>: subsidy <b>80% miner / 15% DTD / 5% Jackpot accumulator</b>, fees <b>100% to the miner</b>, and normal-DTD eligibility also requires an active <b>NODE_BIND</b> + node heartbeats. Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
 </div>
 <div style="max-width:960px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:14px;line-height:1.6">
 <b style="color:#f59e0b">HISTORICAL PAGE.</b> This is an archived announcement. For current instructions use the <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator upgrade guide</a>, <a href="sost-quickstart.html" style="color:#39ff14">quick start</a> and the <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee">official V30000 FINAL SECURITY BUILD</a> (earlier v30000 / v30000-rc1 / emergency builds are superseded). Commands here were updated so nobody copies an unsafe one, but the surrounding text describes an earlier release.
@@ -189,7 +189,7 @@
   <tr><td>Block time</td><td>600s (10 min)</td></tr>
   <tr><td>Max supply</td><td>4,669,201 SOST (hard cap by construction)</td></tr>
   <tr><td>Emission</td><td>Exponential decay, q = e<sup>(-1/4)</sup> &asymp; 0.7788</td></tr>
-  <tr><td>Coinbase split</td><td>50% miner / 50% DTD since block 25,000 (V15). HISTORICAL (blocks 0&ndash;24,999): 50% miner / 25% Gold Funding Vault / 25% PoPC Pool</td></tr>
+  <tr><td>Coinbase split</td><td>50% miner / 50% DTD since block 25,000 (V15); from block 40,000 (V17): subsidy 80% miner / 15% DTD / 5% Jackpot accumulator, fees 100% to the miner. HISTORICAL (blocks 0&ndash;24,999): 50% miner / 25% Gold Funding Vault / 25% PoPC Pool</td></tr>
   <tr><td>Difficulty</td><td>cASERT unified (avg288 bitsQ + dynamic cap + equalizer 43 profiles)</td></tr>
   <tr><td>Encoding</td><td>SOSTCompact Q16.16 fixed-point</td></tr>
   <tr><td>Coinbase maturity</td><td>1,000 blocks (~7 days)</td></tr>
@@ -279,7 +279,7 @@
 
 <p>Since block 25,000 (V15) every block reward is split 50% to the miner and 50% to DTD among recent miners; the Gold Funding Vault and the PoPC Pool receive nothing new, and their frozen balances fund the DTD Jackpot. <b>HISTORICAL:</b> from genesis to block 24,999 the split was 50% miners, 25% Gold Funding Vault, 25% PoPC Pool. There is no founder allocation, no team vesting schedule, and no treasury. SOST is funded by the constitutional coinbase split itself &mdash; never by minted coins outside the schedule.</p>
 
-<p><strong>End of emission:</strong> The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 &mdash; the integer arithmetic truncates sub-stock values to zero. There is <strong>no tail emission</strong> (unlike Monero). The hard cap is not a counter that can be changed &mdash; it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) applies to fees: today 50% to the miner and 50% to DTD (historically 50% / 25% / 25%). The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic design as Bitcoin &mdash; long-term security funded by fee revenue &mdash; but with the structural advantage that 25% of all fees continued accumulating gold reserves &mdash; <b>until block #25,000</b>. Since V15 that share is <b>0</b>: fees go to the miner and the non-miner half of the subsidy goes to the DTD.</p>
+<p><strong>End of emission:</strong> The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 &mdash; the integer arithmetic truncates sub-stock values to zero. There is <strong>no tail emission</strong> (unlike Monero). The hard cap is not a counter that can be changed &mdash; it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) applies to fees: today 50% to the miner and 50% to DTD; from block #40,000 (V17) fees go 100% to the miner (historically 50% / 25% / 25%). The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic design as Bitcoin &mdash; long-term security funded by fee revenue &mdash; but with the structural advantage that 25% of all fees continued accumulating gold reserves &mdash; <b>until block #25,000</b>. Since V15 that share is <b>0</b>: fees go to the miner and the non-miner half of the subsidy goes to the DTD.</p>
 
 <hr>
 
@@ -426,7 +426,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->

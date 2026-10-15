@@ -206,6 +206,47 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ V17 AT BLOCK #40,000: NODE-VERIFIED NORMAL DTD + POW-PROTECTED SEED + 80/15/5 (DRAFT — date set on publication) ============ -->
+<section class="section" id="v17-40000"><div class="container">
+  <article style="border:2px solid #39ff14;border-radius:14px;background:linear-gradient(180deg,rgba(57,255,20,.06),transparent 60%);padding:20px 22px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#39ff14">// CONSENSUS UPGRADE &middot; DRAFT &mdash; DATE SET ON PUBLICATION</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#39ff14;border:1px solid #39ff14;border-radius:6px;padding:3px 8px">V17 &middot; BLOCK #40,000</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#ff6b6b;border:1px solid #7a2b2b;border-radius:6px;padding:3px 8px">MANDATORY UPGRADE</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#94a3b8;border:1px solid #475569;border-radius:6px;padding:3px 8px">UNTIL #39,999: RULES UNCHANGED</span>
+    </div>
+    <h2 style="font-size:24px;margin:12px 0 4px;color:var(--text-primary,#e2e8f0);text-wrap:balance">V17 at block <span style="color:#39ff14">#40,000</span>: node-verified normal DTD, PoW-protected seed, 80/15/5 subsidy</h2>
+    <div style="font-size:14px;color:#c9f7c0;margin-bottom:10px">A scheduled, mandatory consensus upgrade &mdash; every node and miner must run the V17 release before #40,000</div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Nothing changes before #40,000.</b> Up to and including block <b>#39,999</b> the current rules apply exactly as today. From block <b>#40,000</b> four things change, all at once, automatically by block height.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#39ff14;margin:18px 0 6px;font-weight:800">What changes at #40,000</h3>
+    <ul style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:6px 0 6px 18px">
+      <li><b>1 &middot; Normal DTD gains a node requirement.</b> Every current mining-activity rule stays (288-block activity window, 6-block cooldown and its fallback, anti-dominance, uniform draw). In addition, an address must have a valid <b>active NODE_BIND</b> and valid node <b>heartbeats</b> &mdash; the <b>same</b> node-participation test Jackpot V2 uses: a confirmed NODE_BIND tying the mining key to a node key, plus heartbeats in <b>3 of the last 4</b> completed 288-block epochs. The cooldown fallback can only relax the cooldown; it can <b>never</b> waive the NODE_BIND / heartbeat requirement.</li>
+      <li><b>2 &middot; PoW-protected seed (DTD-F1).</b> The normal DTD and Jackpot V2 seeds are derived from the PoW-protected commitments of the <b>16 previous blocks</b> instead of the block hashes.</li>
+      <li><b>3 &middot; Block subsidy 80 / 15 / 5.</b> <b>80% miner</b> &middot; <b>15% normal DTD</b> &middot; <b>5% into the Jackpot accumulator J</b> &mdash; a consensus balance, not an address. The Jackpot pays from the historical reserve <b>H first</b>, then from <b>J</b>. <b>No new supply:</b> all three come from the existing block emission.</li>
+      <li><b>4 &middot; Transaction fees 100% to the miner.</b> Today fees are split with the DTD; from #40,000 the block finder keeps all of them.</li>
+    </ul>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Jackpot V2 is otherwise unchanged:</b> same eligibility (NODE_BIND + heartbeats + at least 3 SbPoW blocks in the last 2,016), same linear PoW weight, same 288-block cadence, base 100 SOST, cap 500 SOST with rollover. Native assets are <b>not</b> part of #40,000.</p>
+    <div style="font:12px/1.65 ui-monospace,monospace;color:#cfe6f2;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre">                  UNTIL #39,999 (today)          FROM #40,000 (V17)
+SUBSIDY           50% miner &middot; 50% normal DTD     80% miner &middot; 15% normal DTD &middot; 5% J
+FEES              split with the DTD             100% to the miner
+NORMAL DTD        mined in last 288 blocks       same mining rules
+                  6-block cooldown + fallback    + active NODE_BIND
+                  anti-dominance (&ge; 11 miners)   + heartbeats 3 of last 4 epochs
+                  NO NODE_BIND &middot; NO heartbeats   (fallback never waives the node test)
+DTD SEED          hashes of 16 previous blocks   PoW-protected commitments (DTD-F1)
+JACKPOT V2        every 288 blocks, paid from H  unchanged rules &middot; paid from H, then J
+MINER REWARD      never needs NODE_BIND          never needs NODE_BIND</div>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#39ff14;margin:18px 0 6px;font-weight:800">What miners and node operators must do</h3>
+    <ul style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:6px 0 6px 18px">
+      <li><b style="color:#ff6b6b">Upgrade to the V17 release before #40,000 &mdash; mandatory.</b> Software that does not apply the V17 rules at #40,000 may split from the chain. The release and its checksums will be announced separately; step-by-step instructions will be in the <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</li>
+      <li><b>To stay eligible for the normal DTD after #40,000</b>, run a node with an <b>active NODE_BIND</b> and keep its heartbeats alive: a node started with <code>--node-key-file</code> emits one heartbeat per 288-block epoch automatically. Bind once with <code>createnodebind</code> (see the <a href="#node-bind-open" style="color:#22d3ee">NODE_BIND article</a>).</li>
+      <li><b>Check your node-participation status</b> &mdash; NODE_BIND and heartbeats &mdash; as described in the <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>; <code>checkhistoricaljackpoteligibility</code> already reports <code>node_bound</code> and <code>heartbeats_valid</code> / <code>heartbeats_required</code>, the same test that the normal DTD uses from #40,000.</li>
+      <li><b>Mining rewards themselves never require NODE_BIND.</b> A miner without a bound node still mines valid blocks and keeps the miner share (80% of the subsidy plus all fees from #40,000); only normal-DTD and Jackpot eligibility depend on the node test.</li>
+    </ul>
+    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Background: <a href="whitepaper-reader.html" style="color:#22d3ee">whitepaper</a> &middot; <a href="sost-whitepaper.html#adaptive-node-participation" style="color:#22d3ee">node participation for the normal DTD</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>. Research pillars such as wSOST, Gold Reserve V2, governance and further decentralization work are <b>not</b> part of #40,000.</p>
+  </article>
+</div></section>
+
 <!-- ============ RESEARCH ROADMAP: wSOST & GOLD RESERVE V2 (2026-10-12) ============ -->
 <section class="section" id="wsost-gold-reserve-v2"><div class="container">
   <article style="border:2px solid #ff1e28;border-radius:14px;background:linear-gradient(180deg,rgba(255,30,40,.06),transparent 60%);padding:20px 22px">
@@ -220,7 +261,7 @@
       <h2 style="flex:1 1 260px;font-size:24px;margin:0;color:var(--text-primary,#e2e8f0);text-wrap:balance">wSOST, Gold Reserve V2 and on-chain governance &mdash; the research roadmap is public</h2>
     </div>
     <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">A new page, <a href="sost-wsost-gold-vault.html" style="color:#ffd166">wSOST &amp; Gold Vault</a> (also the new red circle in the top navigation), explains the whole design with examples: <b>wSOST</b> (1 wSOST = 1 native SOST locked; only wSOST is burned, native SOST never), a separate <b>Gold Reserve V2</b> of tokenized gold that never mints wSOST and has no withdrawal function, and <b>governance</b> where each eligible miner-with-a-bound-node identity casts one on-chain vote and a migration needs YES from two thirds of the whole census plus 4 of 5 guardians, a timelock and a pre-named successor vault.</p>
-    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Nothing is live.</b> No bridge or Ethereum contract is deployed, Gold Reserve V2 holds nothing, and current consensus stays 50% miner / 50% DTD. #40,000 is a research horizon, not an activation commitment. No price, floor or listing is promised.</p>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Nothing is live.</b> No bridge or Ethereum contract is deployed, Gold Reserve V2 holds nothing, and current consensus stays 50% miner / 50% DTD. #40,000 is a research horizon, not an activation commitment. No price, floor or listing is promised. <span style="color:#39ff14">[Update: #40,000 is now the scheduled mandatory <a href="#v17-40000" style="color:#39ff14">V17 upgrade</a> (node-verified normal DTD, PoW-protected seed, 80/15/5 subsidy, fees 100% to the miner); wSOST, Gold Reserve V2 and governance remain research and are not part of it.]</span></p>
   </article>
 </div></section>
 
@@ -280,6 +321,7 @@ Example (SOST, epoch 0, no fees): subsidy 7.85100863 SOST
     <h2 style="font-size:24px;margin:12px 0 4px;color:var(--text-primary,#e2e8f0);text-wrap:balance">Future DTD design: adaptive node participation</h2>
     <div style="font-size:14px;color:#bdeff8;margin-bottom:10px">More miners running nodes &mdash; without making it harder to join while the network is small</div>
     <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Nothing changes today.</b> This is a design direction published for discussion. The current rules stay exactly as they are, no threshold has been chosen and no activation height exists. Any future change would need implementation, simulation, tests, review and audit, a public notice and an explicit activation rule.</p>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><span style="color:#39ff14">[Update: from block #40,000 (<a href="#v17-40000" style="color:#39ff14">V17</a>, mandatory upgrade) the normal DTD requires an active NODE_BIND and valid heartbeats &mdash; the same test as Jackpot V2 &mdash; at a fixed height, not through the adaptive maturity trigger discussed below. The rules below apply until #39,999.]</span></p>
     <h3 style="font-size:14px;letter-spacing:.4px;color:#22d3ee;margin:18px 0 6px;font-weight:800">The rules today (V30000)</h3>
     <div style="font:12px/1.65 ui-monospace,monospace;color:#cfe6f2;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre">MINER REWARD      valid mining &middot; never depends on NODE_BIND
 
@@ -318,7 +360,7 @@ MATURE NETWORK  (only once objective maturity conditions hold)
     <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Maturity should not be measured by NODE_BIND count alone, but by a <b>combination</b> of distinct active miners, distinct active bound node identities, the share of miners with an active bound node, persistence over time, network stability, observable node diversity, a minimum duration before activation and protection against temporary spikes. <b>No number is proposed here</b>: the thresholds have to come out of simulation and incentive analysis.</p>
     <h3 style="font-size:14px;letter-spacing:.4px;color:#22d3ee;margin:18px 0 6px;font-weight:800">Running a node first has to be easy</h3>
     <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Before NODE_BIND is required more broadly, running a node should be close to one click. Target experience (design direction, not a shipped feature): <b>Enable full participation</b> &rarr; run node &middot; run miner &middot; create NODE_BIND &middot; automatic heartbeats &middot; Jackpot eligibility.</p>
-    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Separate from <b>#40,000</b>: the planned 80% miner / 15% DTD normal / 5% DTD Jackpot split and this proposal are two different decisions and are not tied to the same activation. Terminology: NODE_BIND proves a cryptographic link between a mining key and a node key &mdash; a <b>bound node identity</b> &mdash; not that a physical machine is unique. Full technical note: <a href="sost-whitepaper.html#adaptive-node-participation" style="color:#22d3ee">whitepaper</a>.</p>
+    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Separate from <b>#40,000</b>: the planned 80% miner / 15% DTD normal / 5% DTD Jackpot split and this proposal are two different decisions and are not tied to the same activation. <span style="color:#39ff14">[Update: V17 at #40,000 now includes both the 80/15/5 split and a fixed node requirement for the normal DTD.]</span> Terminology: NODE_BIND proves a cryptographic link between a mining key and a node key &mdash; a <b>bound node identity</b> &mdash; not that a physical machine is unique. Full technical note: <a href="sost-whitepaper.html#adaptive-node-participation" style="color:#22d3ee">whitepaper</a>.</p>
   </article>
 </div></section>
 
@@ -433,7 +475,7 @@ sha256sum -c SHA256SUMS      # all three must print: OK</pre></div>
       <li><b>Download:</b> <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee">github.com/Neob1844/sost-core/releases/tag/v30000-final</a> &middot; step-by-step: <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</li>
       <li><b>Activation is automatic at #30,000</b> by block height. Nothing needs to be restarted exactly at #30,000 &mdash; but every validating node and every miner <b>must restart on this build between #29,900 and #30,000</b> and still run it at #30,000; older software may split from the chain and will not apply the new protocol rules.</li>
       <li><b style="color:#39ff14">Update 11 Oct 2026: the go-ahead is given &mdash; NODE_BIND is open.</b> Until then the instruction here was to wait; the first bind confirmed at #30,194 and its first heartbeat at #30,196. Every miner must still be on this build.</li>
-      <li><b>NODE_BIND (after #30,000):</b> a bind now carries a second signature by your <b>node key</b>, so only the holder of a node key can bind it. Command (unchanged): <code>sost-cli --wallet &lt;wallet.json&gt; --mining-key-label &lt;label&gt; createnodebind 1 --node-key-file ~/.sost/node.key</code>. After it confirms, check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it gives no access to wallets and cannot create, spend or burn SOST.</li>
+      <li><b>NODE_BIND (after #30,000):</b> a bind now carries a second signature by your <b>node key</b>, so only the holder of a node key can bind it. Command (unchanged): <code>sost-cli --wallet &lt;wallet.json&gt; --mining-key-label &lt;label&gt; createnodebind 1 --node-key-file ~/.sost/node.key</code>. After it confirms, check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it gives no access to wallets and cannot create, spend or burn SOST. <span style="color:#39ff14">[Update: from #40,000 (V17) NODE_BIND + heartbeats also gate normal-DTD eligibility; block rewards never depend on it.]</span></li>
       <li><b>Native Assets:</b> DEFERRED / FAIL-CLOSED on mainnet. <b>SACS V2:</b> DEFERRED on mainnet.</li>
       <li><b>Monetary rule unchanged:</b> 50% miner / 50% DTD. <b>SOST has no burn mechanism</b> &mdash; none supported, none planned.</li>
     </ul>
@@ -892,6 +934,7 @@ NODE STAYS ALIVE</pre></div>
       <p style="font-size:12.5px;color:#cbb6e6;line-height:1.7;margin:0"><b>Under study (ranges, nothing fixed):</b> miner 70&ndash;80% / DTD 15&ndash;25% / jackpot 5&ndash;10%; jackpot interval ~2,500&ndash;5,000 blocks (block time verified 600&nbsp;s). A key simulation finding: a uniform-per-identity jackpot is Sybil-gameable, so a large jackpot would need <b>PoW-weighted, capped</b> eligibility (V2-style), not a bare address/identity draw. <b>No activation height. No final interval. No consensus change. Any implementation would require a hard fork.</b> 75/20/5 is a <b>candidate only</b>.</p>
       <div class="reward-research-update" style="margin-top:12px;background:rgba(215,255,0,.06);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:10px;padding:14px 16px;color:#e8ffb0;text-shadow:0 0 8px rgba(215,255,0,.22)">
         <div style="color:#d7ff00;font:900 12px/1.2 ui-monospace;letter-spacing:.8px;margin-bottom:8px;text-shadow:0 0 10px rgba(215,255,0,.5)">&#11042; MOST LIKELY CURRENT RESEARCH SCENARIO &mdash; NOT CONSENSUS</div>
+        <p style="font-size:12.5px;line-height:1.7;margin:0 0 7px;color:#39ff14">[Update: this scenario is now scheduled as part of the mandatory <a href="#v17-40000" style="color:#39ff14">V17 upgrade at block #40,000</a> &mdash; 80% miner / 15% normal DTD / 5% into the Jackpot accumulator J, fees 100% to the miner. Until #39,999 consensus is unchanged (50% miner / 50% DTD).]</p>
         <p style="font-size:12.5px;line-height:1.7;margin:0 0 7px;color:#e8ffb0">The current leading scenario under study is a future activation around <b style="color:#d7ff00">block #40,000 or #50,000</b>, subject to network maturity, miner distribution and further simulation. <b style="color:#d7ff00">80/15/5 supersedes 75/20/5 as the current leading research scenario.</b></p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">
           <div style="flex:1 1 150px;border:1px solid #7a8a00;border-radius:8px;padding:9px 11px;background:rgba(215,255,0,.04)"><div style="font:900 18px ui-monospace;color:#d7ff00;text-shadow:0 0 8px rgba(215,255,0,.4)">80%</div><div style="font-size:10.5px;color:#cfe88a">direct PoW miner reward</div></div>
@@ -1143,7 +1186,7 @@ NODE STAYS ALIVE</pre></div>
       <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
         <li><b>First DTD Accumulated Reward V2 draw:</b> block <b>#30,186</b> — it requires a valid NODE_BIND and &ge;3 SbPoW blocks in the previous 2,016, but <b>zero heartbeats (0/0)</b>: no epoch has completed yet, so nobody is excluded for lacking history. The requirement ramps 1/1 &rarr; 2/2 &rarr; 3/3 and settles at the permanent 3-of-4 from <b>#31,338</b>. That ramp is one rule counting epochs, <b>not</b> a second fork.</li>
         <li><b>Payout economics unchanged:</b> base 100&nbsp;SOST, rollover to a 500&nbsp;SOST cap, spent from the existing historical reserve. <b>No new emission.</b></li>
-        <li><b>DTD-normal needs no NODE_BIND, no heartbeats and no PoPC bond</b> — it stays permissionless at every height.</li>
+        <li><b>DTD-normal needs no NODE_BIND, no heartbeats and no PoPC bond</b> — it stays permissionless at every height. <span style="color:#39ff14">[Update: from #40,000 (<a href="#v17-40000" style="color:#39ff14">V17</a>) DTD-normal also requires an active NODE_BIND and heartbeats; still no PoPC bond.]</span></li>
         <li><b>A validating node still on pre-V16 software after #30,000 may diverge.</b> The window is a coordination decision, not a consensus rule.</li>
       </ul>
       <p style="margin-top:10px">Step-by-step commands for systemd, a manual terminal and WSL: <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator upgrade guide</a>.</p>
@@ -1986,7 +2029,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->

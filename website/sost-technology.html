@@ -720,7 +720,7 @@
 
 <!-- HERO -->
 <div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
-<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
+<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). From block <b>#40,000 (V17)</b>: subsidy <b>80% miner / 15% DTD / 5% Jackpot accumulator</b>, fees <b>100% to the miner</b>, and normal-DTD eligibility also requires an active <b>NODE_BIND</b> + node heartbeats. Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
 </div>
 <section class="hero">
   <div class="container">
@@ -1767,7 +1767,7 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
           <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E7&ndash;H35 since V13 (#12,000+) (direct lag map #5,323+: up immediate, down &ge;1 level/block)</td></tr>
           <tr><td class="key">Emission</td><td class="val">Halving / 210K blocks</td><td class="val">Tail emission</td><td class="val" style="color:var(--text-primary);">Smooth exp. decay (q=e<sup>-&frac14;</sup>)</td></tr>
           <tr><td class="key">Max supply</td><td class="val">21M BTC</td><td class="val">Infinite</td><td class="val" style="color:var(--text-primary);">~4,669,201 SOST</td></tr>
-          <tr><td class="key">Constitutional reserve</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--green-primary);">None since V15 (#25,000): 50% miner / 50% DTD <span style="color:var(--text-muted)">(pre-V15: 25% gold + 25% PoPC)</span></td></tr>
+          <tr><td class="key">Constitutional reserve</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--green-primary);">None since V15 (#25,000): 50% miner / 50% DTD <span style="color:var(--text-muted)">(pre-V15: 25% gold + 25% PoPC; from #40,000 (V17): subsidy 80% miner / 15% DTD / 5% Jackpot accumulator J, fees 100% miner)</span></td></tr>
         </table>
       </div>
     </div>
@@ -1796,7 +1796,7 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
  <div class="cx-pre" style="margin-bottom:0">32 ETH deposit &rarr; validator
 &rarr; votes + occasional block &rarr; ETH</div></div>
  <div class="cx-card"><div class="cx-h" style="color:#ff5a5f">SOST &middot; WORK + PARTICIPATION</div>
- ConvergenceX Proof of Work on ordinary CPUs and RAM. A block about every 10 minutes; bitsQ and the Equalizer adjust every block. The block reward is split 50% to the finder and 50% to the DTD draw among recent miners. A separate Jackpot every 288 blocks rewards miners who also run a bound node.
+ ConvergenceX Proof of Work on ordinary CPUs and RAM. A block about every 10 minutes; bitsQ and the Equalizer adjust every block. The block reward is split 50% to the finder and 50% to the DTD draw among recent miners. A separate Jackpot every 288 blocks rewards miners who also run a bound node. From #40,000 (V17, mandatory upgrade) the subsidy becomes 80% finder / 15% DTD / 5% into the Jackpot accumulator J, fees go 100% to the finder, and the normal DTD also requires a bound node with heartbeats.
  <div class="cx-pre" style="margin-bottom:0">CPU + RAM + electricity &rarr; ConvergenceX
 &rarr; commit &le; target &rarr; block &rarr; 50% + DTD</div></div>
 </div>
@@ -1822,7 +1822,10 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
           Every 288 blocks the DTD Jackpot (100 SOST base, up to 500 with
           rollover, paid from the frozen historical reserve, no new coins)
           goes to a miner who has &ge; 3 PoW blocks in the last 2,016, an active
-          NODE_BIND and the heartbeat history; the draw is weighted by PoW blocks.</div>
+          NODE_BIND and the heartbeat history; the draw is weighted by PoW blocks.
+          From #40,000 (V17): subsidy 80% finder / 15% DTD / 5% into the
+          Jackpot accumulator J; fees 100% to the finder; the DTD winner must
+          also pass the same NODE_BIND + heartbeat test.</div>
 
 <h4>Side by side</h4>
 <div class="cx-tw"><table>
@@ -1832,14 +1835,14 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
 <tr><td>Block producer</td><td>whoever finds the PoW</td><td>validator selected per slot</td><td>whoever finds the PoW</td></tr>
 <tr><td>Votes / attestations</td><td>no</td><td>yes</td><td>no</td></tr>
 <tr><td>Slashing</td><td>no</td><td>yes</td><td>no</td></tr>
-<tr><td>Direct reward</td><td>100% subsidy + fees to the finder</td><td>issuance; proposer also gets fees/MEV</td><td>50% of subsidy + fees to the finder</td></tr>
+<tr><td>Direct reward</td><td>100% subsidy + fees to the finder</td><td>issuance; proposer also gets fees/MEV</td><td>50% of subsidy + fees to the finder (from #40,000: 80% of subsidy + 100% of fees)</td></tr>
 <tr><td>Extra reward</td><td>&mdash;</td><td>occasional block proposal</td><td>DTD every block &middot; Jackpot every 288 blocks</td></tr>
-<tr><td>Are nodes paid?</td><td>no</td><td>only as validators</td><td>no &mdash; a bound node is a Jackpot <i>condition</i>, never a multiplier</td></tr>
+<tr><td>Are nodes paid?</td><td>no</td><td>only as validators</td><td>no &mdash; a bound node is a Jackpot <i>condition</i> (from #40,000 also a normal-DTD condition), never a multiplier</td></tr>
 <tr><td>Sybil resistance</td><td>hashrate</td><td>staked ETH</td><td>real PoW blocks (SbPoW-signed identities)</td></tr>
 <tr><td>Coins locked to take part</td><td>no</td><td>yes</td><td>no</td></tr>
 <tr><td>Finality</td><td>probabilistic (more blocks = safer)</td><td>explicit, after ~2 epochs (~13 min)</td><td>probabilistic</td></tr>
 <tr><td>Difficulty adjustment</td><td>every 2,016 blocks</td><td>n/a</td><td>every block: bitsQ + Equalizer</td></tr>
-<tr><td>Long-term security budget</td><td>fees after the last halving</td><td>issuance + fees</td><td>fees only after the cap (no tail emission); under current rules half of fees also go to DTD</td></tr>
+<tr><td>Long-term security budget</td><td>fees after the last halving</td><td>issuance + fees</td><td>fees only after the cap (no tail emission); under current rules half of fees also go to DTD; from #40,000 fees go 100% to the miner</td></tr>
 </table></div>
 
 <h4>Why SOST does not pay nodes simply for existing</h4>
@@ -1848,7 +1851,7 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
 1 miner &middot;   1 node  &middot; 100 PoW blocks   &rarr; weight <span class="g">100</span>
 1 miner &middot;   5 nodes &middot;   2 PoW blocks   &rarr; <span class="r">not eligible</span> (minimum 3)
 Creating nodes adds nothing. Doing work does.</div>
-<p><b>Normal DTD</b> today: an address must have mined in the last 288 blocks; addresses that mined any of the previous 6 blocks are skipped (with a fallback if that would leave nobody); the draw is uniform among the eligible, not proportional to hashrate. An anti-dominance rule (an address with &ge;10% of the last 288 blocks is skipped) exists but switches on only when at least 11 distinct miners are active &mdash; so with today's small miner set it is not in effect. Jackpot V2 has no cooldown and no anti-dominance.</p>
+<p><b>Normal DTD</b> today: an address must have mined in the last 288 blocks; addresses that mined any of the previous 6 blocks are skipped (with a fallback if that would leave nobody); the draw is uniform among the eligible, not proportional to hashrate. An anti-dominance rule (an address with &ge;10% of the last 288 blocks is skipped) exists but switches on only when at least 11 distinct miners are active &mdash; so with today's small miner set it is not in effect. No NODE_BIND is needed for the normal DTD until #39,999. <b>From #40,000 (V17)</b> all of these rules stay and the normal DTD also requires an active NODE_BIND and valid heartbeats &mdash; the same NODE_BIND + heartbeat test Jackpot V2 uses; the cooldown fallback never waives it, and both draws use a PoW-protected seed (DTD-F1). Jackpot V2 has no cooldown and no anti-dominance.</p>
 
 <h4>The honest test of decentralization: what can you switch off?</h4>
 <div class="cx-grid">
@@ -1895,7 +1898,7 @@ Creating nodes adds nothing. Doing work does.</div>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- ============== BEACON — ADVISORY NOTICE CHANNEL (V13) ============== -->

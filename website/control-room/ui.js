@@ -112,6 +112,7 @@
       <div class="kv"><span class="k">Cooldown window</span><span class="v">${num(d.cooldownWindow.value)} blocks</span>
       <span class="k">In cooldown</span><span class="v">${(d.cooldownMiners.value || []).map(addr).join(', ') || 'none'}</span>
       <span class="k">Payout</span><span class="v">${num(d.payout.value, 8)} SOST</span></div>
+      <div class="sub">Until #39,999: no NODE_BIND needed. From #40,000 (V17): also requires an active NODE_BIND + heartbeats (the Jackpot V2 node test, never waived by the cooldown fallback); 15% of the subsidy, PoW-protected seed (DTD-F1).</div>
       <div class="proj"><div class="lbl">PROJECTED NEXT DTD WINNER — CURRENT TIP</div>${addr(d.projectedWinner.value)}
       <div class="sub">Projection for #${num(d.nextHeight.value)} if mined on the current tip. <b>The projection changes when the chain tip changes</b>; it is not a confirmed winner until block #${num(d.nextHeight.value)} exists.</div></div>
       <div class="sub">Independent of the DTD Jackpot: at a jackpot height both draws run in the same block, each with its own rules and its own winner (or none).</div></div>`);

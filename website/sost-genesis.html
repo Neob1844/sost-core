@@ -229,7 +229,7 @@
 
 <!-- HERO -->
 <div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
-<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
+<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). From block <b>#40,000 (V17)</b>: subsidy <b>80% miner / 15% DTD / 5% Jackpot accumulator</b>, fees <b>100% to the miner</b>, and normal-DTD eligibility also requires an active <b>NODE_BIND</b> + node heartbeats. Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
 </div>
 <section class="hero">
   <div class="container">
@@ -432,7 +432,7 @@
           <tr>
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">coinbase_split</td>
             <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">50 / 25 / 25</td>
-            <td style="padding:10px 12px;">Genesis-era distribution: 392,550,433 to miner (50%), 196,275,215 to Gold Funding Vault (25%), 196,275,215 to PoPC Pool (25%). This rule applied to blocks 0&ndash;24,999; since block 25,000 (V15) the split is 50% miner / 50% DTD.</td>
+            <td style="padding:10px 12px;">Genesis-era distribution: 392,550,433 to miner (50%), 196,275,215 to Gold Funding Vault (25%), 196,275,215 to PoPC Pool (25%). This rule applied to blocks 0&ndash;24,999; since block 25,000 (V15) the split is 50% miner / 50% DTD; from block 40,000 (V17) the subsidy is 80% miner / 15% DTD / 5% Jackpot accumulator J, with fees 100% to the miner.</td>
           </tr>
         </tbody>
       </table>
@@ -496,7 +496,7 @@ grep -n ADDR_POPC_POOL include/sost/params.h</span></li>
 
     <div class="text-block fade-in delay-1">
       <p>The genesis block is the cryptographic anchor of the entire SOST. Every block that follows must be compatible with it. The constitutional addresses, emission schedule, coinbase split, and consensus parameters are all committed at this moment. No entity — including SOST — can alter these values after genesis.</p>
-      <p>There is no premine. Block 0 rewards were split like every block up to #24,999: 50% miner, 25% Gold Funding Vault, 25% PoPC Pool (since #25,000: 50% miner / 50% DTD). The founder receives mining rewards only by running a miner, competing equally with every other participant.</p>
+      <p>There is no premine. Block 0 rewards were split like every block up to #24,999: 50% miner, 25% Gold Funding Vault, 25% PoPC Pool (since #25,000: 50% miner / 50% DTD; from #40,000, V17: 80% miner / 15% DTD / 5% Jackpot accumulator J, fees 100% miner). The founder receives mining rewards only by running a miner, competing equally with every other participant.</p>
     </div>
   </div>
 </section>
@@ -534,7 +534,7 @@ function copyJson(btn) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->

@@ -245,7 +245,7 @@
 
 <!-- HERO -->
 <div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
-<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
+<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). From block <b>#40,000 (V17)</b>: subsidy <b>80% miner / 15% DTD / 5% Jackpot accumulator</b>, fees <b>100% to the miner</b>, and normal-DTD eligibility also requires an active <b>NODE_BIND</b> + node heartbeats. Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
 </div>
 <section class="hero">
   <div class="container">
@@ -326,7 +326,7 @@
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">MINE</div>
         <h3 style="color:var(--red-primary)">Run a Miner</h3>
-        <p>CPU-friendly, memory-hard ConvergenceX mining. 8 GB RAM required per thread (4 GB dataset + 4 GB scratchpad). The reference miner is CPU-oriented; SOST does not enforce CPU-only at consensus level. Build from source and start mining with <code style="color:var(--cyan-primary)">sost-miner</code>. (Historical: blocks mined before #25,000 allocated 25% to the Gold Reserve automatically; since V15 that share is 0 and the per-block split is 50% miner / 50% DTD.)</p>
+        <p>CPU-friendly, memory-hard ConvergenceX mining. 8 GB RAM required per thread (4 GB dataset + 4 GB scratchpad). The reference miner is CPU-oriented; SOST does not enforce CPU-only at consensus level. Build from source and start mining with <code style="color:var(--cyan-primary)">sost-miner</code>. (Historical: blocks mined before #25,000 allocated 25% to the Gold Reserve automatically; since V15 that share is 0 and the per-block split is 50% miner / 50% DTD; from #40,000 (V17): 80% miner / 15% DTD / 5% Jackpot accumulator, fees 100% to the miner.)</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">NODE</div>
@@ -401,7 +401,7 @@
           <tr><td class="label">Open source</td><td class="green">MIT license — use, modify, distribute freely</td></tr>
           <tr><td class="label">No ongoing parameter governance</td><td class="green">Monetary rules immutable at genesis — no DAO, no voting</td></tr>
           <tr><td class="label">CPU-friendly</td><td class="green">ConvergenceX resists ASIC and GPU concentration</td></tr>
-          <tr><td class="label">Constitutional reserves</td><td class="green">None since V15 (#25,000): 50% miner / 50% DTD. HISTORICAL (blocks 0&ndash;24,999): 25% Gold Funding Vault + 25% PoPC Pool &mdash; balances now frozen, they fund the DTD Jackpot</td></tr>
+          <tr><td class="label">Constitutional reserves</td><td class="green">None since V15 (#25,000): 50% miner / 50% DTD. From #40,000 (V17): 80% miner / 15% DTD / 5% Jackpot accumulator, fees 100% to the miner. HISTORICAL (blocks 0&ndash;24,999): 25% Gold Funding Vault + 25% PoPC Pool &mdash; balances now frozen, they fund the DTD Jackpot</td></tr>
           <tr><td class="label">Fair launch</td><td class="green">No premine, no ICO, no VC allocation, no insider tokens</td></tr>
         </table>
       </div>
@@ -445,7 +445,7 @@
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->

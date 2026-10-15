@@ -329,7 +329,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
       Three different things, often confused:
       <b style="color:#cbd5e1">installing the software</b> (do it before the window),
       <b style="color:#cbd5e1">the consensus activation</b> (happens by itself at #30,000, nobody triggers it), and
-      <b style="color:#cbd5e1">registering NODE_BIND</b> (optional, only for the Jackpot, and only after #30,000).
+      <b style="color:#cbd5e1">registering NODE_BIND</b> (only after #30,000; until #39,999 only for the Jackpot &mdash; from #40,000 (V17) also required for normal-DTD eligibility, never for mining rewards).
     </div>
   </div>
 
@@ -340,7 +340,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
     <a href="#s5"><b>4 &middot; Start node &amp; miner</b>Verified commands</a>
     <a href="#s6"><b>5 &middot; Encryption</b>Three separate things</a>
     <a href="#s7"><b>6 &middot; DTD vs Jackpot V2</b>What you get without doing anything</a>
-    <a href="#s8"><b>7 &middot; NODE_BIND</b>Optional &middot; open now</a>
+    <a href="#s8"><b>7 &middot; NODE_BIND</b>Open now &middot; DTD from #40,000</a>
     <a href="#s9"><b>8 &middot; Backups &amp; mistakes</b>What to keep, what leaks</a>
     <a href="#s10"><b>9 &middot; Troubleshooting</b>The messages you will actually see</a>
     <a href="#s11"><b>10 &middot; Network status</b>What is not fixed yet</a>
@@ -353,6 +353,8 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
       diverge from the chain at #30,000. The verified SHA-256 values are in section 1 below.
       On mainnet, #30,000 activates DTD Jackpot V2 only: <b>Native Assets are DEFERRED / FAIL-CLOSED</b>,
       <b>SACS V2 is DEFERRED</b>, the monetary rule stays <b>50% Miner / 50% DTD</b>, and <b>SOST has no burn mechanism</b>.
+      <b>From #40,000 (V17, mandatory upgrade):</b> block subsidy <b>80% miner / 15% normal DTD / 5% into the Jackpot accumulator J</b>
+      (a consensus balance, not an address; no new supply), and transaction fees go <b>100% to the miner</b>.
   </div>
 
   <!-- ═══ 2 · DOWNLOAD ════════════════════════════════════════════════ -->
@@ -570,11 +572,19 @@ chmod 600 ~/.sost/rpc.pass</pre></div>
       <tr><th></th><th>Normal DTD</th><th>DTD Jackpot V2</th></tr>
       <tr><td>Since</td><td>block #25,000</td><td>first draw at <b>#30,186</b>, then every 288 blocks</td></tr>
       <tr><td>How often</td><td><b>every block</b></td><td>every 288 blocks (~48 h)</td></tr>
-      <tr><td>NODE_BIND</td><td><b>not needed</b></td><td><b>required</b></td></tr>
-      <tr><td>What you must do</td><td>nothing &mdash; just mine</td><td>bind a node key and keep it online</td></tr>
+      <tr><td>NODE_BIND</td><td><b>not needed</b> until #39,999 &middot; <b>required from #40,000 (V17)</b></td><td><b>required</b></td></tr>
+      <tr><td>What you must do</td><td>until #39,999: nothing &mdash; just mine &middot; from #40,000: mine <b>and</b> bind a node key and keep its heartbeats alive</td><td>bind a node key and keep it online</td></tr>
     </table>
-    <p>Half of every block's emission already goes to the DTD distribution, and you take part by mining. Nothing to register,
+    <p><b>Current rules (until #39,999):</b> half of every block's emission already goes to the DTD distribution, and you take part by mining.
+      Eligibility is mining activity only &mdash; at least one block in the last 288, signed with your SbPoW miner identity; a 6-block
+      recent-producer cooldown (skipped by a fallback if applying it would leave nobody eligible); a 10% anti-dominance cap over the
+      last 288 blocks, armed only when that window holds at least 11 distinct miners; then a uniform draw. Nothing to register,
       nothing to sign up for.</p>
+    <p><b>From block #40,000 (V17, mandatory upgrade):</b> every rule above stays, and the normal DTD also requires a valid
+      <b>active NODE_BIND</b> and valid <b>node heartbeats</b> &mdash; the <b>same NODE_BIND + heartbeat test</b> Jackpot V2 uses
+      (heartbeats in 3 of the last 4 completed 288-block epochs). The cooldown fallback can only relax the cooldown; it never waives
+      the NODE_BIND/heartbeat requirement. The block subsidy becomes <b>80% miner / 15% normal DTD / 5% into the Jackpot accumulator J</b>,
+      fees go <b>100% to the miner</b>, and both draws use a <b>PoW-protected seed (DTD-F1)</b>. Mining itself (block rewards) never requires NODE_BIND.</p>
     <h4>What Jackpot V2 asks for</h4>
     <ul>
       <li>Your <b>SbPoW mining identity</b> &mdash; the key behind <code>--mining-key-label</code>.</li>
@@ -593,10 +603,12 @@ chmod 600 ~/.sost/rpc.pass</pre></div>
   </div></details>
 
   <!-- ═══ 8 · NODE_BIND ═══════════════════════════════════════════════ -->
-  <details class="mg" id="s8"><summary>7 &middot; NODE_BIND &mdash; optional &middot; open now</summary><div class="mg-in">
+  <details class="mg" id="s8"><summary>7 &middot; NODE_BIND &mdash; open now &middot; needed for normal DTD from #40,000</summary><div class="mg-in">
     <div class="mg-note mg-info">
-      <b>You do not need this to mine.</b> Mining and normal DTD work without it. NODE_BIND exists for one reason: to enter
-      the Jackpot V2 draw.
+      <b>You do not need this to mine.</b> Block rewards never require NODE_BIND. <b>Until #39,999</b> mining and normal DTD work
+      without it, and NODE_BIND exists for one reason: to enter the Jackpot V2 draw. <b>From #40,000 (V17)</b> an active NODE_BIND
+      plus live heartbeats (node started with <code>--node-key-file</code>, which emits them automatically) is <b>also required for
+      normal-DTD eligibility</b> &mdash; the same test as Jackpot V2.
     </div>
     <h4>Preparing is not registering</h4>
     <p>You can <b>create and protect the key today</b>. You <b>cannot register it</b> until V30000 is live at #30,000 &mdash; the
@@ -625,9 +637,9 @@ chmod 600 ~/.sost/node.key</pre></div>
       <ol style="margin:6px 0 4px 18px">
         <li>Verify that the registered owner/address of your node key is <b>your</b> intended mining address.</li>
         <li>Verify that the following heartbeats are associated with that node.</li>
-        <li>If the registered owner is not yours, stop relying on Jackpot eligibility and report it to the SOST developers.</li>
+        <li>If the registered owner is not yours, stop relying on Jackpot (and, from #40,000, normal-DTD) eligibility and report it to the SOST developers.</li>
       </ol>
-      NODE_BIND affects <b>Jackpot eligibility only</b>: it does <b>not</b> give anyone access to your wallet, does <b>not</b>
+      NODE_BIND affects <b>eligibility only</b> (Jackpot V2; from #40,000 also normal DTD): it does <b>not</b> give anyone access to your wallet, does <b>not</b>
       let anyone spend your SOST, and can <b>not</b> create or burn SOST. From #30,000 the FINAL build enforces a stronger ownership rule:
       a NODE_BIND must be signed by <b>both</b> your mining key and your <b>node key</b> (the CLI does both from the command above),
       so only the holder of a node key can bind it and a bind cannot be copied to another miner.
@@ -714,7 +726,7 @@ chmod 600 ~/.sost/node.key</pre></div>
     <p>Run <code>checkhistoricaljackpoteligibility</code> (section 6). It answers with reasons.</p>
     <h4>"Do I restart at #30,000?"</h4>
     <p><b>No.</b> Activation is automatic. Install the binaries in the window, and then leave your node alone. The only later
-      restart is optional: adding <code>--node-key-file</code> for the Jackpot.</p>
+      restart is optional: adding <code>--node-key-file</code> for the Jackpot (and, from #40,000, for normal-DTD eligibility).</p>
     <h4>"What if I stay on the old version?"</h4>
     <p>Before #30,000, nothing happens. From #30,000 a pre-V30000 node applies the old rules and will reject blocks the network
       accepts &mdash; it follows a chain nobody else is on. Your coins are safe; your node is not useful.</p>
@@ -846,7 +858,7 @@ function showOS(os) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->

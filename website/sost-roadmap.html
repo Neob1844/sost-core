@@ -721,7 +721,7 @@
 
 
 <div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
-<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
+<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). From block <b>#40,000 (V17)</b>: subsidy <b>80% miner / 15% DTD / 5% Jackpot accumulator</b>, fees <b>100% to the miner</b>, and normal-DTD eligibility also requires an active <b>NODE_BIND</b> + node heartbeats. Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
 </div>
 <section class="hero">
   <div class="container">
@@ -748,7 +748,7 @@
   <div style="background:var(--bg-card,rgba(255,255,255,.03));border:1px solid var(--border,#2a2a2a);border-radius:12px;padding:22px 24px;line-height:1.8">
     <div style="font-size:11px;letter-spacing:2px;color:#22d3ee;font-weight:700;margin-bottom:12px">CURRENT PROTOCOL STATUS</div>
     <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:13px;color:var(--text-secondary)">
-      <div><span style="display:inline-block;min-width:180px;color:#4ade80;font-weight:600">Normal DTD</span> ACTIVE &middot; unchanged &mdash; frequent per-block distribution; no NODE_BIND, no heartbeat.</div>
+      <div><span style="display:inline-block;min-width:180px;color:#4ade80;font-weight:600">Normal DTD</span> ACTIVE &middot; frequent per-block distribution; until #39,999 no NODE_BIND, no heartbeat &mdash; from <strong>#40,000 (V17)</strong> an active NODE_BIND + heartbeats are also required (the same test as Jackpot V2).</div>
       <div><span style="display:inline-block;min-width:180px;color:#4ade80;font-weight:600">DTD Jackpot</span> ACTIVE &middot; current architecture &mdash; returns the previously-accumulated reserve to miners on a 288-block cadence.</div>
       <div><span style="display:inline-block;min-width:180px;color:#22d3ee;font-weight:600">DTD Jackpot V2</span> Scheduled activation <strong>#30,000</strong> &middot; first V2 draw <strong>#30,186</strong> &mdash; independent, node-gated, linear-PoW-weighted draw.</div>
       <div><span style="display:inline-block;min-width:180px;color:#fbbf24;font-weight:600">Gold Vault</span> PAUSED INDEFINITELY / LEGACY &mdash; its previous role is superseded by the DTD / DTD Jackpot architecture.</div>
@@ -857,6 +857,21 @@
       <div class="spec-body">
         <p class="spec-desc">
           <strong>#30,000 &mdash; automatic by height.</strong> Activates <strong>DTD Jackpot V2</strong> (first V2 draw <strong>#30,186</strong>) plus the <strong>native-asset layer</strong>, four <strong>tokenization modalities</strong>, and a <strong>SOST-layer DEX</strong>. All of these ship <strong>admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled</strong>.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Block 40,000 (V17)</span>
+        </div>
+        <span class="spec-tag consensus">V17 FORK &middot; SCHEDULED &middot; MANDATORY</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          <strong>#40,000 &mdash; scheduled mandatory upgrade, automatic by height.</strong> Normal DTD keeps every current mining-activity rule and also requires a valid <strong>active NODE_BIND + node heartbeats</strong> (the same test Jackpot V2 uses; the cooldown fallback never waives it). Normal DTD and Jackpot V2 move to a <strong>PoW-protected seed (DTD-F1)</strong>. Block subsidy <strong>80 % miner / 15 % normal DTD / 5 % into the Jackpot accumulator J</strong> (a consensus balance, not an address; Jackpot pays from the historical reserve first, then J; no new supply); transaction fees <strong>100 % to the miner</strong>. Jackpot V2 rules otherwise unchanged; native assets are not part of #40,000. Until #39,999 the current consensus is unchanged.
         </p>
       </div>
     </div>
@@ -1027,7 +1042,7 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->

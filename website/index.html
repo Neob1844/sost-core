@@ -927,13 +927,16 @@
   </div>
 </nav>
 <details class="reward-research-update" style="margin:10px auto;max-width:1040px;background:rgba(215,255,0,.055);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:8px;padding:8px 14px;color:#e8ffb0">
-  <summary style="cursor:pointer;color:#d7ff00;font:800 12px ui-monospace;letter-spacing:.5px;text-shadow:0 0 8px rgba(215,255,0,.4);list-style:none">&#11042; RESEARCH NOTICE &mdash; #40,000 research horizon: reward evolution &middot; decentralization &middot; asset ecosystem (NOT consensus) &middot; click to expand</summary>
+  <summary style="cursor:pointer;color:#d7ff00;font:800 12px ui-monospace;letter-spacing:.5px;text-shadow:0 0 8px rgba(215,255,0,.4);list-style:none">&#11042; V17 &middot; BLOCK #40,000 &mdash; mandatory upgrade: node-verified normal DTD &middot; PoW-protected seed &middot; 80/15/5 subsidy &middot; fees 100% to the miner &middot; click to expand</summary>
   <div style="margin-top:9px;font-size:12px;line-height:1.7;text-shadow:0 0 6px rgba(215,255,0,.18)">
-    <b>#30,000 builds the foundation. #40,000 is the current target research horizon for the next coordinated upgrade</b> &mdash; <b style="color:#d7ff00">not an activation commitment</b>: nothing is scheduled until code, tests, external audit and a public announcement exist (if not ready, it moves later, e.g. #50,000). Three research pillars:
-    <div style="margin:7px 0 0 4px"><b style="color:#d7ff00">1 &middot; Reward evolution.</b> Most likely research scenario: <b style="color:#d7ff00">80% direct PoW miner reward / 15% normal DTD per block / 5% into the existing DTD Jackpot pool</b>. The 5% is <b>not a direct node payment</b>: it <b>accumulates in the DTD Jackpot pool V30000 already distributes</b>, and when jackpots are paid the existing eligibility framework (including node / NODE_BIND requirements) still applies. <b>No new supply</b> &mdash; all three come from existing block emission.</div>
-    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">2 &middot; Decentralization.</b> Maximum practical protocol decentralization: peer persistence, independent seeds, address gossip and autonomous peer discovery (foundations already built and tested in the lab), plus more independent nodes, operators, providers, geographies and miners &mdash; no dependency on SOSTcore infrastructure for consensus.</div>
-    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">3 &middot; Economic infrastructure.</b> Research target: mature the native-asset framework and build the <b>SOST Asset Market</b> (order book, price discovery, atomic settlement) together with deeper Asset Passport integration (economic rights, regulatory classification). The intended initial state is <b style="color:#d7ff00">technically functional but developer-gated</b>, with no public access until external audits, legal/regulatory integration and an explicit public-access decision.</div>
-    <div style="margin-top:7px"><b>Current consensus is unchanged</b> (50% miner / 50% DTD). At #30,000, V30000 adds a <b>restricted</b> native-asset framework &mdash; admin-gated, fail-closed, disabled for the public, no public activation date. Every #40,000 change above is a research candidate and would require a <b>future hard fork</b>.</div>
+    <b>#30,000 built the foundation. V17 activates at block #40,000</b> &mdash; a <b style="color:#d7ff00">mandatory consensus upgrade</b>: every node and miner must run the V17 release before #40,000. <b>Until #39,999 the current rules apply unchanged.</b> What changes from #40,000:
+    <div style="margin:7px 0 0 4px"><b style="color:#d7ff00">1 &middot; Reward split.</b> Block subsidy <b style="color:#d7ff00">80% PoW miner / 15% normal DTD / 5% into the Jackpot accumulator J</b>; transaction fees go <b>100% to the miner</b>. The 5% is <b>not a direct node payment</b>: J is a consensus balance (no address) and the Jackpot pays from the historical reserve first, then from J, under the unchanged Jackpot V2 eligibility (NODE_BIND + heartbeats). <b>No new supply</b> &mdash; all three come from existing block emission.</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">2 &middot; Node-verified normal DTD.</b> On top of every current mining-activity rule (288-block window, 6-block cooldown and its fallback, anti-dominance, uniform draw), a normal-DTD winner must hold an active <b>NODE_BIND</b> and the required node <b>heartbeats</b> &mdash; the same node-participation test the Jackpot V2 uses. The cooldown fallback never waives it. Mining rewards themselves never require NODE_BIND.</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">3 &middot; PoW-protected seed (DTD-F1).</b> The normal DTD and Jackpot V2 seeds are derived from the PoW-protected commitments of the 16 previous blocks.</div>
+    <div style="margin:7px 0 0 0">Research pillars that are <b>not</b> part of #40,000:</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">Decentralization.</b> Maximum practical protocol decentralization: peer persistence, independent seeds, address gossip and autonomous peer discovery (foundations already built and tested in the lab), plus more independent nodes, operators, providers, geographies and miners &mdash; no dependency on SOSTcore infrastructure for consensus.</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">Economic infrastructure.</b> Research target: mature the native-asset framework and build the <b>SOST Asset Market</b> (order book, price discovery, atomic settlement) together with deeper Asset Passport integration (economic rights, regulatory classification). The intended initial state is <b style="color:#d7ff00">technically functional but developer-gated</b>, with no public access until external audits, legal/regulatory integration and an explicit public-access decision.</div>
+    <div style="margin-top:7px"><b>Current consensus (until #39,999) is unchanged</b>: 50% miner / 50% DTD, and the normal DTD needs no NODE_BIND. The native-asset framework stays <b>restricted</b> &mdash; admin-gated, fail-closed, disabled for the public, no public activation date; native assets are not part of #40,000. The decentralization and asset-market pillars remain research and would require their own future decision.</div>
     <div style="margin-top:8px"><a href="news.html#decentralization" style="color:#39ff14;font-weight:700;text-decoration:none;border-bottom:1px solid rgba(57,255,20,.5);text-shadow:0 0 6px rgba(57,255,20,.3)">&#8594; More decentralization information here</a></div>
   </div>
 </details>
@@ -1409,7 +1412,7 @@
       The <b style="color:#39ff14">DTD (Deterministic Token Distribution)</b> is a consensus-run, per-draw distribution of
       the block&rsquo;s value to eligible network participants &mdash; <b>deterministic</b> (the winner is computed by the
       rules, not chosen by anyone), <b>keyless</b> at SOST layer, and <b>supply-neutral</b> (it moves coins, it never
-      mints them). It runs today and intensified at V15 (#25,000), where the split became 50% miner / 50% DTD.
+      mints them). It runs today and intensified at V15 (#25,000), where the split became 50% miner / 50% DTD. From <b>#40,000 (V17)</b> the subsidy splits 80% miner / 15% DTD / 5% Jackpot accumulator, fees go 100% to the miner, and the normal DTD becomes node-verified (NODE_BIND + heartbeats).
     </p>
 
     <div class="fade-in delay-2" style="max-width:900px;margin:4px auto 22px;border:1px solid rgba(57,255,20,.35);border-left:4px solid #39ff14;border-radius:12px;background:rgba(57,255,20,.05);padding:18px 22px;text-align:left">
@@ -1463,7 +1466,8 @@
           gated (recent-producer cooldown, anti-dominance) so payouts spread across many participants.<br><br>
           <b style="color:#ffd166">At V16 (#30,000) the draw itself does not change</b> &mdash; still every block, still uniform,
           still never weighted by PoW, same seed, same 50/50 split &mdash; but <b style="color:#ffd166">who qualifies does</b>.
-          See the gates below.
+          See the gates below.<br><br>
+          <b style="color:#d7ff00">At V17 (#40,000)</b> the draw stays uniform and every block, but it pays <b>15% of the block subsidy</b> (fees go 100% to the miner), its seed comes from <b>PoW-protected commitments (DTD-F1)</b>, and a winner must also pass the <b>node test</b> (NODE_BIND + heartbeats).
         </p>
         <div style="margin-top:12px;border:1px solid #c084fc;border-radius:8px;background:rgba(192,132,252,.06);padding:12px 14px">
           <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#c084fc;margin-bottom:7px">#30,000 ALSO ACTIVATES &mdash; ADMIN-GATED, PUBLIC ACCESS DISABLED</div>
@@ -1478,7 +1482,8 @@
             <b style="color:#39ff14">Active signed miner</b> — must be a real SbPoW-signed miner identity (its most recent block at height &ge; <b>#7,100</b>); enforced from #12,100. No signed identity, no eligibility.<br>
             <b style="color:#39ff14">Active miner (recency)</b> — from #25,000, must have mined <b>&ge;1 block in the last 5,000 blocks</b>. <b style="color:#ffd166">From #30,000 (V16) this tightens to the last 288 blocks</b> (~2 days), at every height including jackpot heights; dormant addresses drop out until they mine again.<br>
             <b style="color:#39ff14">Recent-producer cooldown</b> — excluded if it produced any of the previous <b>6 blocks</b> (5 before V13) — stops back-to-back wins. Note it keys on <b>having mined</b>, not on having won. <b style="color:#ffd166">From #30,000 it yields when applying it would leave the draw with nobody</b>.<br>
-            <b style="color:#39ff14">Anti-dominance cap</b> — excluded if its share of the last <b>288 blocks is &ge; 10%</b> (from #12,100) — caps concentration. <b style="color:#ffd166">From #30,000 the gate is armed only when the window holds &ge;11 distinct miners</b>: below that it would exclude the very miners keeping the chain alive, so with a single active miner that miner can take 100% of the block (50% miner + 50% DTD).<br>
+            <b style="color:#39ff14">Anti-dominance cap</b> — excluded if its share of the last <b>288 blocks is &ge; 10%</b> (from #12,100) — caps concentration. <b style="color:#ffd166">From #30,000 the gate is armed only when the window holds &ge;11 distinct miners</b>: below that it would exclude the very miners keeping the chain alive, so with a single active miner that miner can take 100% of the block (50% miner + 50% DTD; from #40,000: 80% + 15%, provided it passes the node test).<br>
+            <b style="color:#d7ff00">Active node &middot; from #40,000 (V17)</b> — must hold a confirmed, active <b>NODE_BIND</b> (mining key + node key) and the required node <b>heartbeats</b> (3 of the last 4 completed 288-block epochs) &mdash; the same node-participation test as the Jackpot V2. Until #39,999 this gate does not exist for the normal DTD. The cooldown fallback never waives it.<br>
             <b style="color:#39ff14">Uniform &amp; keyless</b> — every eligible address has the <b>same probability</b>; the winner is computed from chain state by the rules — never weighted by balance, stake or any payment.<br><br>
             <span style="color:var(--text-dim);font-size:11.5px">No purchase, deposit, ticket, KYC or fiat requirement. A block&rsquo;s own producer is not excluded from that block&rsquo;s draw.</span>
           </p>
@@ -1501,6 +1506,7 @@
             <b style="color:#7CFFA0">Active node</b> &mdash; the miner identity must have a confirmed <b>NODE_BIND</b> (mining key + node key) and the required <b>heartbeats</b> (none for the first draw, then one per completed 288-block epoch, ramping to 3 of the last 4 epochs).<br>
             <b style="color:#7CFFA0">Real work</b> &mdash; at least <b>3 SbPoW blocks in the last 2,016</b>; the chance of winning is <b>linear in those blocks</b>.<br>
             <b style="color:#7CFFA0">No cooldown and no anti-dominance</b> &mdash; those belong to the normal per-block DTD only.<br>
+            <b style="color:#d7ff00">From #40,000 (V17)</b> &mdash; Jackpot rules unchanged; the same node test also gates the normal DTD, the seed comes from PoW-protected commitments (DTD-F1), and 5% of every block subsidy flows into the Jackpot accumulator J (paid after the historical reserve).<br>
             <b style="color:#7CFFA0">Must have an eligible winner</b> &mdash; with no eligible address <b>nothing is paid</b> and the pot rolls over to the next draw (cap 500 SOST).<br><br>
             <span style="color:var(--text-dim)">Historical (#25,290&ndash;#29,898): the jackpot went to the DTD winner of the jackpot block, with a 20,000-block recency window.</span>
           </p>
@@ -1519,16 +1525,16 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0">
         <div style="border:1px solid #2b7a3d;border-radius:8px;padding:12px 14px;background:rgba(57,255,20,.04)">
           <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.3px;color:#39ff14;margin-bottom:6px">NORMAL DTD &middot; EVERY BLOCK</div>
-          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: miners active in the recent window, minus the recent-producer <b>cooldown</b> (with a fallback when the cooldown would leave nobody) and the <b>anti-dominance</b> rule (applied when enough miners are active). Uniform pick. Pays 50% of the block subsidy.</div>
+          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: miners active in the recent window, minus the recent-producer <b>cooldown</b> (with a fallback when the cooldown would leave nobody) and the <b>anti-dominance</b> rule (applied when enough miners are active). Uniform pick. Pays 50% of the block subsidy. <b style="color:#d7ff00">From #40,000 (V17):</b> also requires <b>NODE_BIND</b> + <b>heartbeats</b> (never waived by the fallback); pays 15% of the subsidy.</div>
         </div>
         <div style="border:1px solid #7a6a1f;border-radius:8px;padding:12px 14px;background:rgba(255,209,102,.05)">
           <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.3px;color:#ffd166;margin-bottom:6px">JACKPOT V2 &middot; EVERY 288 BLOCKS</div>
-          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: <b>NODE_BIND</b> + required <b>heartbeats</b> + &ge;3 SbPoW blocks in the last 2,016. Pick <b>weighted by PoW blocks</b>. <b>No cooldown, no anti-dominance.</b> Base 100 SOST, rollover up to 500.</div>
+          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: <b>NODE_BIND</b> + required <b>heartbeats</b> + &ge;3 SbPoW blocks in the last 2,016. Pick <b>weighted by PoW blocks</b>. <b>No cooldown, no anti-dominance.</b> Base 100 SOST, rollover up to 500. <b style="color:#d7ff00">From #40,000:</b> funded from the historical reserve first, then the 5% accumulator J.</div>
         </div>
       </div>
       <p style="margin:0 0 10px;color:var(--text-dim);font-size:12.5px;line-height:1.65">
         <b style="color:var(--text-primary)">Randomness.</b> Both draws read the same public entropy &mdash; the hashes of the 16 previous blocks and the height &mdash; but each hashes it under its own domain tag
-        (<code>SOST_LOTTERY_V11</code> for the normal DTD, <code>SOST_HIST_JACKPOT</code> for the Jackpot), so each gets its own seed and its own roll. Anyone can recompute both from the chain.
+        (<code>SOST_LOTTERY_V11</code> for the normal DTD, <code>SOST_HIST_JACKPOT</code> for the Jackpot), so each gets its own seed and its own roll. Anyone can recompute both from the chain. <b style="color:#d7ff00">From #40,000 (V17, DTD-F1)</b> both seeds are derived from the PoW-protected commitments of those 16 blocks instead of their hashes.
       </p>
       <div style="font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-dim);border-top:1px solid #17353f;padding-top:10px">
         <b style="color:#22d3ee">Example &mdash; block #30,186</b> (first Jackpot V2 draw)<br>
@@ -1670,7 +1676,7 @@
       <div class="stat-card" onclick="togglePanel('panel-split',this)">
         <div class="stat-label">Coinbase Split</div>
         <div class="stat-value">50/50</div>
-        <div class="stat-sub">Miner / DTD &middot; since #25,000</div>
+        <div class="stat-sub">Miner / DTD &middot; since #25,000 &middot; 80/15/5 from #40,000</div>
       </div>
       <div class="stat-card" onclick="togglePanel('panel-algo',this)">
         <div class="stat-label">Algorithm</div>
@@ -1719,7 +1725,7 @@
       <p style="font-size:10px;color:var(--text-muted);margin-top:10px;">q = e<sup>-1/4</sup> &asymp; 0.7788 &middot; Epoch = 131,553 blocks (&asymp;2.5 years)</p>
     </div>
     <div class="stat-panel" id="panel-split">
-      <div class="panel-title">Emission Split &mdash; 50% miner / 50% DTD since #25,000 <span style="font-size:.75em;color:#f59e0b">(the 50/25/25 below is historical)</span></div>
+      <div class="panel-title">Emission Split &mdash; 50% miner / 50% DTD since #25,000 &middot; 80% miner / 15% DTD / 5% Jackpot accumulator from #40,000 (V17) <span style="font-size:.75em;color:#f59e0b">(the 50/25/25 below is historical)</span></div>
       <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
         <canvas id="chartSplit" style="max-width:180px;max-height:180px;"></canvas>
         <div style="font-size:12px;color:var(--text-secondary);line-height:2;">
@@ -1822,7 +1828,7 @@
       <div class="spec-body">
         <p class="spec-desc">
           SOST is a Proof-of-Work cryptocurrency. Since <b>V15 (#25,000)</b> each mined block splits
-          <b>50% miner / 50% DTD</b> and no issuance goes to the Gold Funding Vault.
+          <b>50% miner / 50% DTD</b> and no issuance goes to the Gold Funding Vault. From <b>#40,000 (V17)</b> the subsidy splits <b>80% miner / 15% DTD / 5% Jackpot accumulator</b> and fees go 100% to the miner.
           <span style="opacity:.75">Until #25,000, 25% of issuance was allocated to that vault by consensus.</span> Conversions to XAUT/PAXG are operational
           actions executed with public attestations and auditable trails. The reserve is observable
           on Ethereum mainnet &mdash; not a peg, not a guarantee, but a verifiable commitment.
@@ -1830,7 +1836,7 @@
         <table class="code-table">
           <tr><td class="key">Consensus</td><td class="val"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> PoW &mdash; memory-hard, CPU-friendly (reference miner CPU-oriented; protocol does not enforce CPU-only at consensus)</td></tr>
           <tr><td class="key">Monetary Policy</td><td class="val">Smooth exponential decay (q=e<sup>-&frac14;</sup>), Feigenbaum-derived constants, ~30 years to 95% supply</td></tr>
-          <tr><td class="key">Emission split</td><td class="val"><b>50% miner / 50% DTD</b> since #25,000 (gold and PoPC shares: <b>0</b>)</td></tr>
+          <tr><td class="key">Emission split</td><td class="val"><b>50% miner / 50% DTD</b> since #25,000 (gold and PoPC shares: <b>0</b>); from <b>#40,000 (V17)</b>: subsidy <b>80% miner / 15% DTD / 5% Jackpot accumulator</b>, fees 100% to the miner</td></tr>
           <tr><td class="key">Reserve</td><td class="val" style="opacity:.8">Historical: 25% of every block &rarr; tokenized gold (XAUT, PAXG) on Ethereum, until #25,000. Existing holdings remain; SOST is <b>not</b> backed by gold.</td></tr>
           <tr><td class="key">PoPC</td><td class="val" style="opacity:.8">Historical: 25% of every block until #25,000. The DTD requires <b>no</b> PoPC bond at any height.</td></tr>
           <tr><td class="key">Governance</td><td class="val">None. Consensus rules are immutable at genesis.</td></tr>
@@ -2310,7 +2316,7 @@ function fetchSostChart(){
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->

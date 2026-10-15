@@ -164,6 +164,7 @@ footer a{color:var(--t3);text-decoration:none}
 <li>From <b>#25,000 (V15)</b>: coinbase split <b>50% miner / 50% DTD</b>; gold and PoPC coinbase amounts are <b>0</b>.</li>
 <li>The <b>DTD is permissionless</b>: <code>DTD_POPC_GATE_CONSENSUS_ACTIVE = false</code> on mainnet &mdash; no PoPC bond is required to be eligible.</li>
 <li>From <b>#30,000 (V16)</b>: DTD-normal eligibility tightens (288-block recency, conditional cooldown and anti-dominance) and the <b>DTD Jackpot V2</b> becomes an independent node-gated, PoW-weighted draw (first V2 draw <b>#30,186</b>). The same fork also activates the <b>native-asset layer</b> (ASSET_GENESIS / ISSUE / TRANSFER / BURN, with supply conservation + cap safety and a reorg-safe index), <b>four tokenization modalities</b>, and the <b>SOST-layer DEX</b> &mdash; all behind the <b>S14 admin gate (restricted developer mode, public access disabled)</b>. One activation, automatic by height.</li>
+<li>From <b>#40,000 (V17, scheduled mandatory upgrade)</b>: normal-DTD eligibility keeps every current mining-activity rule and also requires a valid <b>active NODE_BIND</b> and valid node <b>heartbeats</b> &mdash; the same NODE_BIND + heartbeat test Jackpot V2 uses (the cooldown fallback never waives it); the normal DTD and Jackpot V2 seeds become a <b>PoW-protected seed (DTD-F1)</b> derived from the PoW-protected commitments of the 16 previous blocks; block subsidy <b>80% miner / 15% normal DTD / 5% into the Jackpot accumulator J</b> (a consensus balance, not an address; Jackpot pays from the historical reserve H first, then J; no new supply); transaction fees <b>100% to the miner</b>. Until #39,999 the rules above are unchanged.</li>
 <li>Current release: <b>V30000</b> (#30,000 network upgrade: native assets + tokenization + DEX, admin-gated; all three binaries changed) &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator upgrade guide</a></li>
 </ul></div>
 <section class="hero">
@@ -328,6 +329,7 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 miner = (subsidy + fees) - 2*q    // 50% + rounding remainder
 gold_vault = q                     // 25%
 popc_pool = q                      // 25%</pre>
+<p>From <b>#40,000 (V17)</b>: block subsidy 80% miner / 15% normal DTD / 5% into the Jackpot accumulator J; transaction fees 100% to the miner. Until #39,999 the 50% miner / 50% DTD split (subsidy + fees) stays in force.</p>
 
 <h3>UTXO Model</h3>
 <p>Each output creates a UTXO indexed by (txid, output_index). ConnectBlock/DisconnectBlock with BlockUndo for reorgs. Coinbase maturity: 1000 blocks. Fee: sum(inputs) - sum(outputs) &ge; 1 stock/byte. <em>Source: utxo_set.cpp</em></p>
@@ -406,7 +408,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <tr><td>PoPC Pool</td><td><code>sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</code></td><td>25% of every block until #25,000 (0 since)</td></tr>
 </table>
 <p>The remaining 50% goes to whichever miner solves the block (configured via <code>--address</code>). The miner address is NOT constitutional &mdash; it changes per miner. Only the Gold Vault and PoPC Pool addresses are hardcoded and immutable.</p>
-<p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the split in force at its height, or sending gold/popc to wrong addresses, is rejected. <b style="color:#f59e0b">The split changed at V15 (#25,000):</b> blocks below that height carry 50/25/25 (miner / Gold Vault / PoPC) and are validated against it forever; from #25,000 the consensus split is <b>50% miner / 50% DTD</b> and the gold and PoPC coinbase outputs are <b>zero</b> &mdash; see <code>src/sost-node.cpp</code> (the V15 emission-transition branch). <em>Source: params.h:187-188</em></p>
+<p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the split in force at its height, or sending gold/popc to wrong addresses, is rejected. <b style="color:#f59e0b">The split changed at V15 (#25,000):</b> blocks below that height carry 50/25/25 (miner / Gold Vault / PoPC) and are validated against it forever; from #25,000 the consensus split is <b>50% miner / 50% DTD</b> and the gold and PoPC coinbase outputs are <b>zero</b> &mdash; see <code>src/sost-node.cpp</code> (the V15 emission-transition branch). From <b>#40,000 (V17)</b> the split changes again: subsidy 80% miner / 15% normal DTD / 5% into the Jackpot accumulator J (a consensus balance, not an address), fees 100% to the miner. <em>Source: params.h:187-188</em></p>
 <p><strong>Hard cap:</strong> Total supply &le; 466,920,160,910,299 stocks (~4,669,201 SOST). Enforced in subsidy calculation at consensus level.</p>
 <p><strong>Coinbase maturity:</strong> 1000 blocks (~7 days). Coinbase outputs cannot be spent before this.</p>
 </div></section>
@@ -508,7 +510,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->

@@ -184,7 +184,7 @@ nav .nav-links { width: 100%; }
     <p>Pools are a powerful coordination mechanism. They smooth out variance for individual miners and make participation easier for people with small hashrate. They are also, historically, the single biggest source of centralization in proof-of-work networks. Two or three pools controlling 60-80% of block production is the norm, not the exception.</p>
     <p>SOST's choice during pre-market testing is to <b>not run an official pool and not ship pool-friendly tooling</b>. That is a deliberate experiment, not a permanent rule.</p>
     <div class="pull">Decentralization is easier to keep than to recover.</div>
-    <p style="margin-top:14px"><b>Current reward context.</b> Since block #25,000 (V15) the split is <b>50% miner / 50% DTD</b>. The DTD distributes the non-miner half of every block to active miners on-chain, deterministically and independently of any mining pool &mdash; so the non-miner share reaches participants without a pool operator. This does not by itself make pools impossible; it changes who the block value flows to.</p>
+    <p style="margin-top:14px"><b>Current reward context.</b> Since block #25,000 (V15) the split is <b>50% miner / 50% DTD</b>. The DTD distributes the non-miner half of every block to active miners on-chain, deterministically and independently of any mining pool &mdash; so the non-miner share reaches participants without a pool operator. This does not by itself make pools impossible; it changes who the block value flows to. From block <b>#40,000 (V17, mandatory upgrade)</b> the subsidy becomes <b>80% miner / 15% normal DTD / 5% into the Jackpot accumulator J</b>, fees go <b>100% to the miner</b>, and normal-DTD eligibility also requires an active NODE_BIND + node heartbeats (the same test Jackpot V2 uses).</p>
   </div>
 </section>
 
@@ -255,7 +255,7 @@ nav .nav-links { width: 100%; }
 
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v568" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
