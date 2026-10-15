@@ -382,4 +382,31 @@ inline std::vector<BootTarget> bootstrap_plan(
     return out;
 }
 
+// Ordered list of (source, "host:port") the node redials when it has NO peer left. The same
+// exclusivity as bootstrap_plan holds on every reconnect: with --connect only the connect list
+// plus the addnode list, never the address book (peers.txt), gossiped addresses, seeds.txt, DNS
+// seeds or fallback IPs. Without --connect: connect(empty), addnode, store, gossip, then the
+// seed sources unless --noseed.
+inline std::vector<BootTarget> reconnect_plan(
+    const std::vector<std::string>& connect, const std::vector<std::string>& addnode,
+    const std::vector<std::string>& store, const std::vector<std::string>& gossip,
+    const std::vector<std::string>& seedsfile, const std::vector<std::string>& dns_seeds,
+    const std::vector<std::string>& fallback_ips, bool noseed)
+{
+    std::vector<BootTarget> out;
+    auto add = [&](PeerSource s, const std::vector<std::string>& v) {
+        for (const auto& a : v) if (!a.empty()) out.push_back({s, a});
+    };
+    add(PeerSource::CONNECT, connect);
+    add(PeerSource::ADDNODE, addnode);
+    if (!connect.empty()) return out;
+    add(PeerSource::STORE, store);
+    add(PeerSource::GOSSIP, gossip);
+    if (noseed) return out;
+    add(PeerSource::SEEDSFILE, seedsfile);
+    add(PeerSource::DNS, dns_seeds);
+    add(PeerSource::FALLBACK, fallback_ips);
+    return out;
+}
+
 } // namespace sost

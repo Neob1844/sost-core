@@ -184,6 +184,36 @@ int main() {
         CK(p5.size() == 1, "dedupe across sources");
     }
 
+    // ---- reconnect plan (no peer left): --connect stays exclusive on every reconnect
+    {
+        std::vector<std::string> conn = {"9.9.9.9:19333"}, add = {"7.7.7.7:19333"}, store = {"1.1.1.1:19333"},
+            gos = {"4.4.4.4:19333"}, sf = {"2.2.2.2:19333"}, dns = {"seed.sostcore.com:19333"}, fb = {"3.3.3.3:19333"};
+        auto only = [](const std::vector<BootTarget>& p, std::initializer_list<PeerSource> ok) {
+            for (const auto& t : p) {
+                bool in = false;
+                for (auto s : ok) if (t.source == s) in = true;
+                if (!in) return false;
+            }
+            return true;
+        };
+        auto r1 = reconnect_plan(conn, {}, store, gos, sf, dns, fb, false);
+        CK(r1.size() == 1 && r1[0].source == PeerSource::CONNECT,
+           "reconnect with --connect: connect list only (no store/gossip/seeds/dns/fallback)");
+        auto r2 = reconnect_plan(conn, add, store, gos, sf, dns, fb, true);
+        CK(r2.size() == 2 && r2[0].source == PeerSource::CONNECT && r2[1].source == PeerSource::ADDNODE,
+           "reconnect with --connect + --addnode (+--noseed): connect then addnode, nothing else");
+        CK(only(reconnect_plan(conn, add, store, gos, sf, dns, fb, false), {PeerSource::CONNECT, PeerSource::ADDNODE}),
+           "reconnect with --connect never yields STORE/GOSSIP/SEEDSFILE/DNS/FALLBACK even without --noseed");
+        auto r3 = reconnect_plan({}, add, store, gos, sf, dns, fb, false);
+        CK(r3.size() == 6 && r3[0].source == PeerSource::ADDNODE && r3[1].source == PeerSource::STORE &&
+           r3[2].source == PeerSource::GOSSIP && r3[3].source == PeerSource::SEEDSFILE &&
+           r3[4].source == PeerSource::DNS && r3[5].source == PeerSource::FALLBACK,
+           "reconnect with --addnode only: addnode coexists with store, gossip and seeds");
+        auto r4 = reconnect_plan({}, add, store, gos, sf, dns, fb, true);
+        CK(r4.size() == 3 && r4[0].source == PeerSource::ADDNODE && r4[1].source == PeerSource::STORE &&
+           r4[2].source == PeerSource::GOSSIP, "reconnect with --noseed (no --connect): no seeds.txt/DNS/fallback");
+    }
+
     // ---- source names round trip
     {
         bool ok = true;

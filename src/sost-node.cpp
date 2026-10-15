@@ -12110,42 +12110,29 @@ int main(int argc, char** argv) {
             save_peer_store(chain_path);
             // D1: if we have NO peers, redial from (a) explicit --connect/--addnode, (b) the
             // address book, (c) gossip candidates, (d) seeds.txt, DNS seeds and fallback IPs
-            // (unless --noseed). Done OUTSIDE the peers lock so a connect() never stalls other
-            // peer writers.
+            // (unless --noseed). With --connect only (a): the connect list stays exclusive on
+            // every reconnect, as at boot (sost::reconnect_plan). Done OUTSIDE the peers lock so
+            // a connect() never stalls other peer writers.
             if(need_reconnect){
                 int want=3, got=0;
-                printf("[P2P] No peers connected, attempting reconnect (connect/addnode/store/gossip/seeds)...\n");
-                for(const auto& a:connect_addrs){
-                    if(got>=want) break;
-                    std::string host; int port; split_hp(a, host, port);
-                    if(connect_peer(host, port, sost::PeerSource::CONNECT)) ++got;
+                printf("[P2P] No peers connected, attempting reconnect (%s)...\n",
+                       connect_addrs.empty() ? "connect/addnode/store/gossip/seeds" : "connect/addnode only, exclusive");
+                std::vector<std::string> cand, seedsfile, dns;
+                if(connect_addrs.empty()){
+                    { std::lock_guard<std::mutex> lk(g_addr_cand_mu); cand=g_addr_candidates; }   // D1: bounded, never persisted raw
+                    for(const auto& es: load_extra_seeds(chain_path)) seedsfile.push_back(es.first + ":" + std::to_string(es.second));
+                    for(int i=0;i<NUM_DEFAULT_SEEDS;++i) dns.push_back(std::string(DEFAULT_SEEDS[i]) + ":" + std::to_string(P2P_PORT_DEFAULT));
                 }
-                for(const auto& a:addnode_addrs){
-                    std::string host; int port; split_hp(a, host, port);
-                    if(connect_peer(host, port, sost::PeerSource::ADDNODE)) ++got;
-                }
-                std::vector<std::string> stored = load_peer_store(chain_path);
-                for(size_t i=0;i<stored.size() && got<want;++i){
-                    std::string host; int port; split_hp(stored[i], host, port);
-                    if(connect_peer(host,port,sost::PeerSource::STORE)) ++got;
-                }
-                // D1: gossiped candidates (bounded, never persisted raw)
-                std::vector<std::string> cand; { std::lock_guard<std::mutex> lk(g_addr_cand_mu); cand=g_addr_candidates; }
-                for(size_t i=0;i<cand.size() && got<want;++i){
-                    std::string host; int port; split_hp(cand[i], host, port);
-                    if(!gossip_target_ok(host)) continue;   // defense-in-depth SSRF/DNS guard on gossiped targets
-                    if(connect_peer(host,port,sost::PeerSource::GOSSIP)) ++got;
-                }
-                if(!g_noseed){
-                    for(const auto& es: load_extra_seeds(chain_path)){ if(got>=want) break;
-                        if(connect_peer(es.first, es.second, sost::PeerSource::SEEDSFILE)) ++got; }
-                    for(int i=0;i<NUM_DEFAULT_SEEDS && got<want;++i){
-                        if(connect_peer(DEFAULT_SEEDS[i], P2P_PORT_DEFAULT, sost::PeerSource::DNS)) ++got;
-                    }
-                    for(size_t i=0;i<FALLBACK_SEED_IPS.size() && got<want;++i){
-                        std::string host; int port; split_hp(FALLBACK_SEED_IPS[i], host, port);
-                        if(connect_peer(host, port, sost::PeerSource::FALLBACK)) ++got;
-                    }
+                const std::vector<std::string> fallback(FALLBACK_SEED_IPS.begin(), FALLBACK_SEED_IPS.end());
+                const auto plan = sost::reconnect_plan(connect_addrs, addnode_addrs,
+                    connect_addrs.empty() ? load_peer_store(chain_path) : std::vector<std::string>{},
+                    cand, seedsfile, dns, fallback, g_noseed);
+                for(const auto& t: plan){
+                    if(t.source==sost::PeerSource::CONNECT){ if(got>=want) continue; }
+                    else if(t.source!=sost::PeerSource::ADDNODE && got>=want) break;
+                    std::string host; int port; split_hp(t.hostport, host, port);
+                    if(t.source==sost::PeerSource::GOSSIP && !gossip_target_ok(host)) continue;   // defense-in-depth SSRF/DNS guard on gossiped targets
+                    if(connect_peer(host, port, t.source)) ++got;
                 }
             } else {
                 // P5: keep --addnode peers connected (they are dialed in addition to discovery).
