@@ -35,7 +35,7 @@
       }
       var nx=document.getElementById('dDTDNext');
       if(nx){ var wp=lot.lottery_winner_pkh?('sost1'+String(lot.lottery_winner_pkh)):null;
-        nx.innerHTML='NEXT BLOCK #'+Number(lot.height_next).toLocaleString('en-US')+' \u00B7 PROJECTED NEXT DTD WINNER \u2014 CURRENT TIP: '+(wp?('<span style="cursor:pointer;color:#ffd166" title="'+wp+' \u2014 projection at the current tip; final only once block #'+lot.height_next+' is mined (can change with a new tip or reorg)" onclick="event.stopPropagation();showAddress(\''+wp+'\')">'+wp.slice(0,10)+'\u2026'+wp.slice(-4)+'</span>'):'\u2014'); }
+        nx.innerHTML='NEXT BLOCK #'+Number(lot.height_next).toLocaleString('en-US'); }
     }
     else if(tip>=30000 && a288!=null && !isNaN(a288)){ txt=a288+' active miners \u00B7 288-block window'; el.title='DTD eligible pool from #30,000 = miners active in the last 288 blocks (node geteligibleminers.active_288). Historical producers since #7,100: '+(window._nodeProducersTotal||'\u2014'); }
     else if(legacyCount!=null){ txt=legacyCount+' eligible miners'; }
@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-15-v569-wordmark">
+<meta name="explorer-html-version" content="2026-10-16-v570-no-projected-winner">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -867,7 +867,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </div>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-15-v569-wordmark';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-16-v570-no-projected-winner';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -2771,7 +2771,6 @@ function dtdRenderCurrent(err){
     +cell('ACTIVE · 288-BLOCK WINDOW',f(c.active.length),'var(--cyan)','blocks #'+f(Math.max(0,c.tip-287))+' → #'+f(c.tip))
     +cell('COOLDOWN · 6 BLOCKS',c.fallback?'FALLBACK ACTIVE':(cdN?cdN+' excluded':'none'),c.fallback?'#ffd166':'#fbbf24',c.fallback?'applying it would leave nobody eligible, so it is skipped for this block':'miners of blocks #'+f(L.height_next-6)+'–#'+f(c.tip))
     +cell('ANTI-DOMINANCE',c.domArmed?(domN+' excluded'):'NOT ARMED',c.domArmed?'#fb010d':'var(--text3)',c.domArmed?'≥10% of the 288 window':'armed only with ≥11 active miners ('+c.active.length+' now)')
-    +cell('PROJECTED NEXT DTD WINNER',c.winner?lnk(c.winner):'—','#ffd166','at the current tip · final only once #'+f(L.height_next)+' is mined')
     +cell('DTD PAYOUT (next block)',L.lottery_payout!=null?dtdSost8(L.lottery_payout)+' SOST':'—','var(--purple)','50% of the block subsidy')
     +'</div>';
   if(c.consistent){
