@@ -383,7 +383,7 @@
       <!-- STEP 4 · REVIEW -->
       <div class="apw-panel" data-p="4">
         <div class="apw-q">Review &amp; generate</div>
-        <div class="apw-hint">Owner statements are <b>declared</b>; a registry, appraiser, lawyer or GeaSpirit analysis can later upgrade a claim to <b>independently verified</b>.</div>
+        <div class="apw-hint">Owner statements are <b>declared</b>; a registry, appraiser, lawyer or independent technical analysis can later upgrade a claim to <b>independently verified</b>.</div>
         <div id="apwReview" class="apw-dash" style="border-top-color:var(--cyan)"></div>
         <div class="reg-gate" style="margin-top:14px;border:1px solid #fb010d;border-radius:10px;background:rgba(251,1,13,.06);padding:13px 15px">
           <div style="font:800 12px/1.3 var(--mono,monospace);letter-spacing:.8px;color:#ff6b6b;margin-bottom:7px">&#9888; REGULATORY REVIEW REQUIRED BEFORE ACTIVATION</div>
@@ -1241,7 +1241,7 @@ async function tkGenPassport(){
     if(n===3){ recalcRef(); } if(n===4){ renderReview(); } }
   window.apwNext=function(){ if(apw.step<TOTAL) showStep(apw.step+1); };
   window.apwBack=function(){ if(apw.step>1) showStep(apw.step-1); };
-  function prettySource(st){ return ({DECLARING_PARTY:'Asset owner',PUBLIC_REGISTRY:'Public registry',PUBLIC_DATASET:'Public dataset',GEASPIRIT_ANALYSIS:'GeaSpirit analysis',INDEPENDENT_EXPERT:'Independent expert',LABORATORY:'Laboratory',LEGAL_DOCUMENT:'Legal document',TECHNICAL_DOCUMENT:'Technical document',THIRD_PARTY_API:'URL / reference',SOST_CALCULATION:'SOST calculation'})[st]||st||'—'; }
+  function prettySource(st){ return ({DECLARING_PARTY:'Asset owner',PUBLIC_REGISTRY:'Public registry',PUBLIC_DATASET:'Public dataset',GEASPIRIT_ANALYSIS:'Independent technical analysis',INDEPENDENT_EXPERT:'Independent expert',LABORATORY:'Laboratory',LEGAL_DOCUMENT:'Legal document',TECHNICAL_DOCUMENT:'Technical document',THIRD_PARTY_API:'URL / reference',SOST_CALCULATION:'SOST calculation'})[st]||st||'—'; }
   function prettyVerif(s){ return s==='INDEPENDENTLY_VERIFIED'?'Independently verified':s==='ATTESTED'?'Attested':s==='NOT_VERIFIED'?'Not verified':'Declared'; }
   function gatherEvidence(){ var ev=[]; document.querySelectorAll('#apwEvidence .apw-ev').forEach(function(row){ var k=row.querySelector('.apwEvKind'), r=row.querySelector('.apwEvRef'); var ref=(r&&r.value||'').trim(); if(ref) ev.push({kind:k?k.value:'OTHER',ref:ref}); }); return ev; }
   function val(id){ var e=q(id); return e?(e.value||'').toString().trim():''; }
