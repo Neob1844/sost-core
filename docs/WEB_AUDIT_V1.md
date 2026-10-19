@@ -4,6 +4,8 @@
 **Auditor:** NeoB + automated verification
 **Domains:** sostcore.com, sostprotocol.com
 
+> Historical audit snapshot (2026-03-28). Some pages listed below (off-chain research modules) are historical, non-normative components and no longer part of the current SOST platform; their URLs now serve retired stubs.
+
 ---
 
 ## A. EXECUTIVE SUMMARY

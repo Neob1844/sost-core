@@ -477,7 +477,7 @@ Attempt to mine V11 blocks with: wrong `miner_pubkey`, valid `miner_pubkey` but 
 The following are intentionally NOT part of V11:
 
 - **Memory-Lock per-instance** (per-thread dataset, forcing dataset+scratchpad to be non-shareable). Studied separately; activation no earlier than block 12,000 if at all.
-- **Useful Compute reward integration**. Tracked under M24 in the AI Engine roadmap.
+- **Useful Compute reward integration**. Paused pending a future redesign (the earlier off-chain research roadmap it pointed to is historical and non-normative; no longer part of the current SOST platform).
 - **Whale governance / staking weight on the lottery**. Out of PoW scope.
 - **Pool resistance via VDF**. Future research direction (`docs/post_fork_gpu_pool_resistance.md`).
 

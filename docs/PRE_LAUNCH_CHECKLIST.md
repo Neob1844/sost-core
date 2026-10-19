@@ -115,7 +115,7 @@ These improve the protocol but are not required on launch day.
 
 ### 3C. Platform Extensions
 
-- [ ] Materials Engine public API documentation
+- ~~Off-chain research module API documentation~~ — historical, non-normative component. No longer part of the current SOST platform.
 - [ ] Web wallet (browser-compatible HD wallet)
 - [ ] PWA installable on mobile (service worker v62+)
 

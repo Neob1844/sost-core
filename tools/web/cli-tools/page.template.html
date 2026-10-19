@@ -127,7 +127,7 @@ a{color:#7dd3fc}
   <div class="card">
     <h2>WHAT THIS PAGE IS — AND IS NOT</h2>
     <div class="cmp">
-      <div><b class="lbl">WEB WALLET BACKUP</b><br>Backup of the browser wallet at wallet.sostcore.com (PBKDF2 + AES-256-GCM). <b>Different format</b> — not readable by sost-miner.</div>
+      <div><b class="lbl">WEB WALLET BACKUP</b><br>Backup of the official browser wallet at https://sostcore.com/sost-wallet.html (PBKDF2 + AES-256-GCM). <b>Different format</b> — not readable by sost-miner.</div>
       <div><b class="lbl">CLI / MINER V2 WALLET</b><br>File written by <code>sost-cli wallet-export --encrypted</code> (scrypt N=32768 r=8 p=1 + AES-256-GCM). Read directly by sost-cli and sost-miner. This page writes exactly this format.</div>
     </div>
     <p class="small">This page cannot: change file permissions, write into WSL, start or stop sost-miner, protect against malware already running as your user, or recover a forgotten passphrase. A browser cannot guarantee that memory is wiped; the page drops passphrases and decrypted data as soon as practical. There is deliberately no "decrypt to plain text" button — use <code>sost-cli wallet-import --encrypted</code> for recovery.</p>

@@ -100,7 +100,7 @@ Everything needed for basic cryptocurrency function is **already implemented**:
 ### Phase 2: Lock Mechanisms (Height 5000+)
 Activates at mainnet height 5000:
 - **BOND_LOCK**: Time-locked outputs (lock SOST until block height N). Used for PoPC Model B.
-- **ESCROW_LOCK**: Time-locked with designated beneficiary. Used for Materials Engine access.
+- **ESCROW_LOCK**: Time-locked with designated beneficiary. Generic escrow / guarantee primitive. (An earlier draft tied it to an off-chain research module: historical, non-normative component. No longer part of the current SOST platform.)
 - **Capsule Protocol v1**: Structured metadata in transaction outputs.
 
 **Complexity**: Low — already implemented, just awaiting activation height.

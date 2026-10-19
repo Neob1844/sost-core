@@ -279,7 +279,6 @@ echo "Supply verified OK"
 
 ### Pre-Release (any code change)
 - [ ] Run all 22 CTest suites
-- [ ] Run Materials Engine tests (117+)
 - [ ] Verify sighash compatibility between CLI and node
 - [ ] Test on local testnet before VPS deployment
 

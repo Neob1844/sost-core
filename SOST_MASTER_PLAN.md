@@ -181,7 +181,7 @@ location /rpc {
 
 ## 7. WALLET ECOSYSTEM
 
-### Phase 1 — Web Wallet (`wallet.sostcore.com`)
+### Phase 1 — Web Wallet (official: `https://sostcore.com/sost-wallet.html`)
 - Browser-based, no download required
 - Key generation in browser using `noble-secp256k1` JS library
 - sost1 address derivation in JavaScript (RIPEMD160(SHA256(pubkey)))
@@ -496,7 +496,7 @@ location / {
 23. Monitor first external connections
 
 ### Block E — Post-Launch
-24. Web wallet with TOTP 2FA (wallet.sostcore.com)
+24. Web wallet with TOTP 2FA (official: https://sostcore.com/sost-wallet.html)
 25. Community growth and ecosystem development
 26. TX index + estimatefee
 27. Desktop wallet with 2FA + offline signing

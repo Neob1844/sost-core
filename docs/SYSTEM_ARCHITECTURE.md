@@ -19,7 +19,6 @@
 │         │    │    index.html              │                      │
 │         │    │    sost-explorer.html      │                      │
 │         │    │    sost-wallet.html        │                      │
-│         │    │    sost-geo-discovery.html     │                      │
 │         │    │    sost-app/index.html     │                      │
 │         │    │    ... (30+ HTML files)    │                      │
 │         │    └───────────────────────────┘                      │
@@ -45,14 +44,10 @@
 │  │  8GB RAM     │  │  :18232 fwd  │  │  build/      │          │
 │  │  CPU mining  │  │  auto-reconn │  │  22/22 tests │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
-│                                                                  │
-│  ┌──────────────┐  ┌──────────────┐                             │
-│  │  a separate project   │  │  Materials   │                             │
-│  │  Python ML   │  │  Engine      │                             │
-│  │  geo-discovery/  │  │  materials/  │                             │
-│  └──────────────┘  └──────────────┘                             │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+> Nota: el diagrama refleja únicamente los componentes actuales de SOST. Componentes de investigación off-chain que aparecían en versiones anteriores de este documento son históricos y no normativos; ya no forman parte de la plataforma SOST actual.
 
 ## Puertos
 

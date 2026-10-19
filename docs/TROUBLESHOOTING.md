@@ -118,19 +118,11 @@ Formato: SÍNTOMA → CAUSA PROBABLE → SOLUCIÓN
 → No hay rotación de logs configurada
 → Instalar cron con log_rotate.sh (ver `deploy/setup_cron.sh`)
 
-## a separate project
+## Entradas 26–28 (retiradas)
 
-**26.** Un script de a separate project falla con "ModuleNotFoundError"
-→ Falta un paquete Python
-→ `pip install rasterio scikit-learn xgboost pandas numpy scipy`
-
-**27.** "EMIT stack not found"
-→ Los datos EMIT no están descargados
-→ Ver manual dropzone: `~/SOST/geo-discovery/data/manual_drop/peru_emit/README.md`
-
-**28.** "rasterio: file not recognized"
-→ El archivo descargado está truncado o es HTML
-→ Verificar tamaño (`ls -la`). Si <1MB probablemente no es un GeoTIFF real.
+**26–28.** Historical, non-normative component. No longer part of the current SOST platform.
+Estas entradas describían scripts de investigación off-chain que ya no forman parte del repositorio
+ni de la plataforma SOST actual. Se conserva la numeración para no romper referencias.
 
 ## Build
 

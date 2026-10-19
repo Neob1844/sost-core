@@ -42,8 +42,8 @@ builder" (redeem-script + claim/refund/dispute spend paths) and expose the four 
 | HD wallet, `sost1` derivation, build/sign/broadcast tx, UTXO select, change | EXISTS | `website/sost-wallet.html`, `src/hd_wallet.cpp`, `src/tx_signer.cpp` |
 | Multisig P2SH (`sost3`, 2-of-3), PSBT offline signing | LIBRARY CODE ONLY — NOT ACTIVE on mainnet (not in consensus, addresses, CLI or RPC) | `website/sost-wallet.html`, `src/psbt.cpp`, `src/script.cpp` |
 | Script opcodes for HTLC: `OP_SHA256`, `OP_HASH160`, `OP_CHECKMULTISIG`, P2SH eval, CLTV via nSequence | LIBRARY CODE — NOT consensus-valid (script interpreter is not wired into tx validation; P2SH output type 0x30 is rejected and is reused by V16 OUT_NODE_PROTOCOL) | `src/script.cpp`, `src/atomic_swap_btc.cpp` (BIP-199 redeem builder) |
-| Sign-message for HOLD | EXISTS but **DISABLED** | `website/sost-wallet.html:6425` (`GEA_SIGN_ENABLED=false`) |
-| Access API (HOLD/PAY backend, flags OFF) | DEPLOYED OFF | `apps/access-api` (a separate project infra), console panel on VPS `/opt/ree-locator` |
+| Sign-message for HOLD | **REMOVED** from the wallet (historical, non-normative; no longer part of the current SOST platform) | — |
+| Access API (HOLD/PAY backend) | NOT PART OF SOST — historical, non-normative component; no longer part of the current SOST platform. A merchant would run its own backend. | — |
 | EVM Atomic Swap HTLC (ETH/BNB/USDT/USDC/PAXG/XAUT) | LIVE V14 | `contracts/atomic-swap/src/AtomicSwapHTLC.sol` |
 | **SOST-native swap leg (BTC-style HTLC signing)** | **STUB — gated to V15** | `src/atomic_swap_btc_signing.cpp` |
 | PoPC bond — native SOST, the only slashable collateral (`BOND_LOCK` UTXO, dynamic sizing 12–25%) | EXISTS (app-layer, non-consensus) | `src/popc.cpp` |
@@ -67,8 +67,9 @@ SOST_GATEWAY_ESCROW_ENABLED     = false
 SOST_GATEWAY_ATOMIC_SWAP_ENABLED= false
 ```
 
-Backend (a separate project access-api, already present, OFF): `GEA_ACCESS_API_ENABLED`,
-`GEA_HOLDING_UNLOCK_ENABLED`, `GEA_PAY_WITH_SOST_ENABLED`. Rollback = set any flag to `0`.
+Backend: there is no SOST-operated merchant backend. Any merchant integrating HOLD/PAY runs its own
+API with its own flags; rollback = set the wallet flags above to `false`. (An earlier draft referenced
+an external access API; historical, non-normative component. No longer part of the current SOST platform.)
 
 ---
 
@@ -77,8 +78,8 @@ Backend (a separate project access-api, already present, OFF): `GEA_ACCESS_API_E
 ### 4.1 HOLD — prove you hold SOST (Engine 1, no funds move)
 
 Flow:
-1. API issues a `nonce` bound to the address (already in `access-api/auth.py`).
-2. Wallet shows a **human-readable** challenge message; user signs (enable `GEA_SIGN_ENABLED`).
+1. The merchant API issues a `nonce` bound to the address.
+2. Wallet shows a **human-readable** challenge message; user signs (a sign-message flow would have to be re-added to the wallet behind `SOST_GATEWAY_HOLD_ENABLED`).
 3. Wallet exports a proof JSON: `address, pubkey, signature_der, message, message_sha256, timestamp`.
 4. API verifies signature (real secp256k1) + reads balance (`getaddressbalance`) → grants a
    short-lived entitlement token (HMAC, masked to last 6).
@@ -91,15 +92,15 @@ Tiers (example): 100 SOST → light downloads · 1 000 → advanced reports · 1
 ### 4.2 PAY — buy access with SOST (Engine 2, degenerate: plain send)
 
 Flow:
-1. a separate project/API creates a **payment intent**: `merchant, concept, amount_sost, destination,
+1. The merchant API creates a **payment intent**: `merchant, concept, amount_sost, destination,
    memo/reference, expires_at, required_confirmations`.
 2. Wallet renders a strong confirmation screen → builds, signs, broadcasts a normal tx.
 3. Wallet shows `txid` + an exportable **receipt JSON** (no secrets) + a "Verify payment status" button.
 4. API verifies the tx pays `destination` ≥ `amount_sost` with ≥ `required_confirmations` and the
-   `txid` is unused → grants access. (`payments.evaluate_payment` already models
+   `txid` is unused → grants access. (The merchant must model
    paid/underpaid/wrong_destination/insufficient_confirmations/reused_tx/expired.)
 
-Tiers (example): 25 SOST → mine report · 100 → country/mineral ranking · 500 → temporary premium dataset.
+Tiers (example): 25 SOST → single item · 100 → bundle · 500 → temporary premium access.
 
 **Verification dependency (flag in roadmap):** today the public RPC exposes `getrawtransaction`
 for the **mempool only** and `gettxout` for the UTXO set; there is no chain-history
@@ -146,8 +147,8 @@ then in-wallet once V15 lands. PAXG/XAUT only after SafeERC20 + balance-delta + 
 
 The two payment routes the user sees:
 - **Has SOST →** PAY directly (fast, cheap, single-chain).
-- **No SOST, has ETH/BNB/PAXG →** SWAP into SOST, then PAY. (We never "pay a separate project in ETH" at
-  launch — splits accounting, weakens SOST utility, and report-unlock is off-chain anyway.)
+- **No SOST, has ETH/BNB/PAXG →** SWAP into SOST, then PAY. (We never "pay the merchant in ETH" at
+  launch — splits accounting, weakens SOST utility, and access-unlock is off-chain anyway.)
 
 ---
 
@@ -225,8 +226,8 @@ Model-A/Model-B split is superseded; the text below describes the unified design
 
 ## 9. Phased roadmap
 
-1. **Phase 1 — HOLD.** Flip `GEA_SIGN_ENABLED` in a flagged build; wire the existing access-api;
-   ship the proof-export. Lowest risk, no funds move.
+1. **Phase 1 — HOLD.** Re-add a sign-message flow in a flagged build (`SOST_GATEWAY_HOLD_ENABLED`);
+   ship the proof-export for a merchant-run API. Lowest risk, no funds move.
 2. **Phase 2 — PAY.** Payment-intent UX over existing build/sign/broadcast; decide PAY-verification
    path (§4.2); dummy intents first.
 3. **Phase 3 — ESCROW (native).** Script-lock builder + Lock/Release/Refund/Dispute over PSBT;
