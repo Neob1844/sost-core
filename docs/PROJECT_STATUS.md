@@ -63,7 +63,7 @@ Mainnet snapshot: block 27,972 (2026-09-25). #29,900 ≈ 1,928 blocks away.
 - **Gauntlet (sec2 surface) DONE:** RPC DoS, parser audit, resource/CPU-DoS (8 concurrent workers ~141 req/s, RSS flat 11MB, no crash), adversarial (fuzz/reorg/orphan/recovery), ASan+UBSan 0 findings, ctest 119/119, full-sync byte-identical.
 - **Next action:** await explicit authorization to (a) apply the interim proxy mitigation, (b) publish sost-node-sec2, (c) VPS swap per the deploy plan. Do NOT mix with the P2P branch. Priority before block 29,900.
 ## LT — Long-term direction (confirmed) · after security + pending work
-- **SOST is fully independent of GeaSpirit** — no shared code/infra/assets/docs/strategy.
+- **SOST is fully independent of any external project** — no shared code/infra/assets/docs/strategy.
 - **Goal 1 — full decentralization:** cross-platform node installer, reproducible clean-sync from genesis, exchange/operator integration folder, recruit >=3 independent node operators, and the "24h with founder infra OFF" independence test (discovery/sync/mine/recover without STRATO). The P2P convergence + fast-sync + sec2 work already built the technical base. Hard open problem: hashrate diversity (one miner ~90%), demand-dependent, cannot be manufactured.
 - **Goal 2 — secure native atomic swaps (NEXT BIG PROJECT after the above):** NOT greenfield — `feat/btc-atomic-swap-complete` is code-complete (HTLC primitives already in consensus, 22 test files, contracts, threat model 54/0). Remaining = validate against a real bitcoind-regtest + independent security audit before any BTC activation. This is the moat for exchange listings without capital.
 - Gold reference stays informational (not backing/peg); MiCA angle = legal-counsel item, not settled here.

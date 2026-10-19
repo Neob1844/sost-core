@@ -37,5 +37,5 @@ reveals the manifestHash, every claim with its source and verification, and the 
 
 ## Who verifies what
 The owner supplies the raw material; SOST records **who declared each fact**; independent sources — a public
-registry, an appraiser, a lawyer, or GeaSpirit analysis — can later upgrade a claim from *declared* to
+registry, an appraiser, a lawyer, or an independent technical analysis — can later upgrade a claim from *declared* to
 *independently verified*. Passports created earlier in the v1 format keep their original hash and still verify.

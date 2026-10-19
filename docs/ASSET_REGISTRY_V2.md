@@ -95,10 +95,12 @@ VALUATION ≠ MARKET PRICE · REFERENCE PRICE ≠ LIQUIDITY · TOKENIZATION ≠ 
 SOST DOES NOT DETERMINE LEGAL OR REGULATORY CLASSIFICATION. Where a declared right may fall under MiCA/
 MiFID II/securities law, note it prudently; do not resolve the classification automatically.
 
-## GeaSpirit hand-off (decoupled; schema only — see geaspirit-sost-handoff.schema.json)
-GeaSpirit (discovery/intelligence) → deep-link/JSON hand-off → SOST Asset Registry. Data crossing the
-boundary becomes claims with `provenance.source_type = GEASPIRIT_ANALYSIS`. NO GeaSpirit code imported
-into SOST or vice-versa; NO runtime dependency; NO custody/tokenization inside GeaSpirit.
+## External technical analysis (decoupled)
+Evidence from an independent external technical analysis enters the SOST Asset Registry only as claims
+with `provenance.source_type = GEASPIRIT_ANALYSIS` (a legacy enum value kept unchanged for canonical-vector
+compatibility; shown to users as "Independent technical analysis") and `verification.status = DECLARED`
+unless independently verified. NO external code is imported into SOST; NO runtime dependency; no external
+party custodies SOST/funds or issues tokens.
 
 ## Implementation status & reproducible contract (2026-09-29)
 Module `website/js/asset-passport-v2.js` (UMD, `window.SOSTAssetPassportV2`) exports: `buildPassport`,

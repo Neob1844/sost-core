@@ -93,8 +93,8 @@ deploy/v15-option-b/sost-cli
 deploy/v15-option-b/sost-miner
 deploy/v15-option-b/sost-signtx
 
-# GeaSpirit is a separate project. Nothing from it belongs in this repository —
-# not its code, not its data, not a vendored copy "for reference".
+# External projects do not belong in this repository —
+# not their code, not their data, not a vendored copy "for reference".
 archive/geaspirit-separation/
 **/geaspirit-platform/
 
