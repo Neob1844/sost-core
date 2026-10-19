@@ -1,14 +1,9 @@
 #!/bin/bash
-# Regenerate whitepaper PDF from source
-# Requires: sudo apt install pandoc texlive-xetex fonts-dejavu
+# Regenerate website/whitepaper.pdf from the current website/sost-whitepaper.html.
+# Uses the page's @media print rules. Requires: WeasyPrint (pip install --user weasyprint).
+# The former pandoc build of docs/convergencex_whitepaper.txt into
+# docs/convergencex_whitepaper.pdf is retired: that PDF is no longer published.
 set -e
-cd "$(dirname "$0")"
-pandoc convergencex_whitepaper.txt -o convergencex_whitepaper.pdf \
-  --pdf-engine=xelatex \
-  -V geometry:margin=1in \
-  -V fontsize=11pt \
-  -V mainfont="DejaVu Sans" \
-  -V monofont="DejaVu Sans Mono" \
-  --wrap=auto
-cp convergencex_whitepaper.pdf ../website/whitepaper.pdf
-echo "Generated: docs/convergencex_whitepaper.pdf + website/whitepaper.pdf"
+cd "$(dirname "$0")/.."
+weasyprint website/sost-whitepaper.html website/whitepaper.pdf
+echo "Generated: website/whitepaper.pdf"
