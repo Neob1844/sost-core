@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import {ReserveBase, IERC20Min} from "./ReserveBase.sol";
 
-/// @title Gold Reserve V2 (Stage 1, research / devnet only)
+/// @title Gold Reserve V2 (C701, development only — NOT deployed)
 /// @notice A separate, publicly verifiable reserve of tokenized gold. It never mints SOST or wSOST,
 ///         is independent of the historical Gold Vault / PoPC / Jackpot reserve and of the Bridge
 ///         Vault, and has NO arbitrary withdrawal. XAUT is enabled at deployment; PAXG is registered
@@ -14,7 +14,11 @@ import {ReserveBase, IERC20Min} from "./ReserveBase.sol";
 ///           unpause          4-of-5
 ///           critical rescue  4-of-5 + rescue delay   -> ONLY to the fixed Quarantine Vault
 ///           final migration  4-of-5 + governance PASS + timelock + registered successor (ReserveBase)
-contract GoldReserveVault is ReserveBase {
+///         C701: the SOST Automated Bridge pays every Gold Access Key straight into this contract
+///         (ERC-20 transferFrom user -> reserve inside the mint transaction). The bridge has NO role
+///         here: bridge authorizers are not guardians and guardians cannot authorize mints.
+///         Guardian recovery (ReserveBase): 4-of-5 + timelock, cancellable by any 2.
+contract GoldReserveV2 is ReserveBase {
     uint8 public constant PAUSE_THRESHOLD = 2;
     uint8 public constant UNPAUSE_THRESHOLD = 4;
     uint8 public constant RESCUE_THRESHOLD = 4;

@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import {ReserveBase} from "./ReserveBase.sol";
 
-/// @title Quarantine Vault (Stage 1, research / devnet only)
+/// @title Quarantine Vault (C701, development only — NOT deployed)
 /// @notice Temporary safe custody for Gold Reserve V2 assets after a critical rescue. It has no
 ///         deposit function, no withdraw function and no arbitrary destination. Assets leave ONLY
 ///         through the same final-migration path as the reserve itself (ReserveBase): 4-of-5

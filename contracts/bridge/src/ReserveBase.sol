@@ -7,7 +7,7 @@ interface IERC20Min {
     function transferFrom(address from, address to, uint256 v) external returns (bool);
 }
 
-/// @title ReserveBase — shared rules of Gold Reserve V2 and its Quarantine Vault (Stage 1, research)
+/// @title ReserveBase — shared rules of Gold Reserve V2 and its Quarantine Vault (C701, development only)
 /// @notice There is NO withdraw(address) and no function that accepts an arbitrary destination.
 ///         Assets can leave only by (a) a guardian rescue to the vault's fixed Quarantine Vault
 ///         (GoldReserveVault only) or (b) a final migration to the EXACT successor vault named in a
@@ -116,10 +116,70 @@ abstract contract ReserveBase {
         emit ApprovalRevoked(actionId, msg.sender, approvals[actionId]);
     }
 
+    /// @dev C701 audit fix: approvals are RE-COUNTED over the CURRENT guardian set at consumption
+    ///      time, so an approval left by a guardian that was later rotated out never counts.
     function _consume(bytes32 actionId, uint8 needed) internal {
         if (consumed[actionId]) revert AlreadyConsumed();
-        if (approvals[actionId] < needed) revert NotApproved();
+        if (liveApprovals(actionId) < needed) revert NotApproved();
         consumed[actionId] = true;
+    }
+
+    function liveApprovals(bytes32 actionId) public view returns (uint8 n) {
+        for (uint256 i = 0; i < 5; i++) {
+            if (approvedBy[actionId][guardians[i]]) n++;
+        }
+    }
+
+    // ------------------------------------------------------------------ guardian recovery (extraordinary)
+    /// Replacing a lost or compromised guardian: 4-of-5 approvals, then a long fixed delay during
+    /// which ANY 2 guardians can cancel. Rotation never moves assets and never changes thresholds.
+    uint8 public constant ROTATE_THRESHOLD = 4;
+    uint8 public constant ROTATE_CANCEL_THRESHOLD = 2;
+    uint256 public rotationNonce;
+    struct Rotation { uint8 index; address oldGuardian; address newGuardian; uint256 eta; }
+    mapping(uint256 => Rotation) public rotations;   // nonce -> queued rotation
+
+    event GuardianRotationQueued(uint256 indexed nonce, uint8 index, address oldGuardian, address newGuardian, uint256 eta);
+    event GuardianRotationCancelled(uint256 indexed nonce);
+    event GuardianRotated(uint256 indexed nonce, uint8 index, address oldGuardian, address newGuardian);
+
+    error RotationNotReady();
+
+    function rotateAction(uint8 index, address oldG, address newG, uint256 nonce) public view returns (bytes32) {
+        return keccak256(abi.encode("ROTATE_GUARDIAN", address(this), index, oldG, newG, nonce));
+    }
+
+    function cancelRotationAction(uint256 nonce) public view returns (bytes32) {
+        return keccak256(abi.encode("CANCEL_ROTATION", address(this), nonce));
+    }
+
+    function queueGuardianRotation(uint8 index, address newG) external {
+        if (index >= 5 || newG == address(0) || isGuardian[newG]) revert BadGuardians();
+        address oldG = guardians[index];
+        uint256 n = rotationNonce;
+        _consume(rotateAction(index, oldG, newG, n), ROTATE_THRESHOLD);
+        rotationNonce = n + 1;
+        uint256 eta = block.timestamp + minMigrationTimelock;     // same floor as a final migration
+        rotations[n] = Rotation(index, oldG, newG, eta);
+        emit GuardianRotationQueued(n, index, oldG, newG, eta);
+    }
+
+    function cancelGuardianRotation(uint256 nonce) external {
+        if (rotations[nonce].eta == 0) revert RotationNotReady();
+        _consume(cancelRotationAction(nonce), ROTATE_CANCEL_THRESHOLD);
+        delete rotations[nonce];
+        emit GuardianRotationCancelled(nonce);
+    }
+
+    function executeGuardianRotation(uint256 nonce) external {
+        Rotation memory r = rotations[nonce];
+        if (r.eta == 0 || block.timestamp < r.eta) revert RotationNotReady();
+        if (guardians[r.index] != r.oldGuardian || isGuardian[r.newGuardian]) revert BadGuardians();
+        delete rotations[nonce];
+        isGuardian[r.oldGuardian] = false;
+        isGuardian[r.newGuardian] = true;
+        guardians[r.index] = r.newGuardian;
+        emit GuardianRotated(nonce, r.index, r.oldGuardian, r.newGuardian);
     }
 
     // ------------------------------------------------------------------ successor registry
