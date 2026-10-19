@@ -8,7 +8,6 @@ Author:        NeoB
 Last update:   block 6,700 (V10 granular relief cascade) snapshot;
                current-rule summary below updated for mainnet
 Companion:     https://sostcore.com/casert-spec.html
-PDF:           https://sostcore.com/convergencex_whitepaper.pdf
 
 ----------------------------------------------------------------
 0. CURRENT MAINNET RULE (read this first)
