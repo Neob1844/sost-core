@@ -637,7 +637,7 @@ body {
 (function() {
 'use strict';
 
-// No domain redirect — both sostcore.com and sostprotocol.com serve identical content
+// No domain redirect — the app is served from sostcore.com (the only official domain)
 
 // ── Configuration ──────────────────────────────────────────────
 let RPC_URL = '/rpc'; // Always relative — we redirect non-sostcore domains above
@@ -2435,10 +2435,10 @@ SectionRenderers.markets = function(el) {
       <div class="stat-row" style="cursor:pointer" onclick="window.open('/sost-explorer.html','_blank')">
         <span class="stat-label">BLOCK EXPLORER</span><span class="stat-value" style="color:var(--pip)">↗ OPEN</span>
       </div>
-      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostprotocol.com/?from=app','_blank')">
+      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostcore.com/?from=app','_blank')">
         <span class="stat-label">OFFICIAL SITE</span><span class="stat-value" style="color:var(--pip)">↗ OPEN</span>
       </div>
-      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostprotocol.com/sost-markets.html?from=app','_blank')">
+      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostcore.com/sost-markets.html?from=app','_blank')">
         <span class="stat-label">VIEW FULL MARKETS</span><span class="stat-value" style="color:var(--pip)">↗ WEB</span>
       </div>
     </div>

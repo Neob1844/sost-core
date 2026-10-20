@@ -47,7 +47,7 @@ Cross-channel publication of the public key fingerprint is mandatory. At
 minimum it MUST appear in:
 
 - this file (`docs/beacon.md`)
-- the public website index (`sostprotocol.com`)
+- the public website index (`sostcore.com`)
 - the BCT announcement thread
 - a tagged GitHub release note
 
