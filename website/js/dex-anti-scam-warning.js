@@ -99,7 +99,8 @@
       label: 'lookalike DEX domain',
       regex: /(sost[\-_.]?(dex|verify|support|admin|official|wallet|portal|gateway|trade|recover|claim))[\-_.](net|org|io|app|com|xyz|finance|exchange)|sostcore[\-_.](net|org|io|app|xyz)/i,
       msg: 'Mentions a domain that looks like SOST but is NOT ' +
-           'sostcore.com or sostprotocol.com. Lookalike domains are ' +
+           'sostcore.com, the only official domain (the former ' +
+           'sostprotocol.com is being retired). Lookalike domains are ' +
            'phishing sites.'
     },
     {
