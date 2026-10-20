@@ -88,19 +88,6 @@
   ]
 }
 
-function syncPhase2ReadyMinerCard(){
-  var card=document.getElementById('phase2ReadyMinersCard');
-  if(!card)return;
-  card.querySelectorAll('.dash-label,.dash-val,.dash-sub').forEach(function(el){
-    el.style.color='#4488ff';
-  });
-  var txt=(card.textContent||'').toLowerCase();
-  var risky=txt.indexOf('centralised')>=0 || txt.indexOf('no phase 2 miners')>=0;
-  card.classList.toggle('phase2-ready-risk-pulse',risky);
-}
-setInterval(syncPhase2ReadyMinerCard,2000);
-setTimeout(syncPhase2ReadyMinerCard,500);
-
 </script>
 <meta charset="utf-8"/>
 <link rel="canonical" href="https://sostcore.com/sost-explorer.html">
