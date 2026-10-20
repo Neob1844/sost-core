@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-16-v570-no-projected-winner">
+<meta name="explorer-html-version" content="2026-10-20-v577-jackpot-candidates-fold">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -614,7 +614,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
 </style>
 <script src="js/security.js?v=v576"></script>
-<script src="js/nav-toggle.js?v=v576" defer></script>
+<script src="js/nav-toggle.js?v=v577" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="stylesheet" href="css/price-cards-v2.css?v=532">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -853,7 +853,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </div>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-16-v570-no-projected-winner';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-20-v577-jackpot-candidates-fold';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -10388,6 +10388,15 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
 .sjpd-note{font:600 11px/1.5 ui-monospace;color:#9aa6b2}
 .sjpd-note b{color:#ffd166}
 .sjpd-link{color:#22d3ee;cursor:pointer;text-decoration:none;font:600 12px ui-monospace}
+.sjpd-v2tg{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sjpd-v2tg:hover{border-color:#22d3ee}
+.sjpd-v2tg:focus{outline:none}
+.sjpd-v2tg:focus-visible{outline:2px solid #22d3ee;outline-offset:2px}
+.sjpd-v2tg[aria-expanded="true"]{border-color:rgba(34,211,238,.55)}
+.sjpd-v2tg .pl-caret{color:#22d3ee}
+#sjpd-v2cand[hidden]{display:none!important}
+#sjpd-v2cand.sjpd-fx{animation:plIn .16s ease-out}
+@media (prefers-reduced-motion:reduce){#sjpd-v2cand.sjpd-fx{animation:none}}
 @media(max-width:560px){.sjpd-grid{grid-template-columns:1fr 1fr}.sjpd-box{padding:16px}}
 </style>
 <div id="sjp-dash" role="dialog" aria-modal="true" aria-label="DTD Jackpot dashboard"></div>
@@ -10500,13 +10509,16 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var _v2HbD=_v2?(esc(String(_v2.heartbeat_required))+(_v2.heartbeat_window?(' / '+esc(String(_v2.heartbeat_window))):'')):'\u2014';
     var _v2Pot=(_v2&&_v2.current_pot_stocks!=null)?(Math.round(_v2.current_pot_stocks/1e6)/100)+' SOST':'100 SOST';
     var _v2Cand=(_v2&&Object.prototype.toString.call(_v2.candidates)==='[object Array]')?_v2.candidates:[];
+    // Candidates table: collapsed by default, toggled by the JACKPOT V2 ELIGIBLE card.
+    // The state lives on window so the many re-renders of this dashboard keep it.
+    var _v2Open=!!window._sjpdV2CandOpen;
     var v2CandHtml=(tip>=V2H)
-      ? ('<div style="margin:10px 0 4px;font:800 10px ui-monospace;letter-spacing:.8px;color:#ffd166">JACKPOT V2 CANDIDATES &middot; #'+fc(nh)+' <span style="font-weight:400;color:var(--text3)">(PoW candidate &ne; eligible: NODE_BIND required)</span></div>'
+      ? ('<div id="sjpd-v2cand"'+(_v2Open?'':' hidden')+'><div style="margin:10px 0 4px;font:800 10px ui-monospace;letter-spacing:.8px;color:#ffd166">JACKPOT V2 CANDIDATES &middot; #'+fc(nh)+' <span style="font-weight:400;color:var(--text3)">(PoW candidate &ne; eligible: NODE_BIND required)</span></div>'
          +(_v2Cand.length
            ? ('<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font:11px ui-monospace"><tr style="color:var(--text3);font-size:9px;text-align:left"><th style="padding:3px 6px">ADDRESS</th><th style="padding:3px 6px">PoW BLOCKS (2,016)</th><th style="padding:3px 6px">NODE_BIND</th><th style="padding:3px 6px">HEARTBEATS</th><th style="padding:3px 6px">ELIGIBLE</th></tr>'
               +_v2Cand.map(function(c){ var a=String(c.address||''); return '<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px;color:#22d3ee;cursor:pointer" title="'+esc(a)+'" onclick="event.stopPropagation();showAddress(\''+esc(a)+'\')">'+esc(a.substr(0,12)+'\u2026'+a.substr(-4))+'</td><td style="padding:4px 6px">'+esc(String(c.pow_blocks))+'</td><td style="padding:4px 6px;color:'+(c.node_bound?'#39ff14':'#fb010d')+'">'+(c.node_bound?'\u2714 bound':'\u2718 not bound')+'</td><td style="padding:4px 6px">'+esc(String(c.heartbeats))+' / '+esc(String(c.heartbeats_required))+'</td><td style="padding:4px 6px;font-weight:800;color:'+(c.eligible?'#39ff14':'#fb010d')+';cursor:pointer;text-decoration:underline dotted" title="Why? Open the eligibility detail of this address" onclick="event.stopPropagation();window.SostElig&&SostElig.open(\''+esc(a)+'\')">'+(c.eligible?'YES':'NO')+'</td></tr>'; }).join('')
               +'</table></div>')
-           : '<div style="font-size:11px;color:var(--text3)">'+(_v2?'No PoW candidates in the 2,016-block window.':(state.v2Error?'Data unavailable.':'Loading\u2026'))+'</div>'))
+           : '<div style="font-size:11px;color:var(--text3)">'+(_v2?'No PoW candidates in the 2,016-block window.':(state.v2Error?'Data unavailable.':'Loading\u2026'))+'</div>')+'</div>')
       : '';
     var v2Banner = (tip < V2H)
       ? ('<div style="border:1px solid #f5b301;border-radius:8px;padding:11px 13px;margin:2px 0 14px;background:rgba(245,179,1,.07)">'
@@ -10523,6 +10535,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       ? ('<div style="font:700 8px/1.3 ui-monospace;letter-spacing:1px;color:#8a97a3;margin-bottom:5px">WALLET / MINING IDENTITY IN COOLDOWN<br><span style="font-weight:400;letter-spacing:.4px;color:var(--text3)">mined a block in the window \u2014 not a DTD win</span></div>'
          +cdArr.map(function(a){return '<div style="font:600 10px/1.7 ui-monospace;color:#22d3ee;cursor:pointer;word-break:break-all" title="Open address detail" onclick="event.stopPropagation();showAddress(\''+esc(a)+'\')">'+esc(a)+'</div>';}).join(''))
       : '<div style="font:600 10px/1.5 ui-monospace;color:var(--text3)">No identities currently in cooldown</div>';
+    var _v2Refocus=!!(document.activeElement&&document.activeElement.id==='sjpd-v2cand-tg');
     d.innerHTML='<div class="sjpd-box"><div class="sjpd-hd"><h3>&#127974; DTD JACKPOT</h3>'+
       '<button class="sjpd-x" id="sjpd-x">Close</button></div>'+
       v2Banner+
@@ -10540,7 +10553,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         ((tip>=V2H)
           // V2 is ACTIVE: the only authoritative eligible set is the node's getjackpotv2audit
           // for the next V2 draw. A PoW candidate is NOT eligible without NODE_BIND.
-          ? ('<div class="sjpd-c"><div class="sjpd-l">JACKPOT V2 ELIGIBLE &middot; #'+fc(nh)+'</div><div class="sjpd-v c">'+_v2EligD+'</div>'+
+          ? ('<div class="sjpd-c sjpd-v2tg" id="sjpd-v2cand-tg" role="button" tabindex="0" aria-controls="sjpd-v2cand" aria-expanded="'+(_v2Open?'true':'false')+'" title="Show or hide the Jackpot V2 candidates table"><div class="sjpd-l"><span class="pl-caret" aria-hidden="true">'+(_v2Open?'\u25BE':'\u25B8')+'</span> JACKPOT V2 ELIGIBLE &middot; #'+fc(nh)+'</div><div class="sjpd-v c">'+_v2EligD+'</div>'+
                '<div style="font-size:8px;letter-spacing:.6px;color:var(--text3);margin-top:2px">source: node getjackpotv2audit</div>'+
                (_v2Zero?'<div style="font-size:8px;letter-spacing:.4px;color:#f5b301;margin-top:2px">nobody eligible yet &rarr; this draw rolls over</div>':'')+'</div>'+
              '<div class="sjpd-c" style="border-color:#39ff14">'+
@@ -10611,6 +10624,20 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     if(_dashOpen) d.classList.add('show');
     try{
     var _xbtn=document.getElementById('sjpd-x'); if(_xbtn) _xbtn.onclick=close;
+    var _v2tg=document.getElementById('sjpd-v2cand-tg');
+    if(_v2tg){
+      var _v2tog=function(){
+        var p=document.getElementById('sjpd-v2cand'); if(!p) return;
+        window._sjpdV2CandOpen=!window._sjpdV2CandOpen;
+        p.hidden=!window._sjpdV2CandOpen;
+        p.classList.remove('sjpd-fx'); if(!p.hidden){ void p.offsetWidth; p.classList.add('sjpd-fx'); }
+        _v2tg.setAttribute('aria-expanded',window._sjpdV2CandOpen?'true':'false');
+        var c=_v2tg.querySelector('.pl-caret'); if(c) c.textContent=window._sjpdV2CandOpen?'\u25BE':'\u25B8';
+      };
+      _v2tg.addEventListener('click',function(e){ e.stopPropagation(); _v2tog(); });
+      _v2tg.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){ e.preventDefault(); e.stopPropagation(); _v2tog(); } });
+      if(_v2Refocus){ try{ _v2tg.focus({preventScroll:true}); }catch(_f){ _v2tg.focus(); } }
+    }
     d.onclick=function(e){ if(e.target===d) close(); };
     var dl=document.getElementById('sjpd-dtd'); if(dl&&typeof window.toggleDashPanel==='function') dl.onclick=function(){ close(); window.toggleDashPanel('dtd'); };
     var rp=document.getElementById('sjpd-replay'); if(rp) rp.onclick=function(){ if(window.SJP&&window.SJP.replayLast) window.SJP.replayLast(); };

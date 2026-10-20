@@ -1026,3 +1026,127 @@
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
+
+/* ============================================================================
+   SOST nav "Contact" -> floating image.
+   A plain left click on the nav's Contact item shows ONLY the contact emblem
+   (media/sost-contact-email.png) floating over the page. Progressive enhancement:
+   the link keeps href="sost-contact.html", so no-JS, middle-click, ctrl/cmd/shift-
+   click and "open in new tab" still go to the page. Only links inside <nav> whose
+   text is "Contact" are intercepted; Contact links in page content are untouched.
+   Closes on Escape, on a click outside the image and on a click on the image.
+   One overlay per page (built on first use, reused after). Focus moves into the
+   dialog, stays trapped there while open and returns to the link on close.
+   ========================================================================== */
+(function(){
+  "use strict";
+  if(window.__sostContactFloat) return;
+  window.__sostContactFloat = true;
+  var ov=null, img=null, opener=null, isOpen=false, hideTimer=null;
+  // Resolve the image next to this script (js/../media/), so it works from any page path.
+  var BASE='media/';
+  try{ var cs=document.currentScript; if(cs && cs.src) BASE=new URL('../media/', cs.src).href; }catch(e){}
+  var SRC=BASE+'sost-contact-email.png', SRC512=BASE+'sost-contact-email-512.png';
+  function reduced(){ try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
+  function styleOnce(){
+    if(document.getElementById('sost-contact-float-style')) return;
+    var st=document.createElement('style'); st.id='sost-contact-float-style';
+    st.textContent=[
+      '#sost-contact-ov{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;',
+      'box-sizing:border-box;padding:4vh 5vw 10vh;background:rgba(0,0,0,.45);opacity:0;transition:opacity .18s ease;',
+      'cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;touch-action:none;overscroll-behavior:contain}',
+      '#sost-contact-ov[hidden]{display:none}',
+      '#sost-contact-ov.open{opacity:1}',
+      '#sost-contact-ov:not(.open){pointer-events:none}',
+      '#sost-contact-ov img{display:block;width:min(420px,90vw,80vh);height:auto;max-width:90vw;max-height:85vh;',
+      'object-fit:contain;transform:scale(.96);transition:transform .18s ease;-webkit-user-drag:none;user-select:none}',
+      '#sost-contact-ov.open img{transform:scale(1)}',
+      '@media (prefers-reduced-motion:reduce){#sost-contact-ov,#sost-contact-ov img{transition:none;transform:none}}'
+    ].join('');
+    (document.head||document.documentElement).appendChild(st);
+  }
+  function build(){
+    if(ov) return ov;
+    styleOnce();
+    ov=document.createElement('div');
+    ov.id='sost-contact-ov';
+    ov.setAttribute('role','dialog');
+    ov.setAttribute('aria-modal','true');
+    ov.setAttribute('aria-label','Contact');
+    ov.tabIndex=-1;
+    ov.hidden=true;
+    img=document.createElement('img');
+    img.src=SRC;
+    img.srcset=SRC512+' 512w, '+SRC+' 980w';
+    img.sizes='min(420px, 90vw, 80vh)';
+    img.width=980; img.height=980;
+    img.alt='SOST contact';
+    img.decoding='async';
+    img.draggable=false;
+    ov.appendChild(img);
+    // Any click inside the overlay (backdrop or image) closes it.
+    ov.addEventListener('click',function(e){ e.preventDefault(); close(); });
+    ov.addEventListener('wheel',swallow,{passive:false});
+    ov.addEventListener('touchmove',swallow,{passive:false});
+    document.body.appendChild(ov);
+    return ov;
+  }
+  // Scroll lock WITHOUT touching overflow: changing html/body overflow re-lays out pages whose
+  // content is wider than a phone viewport (the nav re-wraps behind the backdrop) and on desktop
+  // removes the scrollbar. Instead the overlay swallows wheel/touch scrolling and the keydown
+  // handler swallows the scroll keys, so nothing behind the overlay moves or re-flows.
+  function swallow(e){ if(isOpen && e.cancelable) e.preventDefault(); }
+  function open(link){
+    if(isOpen) return;              // single instance: a second click never stacks overlays
+    build();
+    if(hideTimer){ clearTimeout(hideTimer); hideTimer=null; }
+    isOpen=true; opener=link||null;
+    ov.hidden=false;
+    void ov.offsetWidth;            // commit the hidden->shown frame so the fade runs
+    ov.classList.add('open');
+    try{ ov.focus({preventScroll:true}); }catch(e){ ov.focus(); }
+  }
+  function close(){
+    if(!isOpen) return;
+    isOpen=false;
+    ov.classList.remove('open');
+    var done=function(){ hideTimer=null; if(!isOpen) ov.hidden=true; };
+    if(reduced()) done(); else hideTimer=setTimeout(done,200);
+    var o=opener; opener=null;
+    if(o && document.contains(o)){ try{ o.focus({preventScroll:true}); }catch(e){ o.focus(); } }
+  }
+  var SCROLL_KEYS={' ':1,'Spacebar':1,'PageUp':1,'PageDown':1,'Home':1,'End':1,'ArrowUp':1,'ArrowDown':1,'ArrowLeft':1,'ArrowRight':1};
+  function navContactLink(t){
+    var a=t && t.closest ? t.closest('a[href]') : null;
+    if(!a || !a.closest('nav')) return null;
+    var h=(a.getAttribute('href')||'').trim();
+    if(!/(^|\/)sost-contact\.html(?:[?#].*)?$/i.test(h)) return null;
+    if((a.textContent||'').replace(/\s+/g,' ').trim().toLowerCase()!=='contact') return null;
+    return a;
+  }
+  document.addEventListener('click',function(e){
+    if(e.defaultPrevented || e.button!==0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    var a=navContactLink(e.target);
+    if(!a) return;
+    var tgt=(a.getAttribute('target')||'').toLowerCase();
+    if(tgt && tgt!=='_self') return;
+    e.preventDefault();
+    open(a);
+  });
+  document.addEventListener('keydown',function(e){
+    if(!isOpen) return;
+    if(e.key==='Escape' || e.key==='Esc'){ e.preventDefault(); e.stopPropagation(); close(); return; }
+    // Focus trap: the dialog holds no other focusable element, so Tab stays on it.
+    if(e.key==='Tab'){ e.preventDefault(); try{ ov.focus({preventScroll:true}); }catch(x){ ov.focus(); } return; }
+    if(SCROLL_KEYS[e.key]) e.preventDefault();
+  },true);
+  document.addEventListener('focusin',function(e){
+    if(isOpen && ov && !ov.contains(e.target)){ try{ ov.focus({preventScroll:true}); }catch(x){ ov.focus(); } }
+  });
+  // Build the (hidden) overlay as soon as the pointer or focus reaches the nav Contact link,
+  // so the browser fetches the right srcset candidate before the click.
+  function warm(e){ if(navContactLink(e.target)){ build(); document.removeEventListener('mouseover',warm); document.removeEventListener('focusin',warm); document.removeEventListener('touchstart',warm); } }
+  document.addEventListener('mouseover',warm);
+  document.addEventListener('focusin',warm);
+  document.addEventListener('touchstart',warm,{passive:true});
+})();
