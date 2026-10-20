@@ -21,23 +21,46 @@ setInterval(function(){
 },30000);
 
 // === EXTENSION INJECTION DETECTION ===
+// A <script src> added to the page is kept only if its URL parses to an allowed origin:
+// exactly https:, an exact hostname from the list below, no userinfo, default port
+// (or the page's own origin). Substring matching is NOT used ("evil.example/sostcore.com",
+// "sostcore.com.evil.example" and "user@..." forms are all rejected).
+// This is a defence-in-depth helper, not a substitute for the server CSP.
+var SOST_SCRIPT_HOSTS = [
+  'sostcore.com',
+  'www.sostcore.com',
+  'js.hcaptcha.com'      // sost-contact.html captcha widget (the only third-party script src in use)
+];
+function sostIsAllowedScriptSrc(src){
+  if(typeof src!=='string'||!src)return false;
+  if(/^[\s\u0000-\u001f]*[\\/]{2}/.test(src))return false;   // protocol-relative: never accepted
+  var u;
+  try{u=new URL(src,document.baseURI);}catch(e){return false;}
+  if(u.username||u.password)return false;
+  try{ if(u.origin===window.location.origin&&u.origin!=='null')return true; }catch(e){}
+  if(u.protocol!=='https:')return false;
+  if(u.port!==''&&u.port!=='443')return false;
+  return SOST_SCRIPT_HOSTS.indexOf(u.hostname)>=0;
+}
+window.__sostIsAllowedScriptSrc=sostIsAllowedScriptSrc;
 try{
+  var _secCheck=function(node){
+    if(node&&node.tagName==='SCRIPT'&&node.hasAttribute&&node.hasAttribute('src')&&
+       !sostIsAllowedScriptSrc(node.getAttribute('src')||node.src)){
+      console.warn('SECURITY: Blocked external script:',node.src||node.getAttribute('src'));
+      node.remove();
+    }
+  };
   var _secObs=new MutationObserver(function(muts){
     muts.forEach(function(m){
+      if(m.type==='attributes'){_secCheck(m.target);return;}
       m.addedNodes.forEach(function(node){
-        if(node.tagName==='SCRIPT'&&node.src&&
-           node.src.indexOf('sostcore.com')<0&&
-           node.src.indexOf('jsdelivr')<0&&
-           node.src.indexOf('unpkg')<0&&
-           node.src.indexOf('cdnjs')<0&&
-           node.src.indexOf('googleapis')<0){
-          console.warn('SECURITY: Blocked external script:',node.src);
-          node.remove();
-        }
+        _secCheck(node);
+        if(node.querySelectorAll){node.querySelectorAll('script[src]').forEach(_secCheck);}
       });
     });
   });
-  _secObs.observe(document.documentElement,{childList:true,subtree:true});
+  _secObs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
 }catch(e){}
 
 // === WALLET CAPSULE HOTFIXES (web/UI only, no consensus) ===
