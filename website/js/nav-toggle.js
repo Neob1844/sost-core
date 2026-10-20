@@ -977,3 +977,52 @@
   else inject();
   setTimeout(inject,500);
 })();
+
+/* ============================================================================
+   Mobile menu: keep the open hamburger menu inside the viewport.
+   The nav is position:sticky; with the menu open on a phone it is ~1100px tall,
+   so once it sticks its lower links (Contact, the last row) sit below the screen
+   and can never be reached. While the menu is open (and only at the mobile
+   breakpoint) the nav is capped to the visible height below its own top edge
+   and scrolls internally. Desktop and the closed menu are untouched; page
+   scrolling keeps working (inner scroll chains to the page at its ends).
+   ========================================================================== */
+(function(){
+  "use strict";
+  if(window.__sostNavMenuScroll) return;
+  window.__sostNavMenuScroll = true;
+  var st=document.createElement('style'); st.id='sost-nav-menu-scroll-style';
+  st.textContent='@media (max-width:768px){nav.sost-menu-open{max-height:calc(100vh - var(--sost-nav-top,0px));'+
+    'max-height:calc(100dvh - var(--sost-nav-top,0px));overflow-y:auto;-webkit-overflow-scrolling:touch}}';
+  (document.head||document.documentElement).appendChild(st);
+  var nav=null, raf=0;
+  function findNav(){
+    var nl=document.querySelector('nav .nav-links');
+    return nl ? nl.closest('nav') : null;
+  }
+  function place(){
+    raf=0;
+    if(!nav || !nav.classList.contains('sost-menu-open')) return;
+    var t=Math.max(0, Math.round(nav.getBoundingClientRect().top));
+    nav.style.setProperty('--sost-nav-top', t+'px');
+  }
+  function sync(){
+    if(!nav || !document.contains(nav)) nav=findNav();
+    if(!nav) return;
+    var nl=nav.querySelector('.nav-links');
+    var on=!!(nl && nl.classList.contains('open'));
+    if(on===nav.classList.contains('sost-menu-open')){ if(on) place(); return; }
+    nav.classList.toggle('sost-menu-open', on);
+    if(on) place(); else { nav.style.removeProperty('--sost-nav-top'); nav.scrollTop=0; }
+  }
+  function onScroll(){ if(nav && !raf && nav.classList.contains('sost-menu-open')) raf=requestAnimationFrame(place); }
+  function init(){
+    nav=findNav();
+    if(!nav) return;
+    try{ new MutationObserver(sync).observe(nav,{attributes:true,attributeFilter:['class'],subtree:true}); }catch(e){}
+    window.addEventListener('scroll',onScroll,{passive:true});
+    window.addEventListener('resize',onScroll,{passive:true});
+    sync();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
