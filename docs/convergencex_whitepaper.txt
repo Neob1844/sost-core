@@ -1121,62 +1121,147 @@ staking chain. ASIC resistance by memory hardness is a design goal that must sur
 years of adversaries; it is not a proven fact. Final decentralization is not written in
 C++: it comes from independent people running the code without needing its authors.
 
-3.16 Research Horizon — wSOST, Gold Reserve V2 and On-Chain Governance (design, not deployed)
+3.16 Research Horizon — SOST Automated Bridge (C701), Gold Access Key, Gold Reserve V2 and Governance
+     (design in development, not active)
 
-STATUS: research / design only. No bridge, no Ethereum contract and no Gold Reserve V2
-funds exist. Current consensus (50% miner / 50% DTD) is unchanged. Block #40,000 is the
-current coordinated research horizon, NOT an activation commitment; if engineering,
-external audit, legal or operational gates are not complete, the work moves later.
-Public explanation: sostcore.com/sost-wsost-gold-vault.html
+STATUS: DESIGN IN DEVELOPMENT · NOT ACTIVE · NOT READY FOR PRODUCTION
 
-Invariants:
+C701 proposes replacing the previous bridge architecture with automated verification (target
+architecture). The SOST Automated Bridge, wSOST and Gold Reserve V2 exist only as development
+contracts, an off-chain verification-engine prototype and tests on a LOCAL development chain.
+Nothing is deployed on any public chain, no contract is live, no funds exist and there is no
+launch date. Real operations are blocked by design until the open blockers listed below are
+closed; any future activation is subject to security work, an external audit and legal /
+regulatory review. Current consensus (50% miner / 50% DTD) is unchanged. Block #40,000 is a
+research horizon, not an activation commitment.
+Public explanation and DEMO: sostcore.com/sost-wsost-gold-vault.html
+
+Two services only:
 
 ```
-1 wSOST = 1 native SOST locked in the Bridge Vault   (only wSOST is ever burned)
-Gold never mints wSOST                               (Gold Reserve V2 is a separate reserve)
-Native SOST is never burned
+SOST Bridge        native SOST <-> wSOST on Ethereum, 1:1 (this section)
+SOST Atomic Swap   separate P2P HTLC service; no SOST<->wSOST pair, no Gold Access Key,
+                   never touches Gold Reserve V2
 ```
+
+Invariants and backing:
+
+```
+Example: 1,000 SOST locked in the Bridge Vault -> 1,000 wSOST minted on Ethereum
+Native SOST is never burned: it is locked, and released when wSOST is burned
+                                                  (only wSOST is ever burned)
+Backing of wSOST = native SOST locked = wSOST minted (in base units)
+The XAUT contribution never reduces the amount minted
+Burning N wSOST entitles the release of N SOST (minus the published SOST network fee)
+No wSOST without a verified, confirmed native deposit; gold never mints wSOST
+Native SOST is never created by the bridge; DTD Jackpot funds are never used
+```
+
+The XAUT contribution (Gold Access Key) is NOT backing of SOST or wSOST, NOT a peg, NOT a price
+floor, NOT a price guarantee, NOT a redemption promise and NOT 1:1 gold backing. Gold held by
+Gold Reserve V2 gives no individual redemption right.
 
 Five accounts, never combined or double-counted: (1) native SOST; (2) bridge-locked SOST;
-(3) wSOST, the ERC-20 representation of (2); (4) Gold Reserve V2 (XAUT initially, PAXG
-gated pending availability/legal review); (5) the historical Gold Vault + PoPC Pool,
-frozen since #25,000 and committed to the DTD Jackpot.
+(3) wSOST, the ERC-20 representation of (2); (4) Gold Reserve V2 (XAUT; PAXG gated pending
+availability/legal review); (5) the historical Gold Vault + PoPC Pool, frozen since #25,000 and
+committed to the DTD Jackpot.
 
-Example — wrap and unwrap:
+Flow (target architecture: automated verification):
 
 ```
-John holds 1,000 SOST and wraps 500:
-  500 SOST stay native · 500 SOST locked in the Bridge Vault · 500 wSOST on Ethereum
-  (deposit capsule: WSOST:0x<recipient>, 48 of the 80 open-note bytes)
-John burns 200 wSOST:
-  200 wSOST destroyed -> 200 native SOST released (release capsule WSOST-RELEASE:<burnId>)
-No SOST is created or destroyed at any step.
+SOST -> wSOST
+  1 request: amount + Ethereum recipient -> requestId = hash(chainId, contract, recipient,
+    amount, vault, salt)
+  2 the user's SOST wallet pays the Bridge Vault; capsule "C701:0x<requestId>" on that output
+    (SCPv1 open note, 71 of 80 bytes; capsules active since #7,350)
+  3 the verification engine checks vault, exact amount, capsule, 30 confirmations
+    (provisional), unspent output, never used
+  4 it signs one EIP-712 authorization bound to chainId, contract, recipient, amount,
+    deposit txid:vout, SOST block, expiry and nonce, plus a separately signed XAUT/EUR quote
+  5 in ONE Ethereum transaction the contract re-checks everything, moves the Gold Access Key
+    in XAUT from the user straight to Gold Reserve V2 and mints exactly N wSOST
+wSOST -> SOST
+  any wSOST holder burns N wSOST (no XAUT) and the vault releases N SOST minus the SOST network
+  fee, with capsule "C701R:0x<releaseId>"; the release is verified and recorded on Ethereum
+A transaction hash typed by a user is a search hint, never proof.
 ```
 
-Bridge trust model: native multisig is not active on mainnet, so the pilot is a capped
-operator bridge: one cold single-key Bridge Vault (sost1) with a hard exposure cap and
-offline signing behind a swappable signer interface; 2-of-3 EIP-712 observer
-attestations (an operator quorum, not decentralized; relayers hold no mint authority);
-30 confirmations as a provisional, recalibratable policy (a 1-block reorg replaced block
-#30,297); full proof-of-reserves reconciliation of deposits, mints, burns and releases
-with states BALANCED / PENDING / CRITICAL (totalSupply <= backing is necessary but not
-sufficient). Target: a future, explicitly activated native multisig (new output type,
-not 0x30).
+Gold Access Key:
 
-Gold Reserve V2 powers:
+```
+feeEUR  = min(50, max(0.50, bridgeValueEUR x 0.001))   0.10%, min 0.50 EUR, max 50 EUR
+feeXAUT = feeEUR / verified XAUT price, rounded UP to XAUT's 6 decimals (integer math)
+minimum operation 100 EUR (smaller operations are refused); 100% to Gold Reserve V2;
+Ethereum gas paid by the user and shown separately; no XAUT contribution on the return path.
+Example at a fixed illustrative price 1 XAUT = 3,713.13 EUR (2026-10-19, illustrative, not a quote):
+  100 EUR -> 0.50 EUR -> 0.000135 XAUT      1,000 EUR -> 1.00 -> 0.000270 XAUT
+  10,000 EUR -> 10.00 -> 0.002694 XAUT      >= 50,000 EUR -> 50.00 -> 0.013466 XAUT
+```
+
+Two valuation inputs are needed: XAUT/EUR (signed, fresh, bounded, deviation-limited) and
+SOST/EUR. SOST/EUR has NO approved methodology; while it is absent the contract refuses every
+mint and the engine refuses every request. The informational SOST gold reference
+(0.8886707657 mg per SOST) is not a market price and is never used for fees.
+
+Trust (explicit): Ethereum cannot read SOST, so in the current prototype backing is asserted by
+the operator's authorizer keys. A single signer is a central point of trust; a compromised
+authorizer key could issue unbacked wSOST up to the per-mint, daily and exposure caps until
+reconciliation (locked SOST vs wSOST supply + pending releases; BALANCED / PENDING / CRITICAL)
+pauses minting. This is why the design is NOT READY FOR PRODUCTION. Native SOST multisig is not
+active (planned for V17), so today the Bridge Vault could only be a single cold key with
+releases/refunds signed offline. A refund is possible only after the deposit is revoked on
+Ethereum (final) and every issued authorization has expired, so nobody can keep both the
+refund and wSOST. Stronger options under study, without a federation: SOST header relay with
+Merkle inclusion proofs (likely optimistic), succinct proofs of SOST validity, delay/veto
+windows for large mints, threshold signing inside the operator and native multisig for the
+vault.
+
+BLOCKING SECURITY REQUIREMENT: a stolen verifier key must NOT allow minting wSOST without
+previously locked native SOST. Before production there must be a demonstrable property
+
+```
+MINTED_WSOST <= VERIFIED_CONFIRMED_NATIVE_SOST_LOCKED
+```
+
+and the system must fail closed (no mint) whenever it cannot be demonstrated. The current
+prototype does not meet this yet.
+
+Open blockers (public):
+
+```
+1 remove the single-verifier-key risk
+2 secure native custody with multisig (V17)
+3 tested recovery (custody, refunds, keys)
+4 approved SOST/EUR valuation method
+5 reliable XAUT price oracle
+6 reorg / double-mint safety
+7 external security audit
+8 legal / regulatory review
+```
+
+Gold Reserve V2 powers (receives XAUT from completed operations; issues nothing; no
+liquidity; balances verifiable on Ethereum; separate from the bridge's authorizers):
 
 ```
 withdraw(address)    does not exist
 pause                2-of-5 guardians, moves nothing
-critical rescue      4-of-5 guardians, only to the predefined Quarantine Vault
-final migration      4-of-5 guardians + YES >= ceil(2/3 x full eligible census)
-                     + timelock + exact successor vault named in the frozen proposal
+critical rescue      4-of-5 guardians + delay, only to the predefined Quarantine Vault
+final migration      4-of-5 guardians + YES >= ceil(2/3 x full eligible census) once
+                     governance is mature + timelock + exact successor vault named in the
+                     frozen proposal
+guardian recovery    4-of-5 + timelock, cancellable by any 2; never moves assets
 ```
 
-The informational ratio (gold reserve value / circulating SOST, e.g. $250,000 / 2,000,000
-= $0.125) is not a redemption value and not a floor. Words never used: gold-backed, peg,
-floor, redeemable. The Gold -> wSOST desk (selling EXISTING treasury wSOST for XAUT at an
-auction or TWAP price) is designed and gated off; gold arriving never mints wSOST.
+The informational ratio (gold reserve value / circulating SOST) is not a redemption value and
+not a floor. SOST is not individually gold-backed: the reserve is restricted external ecosystem
+wealth with no individual right of redemption, parity, yield or guarantee. SOST and wSOST
+are never described as gold-backed, pegged, floored or redeemable.
+
+HISTORICAL / SUPERSEDED DESIGN (kept for the record, never operational): the Gold -> wSOST desk
+(selling existing treasury wSOST for XAUT at an auction or TWAP price), funding Gold Reserve V2
+through that sale, the 2-of-3 federated observer attestations with a relayer paying the mint
+gas, and the "WSOST:0x<recipient>" deposit capsule. It is not operational and is no longer the
+target architecture.
 
 Governance constitution:
 

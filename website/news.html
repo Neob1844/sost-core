@@ -206,6 +206,37 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ DESIGN IN DEVELOPMENT: SOST <-> wSOST BRIDGE ARCHITECTURE C701 (2026-10-20) ============
+     DRAFT prepared on branch web/c701-design-docs. Not deployed; publish only after owner review. -->
+<section class="section" id="c701-bridge-architecture"><div class="container">
+  <article style="border:2px solid #ff1e28;border-radius:14px;background:linear-gradient(180deg,rgba(255,30,40,.06),transparent 60%);padding:20px 22px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ff5a5f">// DESIGN IN DEVELOPMENT &middot; 20 OCT 2026</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#ff6b6b;border:1px solid #7a2b2b;border-radius:6px;padding:3px 8px">NOT ACTIVE</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#ff6b6b;border:1px solid #7a2b2b;border-radius:6px;padding:3px 8px">NOT READY FOR PRODUCTION</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#fbbf24;border:1px solid #b45309;border-radius:6px;padding:3px 8px">EXPERIMENTAL</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#94a3b8;border:1px solid #475569;border-radius:6px;padding:3px 8px">NO LAUNCH DATE</span>
+    </div>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px">
+      <img src="assets/wsost/wsost-gold-vault-256.png?v=v553" width="96" height="96" alt="wSOST &amp; Gold Vault" style="width:96px;height:96px;filter:drop-shadow(0 0 12px rgba(255,30,40,.6))">
+      <h2 style="flex:1 1 260px;font-size:24px;margin:0;color:var(--text-primary,#e2e8f0);text-wrap:balance">New SOST &harr; wSOST Bridge Architecture &mdash; In Development</h2>
+    </div>
+    <div style="margin:12px 0;border:2px solid #ff3b3f;border-radius:10px;background:rgba(255,59,63,.08);padding:10px 14px;font:800 12.5px/1.5 ui-monospace,monospace;letter-spacing:1px;color:#fff;text-align:center">STATUS: DESIGN IN DEVELOPMENT &middot; NOT ACTIVE &middot; NOT READY FOR PRODUCTION</div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">We have published a <b>new, experimental design</b> for moving SOST to Ethereum: <b>C701</b>, the SOST Automated Bridge. C701 proposes replacing the previous bridge architecture with <b>automated verification</b> (target architecture). It would lock native SOST one-for-one against <b>wSOST</b> on Ethereum: <b>1,000 SOST locked &rarr; 1,000 wSOST minted</b>. Native SOST is never burned &mdash; it is locked, and released when the wSOST is burned. The backing of wSOST is exactly the native SOST locked for it, in base units.</p>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Gold Access Key.</b> Each SOST &rarr; wSOST conversion would require a contribution in <b>XAUT</b> of 0.10% of the operation value (minimum 0.50 EUR, maximum 50 EUR equivalent; minimum operation 100 EUR), paid 100% to <b>Gold Reserve V2</b>. Ethereum gas is paid separately by the user, and the return path (wSOST &rarr; SOST) has no XAUT contribution. The XAUT contribution is <b>not</b> backing of SOST, not a peg, not a price floor, not a price guarantee, not a redemption promise and not 1:1 gold backing; Gold Reserve V2 gives no individual redemption right.</p>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Nothing is live.</b> No contract is deployed, no funds exist, there is <b>no launch date</b>, and any future activation is subject to security work, an <b>external audit</b> and <b>legal / regulatory review</b>. The previous design (treasury Gold &rarr; wSOST desk and federated observers) is kept on the page as a <b>historical / superseded design</b>; it was never operational. The SOST Atomic Swap remains a separate service.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#ffd166;margin:18px 0 6px;font-weight:800">Open blockers before any activation</h3>
+    <ul style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:6px 0 6px 18px">
+      <li>remove the single-verifier-key risk &mdash; a stolen verifier key must not allow minting wSOST without previously locked native SOST; the property <code>MINTED_WSOST &lt;= VERIFIED_CONFIRMED_NATIVE_SOST_LOCKED</code> must be demonstrable and the system must fail closed;</li>
+      <li>secure native custody with multisig (V17) and tested recovery;</li>
+      <li>an approved SOST/EUR valuation method and a reliable XAUT price oracle;</li>
+      <li>reorg / double-mint safety;</li>
+      <li>external security audit and legal / regulatory review.</li>
+    </ul>
+    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Read more: <a href="sost-wsost-gold-vault.html#bridge" style="color:#ffd166">wSOST &amp; Gold Vault &mdash; design and DEMO</a> &middot; <a href="whitepaper-reader.html#sec-research" style="color:#ffd166">Whitepaper &sect;3.16</a>. The DEMO on that page uses a fixed, dated illustrative XAUT price (1 XAUT = 3,713.13 EUR, 2026-10-19), not a quote, and creates no transaction.</p>
+  </article>
+</div></section>
+
 <!-- ============ RESEARCH ROADMAP: wSOST & GOLD RESERVE V2 (2026-10-12) ============ -->
 <section class="section" id="wsost-gold-reserve-v2"><div class="container">
   <article style="border:2px solid #ff1e28;border-radius:14px;background:linear-gradient(180deg,rgba(255,30,40,.06),transparent 60%);padding:20px 22px">
