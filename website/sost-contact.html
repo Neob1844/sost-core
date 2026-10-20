@@ -255,7 +255,6 @@
       <div class="h-captcha" id="cfCaptcha" data-sitekey="50b2fe65-b00b-4b9e-ad62-3ba471098be2" style="margin:6px 0 14px;"></div>
       <button type="submit" id="cfSubmit" class="submit-btn">SEND MESSAGE</button>
       <div id="cfStatus" role="status" aria-live="polite" style="margin-top:14px;font-size:14px;line-height:1.5;display:none;"></div>
-      <p style="margin-top:12px;font-size:12px;color:var(--text-dim,#888);">You can also contact us directly at <a href="mailto:sost@sostcore.com" style="color:var(--cyan-primary);text-decoration:none;">sost@sostcore.com</a></p>
     </form>
 
     <div class="notice fade-in delay-2">
@@ -278,7 +277,7 @@
 /* SOST contact form — real submission, NO mailto, with layered spam protection:
    honeypot + time-trap + heuristic content filters + hCaptcha (Web3Forms managed).
    The Web3Forms access key and the hCaptcha site key are PUBLIC by design (no
-   mailbox password, no secret). Sends to sost@sostcore.com. */
+   mailbox password, no secret). */
 (function () {
   "use strict";
   var WEB3FORMS_KEY = "ed7c09a0-b426-4014-ba2a-fb121af53f9b";
@@ -370,12 +369,12 @@
       } else {
         btn.disabled = false; btn.textContent = original;
         try { if (typeof hcaptcha !== "undefined") hcaptcha.reset(); } catch (e) {}
-        show("Message could not be sent. Please try again or email sost@sostcore.com directly.", false);
+        show("Unable to send the message. Please try again later.", false);
       }
     }).catch(function () {
       btn.disabled = false; btn.textContent = original;
       try { if (typeof hcaptcha !== "undefined") hcaptcha.reset(); } catch (e) {}
-      show("Message could not be sent. Please try again or email sost@sostcore.com directly.", false);
+      show("Unable to send the message. Please try again later.", false);
     });
   });
 })();
