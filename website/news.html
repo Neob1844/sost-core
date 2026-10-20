@@ -99,7 +99,7 @@
   @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v564" defer></script>
+<script src="js/nav-toggle.js?v=v576" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
@@ -206,8 +206,7 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
-<!-- ============ DESIGN IN DEVELOPMENT: SOST <-> wSOST BRIDGE ARCHITECTURE C701 (2026-10-20) ============
-     DRAFT prepared on branch web/c701-design-docs. Not deployed; publish only after owner review. -->
+<!-- ============ DESIGN IN DEVELOPMENT: SOST <-> wSOST BRIDGE ARCHITECTURE C701 (2026-10-20) ============ -->
 <section class="section" id="c701-bridge-architecture"><div class="container">
   <article style="border:2px solid #ff1e28;border-radius:14px;background:linear-gradient(180deg,rgba(255,30,40,.06),transparent 60%);padding:20px 22px">
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
@@ -227,7 +226,7 @@
     <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Nothing is live.</b> No contract is deployed, no funds exist, there is <b>no launch date</b>, and any future activation is subject to security work, an <b>external audit</b> and <b>legal / regulatory review</b>. The previous design (treasury Gold &rarr; wSOST desk and federated observers) is kept on the page as a <b>historical / superseded design</b>; it was never operational. The SOST Atomic Swap remains a separate service.</p>
     <h3 style="font-size:14px;letter-spacing:.4px;color:#ffd166;margin:18px 0 6px;font-weight:800">Open blockers before any activation</h3>
     <ul style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:6px 0 6px 18px">
-      <li>remove the single-verifier-key risk &mdash; a stolen verifier key must not allow minting wSOST without previously locked native SOST; the property <code>MINTED_WSOST &lt;= VERIFIED_CONFIRMED_NATIVE_SOST_LOCKED</code> must be demonstrable and the system must fail closed;</li>
+      <li>remove the single-verifier-key risk &mdash; a stolen verifier key must not allow minting wSOST without previously locked native SOST; the property <code>MINTED_WSOST &lt;= VERIFIED_CONFIRMED_NATIVE_SOST_LOCKED</code> must be demonstrable and the system must fail closed &mdash; this is required and the current prototype does not guarantee it yet;</li>
       <li>secure native custody with multisig (V17) and tested recovery;</li>
       <li>an approved SOST/EUR valuation method and a reliable XAUT price oracle;</li>
       <li>reorg / double-mint safety;</li>
