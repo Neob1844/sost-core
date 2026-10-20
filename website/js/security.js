@@ -37,7 +37,7 @@ function sostIsAllowedScriptSrc(src){
   var u;
   try{u=new URL(src,document.baseURI);}catch(e){return false;}
   if(u.username||u.password)return false;
-  try{ if(u.origin===window.location.origin&&u.origin!=='null')return true; }catch(e){}
+  try{ if(u.protocol===window.location.protocol&&(u.protocol==='https:'||u.protocol==='http:')&&u.origin===window.location.origin)return true; }catch(e){}
   if(u.protocol!=='https:')return false;
   if(u.port!==''&&u.port!=='443')return false;
   return SOST_SCRIPT_HOSTS.indexOf(u.hostname)>=0;
