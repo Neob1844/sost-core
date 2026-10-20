@@ -17,7 +17,16 @@ const SOSTSentinel = (function () {
   var MAX_MSG_LENGTH = 1000;         // Characters
   var MIN_MSG_LENGTH = 2;
   var DUPLICATE_WINDOW = 60000;      // 1 min window for duplicate detection
-  var OFFICIAL_DOMAINS = ['sostcore.com', 'sostprotocol.com', 'github.com/neob1844'];
+  // Official link allowlist. sostcore.com is the only official domain
+  // (www.sostcore.com serves the same site). sostprotocol.com is being retired
+  // and is intentionally absent. An entry "host/segment" is official only under
+  // that first path segment (owner), compared case-insensitively.
+  var OFFICIAL_DOMAINS = ['sostcore.com', 'www.sostcore.com', 'github.com/neob1844'];
+
+  // Schemes that are never a normal web link in chat.
+  var DANGEROUS_SCHEME_RE = /^(javascript|data|blob|file|vbscript|filesystem|about|chrome|view-source|intent):/i;
+  // Where a link starts inside a whitespace-separated token.
+  var LINK_START_RE = /([a-z][a-z0-9+.\-]*:\/\/|(?:javascript|data|blob|file|vbscript|filesystem|view-source|intent):(?=\S)|\/\/(?=[^\/\s])|www\.)/i;
 
   // ── Scam patterns ─────────────────────────────────────────────
 
@@ -148,17 +157,14 @@ const SOSTSentinel = (function () {
       }
     }
 
-    // Link analysis
-    var links = text.match(/https?:\/\/[^\s]+/gi) || [];
-    if (links.length > 0) {
-      for (var k = 0; k < links.length; k++) {
-        var isSafe = false;
-        for (var d = 0; d < OFFICIAL_DOMAINS.length; d++) {
-          if (links[k].toLowerCase().indexOf(OFFICIAL_DOMAINS[d]) >= 0) { isSafe = true; break; }
-        }
-        if (!isSafe) {
-          flags.push({ type: 'EXTERNAL_LINK', severity: 'INFO', url: links[k] });
-        }
+    // Link analysis (real URL parsing + exact host allowlist, see isOfficialUrl)
+    var links = extractLinks(text);
+    for (var k = 0; k < links.length; k++) {
+      var verdict = linkVerdict(links[k]);
+      if (verdict === 'UNSAFE') {
+        flags.push({ type: 'UNSAFE_LINK', severity: 'WARNING', url: links[k] });
+      } else if (verdict === 'EXTERNAL') {
+        flags.push({ type: 'EXTERNAL_LINK', severity: 'INFO', url: links[k] });
       }
     }
 
@@ -171,6 +177,90 @@ const SOSTSentinel = (function () {
       action: flags.length > 0 ? 'publish_with_flags' : 'publish',
       reason: null
     };
+  }
+
+  // ── Link policy ───────────────────────────────────────────────
+
+  /**
+   * Extract link-like substrings from free text: anything with a scheme
+   * ("x://"), dangerous pseudo-schemes (javascript:, data:, ...),
+   * protocol-relative "//host" and bare "www." hosts. Surrounding brackets,
+   * quotes and trailing sentence punctuation are stripped.
+   */
+  function extractLinks(text) {
+    var out = [];
+    var tokens = String(text || '').split(/\s+/);
+    for (var i = 0; i < tokens.length; i++) {
+      var t = tokens[i];
+      if (!t) continue;
+      var m = LINK_START_RE.exec(t);
+      if (!m) continue;
+      t = t.slice(m.index);
+      t = t.replace(/[)\]}>"'`.,;:!?]+$/, '');
+      if (t.length > 0) out.push(t);
+    }
+    return out;
+  }
+
+  /**
+   * True only for https URLs whose parsed host is exactly an allowlisted host
+   * (and, for "host/segment" entries, whose first path segment is exactly that
+   * owner). Policy:
+   *  - the raw string must be printable ASCII, start with "https://", contain
+   *    no backslash/whitespace/control characters (rejects IDN/Unicode
+   *    lookalikes, protocol-relative and scheme tricks);
+   *  - parsed with the WHATWG URL parser; protocol must be https:;
+   *  - no userinfo (user@ / user:pass@), no explicit non-default port;
+   *  - hostname compared exactly (lower-case); a trailing-dot host such as
+   *    "sostcore.com." is NOT official, nor is any subdomain or suffix.
+   */
+  function isOfficialUrl(raw) {
+    if (typeof raw !== 'string') return false;
+    var s = raw.trim();
+    if (!s || s.length > 2048) return false;
+    if (/[^\x21-\x7e]/.test(s)) return false;          // non-ASCII, space, control
+    if (s.indexOf('\\') >= 0) return false;            // backslash host tricks
+    if (!/^https:\/\/[^\/?#@]/i.test(s)) return false;
+    if (s.slice(8).split(/[\/?#]/)[0].indexOf('@') >= 0) return false; // any userinfo, even empty
+    if (typeof URL !== 'function') return false;
+    var u;
+    try { u = new URL(s); } catch (e) { return false; }
+    if (u.protocol !== 'https:') return false;
+    if (u.username !== '' || u.password !== '') return false;
+    if (u.port !== '') return false;
+    var host = u.hostname.toLowerCase();
+    var firstSeg = (u.pathname.split('/')[1] || '').toLowerCase();
+    for (var d = 0; d < OFFICIAL_DOMAINS.length; d++) {
+      var entry = OFFICIAL_DOMAINS[d].toLowerCase();
+      var slash = entry.indexOf('/');
+      var eHost = slash < 0 ? entry : entry.slice(0, slash);
+      var eSeg = slash < 0 ? '' : entry.slice(slash + 1);
+      if (host !== eHost) continue;
+      if (!eSeg) return true;
+      if (firstSeg === eSeg) return true;
+    }
+    return false;
+  }
+
+  /** 'OFFICIAL' | 'EXTERNAL' (ordinary third-party https/http link) | 'UNSAFE'. */
+  function linkVerdict(raw) {
+    var s = String(raw || '').trim();
+    if (isOfficialUrl(s)) return 'OFFICIAL';
+    if (DANGEROUS_SCHEME_RE.test(s)) return 'UNSAFE';
+    if (/^\/\//.test(s)) return 'UNSAFE';               // protocol-relative
+    if (/^www\./i.test(s)) s = 'https://' + s;
+    if (!/^https?:\/\//i.test(s)) return 'UNSAFE';      // other schemes
+    if (/[^\x21-\x7e]/.test(s) || s.indexOf('\\') >= 0) return 'UNSAFE';
+    var u;
+    try { u = new URL(s); } catch (e) { return 'UNSAFE'; }
+    if (u.username !== '' || u.password !== '') return 'UNSAFE';  // user@host disguise
+    if (u.hostname.indexOf('xn--') >= 0) return 'UNSAFE';         // punycode / IDN
+    // A real subdomain of sostcore.com (explorer., wallet., relay., seed.) is ours but not
+    // allowlisted: shown as an ordinary external link, not as a lookalike.
+    if (u.protocol === 'https:' && /^([a-z0-9-]+\.)+sostcore\.com$/i.test(u.hostname)) return 'EXTERNAL';
+    if (/sostcore|sost-?core|sostprotocol/i.test(u.hostname)) return 'UNSAFE'; // lookalike of an official name
+    if (u.protocol === 'http:' && /(^|\.)sostcore\.com\.?$/i.test(u.hostname)) return 'UNSAFE';
+    return 'EXTERNAL';
   }
 
   /**
@@ -289,6 +379,12 @@ const SOSTSentinel = (function () {
     autoRespond: autoRespond,
     sanitize: sanitize,
     getMutedUsers: getMutedUsers,
-    unmuteUser: unmuteUser
+    unmuteUser: unmuteUser,
+    isOfficialUrl: isOfficialUrl,
+    linkVerdict: linkVerdict,
+    extractLinks: extractLinks,
+    OFFICIAL_DOMAINS: OFFICIAL_DOMAINS.slice()
   };
 })();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = SOSTSentinel;
