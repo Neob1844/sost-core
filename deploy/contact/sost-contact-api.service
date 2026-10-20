@@ -1,0 +1,34 @@
+[Unit]
+Description=SOST website contact endpoint (POST /api/contact -> fixed inbox via STRATO SMTP)
+Documentation=https://github.com/Neob1844/sost-core/blob/main/deploy/contact/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Deployed copy: /opt/sost/sost-contact-api.py (cp'd from ops/ on each deploy).
+# Config (root:root 0600) is passed as a systemd credential; the transient service user
+# reads it from $CREDENTIALS_DIRECTORY/contact.conf and never sees /etc/sost.
+ExecStart=/usr/bin/python3 /opt/sost/sost-contact-api.py
+LoadCredential=contact.conf:/etc/sost/contact-api.conf
+DynamicUser=yes
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+MemoryMax=128M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

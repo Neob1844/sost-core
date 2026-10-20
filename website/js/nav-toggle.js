@@ -1028,21 +1028,45 @@
 })();
 
 /* ============================================================================
-   SOST nav "Contact" -> floating image.
-   A plain left click on the nav's Contact item shows ONLY the contact emblem
-   (media/sost-contact-email.png) floating over the page. Progressive enhancement:
-   the link keeps href="sost-contact.html", so no-JS, middle-click, ctrl/cmd/shift-
-   click and "open in new tab" still go to the page. Only links inside <nav> whose
-   text is "Contact" are intercepted; Contact links in page content are untouched.
-   Closes on Escape, on a click outside the image and on a click on the image.
-   One overlay per page (built on first use, reused after). Focus moves into the
-   dialog, stays trapped there while open and returns to the link on close.
+   SOST nav "Contact" -> floating image -> contact form.
+   A plain left click on the nav's Contact item shows the contact emblem
+   (media/sost-contact-email.png) floating over the page. A click on the emblem
+   (or Enter / Space) turns it, with a short fade, into a small contact form
+   in the same dialog. Sending is gated by CONTACT_SEND_ENABLED below: while it
+   is false the SEND button is disabled, a "not active yet" note is shown and
+   NOTHING is posted anywhere. Once the /api/contact service (ops/sost-contact-
+   api.py, deploy/contact/) is installed and its SMTP config tested, set it to
+   true and the form posts JSON to that same-origin endpoint. The destination
+   inbox exists ONLY in the server config: nothing in this file, the page or
+   the response names it.
+   The emblem PNG has a 1-2px light antialiased fringe baked into the edge of
+   its black circle, which showed as a thin grey ring over the dim backdrop. It
+   is hidden with a circular clip-path just inside that fringe (the image file
+   itself is left untouched).
+   Progressive enhancement: the link keeps href="sost-contact.html", so no-JS,
+   middle-click, ctrl/cmd/shift-click and "open in new tab" still go to the page.
+   Only links inside <nav> whose text is "Contact" are intercepted.
+   Closes on Escape and on a click outside the emblem / form. One overlay per page
+   (built on first use, reused after). Focus moves into the dialog, stays trapped
+   there while open and returns to the link on close.
    ========================================================================== */
 (function(){
   "use strict";
   if(window.__sostContactFloat) return;
   window.__sostContactFloat = true;
-  var ov=null, img=null, opener=null, isOpen=false, hideTimer=null;
+  // ONE switch for sending. Keep false until the /api/contact service is deployed with a
+  // working SMTP config and a real test message has arrived (see deploy/contact/README.md).
+  var CONTACT_SEND_ENABLED = false;
+  var ENDPOINT='/api/contact';
+  var LIM={name:100,email:254,subject:200,message:5000};
+  var T_OK='Your message has been sent.';
+  var T_FAIL='Unable to send the message. Please try again later.';
+  var T_REQ='Please fill in the required fields.';
+  var T_EMAIL='Please enter a valid email address.';
+  var T_OFF='Sending is not active yet \u2014 coming soon.';
+  var ov=null, img=null, panel=null, form=null, statusEl=null, btn=null, done=null, back=null;
+  var opener=null, isOpen=false, hideTimer=null, view='image', sending=false, sent=false, idem='';
+  var downOnBackdrop=false;
   // Resolve the image next to this script (js/../media/), so it works from any page path.
   var BASE='media/';
   try{ var cs=document.currentScript; if(cs && cs.src) BASE=new URL('../media/', cs.src).href; }catch(e){}
@@ -1051,6 +1075,7 @@
   function styleOnce(){
     if(document.getElementById('sost-contact-float-style')) return;
     var st=document.createElement('style'); st.id='sost-contact-float-style';
+    var P='#sost-contact-ov ';
     st.textContent=[
       '#sost-contact-ov{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;',
       'box-sizing:border-box;padding:4vh 5vw 10vh;background:rgba(0,0,0,.45);opacity:0;transition:opacity .18s ease;',
@@ -1058,12 +1083,104 @@
       '#sost-contact-ov[hidden]{display:none}',
       '#sost-contact-ov.open{opacity:1}',
       '#sost-contact-ov:not(.open){pointer-events:none}',
-      '#sost-contact-ov img{display:block;width:min(420px,90vw,80vh);height:auto;max-width:90vw;max-height:85vh;',
-      'object-fit:contain;transform:scale(.96);transition:transform .18s ease;-webkit-user-drag:none;user-select:none}',
-      '#sost-contact-ov.open img{transform:scale(1)}',
-      '@media (prefers-reduced-motion:reduce){#sost-contact-ov,#sost-contact-ov img{transition:none;transform:none}}'
+      '#sost-contact-ov > img{display:block;width:min(420px,90vw,80vh);height:auto;max-width:90vw;max-height:85vh;',
+      'object-fit:contain;transform:scale(.96);transition:transform .18s ease;-webkit-user-drag:none;user-select:none;',
+      // Hide the light fringe baked into the PNG's circle edge (outer ~0.5% of the radius).
+      '-webkit-clip-path:circle(49.4% at 50% 50%);clip-path:circle(49.4% at 50% 50%);border:0;outline:0;box-shadow:none;background:transparent}',
+      '#sost-contact-ov.open > img{transform:scale(1)}',
+      '#sost-contact-ov.form{padding:16px;background:rgba(0,0,0,.72);touch-action:auto}',
+      '#sost-contact-ov.form > img{display:none}',
+      // Centred on the overlay by default; placePanel() then re-centres and re-sizes it on the
+      // VISUAL viewport (see there). Fixed, so it does not depend on the overlay's box.
+      P+'.scf-panel{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;',
+      'width:min(460px,calc(100% - 32px));max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);',
+      'overflow-y:auto;overscroll-behavior:contain;cursor:auto;text-align:left;color:#f1f1f1;background:linear-gradient(160deg,#0b0b0d,#120507);',
+      'border:1px solid rgba(251,1,13,.55);border-radius:14px;box-shadow:0 0 34px rgba(251,1,13,.22),0 18px 60px rgba(0,0,0,.6);',
+      'padding:22px 22px 20px;font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;-webkit-tap-highlight-color:initial}',
+      '#sost-contact-ov.form .scf-panel{display:block;animation:scf-in .22s ease both}',
+      '@keyframes scf-in{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}',
+      P+'.scf-h{margin:0 120px 16px 0;font-size:15px;font-weight:700;letter-spacing:2px;color:#fff;text-transform:uppercase}',
+      P+'.scf-h b{color:#fb010d;font-weight:700}',
+      P+'.scf-x{position:absolute;top:12px;right:12px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;',
+      'background:transparent;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#ddd;font:20px/1 sans-serif;cursor:pointer;padding:0}',
+      P+'.scf-x:hover,'+P+'.scf-x:focus-visible{border-color:#fb010d;color:#fff;outline:none}',
+      P+'.scf-f{display:block;margin:0 0 12px}',
+      P+'.scf-f label{display:block;margin:0 0 5px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#cfcfcf}',
+      P+'.scf-f label span{font-weight:400;letter-spacing:.5px;text-transform:none;color:#8b8b8b}',
+      P+'.scf-f input,'+P+'.scf-f textarea{display:block;box-sizing:border-box;width:100%;margin:0;padding:10px 12px;font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;',
+      'color:#fff;background:#0a0a0a;border:1px solid #3a3a3a;border-radius:8px;outline:none;-webkit-appearance:none;appearance:none}',
+      P+'.scf-f textarea{min-height:120px;resize:vertical}',
+      P+'.scf-f input:focus,'+P+'.scf-f textarea:focus{border-color:#fb010d;box-shadow:0 0 0 2px rgba(251,1,13,.25)}',
+      P+'.scf-f [aria-invalid="true"]{border-color:#ff5a5f}',
+      P+'.scf-hp{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important}',
+      P+'.scf-st{min-height:1.5em;margin:2px 0 12px;font-size:12.5px;color:#ff8a8d}',
+      P+'.scf-st.ok{color:#7ee2a8}',
+      P+'.scf-b{display:block;width:100%;padding:12px 14px;font:700 13px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:2px;color:#fff;cursor:pointer;',
+      'background:linear-gradient(135deg,#fb010d,#a8000a);border:1px solid rgba(255,120,120,.6);border-radius:10px;box-shadow:0 0 16px rgba(251,1,13,.35)}',
+      P+'.scf-b:hover{filter:brightness(1.1)}',
+      P+'.scf-b:focus-visible{outline:2px solid #fff;outline-offset:2px}',
+      P+'.scf-b[disabled]{opacity:.6;cursor:progress;filter:none}',
+      P+'.scf-b.off[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none;background:#3a3a3a;border-color:#555}',
+      P+'.scf-off{margin:0 0 12px;padding:9px 11px;font-size:12.5px;color:#f5c889;background:rgba(245,200,137,.08);border:1px solid rgba(245,200,137,.35);border-radius:8px}',
+      P+'.scf-back{position:absolute;top:12px;right:52px;height:32px;display:flex;align-items:center;padding:0 10px;background:transparent;',
+      'border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#ddd;font:700 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:1px;cursor:pointer}',
+      P+'.scf-back:hover,'+P+'.scf-back:focus-visible{border-color:#fb010d;color:#fff;outline:none}',
+      P+'.scf-done{display:none;text-align:center;padding:18px 0 6px}',
+      P+'.scf-done p{margin:0 0 18px;font-size:15px;color:#7ee2a8}',
+      '#sost-contact-ov.sent .scf-form{display:none}',
+      '#sost-contact-ov.sent .scf-done{display:block}',
+      '@media (prefers-reduced-motion:reduce){#sost-contact-ov,#sost-contact-ov > img{transition:none;transform:none}#sost-contact-ov .scf-panel{animation:none!important}}'
     ].join('');
     (document.head||document.documentElement).appendChild(st);
+  }
+  function el(tag, attrs, text){
+    var e=document.createElement(tag);
+    if(attrs) for(var k in attrs){ if(Object.prototype.hasOwnProperty.call(attrs,k)) e.setAttribute(k,attrs[k]); }
+    if(text!=null) e.textContent=text;
+    return e;
+  }
+  function fieldRow(id, label, hint, ctl){
+    var row=el('div',{'class':'scf-f'});
+    var lb=el('label',{'for':id}, label);
+    if(hint){ lb.appendChild(document.createTextNode(' ')); lb.appendChild(el('span',null,hint)); }
+    row.appendChild(lb); row.appendChild(ctl);
+    return row;
+  }
+  function buildPanel(){
+    panel=el('div',{'class':'scf-panel'});
+    var h=el('h2',{'class':'scf-h',id:'scf-title'}); h.appendChild(document.createTextNode('Contact ')); h.appendChild(el('b',null,'SOST'));
+    var x=el('button',{type:'button','class':'scf-x','aria-label':'Close'},'×');
+    x.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); close(); });
+    back=el('button',{type:'button','class':'scf-back','aria-label':'Back to the contact emblem'},'\u2190 BACK');
+    back.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); showImage(); });
+    form=el('form',{'class':'scf-form',novalidate:'',autocomplete:'on','aria-labelledby':'scf-title'});
+    form.appendChild(fieldRow('scf-name','Name','(optional)',el('input',{id:'scf-name',name:'name',type:'text',maxlength:String(LIM.name),autocomplete:'name'})));
+    form.appendChild(fieldRow('scf-email','Email','(required)',el('input',{id:'scf-email',name:'email',type:'email',required:'',maxlength:String(LIM.email),autocomplete:'email',inputmode:'email',spellcheck:'false'})));
+    form.appendChild(fieldRow('scf-subject','Subject','(required)',el('input',{id:'scf-subject',name:'subject',type:'text',required:'',maxlength:String(LIM.subject)})));
+    form.appendChild(fieldRow('scf-message','Message','(required)',el('textarea',{id:'scf-message',name:'message',required:'',maxlength:String(LIM.message),rows:'6'})));
+    // Honeypot: invisible to people (and to assistive tech), tempting to form-filling bots.
+    var hp=el('div',{'class':'scf-hp','aria-hidden':'true'});
+    hp.appendChild(el('label',{'for':'scf-website'},'Leave this field empty'));
+    hp.appendChild(el('input',{id:'scf-website',name:'website',type:'text',tabindex:'-1',autocomplete:'off'}));
+    form.appendChild(hp);
+    statusEl=el('p',{'class':'scf-st',role:'status','aria-live':'polite'});
+    form.appendChild(statusEl);
+    btn=el('button',{type:'submit','class':'scf-b'},'SEND MESSAGE');
+    if(!CONTACT_SEND_ENABLED){
+      form.appendChild(el('p',{'class':'scf-off',id:'scf-off'},T_OFF));
+      btn.disabled=true; btn.className='scf-b off';
+      btn.setAttribute('aria-describedby','scf-off');
+    }
+    form.appendChild(btn);
+    form.addEventListener('submit',onSubmit);
+    form.addEventListener('input',function(e){ if(e.target && e.target.getAttribute('aria-invalid')) e.target.removeAttribute('aria-invalid'); });
+    done=el('div',{'class':'scf-done',role:'status'});
+    done.appendChild(el('p',null,T_OK));
+    var cb=el('button',{type:'button','class':'scf-b'},'CLOSE');
+    cb.addEventListener('click',function(e){ e.preventDefault(); close(); });
+    done.appendChild(cb);
+    panel.appendChild(h); panel.appendChild(back); panel.appendChild(x); panel.appendChild(form); panel.appendChild(done);
+    return panel;
   }
   function build(){
     if(ov) return ov;
@@ -1080,12 +1197,19 @@
     img.srcset=SRC512+' 512w, '+SRC+' 980w';
     img.sizes='min(420px, 90vw, 80vh)';
     img.width=980; img.height=980;
-    img.alt='SOST contact';
+    img.alt='SOST contact. Select to open the contact form';
     img.decoding='async';
     img.draggable=false;
     ov.appendChild(img);
-    // Any click inside the overlay (backdrop or image) closes it.
-    ov.addEventListener('click',function(e){ e.preventDefault(); close(); });
+    ov.appendChild(buildPanel());
+    // Emblem click -> form. A click whose press AND release are both on the backdrop closes.
+    // (A text selection dragged out of a field must not close the form and lose the draft.)
+    ov.addEventListener('pointerdown',function(e){ downOnBackdrop=(e.target===ov); });
+    ov.addEventListener('click',function(e){
+      if(e.target===img){ e.preventDefault(); showForm(); return; }
+      if(e.target===ov){ e.preventDefault(); if(downOnBackdrop || view==='image') close(); }
+      downOnBackdrop=false;
+    });
     ov.addEventListener('wheel',swallow,{passive:false});
     ov.addEventListener('touchmove',swallow,{passive:false});
     document.body.appendChild(ov);
@@ -1094,26 +1218,149 @@
   // Scroll lock WITHOUT touching overflow: changing html/body overflow re-lays out pages whose
   // content is wider than a phone viewport (the nav re-wraps behind the backdrop) and on desktop
   // removes the scrollbar. Instead the overlay swallows wheel/touch scrolling and the keydown
-  // handler swallows the scroll keys, so nothing behind the overlay moves or re-flows.
-  function swallow(e){ if(isOpen && e.cancelable) e.preventDefault(); }
+  // handler swallows the scroll keys, so nothing behind the overlay moves or re-flows. Inside
+  // the form, scrolling is allowed only where something can actually scroll (panel/textarea).
+  function canScroll(t){
+    for(var n=t; n && n!==ov; n=n.parentNode){
+      if(n.nodeType===1 && n.scrollHeight>n.clientHeight+1){
+        var oy=getComputedStyle(n).overflowY;
+        if(oy==='auto'||oy==='scroll') return true;
+      }
+    }
+    return false;
+  }
+  function swallow(e){
+    if(!isOpen || !e.cancelable) return;
+    if(view==='form' && panel.contains(e.target) && canScroll(e.target)) return;
+    e.preventDefault();
+  }
+  // On phones the area the visitor actually sees (the visual viewport) can differ from the
+  // layout viewport the fixed overlay follows: pages wider than the screen, pinch zoom, and
+  // above all the on-screen keyboard, which shrinks only the visual viewport. Keep the form
+  // centred in, and no taller/wider than, what is visible; it scrolls inside if needed.
+  function placePanel(){
+    if(!isOpen || view!=='form' || !panel) return;
+    var v=window.visualViewport;
+    if(!v || !(v.width>0) || !(v.height>0)) return;
+    panel.style.left=(v.offsetLeft+v.width/2)+'px';
+    panel.style.top=(v.offsetTop+v.height/2)+'px';
+    panel.style.width=Math.max(200,Math.min(460,v.width-32))+'px';
+    panel.style.maxHeight=Math.max(160,v.height-32)+'px';
+  }
+  try{ if(window.visualViewport){ visualViewport.addEventListener('resize',placePanel); visualViewport.addEventListener('scroll',placePanel); } }catch(e){}
+  function newKey(){
+    try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g,''); }catch(e){}
+    try{ var a=new Uint8Array(16); crypto.getRandomValues(a); return Array.prototype.map.call(a,function(b){return ('0'+b.toString(16)).slice(-2);}).join(''); }catch(e){}
+    return String(Date.now())+String(Math.random()).slice(2,12);
+  }
+  function focusables(){
+    var root=(view==='form') ? panel : ov;
+    return Array.prototype.filter.call(root.querySelectorAll('button,input,textarea,a[href],[tabindex]:not([tabindex="-1"])'),function(n){
+      return !n.disabled && n.tabIndex>=0 && n.getClientRects().length>0;
+    });
+  }
+  function focusEl(n){ try{ n.focus({preventScroll:true}); }catch(e){ n.focus(); } }
+  function showForm(){
+    if(!isOpen) return;
+    if(sent) resetForm();
+    view='form';
+    ov.classList.add('form');
+    panel.scrollTop=0;
+    placePanel();
+    if(!idem) idem=newKey();
+    var f=focusables(); focusEl(f.length ? f.filter(function(n){return n.tagName==='INPUT';})[0]||f[0] : ov);
+  }
+  function showImage(){
+    if(!isOpen) return;
+    view='image';
+    ov.classList.remove('form');
+    focusEl(ov);
+  }
+  function resetForm(){
+    sent=false; idem='';
+    ov.classList.remove('sent');
+    form.reset();
+    statusEl.textContent=''; statusEl.className='scf-st';
+    Array.prototype.forEach.call(form.querySelectorAll('[aria-invalid]'),function(n){ n.removeAttribute('aria-invalid'); });
+  }
+  var EMAIL_RE=/^[A-Za-z0-9!#$%&'*+\/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
+  function setStatus(t, ok){ statusEl.textContent=t; statusEl.className='scf-st'+(ok?' ok':''); }
+  function invalid(n, msg){
+    n.setAttribute('aria-invalid','true');
+    setStatus(msg,false);
+    focusEl(n);
+    return false;
+  }
+  function validate(){
+    var E=form.elements;
+    Array.prototype.forEach.call(form.querySelectorAll('[aria-invalid]'),function(n){ n.removeAttribute('aria-invalid'); });
+    var req=[E.email,E.subject,E.message];
+    for(var i=0;i<req.length;i++){ if(!req[i].value.trim()) return invalid(req[i],T_REQ); }
+    var em=E.email.value.trim(), local=em.split('@')[0];
+    if(em.length>LIM.email || local.length>64 || !EMAIL_RE.test(em)) return invalid(E.email,T_EMAIL);
+    if(E.name.value.trim().length>LIM.name) return invalid(E.name,T_REQ);
+    if(E.subject.value.trim().length>LIM.subject) return invalid(E.subject,T_REQ);
+    if(E.message.value.trim().length>LIM.message) return invalid(E.message,T_REQ);
+    return true;
+  }
+  function onSubmit(e){
+    e.preventDefault();
+    if(!CONTACT_SEND_ENABLED) return;    // sending not active: never post, never pretend it was sent
+    if(sending || sent) return;          // the button is disabled too; this guards Enter-key repeats
+    if(!validate()) return;
+    var E=form.elements;
+    var payload={
+      name:E.name.value.trim(), email:E.email.value.trim(), subject:E.subject.value.trim(),
+      message:E.message.value.trim(), website:E.website.value, idempotency_key:idem||(idem=newKey())
+    };
+    sending=true; btn.disabled=true; btn.textContent='SENDING…'; form.setAttribute('aria-busy','true');
+    setStatus('',false);
+    var ctrl=null, timer=null;
+    try{ ctrl=new AbortController(); timer=setTimeout(function(){ try{ctrl.abort();}catch(x){} },30000); }catch(x){}
+    var finish=function(ok, msg){
+      if(timer) clearTimeout(timer);
+      sending=false; form.removeAttribute('aria-busy'); btn.textContent='SEND MESSAGE';
+      if(ok){
+        sent=true; ov.classList.add('sent');
+        var c=done.querySelector('button'); if(c && isOpen) focusEl(c);
+      }else{
+        btn.disabled=false;
+        setStatus(msg||T_FAIL,false);
+      }
+    };
+    fetch(ENDPOINT,{method:'POST',credentials:'same-origin',cache:'no-store',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify(payload), signal:ctrl?ctrl.signal:undefined})
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {status:r.status,j:j||{}}; }); })
+      .then(function(res){
+        if(res.status===200 && res.j.ok===true) return finish(true);
+        if(res.status===400 && res.j.field==='email'){ finish(false,T_EMAIL); E.email.setAttribute('aria-invalid','true'); return; }
+        finish(false,T_FAIL);
+      })
+      .catch(function(){ finish(false,T_FAIL); });
+  }
   function open(link){
     if(isOpen) return;              // single instance: a second click never stacks overlays
     build();
     if(hideTimer){ clearTimeout(hideTimer); hideTimer=null; }
     isOpen=true; opener=link||null;
+    view='image'; ov.classList.remove('form');
     ov.hidden=false;
     void ov.offsetWidth;            // commit the hidden->shown frame so the fade runs
     ov.classList.add('open');
-    try{ ov.focus({preventScroll:true}); }catch(e){ ov.focus(); }
+    focusEl(ov);
   }
   function close(){
     if(!isOpen) return;
     isOpen=false;
     ov.classList.remove('open');
-    var done=function(){ hideTimer=null; if(!isOpen) ov.hidden=true; };
-    if(reduced()) done(); else hideTimer=setTimeout(done,200);
+    var done_=function(){
+      hideTimer=null;
+      if(!isOpen){ ov.hidden=true; ov.classList.remove('form'); view='image'; if(sent && !sending) resetForm(); }
+    };
+    if(reduced()) done_(); else hideTimer=setTimeout(done_,200);
     var o=opener; opener=null;
-    if(o && document.contains(o)){ try{ o.focus({preventScroll:true}); }catch(e){ o.focus(); } }
+    if(o && document.contains(o)) focusEl(o);
   }
   var SCROLL_KEYS={' ':1,'Spacebar':1,'PageUp':1,'PageDown':1,'Home':1,'End':1,'ArrowUp':1,'ArrowDown':1,'ArrowLeft':1,'ArrowRight':1};
   function navContactLink(t){
@@ -1136,12 +1383,21 @@
   document.addEventListener('keydown',function(e){
     if(!isOpen) return;
     if(e.key==='Escape' || e.key==='Esc'){ e.preventDefault(); e.stopPropagation(); close(); return; }
-    // Focus trap: the dialog holds no other focusable element, so Tab stays on it.
-    if(e.key==='Tab'){ e.preventDefault(); try{ ov.focus({preventScroll:true}); }catch(x){ ov.focus(); } return; }
+    if(view==='image' && (e.key==='Enter' || e.key===' ' || e.key==='Spacebar')){ e.preventDefault(); showForm(); return; }
+    if(e.key==='Tab'){
+      var f=focusables();
+      if(!f.length){ e.preventDefault(); focusEl(ov); return; }
+      var i=f.indexOf(document.activeElement);
+      if(e.shiftKey && i<=0){ e.preventDefault(); focusEl(f[f.length-1]); }
+      else if(!e.shiftKey && (i===-1 || i===f.length-1)){ e.preventDefault(); focusEl(f[0]); }
+      return;
+    }
+    // Keys typed into the form keep their normal meaning (space, arrows, Home/End...).
+    if(view==='form' && panel.contains(e.target)) return;
     if(SCROLL_KEYS[e.key]) e.preventDefault();
   },true);
   document.addEventListener('focusin',function(e){
-    if(isOpen && ov && !ov.contains(e.target)){ try{ ov.focus({preventScroll:true}); }catch(x){ ov.focus(); } }
+    if(isOpen && ov && !ov.contains(e.target)){ var f=focusables(); focusEl(f[0]||ov); }
   });
   // Build the (hidden) overlay as soon as the pointer or focus reaches the nav Contact link,
   // so the browser fetches the right srcset candidate before the click.

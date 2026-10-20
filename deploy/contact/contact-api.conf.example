@@ -1,0 +1,46 @@
+# SOST website contact endpoint — CONFIG TEMPLATE (placeholders only).
+#
+# Real file on the VPS: /etc/sost/contact-api.conf   owner root:root   mode 0600
+# It is handed to the service by systemd (LoadCredential=), so the service user never
+# needs read access to /etc/sost. NEVER commit the real file, never copy it under a
+# docroot, never paste its values into HTML/JS/CSS/JSON or a ticket.
+#
+# Every value in <ANGLE_BRACKETS> must be replaced on the server. The recipient inbox
+# is configured ONLY here.
+
+[contact]
+listen_host = 127.0.0.1
+listen_port = 18330
+
+# Fixed recipient: the official SOST inbox (the mailbox hosted by STRATO).
+mail_to = <OFFICIAL_INBOX_ADDRESS>
+
+# Envelope + header From. Must be the STRATO mailbox that authenticates below (or an
+# alias STRATO allows that mailbox to send as), so STRATO's DKIM signature for the
+# domain makes DMARC (p=reject) pass. Simplest correct choice: the same mailbox as
+# smtp_user. The visitor's address only ever goes in Reply-To.
+mail_from = <STRATO_MAILBOX_ADDRESS>
+mail_from_name = SOST website contact form
+subject_prefix = [sostcore.com contact]
+
+# STRATO authenticated submission (implicit TLS).
+smtp_host = smtp.strato.de
+smtp_port = 465
+smtp_security = ssl
+smtp_user = <STRATO_MAILBOX_ADDRESS>
+smtp_password = <STRATO_MAILBOX_PASSWORD>
+smtp_timeout = 15
+
+# Only these page origins may post (Origin header, else Referer).
+allowed_origins = https://sostcore.com,https://www.sostcore.com
+
+# nginx sets X-Real-IP; trusted only when the TCP peer is 127.0.0.1.
+trust_x_real_ip = true
+
+# Limits (in memory; reset on service restart).
+ip_sends_per_10min = 3
+ip_sends_per_day = 20
+ip_requests_per_10min = 30
+global_sends_per_hour = 30
+global_sends_per_day = 200
+duplicate_window_seconds = 600
