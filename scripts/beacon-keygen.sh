@@ -116,7 +116,7 @@ echo "  $PUB_HEX"
 echo
 echo "Publish this fingerprint in MULTIPLE channels for cross-validation:"
 echo "  - GitHub README"
-echo "  - sostprotocol.com / sostcore.com index"
+echo "  - sostcore.com index"
 echo "  - BCT thread"
 echo "  - Whitepaper"
 echo

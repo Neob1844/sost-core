@@ -34,6 +34,9 @@ Blocks usernames matching:
 
 ## Link Policy
 - Official domains (whitelisted): sostcore.com, sostprotocol.com, github.com/neob1844
+  - Note: sostcore.com is the only official domain. sostprotocol.com is being retired and
+    is still in the `OFFICIAL_DOMAINS` list of `website/js/sost-sentinel.js`; it must be
+    removed from that list before the registration is allowed to lapse.
 - External links: flagged as INFO (not blocked, but marked)
 - Suspicious domains: collapsed pending review
 

@@ -32,7 +32,7 @@ The bot moderates spam, scams and abuse — **not criticism**.
 ## Important
 
 - Admins will NEVER ask you to send funds
-- Only trust sostcore.com and sostprotocol.com
+- Only trust sostcore.com, the only official domain (the former sostprotocol.com is being retired)
 - Report suspicious behavior via the report button
 - Identity required to post (prevents anonymous spam)
 

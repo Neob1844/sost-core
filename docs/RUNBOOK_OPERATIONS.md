@@ -215,7 +215,9 @@ scp root@OLD_VPS:/etc/sost/auth.env /etc/sost/
 scp root@OLD_VPS:/etc/nginx/sites-enabled/sost* /etc/nginx/sites-enabled/
 
 # Configurar SSL:
-sudo certbot --nginx -d sostcore.com -d sostprotocol.com
+sudo certbot --nginx -d sostcore.com -d www.sostcore.com
+# (sostprotocol.com está en retirada: solo añadir -d sostprotocol.com -d www.sostprotocol.com
+#  mientras se mantenga el bloque de redirección 301 hacia sostcore.com)
 
 # Arrancar:
 sudo systemctl enable --now sost-node nginx sost-auth

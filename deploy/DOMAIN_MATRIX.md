@@ -1,5 +1,9 @@
 # SOST Domain Matrix
 
+> **Outdated (historical).** sostcore.com is the only official domain. sostprotocol.com is
+> no longer a mirror: production serves it only as a `301` redirect to `https://sostcore.com`
+> and the domain is being retired. Do not use the mirror instructions below.
+
 ## Source of Truth: `sostcore.com`
 
 All website files live in `/website/` within the sost-core repository.

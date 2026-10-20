@@ -64,7 +64,7 @@
 | Dominio | Destino | Contenido |
 |---------|---------|-----------|
 | sostcore.com | VPS nginx | Web principal, explorer, wallet, app |
-| sostprotocol.com | VPS nginx (alias) | Mismo contenido que sostcore.com |
+| sostprotocol.com | VPS nginx (redirect) | 301 → https://sostcore.com$request_uri. Dominio en retirada; sostcore.com es el único dominio oficial |
 | seed.sostcore.com | VPS :19333 | P2P seed node (no web) |
 
 ## Flujo de datos
