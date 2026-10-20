@@ -942,11 +942,13 @@ function getSettings() {
   return { rpcUrl: '/rpc', rpcUser: '', rpcPass: '', lockMinutes: 5 };
 }
 
-// RPC endpoints: primary = sostcore.com, secondary = sostprotocol.com
+// RPC endpoints: same-origin first, then sostcore.com (the only official domain).
+// The former sostprotocol.com/rpc fallback was removed: that host only
+// 301-redirects to sostcore.com (a CORS preflight cannot follow it, so it never
+// worked) and the domain is being retired.
 const RPC_ENDPOINTS = [
   '/rpc',                          // same-origin (fastest if nginx proxies)
-  'https://sostcore.com/rpc',      // primary domain
-  'https://sostprotocol.com/rpc',  // secondary fallback
+  'https://sostcore.com/rpc',      // official domain
 ];
 
 async function rpcCall(method, params = {}) {
