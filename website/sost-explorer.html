@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-20-v577-jackpot-candidates-fold">
+<meta name="explorer-html-version" content="2026-10-20-v579-explorer-rpc-polling">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -853,7 +853,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </div>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-20-v577-jackpot-candidates-fold';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-20-v579-explorer-rpc-polling';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -2255,8 +2255,62 @@ function copyText(b,t){navigator.clipboard.writeText(t).then(function(){b.classL
 // / balances blank, the block & tx tables empty and the load overlay stuck.
 // Direct rpc() (the browser's own connection pool does the limiting) restores
 // the dashboard; the residual 503 console noise is cosmetic and already retried.
-async function rpc(m,p){
+// v578 RPC hygiene (fixes ~12 req/s per open tab). Every refresh cycle (30 s
+// floor + every tip change) re-read the 288-block window, the 11-row block table
+// and the 31-block tx head with getblockhash+getblock pairs (~680 POST /rpc per
+// cycle, nothing cached), in hidden tabs too, and retried a 401 three times.
+// rpc() now, for the same callers and the same results:
+//   - caches getblock by hash (a block is immutable: the node returns no
+//     confirmations field) and getblockhash by height (permanent RPC_REORG_DEPTH
+//     blocks below the tip, 60 s near the tip; cleared when a fetched block's
+//     previousblockhash disagrees with the cached hash = reorg);
+//   - shares one in-flight request between identical concurrent read calls;
+//   - waits while the tab is hidden (requests resume, deduplicated, when it is
+//     shown again; the version check still runs and still reloads the tab);
+//   - never retries 400/401/403/404 and remembers a 401/403 method for 10 min;
+//   - retries 429 / 5xx / timeouts / network errors with exponential backoff and
+//     jitter, and a 429/5xx pauses ALL new requests for that backoff.
+var RPC_REORG_DEPTH=12, RPC_NEAR_TIP_TTL=60000, RPC_CACHE_MAX=4000;
+var _rpcBlk=new Map(), _rpcHash=new Map(), _rpcFly=new Map(), _rpcDeny={}, _rpcCoolUntil=0, _rpcFor=null;
+var _rpcVisWait=[];
+document.addEventListener('visibilitychange',function(){ if(!document.hidden){ var w=_rpcVisWait; _rpcVisWait=[]; w.forEach(function(f){f();}); } });
+function _rpcWhenVisible(){ return document.hidden?new Promise(function(r){_rpcVisWait.push(r);}):null; }
+function _rpcTip(){ return (typeof H==='number'&&H>0)?H:((window._dtdTip>0)?window._dtdTip:0); }
+function _rpcPut(map,k,v){ map.delete(k); map.set(k,v); if(map.size>RPC_CACHE_MAX){ map.delete(map.keys().next().value); } }
+function _rpcCached(m,p){
+  if(m==='getblock'&&p.length===1&&_rpcBlk.has(p[0]))return {v:_rpcBlk.get(p[0])};
+  if(m==='getblockhash'&&p.length===1){
+    var h=parseInt(p[0],10), e=_rpcHash.get(h);
+    if(e){ var tip=_rpcTip(); if((tip>0&&h<=tip-RPC_REORG_DEPTH)||(Date.now()-e.t)<RPC_NEAR_TIP_TTL)return {v:e.v}; }
+  }
+  return null;
+}
+function _rpcStore(m,p,v){
+  if(v==null)return;
+  if(m==='getblock'&&p.length===1&&typeof v==='object'&&v.hash===p[0]){
+    if(typeof v.height==='number'&&v.previousblockhash){ var pe=_rpcHash.get(v.height-1); if(pe&&pe.v!==v.previousblockhash)_rpcHash.clear(); }
+    _rpcPut(_rpcBlk,p[0],v);
+    if(typeof v.height==='number'){ var he=_rpcHash.get(v.height); if(he&&he.v!==v.hash)_rpcHash.clear(); }
+  } else if(m==='getblockhash'&&p.length===1&&typeof v==='string'){
+    _rpcPut(_rpcHash,parseInt(p[0],10),{v:v,t:Date.now()});
+  }
+}
+function _rpcSleep(ms){ return new Promise(function(r){setTimeout(r,ms);}); }
+function _rpcBackoff(a){ var b=Math.min(8000,500*Math.pow(2,a)); return Math.round(b*(0.5+Math.random())); }
+function rpc(m,p){
   p=p||[];
+  if(_rpcFor!==RPC+'|'+RPC_USER){ _rpcFor=RPC+'|'+RPC_USER; _rpcBlk.clear(); _rpcHash.clear(); _rpcDeny={}; }
+  var c=_rpcCached(m,p); if(c)return Promise.resolve(c.v);
+  var write=/^(send|submit)/.test(m);
+  var key=m+'|'+JSON.stringify(p);
+  if(!write&&_rpcFly.has(key))return _rpcFly.get(key);
+  var pr=_rpcFetch(m,p);
+  if(!write){ _rpcFly.set(key,pr); var done=function(){ if(_rpcFly.get(key)===pr)_rpcFly.delete(key); }; pr.then(done,done); }
+  return pr;
+}
+async function _rpcFetch(m,p){
+  var vw=_rpcWhenVisible(); if(vw)await vw;
+  var c=_rpcCached(m,p); if(c)return c.v;
   var hdrs={'Content-Type':'application/json'};
   if(RPC_USER&&RPC_PASS)hdrs['Authorization']='Basic '+btoa(RPC_USER+':'+RPC_PASS);
   // Per-attempt timeout: 15s. The chain RPC is normally <100ms, but
@@ -2266,23 +2320,40 @@ async function rpc(m,p){
   // nodes; loadBlocks() also paralellises requests so the wall-clock
   // budget stays small.
   var TIMEOUT_MS=15000;
-  for(var a=0;a<3;a++){try{
-    var ac=new AbortController();var tid=setTimeout(function(){ac.abort();},TIMEOUT_MS);
-    var r=await fetch(RPC,{method:'POST',cache:'no-store',headers:hdrs,body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p}),signal:ac.signal});
-    clearTimeout(tid);
-    if(r.status===401)throw new Error('Authentication failed (401) — check RPC username and password');
-    if(!r.ok)throw new Error('HTTP '+r.status+' '+r.statusText);
-    var d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;
-  }catch(e){
-    var msg=String((e&&e.message)||e);
-    if(msg.indexOf('aborted')!==-1||(e&&e.name==='AbortError')){
-      // Replace the cryptic browser default ("signal is aborted without
-      // reason") with something an operator can act on.
-      e=new Error('RPC timeout: '+m+' ('+(TIMEOUT_MS/1000)+'s, attempt '+(a+1)+'/3)');
+  for(var a=0;a<3;a++){
+    var permanent=false;
+    try{
+      if(_rpcDeny[m]&&Date.now()<_rpcDeny[m].until){ permanent=true; throw new Error(_rpcDeny[m].msg); }
+      var wait=_rpcCoolUntil-Date.now(); if(wait>0)await _rpcSleep(wait);
+      var ac=new AbortController();var tid=setTimeout(function(){ac.abort();},TIMEOUT_MS);
+      var r;
+      try{ r=await fetch(RPC,{method:'POST',cache:'no-store',headers:hdrs,body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p}),signal:ac.signal}); }
+      finally{ clearTimeout(tid); }
+      if(r.status===401||r.status===403){
+        permanent=true;
+        var am=(r.status===401)?'Authentication failed (401) — check RPC username and password':'HTTP 403 '+r.statusText;
+        _rpcDeny[m]={until:Date.now()+600000,msg:am};
+        throw new Error(am);
+      }
+      if(r.status===400||r.status===404){ permanent=true; throw new Error('HTTP '+r.status+' '+r.statusText); }
+      if(!r.ok){
+        if(r.status===429||r.status>=500)_rpcCoolUntil=Math.max(_rpcCoolUntil,Date.now()+_rpcBackoff(a));
+        throw new Error('HTTP '+r.status+' '+r.statusText);
+      }
+      var d=await r.json();if(d.error)throw new Error(d.error.message);
+      _rpcStore(m,p,d.result);
+      return d.result;
+    }catch(e){
+      var msg=String((e&&e.message)||e);
+      if(msg.indexOf('aborted')!==-1||(e&&e.name==='AbortError')){
+        // Replace the cryptic browser default ("signal is aborted without
+        // reason") with something an operator can act on.
+        e=new Error('RPC timeout: '+m+' ('+(TIMEOUT_MS/1000)+'s, attempt '+(a+1)+'/3)');
+      }
+      if(permanent||a===2)throw e;
+      await _rpcSleep(_rpcBackoff(a));
     }
-    if(a===2)throw e;
-    await new Promise(function(r){setTimeout(r,300*(a+1));});
-  }}
+  }
 }
 function connectRPC(){RPC=document.getElementById('rpcUrl').value.trim().replace(/\/+$/,'');RPC_USER=document.getElementById('rpcUser').value.trim();RPC_PASS=document.getElementById('rpcPass').value.trim();off=0;prevH=0;var authCards=document.querySelectorAll('.auth-only');for(var i=0;i<authCards.length;i++)authCards[i].style.display=(RPC_USER&&RPC_PASS)?'':'none';refresh();}
 function fT(ts){var d=Date.now()/1000-ts;if(d<60)return Math.floor(d)+'s ago';if(d<3600)return Math.floor(d/60)+'m ago';if(d<86400)return Math.floor(d/3600)+'h '+Math.floor((d%3600)/60)+'m ago';return new Date(ts*1000).toISOString().slice(0,16).replace('T',' ');}
@@ -8578,7 +8649,8 @@ refresh();
         if(!detail||!detail.classList.contains('show')){
           location.reload();
         }else{
-          _currentVersion=d.v; // update silently, reload next check
+          // keep _currentVersion: the tab reloads on the first check after the
+          // detail panel is closed (setting it here meant it never reloaded).
         }
       }
     }).catch(function(){});
