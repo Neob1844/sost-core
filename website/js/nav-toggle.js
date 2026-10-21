@@ -1054,13 +1054,13 @@
   "use strict";
   if(window.__sostContactFloat) return;
   window.__sostContactFloat = true;
-  // ONE switch for sending. Keep false until the /api/contact service is deployed with a
-  // working SMTP config and a real test message has arrived (see deploy/contact/README.md).
-  var CONTACT_SEND_ENABLED = false;
+  // ONE switch for sending. true since the /api/contact service went live with the STRATO
+  // SMTP config (deploy/contact/README.md). Set false to fall back to the disabled form.
+  var CONTACT_SEND_ENABLED = true;
   var ENDPOINT='/api/contact';
   var LIM={name:100,email:254,subject:200,message:5000};
-  var T_OK='Your message has been sent.';
-  var T_FAIL='Unable to send the message. Please try again later.';
+  var T_OK='YOUR MESSAGE HAS BEEN SENT.';
+  var T_FAIL='UNABLE TO SEND THE MESSAGE. PLEASE TRY AGAIN LATER.';
   var T_REQ='Please fill in the required fields.';
   var T_EMAIL='Please enter a valid email address.';
   var T_OFF='Sending is not active yet \u2014 coming soon.';
