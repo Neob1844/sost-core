@@ -39,6 +39,7 @@
 | Live reward TX broadcast (pool key management) | 1-2 days | HIGH | HIGH (moves real funds) |
 | Price Bulletin system | 2-3 days | MEDIUM | LOW |
 | Full Etherscan integration in C++ | 2-3 days | LOW | MEDIUM |
+| **PoPC Bond v2 — on-chain bond collateral** (prereq for security-relevant caps + deterministic slashing) — see [`POPC_BOND_V2_ONCHAIN_COLLATERAL.md`](POPC_BOND_V2_ONCHAIN_COLLATERAL.md) | multi-phase | HIGH | HIGH (consensus fork) |
 
 **Remaining estimated: ~6-9 days of focused development**
 
