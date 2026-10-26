@@ -31,6 +31,14 @@
     q.length = 0;
     de.classList.remove("sost-nav-pending");
   }
+  // Every logo module of the canonical bar is 110 px (the SOST mark's size). Modules are now
+  // built while the page is still parsing, when a measured sibling can come out smaller
+  // because not every stylesheet has been applied yet; so the canonical bar uses the
+  // constant and only other navs fall back to measuring.
+  window.__sostModSize = function (nav, measured) {
+    if (nav && nav.classList.contains("sost-canon-nav")) return 110;
+    return measured || 110;
+  };
   window.__sostNavReady = function (fn) {
     if (done) { run(fn); return; }
     q.push(fn);
@@ -519,7 +527,7 @@
     // founder console). Fall back to the legacy hrefs / WATCH icon for old structures.
     var watch=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]')||nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
     if(!watch) return;                                            // need the logo-button row
-    var sz=watch.offsetWidth||110;                               // match the sibling box
+    var sz=window.__sostModSize(nav, watch.offsetWidth);          // match the sibling box
     var a=document.createElement('a');
     a.href='news.html'; a.title='News & Updates';
     a.className='sost-news-btn';
@@ -651,6 +659,7 @@
     if(!anchor) return;                       // no large-button row on this page
     styleOnce();
     var sz=anchor.offsetWidth; if(!sz||sz<90) sz=110;   // match the sibling box; guard the CSS-load race (avoid the old 72 fallback)
+    sz=window.__sostModSize(nav, sz);
     var a=document.createElement('a');
     a.href='index.html#dtd'; a.title='DTD — Deterministic Token Distribution';
     a.className='sost-dtd-btn';
@@ -692,8 +701,8 @@
     var cx=nav.querySelector('img[src*="convergencex-logo"]');
     if(cx && !cx.parentElement.classList.contains('sq')){
       var box=document.createElement('span');
-      box.style.cssText='display:inline-flex;width:'+(cx.offsetWidth||110)+'px;height:'
-        +(cx.offsetHeight||110)+'px;flex:0 0 auto';
+      box.style.cssText='display:inline-flex;width:'+window.__sostModSize(nav, cx.offsetWidth)+'px;height:'
+        +window.__sostModSize(nav, cx.offsetHeight)+'px;flex:0 0 auto';
       cx.parentNode.insertBefore(box, cx); box.appendChild(cx);
       wrap(box,'cx');
     }
@@ -704,7 +713,7 @@
     nav.querySelectorAll('.sost-news-btn').forEach(function(e){ wrap(e,'news'); });
   }
   window.__sostNavReady(tag);
-  setTimeout(tag,0); setTimeout(tag,400); setTimeout(tag,1200);
+  window.__sostNavReady(function(){ setTimeout(tag,0); setTimeout(tag,400); setTimeout(tag,1200); });
 })();
 
 /* ============================================================================
@@ -771,7 +780,7 @@
     styleOnce();
     // EXACTLY the SOST logo size (110 on every page); fall back to ConvergenceX/110.
     var sImg=nav.querySelector('.nav-logo img');
-    var sz=(sImg&&sImg.offsetWidth) || (cx.querySelector('img')&&cx.querySelector('img').offsetWidth) || cx.offsetWidth || 110;
+    var sz=window.__sostModSize(nav, (sImg&&sImg.offsetWidth) || (cx.querySelector('img')&&cx.querySelector('img').offsetWidth) || cx.offsetWidth || 110);
     var a=document.createElement('a');
     a.href='sost-universal-assets.html'; a.className='sost-tok-logo';
     a.title='SOST Tokenization & Offers';
@@ -783,7 +792,7 @@
     cx.parentNode.insertBefore(a, cx);   // JUST BEFORE ConvergenceX
   }
   window.__sostNavReady(inject);
-  setTimeout(inject,0); setTimeout(inject,350); setTimeout(inject,800);
+  window.__sostNavReady(function(){ setTimeout(inject,0); setTimeout(inject,350); setTimeout(inject,800); });
 })();
 
 
@@ -861,7 +870,7 @@
     });
   }
   window.__sostNavReady(mountCounter);
-  setTimeout(mountCounter,600); setTimeout(mountCounter,1600);
+  window.__sostNavReady(function(){ setTimeout(mountCounter,600); setTimeout(mountCounter,1600); });
 })();
 
 /* ============================================================================
@@ -898,6 +907,7 @@
     if(!ax) return;                                         // no large-button row on this page
     styleOnce();
     var sz=ax.offsetWidth; if(!sz||sz<60) sz=110;
+    sz=window.__sostModSize(nav, sz);
     sz=Math.round(sz*1.2*0.93*1.02);                        // +20%, -7%, then +2% vs the sibling modules (owner requests)
     var a=document.createElement('a');
     a.href='sost-wsost-gold-vault.html'; a.className='sost-wsost-btn';
@@ -918,7 +928,7 @@
   }
   function run(){ inject(); }
   window.__sostNavReady(run);
-  setTimeout(run,0); setTimeout(run,450); setTimeout(run,1300);
+  window.__sostNavReady(function(){ setTimeout(run,0); setTimeout(run,450); setTimeout(run,1300); });
 })();
 
 
@@ -1008,7 +1018,7 @@
     show();
   }
   window.__sostNavReady(inject);
-  setTimeout(inject,500);
+  window.__sostNavReady(function(){ setTimeout(inject,500); });
 })();
 
 /* ============================================================================
