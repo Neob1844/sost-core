@@ -1499,12 +1499,23 @@ wSOST → SOST   any holder burns N wSOST (no XAUT) → vault releases N SOST mi
                (capsule C701R:0x&lt;releaseId&gt;) → verified and recorded on Ethereum
 A transaction hash typed by a user is a search hint, never proof.</div>
 <h4>Gold Access Key</h4>
-<div class="cx-pre">feeEUR  = min(50, max(0.50, bridgeValueEUR × 0.001))       0.10% · min 0.50 EUR · max 50 EUR
+<div class="cx-pre">feeEUR  = min(250, max(0.50, bridgeValueEUR × 0.001))      0.10% · min 0.50 EUR · max 250 EUR
 feeXAUT = feeEUR / verified XAUT price, rounded UP to XAUT's 6 decimals (integer math)
 minimum operation 100 EUR · 100% to Gold Reserve V2 · Ethereum gas paid by the user, shown separately
 no XAUT contribution on the return path (wSOST → SOST)
 fixed illustrative price 1 XAUT = 3,713.13 EUR (2026-10-19, illustrative, not a quote):
-  100 EUR → 0.000135 XAUT · 1,000 EUR → 0.000270 · 10,000 EUR → 0.002694 · ≥ 50,000 EUR → 0.013466</div>
+  100 EUR → 0.000135 XAUT · 1,000 EUR → 0.000270 · 10,000 EUR → 0.002694
+  100,000 EUR → 0.026932 · ≥ 250,000 EUR → 0.067329 (cap)</div>
+<p>The cap was revised from 50 EUR to <b>250 EUR</b> on 2026-10-26: at 1,000,000 EUR the effective rate is 0.025%, against 0.005% with a 50 EUR cap.</p>
+<h4>How it differs from most bridges</h4>
+<div class="cx-pre">family                     who decides a deposit is real   pool   who keeps the fee
+custodian / multisig       custodian or N-of-M keys        no     custodian / merchants
+liquidity network          relayers / pool protocol        yes    LPs, relayers, treasury
+guardian / messaging       external guardian set           no     relayers / protocol
+issuer burn-and-mint       the issuer                      no     - (gas only)
+rollup / light client      the destination chain itself    no     - (gas only)
+SOST bridge (design)       SOST's automated engine         no     nobody: 100% to Gold Reserve V2</div>
+<p>Most bridges pay their fee to liquidity providers, relayers, a treasury or token holders, and many depend on an outside key set or a pool (Ronin 2022: 5 of 9 validator keys; Harmony Horizon 2022: 2 of 5 multisig keys; Wormhole 2022: a signature-verification bug minted 120,000 wrapped ETH). The SOST design has no pool (always exactly 1:1), no outside federation, no fee on the return, and its fee builds a public gold reserve. It is <b>not trustless</b>: in its first version the engine is a single central point of trust, which is why it is not active. Full comparison and worked examples: <a href="sost-wsost-gold-vault.html#bridge-compare">wSOST &amp; Gold Vault</a>.</p>
 <p>SOST/EUR has <b>no approved methodology</b>: while it is absent the contract refuses every mint and the engine every request. The informational gold reference (0.8886707657 mg per SOST) is not a market price and is never used for fees.</p>
 <h4>Trust &mdash; stated plainly</h4>
 <p>Ethereum cannot read SOST, so in the current prototype backing is asserted by the operator's authorizer keys: a <b>central point of trust</b>. A compromised authorizer key could issue unbacked wSOST up to the per-mint, daily and exposure caps until reconciliation (BALANCED / PENDING / CRITICAL) pauses minting &mdash; this is why the design is <b>not ready for production</b>. Native SOST multisig is not active (planned for V17), so today the Bridge Vault could only be a single cold key with offline releases. A refund requires a final on-chain revoke and the expiry of every issued authorization, so nobody can keep both. Stronger options under study: SOST header relay with Merkle inclusion proofs, succinct validity proofs, delay/veto windows for large mints, threshold signing and native multisig.</p>

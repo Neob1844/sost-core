@@ -832,7 +832,7 @@
  <div class="wg-not"><div>&#9940; NOT LIVE &middot; DEMO ONLY</div><div>&#9940; NO BRIDGE CONTRACT DEPLOYED</div><div>&#9940; NO GOLD RESERVE V2 FUNDS YET</div><div>&#9940; REAL OPERATIONS BLOCKED: NO APPROVED SOST/EUR VALUATION</div><div>&#9989; CURRENT SOST CONSENSUS UNCHANGED</div></div>
  <div class="box cyan"><div class="bt">#30,000 &rarr; #40,000</div><b>#30,000 built the current foundation</b> (V30000 is live). <b>#40,000 is the current coordinated research horizon</b> for the next major phase. <b>Nothing activates automatically at #40,000.</b> If engineering, external audit, legal or operational gates are not complete, the work moves later (for example #50,000). Every consensus change would need its own release, tests, audit and public notice.</div>
  <div class="wg-toc">
-  <a href="#bridge">Bridge dashboard (demo)</a><a href="#backing">Backing</a><a href="#gold-access-key">Gold Access Key</a><a href="#bridge-return">Return wSOST &rarr; SOST</a><a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#how-to-wrap">How the bridge works</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#trust">Bridge trust</a><a href="#swap-separate">Atomic Swap (separate)</a><a href="#blockers">Open blockers</a><a href="#superseded">Historical / superseded design</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
+  <a href="#bridge">Bridge dashboard (demo)</a><a href="#backing">Backing</a><a href="#gold-access-key">Gold Access Key</a><a href="#bridge-return">Return wSOST &rarr; SOST</a><a href="#bridge-examples">Worked examples</a><a href="#bridge-compare">vs other bridges</a><a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#how-to-wrap">How the bridge works</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#trust">Bridge trust</a><a href="#swap-separate">Atomic Swap (separate)</a><a href="#blockers">Open blockers</a><a href="#superseded">Historical / superseded design</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
  </div>
 </div></div></section>
 
@@ -849,7 +849,7 @@
    <div class="cb-amt"><span class="out" id="cbRecv" aria-live="polite">1,000</span><span class="tk"><span class="wm-sost"><span style="color:#fff">w</span>SOST</span></span></div>
    <div class="cb-mini">Always the same amount: <b>1 SOST locked = 1 wSOST minted</b>. The XAUT contribution never reduces it.</div>
    <div style="margin-top:10px">
-    <div class="cb-row"><span class="k">GOLD ACCESS KEY</span><span class="v"><b class="cb-gold">XAUT required</b><br><span id="cbKey">0.10% of the value &middot; min 0.50 EUR &middot; max 50 EUR &middot; 0.000135&ndash;0.013466 XAUT at the demo price</span></span></div>
+    <div class="cb-row"><span class="k">GOLD ACCESS KEY</span><span class="v"><b class="cb-gold">XAUT required</b><br><span id="cbKey">0.10% of the value &middot; min 0.50 EUR &middot; max 250 EUR &middot; 0.000135&ndash;0.067329 XAUT at the demo price</span></span></div>
     <div class="cb-row"><span class="k">DESTINATION</span><span class="v"><b class="cb-gold">GOLD RESERVE V2</b> &middot; 100% of the Gold Access Key</span></div>
     <div class="cb-row"><span class="k">ETHEREUM GAS</span><span class="v">estimated cost &middot; paid by you in ETH<br><span class="cb-mini">&asymp; 45,000 gas (XAUT approval) + &asymp; 340,000 gas (verify + contribute + mint, one transaction). Example at 10 gwei: &asymp; 0.0039 ETH. Your wallet shows the real figure before you sign.</span></span></div>
     <div class="cb-row"><span class="k">SOST NETWORK FEE</span><span class="v">normal fee of your deposit transaction (SOST wallet)</span></div>
@@ -898,7 +898,7 @@ Backing of wSOST  =  native SOST locked  =  wSOST minted      (in base units)</d
  <div class="box red"><div class="bt">THE XAUT CONTRIBUTION IS NOT BACKING</div>The Gold Access Key in XAUT is <b>NOT backing</b> of SOST or of wSOST, <b>NOT a peg</b>, <b>NOT a price floor</b>, <b>NOT a price guarantee</b>, <b>NOT a redemption promise</b> and <b>NOT 1:1 gold backing</b>. The gold held by Gold Reserve V2 gives <b>no individual redemption right</b>. The only backing of wSOST is the native SOST locked for it.</div>
 
  <h3 id="gold-access-key">Gold Access Key &mdash; fee simulator</h3>
- <div class="box"><div class="bt">FORMULA</div><code>feeEUR = min(50, max(0.50, bridgeValueEUR &times; 0.001))</code> &middot; <code>feeXAUT = feeEUR / XAUT price</code>, rounded <b>up</b> to XAUT's 6 decimals (verified on the official XAUT contract). Minimum operation 100 EUR. Paid in XAUT, <b>100% to Gold Reserve V2</b>. Ethereum gas is separate and paid by you. The return wSOST &rarr; SOST has <b>no</b> XAUT fee. Not free, and never presented as free.</div>
+ <div class="box"><div class="bt">FORMULA</div><code>feeEUR = min(250, max(0.50, bridgeValueEUR &times; 0.001))</code> &middot; <code>feeXAUT = feeEUR / XAUT price</code>, rounded <b>up</b> to XAUT's 6 decimals (verified on the official XAUT contract). Minimum operation 100 EUR. Paid in XAUT, <b>100% to Gold Reserve V2</b>. Ethereum gas is separate and paid by you. The return wSOST &rarr; SOST has <b>no</b> XAUT fee. Not free, and never presented as free.</div>
  <div class="box red"><div class="bt">FIXED, DATED PRICE &mdash; NOT A QUOTE</div>The simulator uses <b>1 XAUT = 3,713.13 EUR</b>, a fixed illustrative value dated <b>2026-10-19</b>. It is illustrative only: not live, not a quote and not an offer, and the simulator creates no transaction. A real operation would use a signed, fresh, bounded XAUT/EUR price. The bridge value in EUR is a number <b>you</b> type here: SOST has <b>no approved EUR valuation methodology</b>, so real operations stay blocked. The informational SOST gold reference (0.8886707657 mg) is not a market price and is never used for fees.</div>
  <div class="cb-sim">
   <div><label for="cbSimV">BRIDGE VALUE (EUR, YOUR INPUT)</label><input id="cbSimV" type="text" inputmode="decimal" value="1000" autocomplete="off"></div>
@@ -911,28 +911,30 @@ Backing of wSOST  =  native SOST locked  =  wSOST minted      (in base units)</d
  </div>
  <h4>Twenty examples (1 XAUT = 3,713.13 EUR, fixed demo price)</h4>
  <div class="tw"><table>
-  <tr><th>Bridge value</th><th>Fee (EUR)</th><th>Fee (XAUT, 6 dp, rounded up)</th><th>Result</th></tr>
-  <tr class="rej"><td>0 EUR</td><td>&mdash;</td><td>&mdash;</td><td><span class="st nd">REJECTED &middot; BELOW 100 EUR</span></td></tr>
-  <tr class="rej"><td>10 EUR</td><td>&mdash;</td><td>&mdash;</td><td><span class="st nd">REJECTED &middot; BELOW 100 EUR</span></td></tr>
-  <tr class="rej"><td>50 EUR</td><td>&mdash;</td><td>&mdash;</td><td><span class="st nd">REJECTED &middot; BELOW 100 EUR</span></td></tr>
-  <tr><td>100 EUR</td><td>0.50</td><td>0.000135</td><td>allowed (minimum fee)</td></tr>
-  <tr><td>250 EUR</td><td>0.50</td><td>0.000135</td><td>allowed (minimum fee)</td></tr>
-  <tr><td>500 EUR</td><td>0.50</td><td>0.000135</td><td>allowed</td></tr>
-  <tr><td>750 EUR</td><td>0.75</td><td>0.000202</td><td>allowed</td></tr>
-  <tr><td>1,000 EUR</td><td>1.00</td><td>0.000270</td><td>allowed</td></tr>
-  <tr><td>1,500 EUR</td><td>1.50</td><td>0.000404</td><td>allowed</td></tr>
-  <tr><td>2,000 EUR</td><td>2.00</td><td>0.000539</td><td>allowed</td></tr>
-  <tr><td>3,000 EUR</td><td>3.00</td><td>0.000808</td><td>allowed</td></tr>
-  <tr><td>5,000 EUR</td><td>5.00</td><td>0.001347</td><td>allowed</td></tr>
-  <tr><td>7,500 EUR</td><td>7.50</td><td>0.002020</td><td>allowed</td></tr>
-  <tr><td>10,000 EUR</td><td>10.00</td><td>0.002694</td><td>allowed</td></tr>
-  <tr><td>15,000 EUR</td><td>15.00</td><td>0.004040</td><td>allowed</td></tr>
-  <tr><td>25,000 EUR</td><td>25.00</td><td>0.006733</td><td>allowed</td></tr>
-  <tr><td>50,000 EUR</td><td>50.00</td><td>0.013466</td><td>allowed (maximum fee)</td></tr>
-  <tr><td>100,000 EUR</td><td>50.00</td><td>0.013466</td><td>allowed (maximum fee)</td></tr>
-  <tr><td>500,000 EUR</td><td>50.00</td><td>0.013466</td><td>allowed (maximum fee)</td></tr>
-  <tr><td>1,000,000 EUR</td><td>50.00</td><td>0.013466</td><td>allowed (maximum fee)</td></tr>
+  <tr><th>Bridge value</th><th>Fee (EUR)</th><th>Fee (XAUT, 6 dp, rounded up)</th><th>Effective rate</th><th>Result</th></tr>
+  <tr class="rej"><td>0 EUR</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td><span class="st nd">REJECTED &middot; BELOW 100 EUR</span></td></tr>
+  <tr class="rej"><td>10 EUR</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td><span class="st nd">REJECTED &middot; BELOW 100 EUR</span></td></tr>
+  <tr class="rej"><td>50 EUR</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td><span class="st nd">REJECTED &middot; BELOW 100 EUR</span></td></tr>
+  <tr><td>100 EUR</td><td>0.50</td><td>0.000135</td><td>0.50%</td><td>allowed (minimum fee)</td></tr>
+  <tr><td>250 EUR</td><td>0.50</td><td>0.000135</td><td>0.20%</td><td>allowed (minimum fee)</td></tr>
+  <tr><td>500 EUR</td><td>0.50</td><td>0.000135</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>750 EUR</td><td>0.75</td><td>0.000202</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>1,000 EUR</td><td>1.00</td><td>0.000270</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>1,500 EUR</td><td>1.50</td><td>0.000404</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>2,000 EUR</td><td>2.00</td><td>0.000539</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>3,000 EUR</td><td>3.00</td><td>0.000808</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>5,000 EUR</td><td>5.00</td><td>0.001347</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>7,500 EUR</td><td>7.50</td><td>0.002020</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>10,000 EUR</td><td>10.00</td><td>0.002694</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>15,000 EUR</td><td>15.00</td><td>0.004040</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>25,000 EUR</td><td>25.00</td><td>0.006733</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>50,000 EUR</td><td>50.00</td><td>0.013466</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>100,000 EUR</td><td>100.00</td><td>0.026932</td><td>0.10%</td><td>allowed</td></tr>
+  <tr><td>500,000 EUR</td><td>250.00</td><td>0.067329</td><td>0.05%</td><td>allowed (maximum fee)</td></tr>
+  <tr><td>1,000,000 EUR</td><td>250.00</td><td>0.067329</td><td>0.025%</td><td>allowed (maximum fee)</td></tr>
  </table></div>
+ <div class="box"><div class="bt">WHY 0.10% &middot; MIN 0.50 EUR &middot; MAX 250 EUR</div>Mid-market, neither cheap nor greedy. On a 5,000 USD transfer, published fees of the major bridges range from about <b>0.005%</b> (Circle CCTP, burn-and-mint, no liquidity) to about <b>0.28%</b> (Synapse); Stargate charges <b>0.06%</b> with no cap. SOST's <b>0.10%</b> sits in the middle up to 250,000 EUR. The <b>cap of 250 EUR</b> is reached at 250,000 EUR, so a 1,000,000 EUR operation pays an effective <b>0.025%</b> &mdash; less than half of Stargate's 0.06% (about 600 EUR) &mdash; without the near-zero 0.005% a 50 EUR cap would have meant. The <b>0.50 EUR minimum</b> only matters below 500 EUR and is smaller than the Ethereum gas of the same operation. Unlike every bridge in that comparison, <b>none of it is revenue</b>: 100% goes to Gold Reserve V2, and the return wSOST &rarr; SOST pays no fee at all. <span class="st gated">DESIGN PARAMETER &middot; NOT ACTIVE</span></div>
+
 
  <h3 id="bridge-return">Return &mdash; wSOST &rarr; native SOST</h3>
  <div class="grid">
@@ -945,6 +947,154 @@ Backing of wSOST  =  native SOST locked  =  wSOST minted      (in base units)</d
  <h3>In plain words</h3>
  <div class="cb-public" lang="en"><b>Design in development &middot; not active &middot; not ready for production.</b> The proposed SOST bridge would lock your native coins and mint the same amount of wSOST on Ethereum, keeping the 1:1 equivalence (1,000 SOST locked &rarr; 1,000 wSOST minted; native SOST is never burned). To complete a conversion, you would make a small contribution in XAUT to Gold Reserve V2. The target architecture verifies the operation automatically and publishes the proofs of the transfers. The contribution goes entirely to the ecosystem's gold reserve. Gas and other network costs are shown separately. The XAUT contribution is not backing, not a peg, not a price floor and not a redemption promise; the gold of the reserve does not represent an individual right of redemption and does not guarantee the price of SOST.</div>
  <div class="cb-public" lang="es" style="margin-top:10px"><b>Diseño en desarrollo &middot; no activo &middot; no apto para producción.</b> El puente SOST propuesto bloquearía tus monedas nativas y emitiría la misma cantidad de wSOST en Ethereum, manteniendo la equivalencia 1:1 (1.000 SOST bloqueados &rarr; 1.000 wSOST emitidos; el SOST nativo nunca se quema). Para completar una conversión, realizarías una pequeña aportación en XAUT a Gold Reserve V2. La arquitectura objetivo verifica automáticamente la operación y publica las pruebas de las transferencias. La aportación se destinaría íntegramente a la reserva de oro del ecosistema. El gas y demás gastos de red se muestran por separado. La aportación en XAUT no es respaldo, ni paridad, ni precio mínimo, ni promesa de reembolso; el oro de la reserva no representa un derecho individual de reembolso ni garantiza el precio de SOST.</div>
+</div></div></section>
+
+<section class="section" id="bridge-examples"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">WORKED EXAMPLES (DESIGN)</div><h2 class="section-title">The bridge and <span class="accent"><span class="wm-gold">Gold Reserve</span> V2</span>, step by step</h2></div>
+ <div class="c701-status" role="note">STATUS: DESIGN IN DEVELOPMENT &middot; NOT ACTIVE &middot; EVERY FIGURE BELOW IS ILLUSTRATIVE</div>
+ <div class="box red"><div class="bt">READ FIRST</div>All examples use the fixed demo price <b>1 XAUT = 3,713.13 EUR</b> (2026-10-19) and a EUR value <b>chosen by the user for the example</b>. SOST has <b>no approved EUR valuation</b>; these are not prices of SOST, not quotes and not offers. No contract is deployed and none of these operations can be executed today.</div>
+
+ <h3>Example 1 &middot; Ana converts 1,000 SOST</h3>
+ <div class="pre">Ana mined 1,000 SOST. For the example she values them at 1,000 EUR.
+
+1. REQUEST     Ana types 1,000 SOST and her MetaMask address 0xA1&hellip;
+               The bridge creates request id R-7f3a, bound to: her Ethereum address,
+               1,000 SOST, Ethereum chain id, the bridge contract, an expiry.
+2. DEPOSIT     Her SOST wallet sends 1,000 SOST to the Bridge Vault with capsule C701:0x7f3a&hellip;
+               She pays only the normal SOST network fee.
+3. VERIFY      The engine reads the SOST chain itself (no hash typed by anyone):
+               right vault &middot; exactly 1,000 SOST &middot; capsule = R-7f3a &middot; 30 confirmations
+               &middot; output unspent &middot; deposit never used before.
+4. AUTHORIZE   One EIP-712 signature for: chain, contract, 0xA1&hellip;, 1,000, deposit txid:vout,
+               expiry, nonce. It is useless for any other address, amount or deposit.
+5. SIGN        In MetaMask Ana approves 0.000270 XAUT (Gold Access Key: 0.10% of 1,000 EUR = 1.00 EUR)
+               and signs ONE Ethereum transaction that:
+                 &bull; moves 0.000270 XAUT from her wallet straight to Gold Reserve V2
+                 &bull; mints exactly 1,000 wSOST to 0xA1&hellip;
+               Both happen or neither happens. Gas &asymp; 0.0039 ETH at 10 gwei, paid by Ana.
+
+RESULT         Ana: 1,000 wSOST          Bridge Vault: +1,000 SOST locked
+               Gold Reserve V2: +0.000270 XAUT        wSOST supply: +1,000
+               Ana loses no SOST: 1 SOST locked = 1 wSOST minted.</div>
+
+ <h3>Example 2 &middot; small and very large operations</h3>
+ <div class="tw"><table>
+  <tr><th>Who</th><th>Value (example)</th><th>Gold Access Key</th><th>XAUT</th><th>Effective</th><th>Receives</th></tr>
+  <tr><td>Luis, first conversion</td><td>100 EUR</td><td>0.50 EUR (minimum)</td><td>0.000135</td><td>0.50%</td><td>same SOST amount in wSOST</td></tr>
+  <tr><td>Marta</td><td>25,000 EUR</td><td>25.00 EUR</td><td>0.006733</td><td>0.10%</td><td>same SOST amount in wSOST</td></tr>
+  <tr><td>A fund</td><td>1,000,000 EUR</td><td>250.00 EUR (maximum)</td><td>0.067329</td><td>0.025%</td><td>same SOST amount in wSOST</td></tr>
+  <tr class="rej"><td>Pablo</td><td>60 EUR</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td><span class="st nd">REFUSED &middot; below 100 EUR</span> (refused before any deposit)</td></tr>
+ </table></div>
+
+ <h3>Example 3 &middot; Ben returns wSOST he bought on an exchange</h3>
+ <div class="pre">Ben never held native SOST. He bought 500 wSOST on an exchange.
+
+1. Ben enters 500 wSOST and his address sost1b3n&hellip;
+2. He burns 500 wSOST on Ethereum (he pays the gas). NO XAUT is charged.
+   The contract publishes the burn with a unique release id.
+3. After the burn is final, the Bridge Vault releases 500 SOST to sost1b3n&hellip;,
+   minus only the normal SOST network fee of that transaction.
+
+RESULT   Ben: 500 native SOST        Bridge Vault: &minus;500 SOST        wSOST supply: &minus;500
+         Gold Reserve V2: unchanged (the return never pays, and never takes, gold)</div>
+
+ <h3>Example 4 &middot; when something goes wrong</h3>
+ <div class="tw"><table>
+  <tr><th>Situation</th><th>What the bridge does</th><th>Ana's money</th></tr>
+  <tr><td>Deposit confirmed, but Ana has no XAUT or no ETH for gas</td><td>State <b>PENDING</b>; the price quote expires; she can get a new quote and mint later</td><td>1,000 SOST stay locked for her request; nothing is minted</td></tr>
+  <tr><td>Ana sent 990 SOST instead of 1,000</td><td>Amount mismatch &rarr; <b>PENDING RECOVERY</b>; no mint</td><td>refund of the 990 SOST to the sending address, once the request is revoked on Ethereum</td></tr>
+  <tr><td>Someone pastes Ana's deposit hash to claim it</td><td>Refused: a hash is only a lookup key; the authorization is bound to Ana's address and the deposit can be used once</td><td>untouched</td></tr>
+  <tr><td>The SOST chain reorganizes after authorization</td><td><b>SECURITY ERROR</b>: the engine stops issuing authorizations and the case is reviewed</td><td>no wSOST without a final deposit</td></tr>
+  <tr><td>The verification server is down</td><td>No authorizations are issued; nothing is lost; it resumes from the chain</td><td>locked SOST stay locked; burns keep working</td></tr>
+  <tr><td>Locked SOST and wSOST supply ever disagree</td><td>Reconciliation pauses minting automatically</td><td>returns (burn &rarr; release) stay available</td></tr>
+ </table></div>
+ <div class="box gray"><div class="bt">THE ONE RULE OF REFUNDS</div>A deposit is refunded only after its request has been revoked on Ethereum, so nobody can ever keep both the refunded SOST and the wSOST.</div>
+
+ <h3>Example 5 &middot; how <span class="wm-gold">Gold Reserve</span> V2 would grow</h3>
+ <p>An illustrative month with 300 completed conversions:</p>
+ <div class="tw"><table>
+  <tr><th>Operations</th><th>Value each (example)</th><th>Key each</th><th>XAUT each</th><th>XAUT to the reserve</th></tr>
+  <tr><td>200</td><td>1,000 EUR</td><td>1.00 EUR</td><td>0.000270</td><td>0.054000</td></tr>
+  <tr><td>80</td><td>10,000 EUR</td><td>10.00 EUR</td><td>0.002694</td><td>0.215520</td></tr>
+  <tr><td>18</td><td>50,000 EUR</td><td>50.00 EUR</td><td>0.013466</td><td>0.242388</td></tr>
+  <tr><td>2</td><td>1,000,000 EUR</td><td>250.00 EUR</td><td>0.067329</td><td>0.134658</td></tr>
+  <tr><td><b>300</b></td><td><b>3,900,000 EUR bridged</b></td><td><b>2,400 EUR</b></td><td>&mdash;</td><td><b>0.646566 XAUT</b> (&asymp; 2,400 EUR at the demo price)</td></tr>
+ </table></div>
+ <div class="pre">Gold Reserve V2 after the month    +0.646566 XAUT    (every deposit public on Ethereum)
+Bridge Vault                       = SOST locked   = wSOST supply   (checked continuously)
+New SOST emitted by the bridge     0
+Historical Gold Vault / DTD Jackpot  untouched</div>
+ <p>The reserve grows only with real use of the bridge. The gold stays in the reserve under its own rules: it is <b>not</b> paid out to anyone, it backs neither SOST nor wSOST, and it gives no holder a redemption right. Growth of the reserve does not guarantee any price of SOST.</p>
+
+ <h3>Example 6 &middot; the two reserves are never the same thing</h3>
+ <div class="tw"><table>
+  <tr><th></th><th>Historical <span class="wm-gold">Gold Vault</span></th><th><span class="wm-gold">Gold Reserve</span> V2</th></tr>
+  <tr><td>Where</td><td>SOST chain (consensus)</td><td>Ethereum (smart contract)</td></tr>
+  <tr><td>Holds</td><td>SOST from blocks 0&ndash;24,999 (25% of each block)</td><td>tokenized gold (XAUT) only</td></tr>
+  <tr><td>Fed by</td><td>nothing since #25,000 (0% of new emission)</td><td>the Gold Access Key of each completed bridge operation (+ voluntary contributions)</td></tr>
+  <tr><td>Used for</td><td>frozen by consensus; pays the DTD Jackpot</td><td>held; no liquidity, no arbitrary withdrawal, emergency rules only</td></tr>
+  <tr><td>Status</td><td><span class="st live">LIVE &middot; FROZEN</span></td><td><span class="st nd">NOT DEPLOYED</span></td></tr>
+ </table></div>
+</div></div></section>
+
+<section class="section" id="bridge-compare"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">COMPARISON</div><h2 class="section-title">How the <span class="wm-sost">SOST</span> bridge differs <span class="accent">from most bridges</span></h2></div>
+ <p>Most cross-chain bridges belong to one of five families. They differ in <b>who decides that a deposit is real</b>, <b>where the money for the other side comes from</b>, and <b>who keeps the fee</b>.</p>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#fff">1 &middot; CUSTODIAN / MULTISIG LOCK-AND-MINT</div>A company or a small group of keys holds the original coins and mints the wrapped token. <i>Example:</i> WBTC (custodian-held BTC). <i>What went wrong elsewhere:</i> Ronin (March 2022) &mdash; attackers obtained 5 of its 9 validator keys and took about 625 million USD; Harmony Horizon (June 2022) &mdash; 2 of 5 multisig keys, about 100 million USD.</div>
+  <div class="card"><div class="h" style="color:#fff">2 &middot; LIQUIDITY NETWORKS</div>No wrapping: pools or relayers on the destination chain pay you from their own capital, and are repaid later. <i>Examples:</i> Stargate (0.06% per transfer, split between treasury, token holders and LPs), Across (LP + relayer fee), Hop, Synapse. Fees pay the capital; amounts can depend on pool balance.</div>
+  <div class="card"><div class="h" style="color:#fff">3 &middot; GUARDIAN / MESSAGING NETWORKS</div>An external set of validators signs messages that let a contract mint on the other side. <i>Examples:</i> Wormhole (a guardian set, 13 of 19 signatures), LayerZero (verifier networks). <i>What went wrong:</i> Wormhole (February 2022) &mdash; a signature-verification bug let an attacker mint 120,000 wrapped ETH without a deposit.</div>
+  <div class="card"><div class="h" style="color:#fff">4 &middot; ISSUER BURN-AND-MINT</div>The issuer of the asset burns it on one chain and mints it on the other. <i>Example:</i> Circle CCTP for USDC &mdash; almost free (destination gas only) because the issuer itself attests. Only possible for the issuer's own token.</div>
+  <div class="card"><div class="h" style="color:#fff">5 &middot; CANONICAL ROLLUP / LIGHT-CLIENT</div>The destination chain verifies the source chain's state itself. <i>Example:</i> the Optimism Standard Bridge &mdash; deposits in minutes, withdrawals after a 7-day challenge window. The most trust-minimized model, but it exists only where one chain can verify the other.</div>
+  <div class="card" style="border-color:var(--gold,#d4af37)"><div class="h" style="color:#d4af37">SOST AUTOMATED BRIDGE (DESIGN)</div>Lock-and-mint 1:1 with native SOST, verified by SOST's own automated engine (no human operators, no outside federation), no liquidity pool, and a Gold Access Key in XAUT that goes <b>100% to Gold Reserve V2</b> inside the mint transaction. Honest limit: in its first version the verifier is a <b>single central point of trust</b> &mdash; which is why it is <b>not approved for production</b>.</div>
+ </div>
+
+ <h3>Comparison table</h3>
+ <div class="tw"><table>
+  <tr><th>&nbsp;</th><th>Custodian / multisig</th><th>Liquidity network</th><th>Guardian / messaging</th><th>Issuer burn-mint</th><th>Rollup / light client</th><th><span class="wm-sost">SOST</span> bridge (design)</th></tr>
+  <tr><td>Example</td><td>WBTC, Ronin, Horizon</td><td>Stargate, Across, Hop</td><td>Wormhole, LayerZero</td><td>Circle CCTP</td><td>Optimism Standard Bridge</td><td>SOST &harr; wSOST</td></tr>
+  <tr><td>Who decides a deposit is real</td><td>custodian or N-of-M keys</td><td>relayers / pool protocol</td><td>external guardian set</td><td>the issuer</td><td>the destination chain itself</td><td>SOST's automated engine, reading its own node</td></tr>
+  <tr><td>Liquidity pool</td><td>no</td><td><b>yes</b> (LP capital)</td><td>no (wrapped) / yes (some)</td><td>no</td><td>no</td><td><b>no</b></td></tr>
+  <tr><td>Amount received</td><td>1:1 minus fees</td><td>amount minus fees; may vary with pool balance</td><td>1:1 minus fees</td><td>1:1</td><td>1:1</td><td><b>exactly 1:1</b>; the fee is paid separately in XAUT</td></tr>
+  <tr><td>Who keeps the fee</td><td>custodian / merchants</td><td>LPs, relayers, treasury, token holders</td><td>relayers / protocol</td><td>&mdash; (gas only)</td><td>&mdash; (gas only)</td><td><b>nobody: 100% to Gold Reserve V2</b>, on-chain</td></tr>
+  <tr><td>Typical fee</td><td>varies</td><td>&asymp; 0.03&ndash;0.28% (5,000 USD sample)</td><td>messaging + gas</td><td>&asymp; 0.005% (gas)</td><td>gas</td><td>0.10%, min 0.50 EUR, <b>max 250 EUR</b></td></tr>
+  <tr><td>Return trip</td><td>fee</td><td>fee</td><td>fee</td><td>gas</td><td>gas + 7-day wait</td><td><b>no fee</b> (gas + SOST network fee only)</td></tr>
+  <tr><td>User types a tx hash?</td><td>sometimes</td><td>no</td><td>sometimes (manual redeem)</td><td>no</td><td>no</td><td><b>no</b> &mdash; detected automatically; a hash is only a recovery lookup, never a proof</td></tr>
+  <tr><td>Main risk</td><td>key holders</td><td>pool / relayer contracts</td><td>guardian keys, verification bugs</td><td>the issuer</td><td>proof system, long exit</td><td><b>single verifier key</b>; native custody until V17 multisig</td></tr>
+  <tr><td>Status</td><td colspan="5">in production on their networks</td><td><span class="st nd">DESIGN &middot; NOT ACTIVE</span></td></tr>
+ </table></div>
+
+ <h3>Same 10,000 EUR transfer, four ways</h3>
+ <div class="tw"><table>
+  <tr><th>Bridge type</th><th>What the user pays besides gas</th><th>Where that money goes</th></tr>
+  <tr><td>Liquidity network at 0.06% (Stargate)</td><td>&asymp; 6 EUR, taken from the amount received</td><td>treasury, token holders, LPs</td></tr>
+  <tr><td>Liquidity network at &asymp; 0.11% (Hop, 5,000 USD sample)</td><td>&asymp; 11 EUR</td><td>bonders / LPs</td></tr>
+  <tr><td>Issuer burn-and-mint (CCTP)</td><td>&asymp; 0 (gas only)</td><td>&mdash;</td></tr>
+  <tr><td><span class="wm-sost">SOST</span> bridge (design)</td><td>10.00 EUR = 0.002694 XAUT, paid apart; the user still receives the full amount 1:1</td><td><b>Gold Reserve V2</b> (public, restricted, never revenue)</td></tr>
+ </table></div>
+
+ <h3>What SOST does differently &mdash; and what it does not claim</h3>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#39ff14">DIFFERENT</div>
+   <ul style="margin:6px 0 0 18px;padding:0">
+    <li>the fee builds a public gold reserve instead of paying LPs, relayers or a treasury;</li>
+    <li>the gold payment and the mint are one Ethereum transaction: both or neither;</li>
+    <li>no pool, no slippage, no rebalancing fee: always exactly 1:1;</li>
+    <li>the fee has a cap, and the return trip is free of it;</li>
+    <li>no hash to copy: the engine finds the deposit, and a pasted hash proves nothing;</li>
+    <li>no human approves operations and no outside federation signs them.</li>
+   </ul></div>
+  <div class="card"><div class="h" style="color:#ff3b3f">NOT CLAIMED</div>
+   <ul style="margin:6px 0 0 18px;padding:0">
+    <li><b>not trustless</b>: Ethereum cannot read SOST; the engine is a central point of trust;</li>
+    <li>not safer than a light-client bridge; not yet audited;</li>
+    <li>the XAUT is not backing, not a peg, not a floor and not redeemable by holders;</li>
+    <li>not free: the Gold Access Key is a real, irreversible cost;</li>
+    <li>not active: 8 blockers are open (see <a href="#blockers">Open blockers</a>).</li>
+   </ul></div>
+ </div>
+ <div class="cb-public" lang="es" style="margin-top:12px"><b>En resumen.</b> La mayoría de los puentes cobran una comisión que se queda alguien (proveedores de liquidez, relayers, la tesorería o los tenedores de su token), y muchos dependen de un grupo externo de claves o de una bolsa de liquidez. El puente SOST propuesto bloquea SOST nativo y emite exactamente la misma cantidad de wSOST, sin bolsa de liquidez, y la aportación en XAUT (0,10 %, mínimo 0,50 €, máximo 250 €) va íntegra a Gold Reserve V2 dentro de la misma transacción. La vuelta no paga aportación. A cambio, su primera versión depende de un único verificador automático de SOST: no es un puente sin confianza y no se activará hasta cerrar los 8 bloqueos publicados.</div>
+ <p class="cb-mini">Sources for the figures of other bridges: Stargate documentation (protocol fees); Across documentation (fee model); a published May 2026 comparison of bridge fees for a 5,000 USD USDC transfer; public post-mortems of the Ronin, Harmony Horizon and Wormhole incidents. Fees of other bridges change over time; they are shown for comparison only.</p>
 </div></div></section>
 
 <section class="section" id="what"><div class="container"><div class="wg">
@@ -1082,7 +1232,7 @@ the historical Jackpot reserve is never touched</div>
  <div class="tw"><table>
   <tr><th>Action</th><th>Cost</th></tr>
   <tr><td><b>Deposit</b> (SOST side)</td><td>the normal <b>SOST network fee</b> of your transaction</td></tr>
-  <tr><td><b>Mint</b> (Ethereum)</td><td><b>Gold Access Key</b> in XAUT (0.10%, min 0.50 EUR, max 50 EUR, 100% to Gold Reserve V2) + <b>Ethereum gas</b> paid by you in ETH</td></tr>
+  <tr><td><b>Mint</b> (Ethereum)</td><td><b>Gold Access Key</b> in XAUT (0.10%, min 0.50 EUR, max 250 EUR, 100% to Gold Reserve V2) + <b>Ethereum gas</b> paid by you in ETH</td></tr>
   <tr><td>Send wSOST, use a DEX</td><td>Ethereum gas only</td></tr>
   <tr><td><b>Return</b> (wSOST &rarr; SOST)</td><td>Ethereum gas for the burn + the published SOST network fee of the release. <b>No XAUT.</b></td></tr>
  </table></div>
@@ -1462,9 +1612,9 @@ SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
   function feeUnits(v8){ // returns null below the 100 EUR minimum
     if(v8 < 10000000000n) return null;
     var num, den;
-    if(v8 < 50000000n*1000n){ num=50000000n; den=1n; } else if(v8 > 5000000000n*1000n){ num=5000000000n; den=1n; } else { num=v8; den=1000n; }
+    if(v8 < 50000000n*1000n){ num=50000000n; den=1n; } else if(v8 > 25000000000n*1000n){ num=25000000000n; den=1n; } else { num=v8; den=1000n; }
     var n=num*1000000n, d=den*X8; return (n+d-1n)/d; }
-  function feeEur8(v8){ if(v8 < 50000000n*1000n) return 50000000n; if(v8 > 5000000000n*1000n) return 5000000000n; return v8/1000n; }
+  function feeEur8(v8){ if(v8 < 50000000n*1000n) return 50000000n; if(v8 > 25000000000n*1000n) return 25000000000n; return v8/1000n; }
   function fmt6(u){ var s=u.toString().padStart(7,'0'); return s.slice(0,-6)+'.'+s.slice(-6); }
   function fmtE(e8){ var c=(e8+500000n)/1000000n; var s=c.toString().padStart(3,'0'); return s.slice(0,-2)+'.'+s.slice(-2); }
   var V=document.getElementById('cbSimV');
