@@ -1248,6 +1248,43 @@ reserve insufficient, reorg, attempted reserve theft; decisive test 500 SOST -> 
 500 SOST with 1:1 kept and no operator permission. The theft test is expected to fail with
 today's primitives. Until all of it is shown, the Atomic Reserve Vault is RESEARCH ONLY.
 
+C705 feasibility result (2026-10-26) — a keyless native reserve. A reserve that nobody holds a
+key to can only react to events its own chain can verify. Hashlocks alone cannot protect it: with
+no deciding counterparty, anyone could make it lock SOST under a secret of their own choosing.
+The keyless form of the Atomic Bridge therefore replaces "who signs" with "what is proven", in
+both directions: the Ethereum vault releases inventory only against a proof of a confirmed SOST
+deposit, and SOST pays from the reserve only against a proof of a finalized Ethereum return.
+HTLCs remain only as an optional fast path for market makers swapping their own funds. Minimum
+new SOST primitives (research only, none authorized, consensus unchanged):
+
+```
+N1 = P4  keyless ARV outputs, no pubkey, no script, fixed spend paths:
+         ARV_DEPOSIT (names 0x recipient, deadline, refund address, vault)
+           -> swept into the reserve on a proof of EntryReleased, or
+           -> refunded to its fixed address on a proof of EntryCancelled
+         ARV_RESERVE singleton (chained output; holds the Ethereum light-client state)
+           -> pays proven ExitRequested events, sequential nonce, fixed destination
+N2 = P5  ETH_FINALITY_PROOF: sync-committee light client in consensus (BLS12-381, SSZ,
+         keccak, RLP, Merkle-Patricia receipt proofs), finalized headers only
+P1, P2, P3  not needed (no key to fix, share or delay); multisig is not used for the reserve
+Ethereum  immutable vault, no admin; SOST header relay (optimistic, bonded, fraud proof by
+          one ConvergenceX transcript check; gas unmeasured); each entry RELEASED before its
+          deadline xor CANCELLED after it
+```
+
+Every action is permissionless: amount and destination are fixed by the deposit or the Ethereum
+event, so execution is open and ownership does not exist. A bounded model check
+(research/arv/arv_model.py) explores every order of events with users, relayers and an attacker
+who holds funds: a key or M-of-N reserve can be taken (DESIGN FAIL); the keyless rules lose or
+duplicate nothing and every user can finish or cancel alone; a SOST reorg deeper than the
+confirmation depth breaks the backing. Evidence, not a formal proof. Remaining trust: SOST PoW
+majority (weak while mining is concentrated, so amounts must be capped), more than 2/3 of
+Ethereum's 512-member sync committee, code correctness, one honest relayer, bootstrap
+checkpoints; every Ethereum hard fork needs a SOST release first, or the reserve waits frozen.
+Both rules are a hard fork: NOT in V17 (#40,000); better as V18, after a devnet PoC of N1 + N2
+and an external review. No bridge is 100% trustless; the aim is no custodian, no admin key, no
+multisig and no human approval.
+
 3.16.2 Conventional reference model — lock / mint (C701/C703 prototype)
 
 Invariants and backing (conventional reference):
