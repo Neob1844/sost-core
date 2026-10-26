@@ -280,7 +280,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does SOST resolve forks?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST uses <strong>best-chain-by-cumulative-work</strong> selection, not longest-chain. Each block contributes work = <code>floor(2^256 / (target + 1))</code>. The chain with the highest total accumulated work wins. This prevents attacks using many easy blocks to outpace a shorter chain with more real work &mdash; the same approach used by Bitcoin.<br><br><strong>Fork resolution is atomic:</strong> if a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is fully restored. Maximum reorganization depth: 500 blocks (~3.5 days) for history before #30,000. From #30,000 (SACS V2, V30000 release), deep fork blocks beyond 500 that are post-activation are kept and judged strictly by valid cumulative work instead of being hard-rejected.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST uses <strong>best-chain-by-cumulative-work</strong> selection, not longest-chain. Each block contributes work = <code>floor(2^256 / (target + 1))</code>. The chain with the highest total accumulated work wins. This prevents attacks using many easy blocks to outpace a shorter chain with more real work &mdash; the same approach used by Bitcoin.<br><br><strong>Fork resolution is atomic:</strong> if a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is fully restored. Maximum reorganization depth: 500 blocks (~3.5 days): a node refuses a reorganization that would disconnect more than 500 blocks of its own active chain, even if the other chain has more work. This limit protects the history held by that node; it is not a global finality guarantee. SACS V2 (a rule that would turn this limit into an alarm for forks after its activation) was prepared for #30,000 but deferred on 8 October 2026, before that height: it is <b>not active on mainnet</b>.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -432,8 +432,8 @@
           <ul>
             <li><b>DTD eligibility tightens:</b> 288-block recency, conditional cooldown and anti-dominance.</li>
             <li><b>DTD Jackpot V2:</b> an independent, node-gated, PoW-weighted draw. First V2 draw at <b>#30,186</b>.</li>
-            <li><b>Native-asset layer</b> (issue / transfer / burn with supply conservation), <b>tokenization</b> and the <b>SOST-layer DEX</b> &mdash; all behind the S14 admin gate (public access disabled at activation).</li>
-            <li><b>SACS V2:</b> deep forks after #30,000 are judged strictly by valid cumulative work.</li>
+            <li><b>Native-asset layer</b>, <b>tokenization</b> and the <b>SOST-layer DEX</b>: <b>deferred / fail-closed</b> on mainnet (not activated at #30,000).</li>
+            <li><b>SACS V2</b> (deep-reorg recovery): <b>deferred</b> on 8 October 2026, before #30,000. Not active on mainnet; the 500-block reorg limit is unchanged.</li>
           </ul>
           <p>Activation is automatic by height. Operators must run the <b>V30000</b> release before #30,000 &mdash; see the <a href="sost-upgrade.html">upgrade guide</a>.</p>
         </div></div>

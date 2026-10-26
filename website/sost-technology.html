@@ -1542,7 +1542,7 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
           </tr>
           <tr>
             <td class="key">Fork resolution</td>
-            <td class="val"><strong>Atomic.</strong> If a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is restored. MAX_REORG_DEPTH = 500 blocks (~3.5 days) for history before #30,000. <b>From #30,000 (SACS V2, V30000 release):</b> deep fork blocks beyond 500 that are post-activation are kept and evaluated strictly by valid cumulative work instead of being hard-rejected.</td>
+            <td class="val"><strong>Atomic.</strong> If a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is restored. MAX_REORG_DEPTH = 500 blocks (~3.5 days): a node refuses a reorganization that would disconnect more than 500 blocks of its own active chain, even if the other chain has more work. This protects the history held by that node; it is not a global finality guarantee. <b>SACS V2</b> (which would turn this limit into an alarm for forks after its activation) was prepared for #30,000 but <b>deferred on 8 October 2026</b>, before that height: it is not active on mainnet.</td>
           </tr>
         </tbody></table>
       </div>
