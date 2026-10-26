@@ -135,7 +135,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v576"></script>
-<script src="js/nav-toggle.js?v=v583"></script>
+<script src="js/nav-toggle.js?v=v584"></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
@@ -220,6 +220,13 @@
       <div class="section-title">Send a <span class="accent">Message</span></div>
     </div>
 
+    <!-- The SOST contact emblem (same asset as the nav Contact overlay). The PNG's 1-2px
+         antialiased fringe at the edge of its black disc is hidden by the clip-path. -->
+    <div class="cf-emblem fade-in delay-1">
+      <img src="media/sost-contact-email-512.png" srcset="media/sost-contact-email-512.png 512w, media/sost-contact-email.png 980w"
+           sizes="(max-width: 480px) 150px, 190px" width="190" height="190" alt="SOST contact — envelope with the Σ" decoding="async">
+    </div>
+
     <form id="contactForm" class="form-wrap fade-in delay-1" novalidate>
       <div class="form-group">
         <label>Name *</label>
@@ -251,11 +258,11 @@
       </div>
       <!-- honeypot: hidden from real users; bots that tick it are rejected -->
       <input type="checkbox" name="botcheck" id="cfBot" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:0;height:0;opacity:0;">
-      <!-- hCaptcha (Web3Forms managed site key — public by design) -->
-      <div class="h-captcha" id="cfCaptcha" data-sitekey="50b2fe65-b00b-4b9e-ad62-3ba471098be2" style="margin:6px 0 14px;"></div>
       <button type="submit" id="cfSubmit" class="submit-btn">SEND MESSAGE</button>
       <div id="cfStatus" role="status" aria-live="polite" style="margin-top:14px;font-size:14px;line-height:1.5;display:none;"></div>
     </form>
+
+    <p class="cf-direct fade-in delay-2">Or write directly to <a href="mailto:sost@sostcore.com">sost@sostcore.com</a></p>
 
     <div class="notice fade-in delay-2">
       <strong>Security vulnerabilities:</strong> For security vulnerabilities, use this contact form and select "Security Vulnerability Report" as the subject. Do <strong>NOT</strong> open a public GitHub issue for security disclosures. For general bugs and feature requests, use <a href="https://github.com/Neob1844/sost-core/issues" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;">GitHub Issues</a>.
@@ -272,17 +279,28 @@
   </div>
 </footer>
 
-<script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+<style>
+.cf-emblem{display:flex;justify-content:center;margin:4px 0 22px}
+.cf-emblem img{width:190px;height:190px;clip-path:circle(49.2% at 50% 50%);filter:drop-shadow(0 0 18px rgba(251,1,13,.35))}
+.cf-direct{text-align:center;margin:18px 0 0;font-size:14px;color:var(--text-dim)}
+.cf-direct a{color:#fb010d;text-decoration:none;font-weight:700}
+.cf-direct a:hover,.cf-direct a:focus-visible{text-decoration:underline}
+@media (max-width:480px){.cf-emblem img{width:150px;height:150px}}
+</style>
 <script>
-/* SOST contact form — real submission, NO mailto, with layered spam protection:
-   honeypot + time-trap + heuristic content filters + hCaptcha (Web3Forms managed).
-   The Web3Forms access key and the hCaptcha site key are PUBLIC by design (no
-   mailbox password, no secret). */
+/* SOST contact form — posts to SOST's own same-origin endpoint POST /api/contact
+   (ops/sost-contact-api.py on the sostcore.com server, STRATO SMTP to the project inbox),
+   the same endpoint as the nav Contact overlay in js/nav-toggle.js. No third-party
+   service, no captcha script, no key in this page. Server-side: Origin check, strict field
+   validation, header-injection rejection, rate limits, duplicate suppression. Client-side:
+   honeypot + time-trap + heuristic content filters. On failure the typed text is kept. */
 (function () {
   "use strict";
-  var WEB3FORMS_KEY = "ed7c09a0-b426-4014-ba2a-fb121af53f9b";
-  var ENDPOINT = "https://api.web3forms.com/submit";
+  var ENDPOINT = "/api/contact";
+  var LIM = {name: 100, email: 254, subject: 200, message: 5000};
   var LOADED_AT = Date.now();
+  var T_FAIL = "Unable to send the message. Please try again later.";
+  var T_RATE = "Too many messages. Please try again later.";
   var SPAM_MSG = "Your message could not be submitted because it appears to match automated or unsolicited spam patterns.";
   var SPAM_RE = [
     /app\s*develop/i, /mobile\s*apps?/i, /android\s*app/i, /ios\s*app/i,
@@ -294,22 +312,35 @@
     /\bguest\s*post/i, /increase\s*your\s*(sales|traffic|ranking)/i,
     /digital\s*marketing\s*services?/i, /web3\s*development\s*services?/i
   ];
+  var EMAIL_RE = /^[A-Za-z0-9!#$%&'*+\/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@([A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
   var form = document.getElementById("contactForm");
   var btn = document.getElementById("cfSubmit");
   var statusEl = document.getElementById("cfStatus");
+  var sending = false, sent = false, idem = "";
   function show(msg, ok) {
     statusEl.style.display = "block";
     statusEl.style.color = ok ? "#00ff41" : "#ff5555";
     statusEl.textContent = msg;
   }
   function val(id) { var e = document.getElementById(id); return e ? e.value.trim() : ""; }
+  function newKey() {
+    try { var a = new Uint8Array(16); crypto.getRandomValues(a); return Array.prototype.map.call(a, function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); }
+    catch (e) { return String(Date.now()) + String(Math.random()).slice(2); }
+  }
+  function body() {
+    var org = val("cfOrg");
+    return (org ? "Organization: " + org + "\n\n" : "") + val("cfMessage");
+  }
   function validate() {
     if (!val("cfName") || !val("cfEmail") || !val("cfSubject") || !val("cfMessage")) {
       show("Please fill in all required fields.", false); return false;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val("cfEmail"))) {
+    var em = val("cfEmail");
+    if (em.length > LIM.email || em.split("@")[0].length > 64 || !EMAIL_RE.test(em)) {
       show("Please enter a valid email address.", false); return false;
     }
+    if (val("cfName").length > LIM.name) { show("The name is too long (maximum " + LIM.name + " characters).", false); return false; }
+    if (body().length > LIM.message) { show("The message is too long (maximum " + LIM.message + " characters).", false); return false; }
     return true;
   }
   // Heuristic spam gate — returns a user-facing message to show, or null if clean.
@@ -327,55 +358,44 @@
     if (((email.split("@")[0]) || "").toLowerCase() === mg) return SPAM_MSG;
     return null;
   }
-  function captchaToken() {
-    try { if (typeof hcaptcha !== "undefined" && hcaptcha.getResponse) return hcaptcha.getResponse(); } catch (e) {}
-    var t = form.querySelector('textarea[name="h-captcha-response"]');
-    return t ? t.value : "";
-  }
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    if (document.getElementById("cfBot").checked) return;   // honeypot tripped → silently drop
+    if (sending || sent) return;                                    // double click / Enter repeat
     if (!validate()) return;
     var reason = spamReason(val("cfName"), val("cfEmail"), val("cfSubject"), val("cfMessage"));
     if (reason) { show(reason, false); return; }
-    var token = captchaToken();
-    if (typeof hcaptcha !== "undefined" && !token) {        // captcha required only when its script actually loaded
-      show("Please complete the captcha to confirm you are human.", false); return;
-    }
-    var original = btn.textContent;
-    btn.disabled = true; btn.textContent = "Sending…"; statusEl.style.display = "none";
     var payload = {
-      access_key: WEB3FORMS_KEY,
-      from_name: "SOST Contact Form",
-      subject: "[SOST] " + val("cfSubject"),
-      name: val("cfName"),
-      email: val("cfEmail"),
-      organization: val("cfOrg"),
-      topic: val("cfSubject"),
-      message: val("cfMessage"),
-      page_source: "sost-contact.html",
-      timestamp: new Date().toISOString(),
-      botcheck: false
+      name: val("cfName"), email: val("cfEmail"), subject: val("cfSubject"), message: body(),
+      website: document.getElementById("cfBot").checked ? "on" : "",   // honeypot -> server drops it
+      idempotency_key: idem || (idem = newKey())
     };
-    if (token) payload["h-captcha-response"] = token;
-    fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify(payload)
-    }).then(function (r) { return r.json(); }).then(function (d) {
-      if (d && d.success) {
+    sending = true; btn.disabled = true; btn.textContent = "SENDING…"; statusEl.style.display = "none";
+    var ctrl = null, timer = null;
+    try { ctrl = new AbortController(); timer = setTimeout(function () { try { ctrl.abort(); } catch (x) {} }, 30000); } catch (x) {}
+    function finish(ok, msg) {
+      if (timer) clearTimeout(timer);
+      sending = false; btn.textContent = "SEND MESSAGE";
+      if (ok) {
+        sent = true;
         Array.prototype.forEach.call(form.querySelectorAll("input,select,textarea,button"), function (el) { el.disabled = true; });
-        show("Thank you. Your message has been sent successfully. We will reply as soon as possible.", true);
+        show("Your message has been sent. We will reply as soon as possible.", true);
       } else {
-        btn.disabled = false; btn.textContent = original;
-        try { if (typeof hcaptcha !== "undefined") hcaptcha.reset(); } catch (e) {}
-        show("Unable to send the message. Please try again later.", false);
+        btn.disabled = false;                                       // the typed text stays in the form
+        show(msg || T_FAIL, false);
       }
-    }).catch(function () {
-      btn.disabled = false; btn.textContent = original;
-      try { if (typeof hcaptcha !== "undefined") hcaptcha.reset(); } catch (e) {}
-      show("Unable to send the message. Please try again later.", false);
-    });
+    }
+    fetch(ENDPOINT, {
+      method: "POST", credentials: "same-origin", cache: "no-store",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(payload), signal: ctrl ? ctrl.signal : undefined
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) { return {status: r.status, j: j || {}}; });
+    }).then(function (res) {
+      if (res.status === 200 && res.j.ok === true) return finish(true);
+      if (res.status === 400 && res.j.field === "email") return finish(false, "Please enter a valid email address.");
+      if (res.status === 429) return finish(false, T_RATE);
+      finish(false, T_FAIL);
+    }).catch(function () { finish(false, T_FAIL); });
   });
 })();
 </script>

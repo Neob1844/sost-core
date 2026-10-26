@@ -1414,6 +1414,10 @@
     if((a.textContent||'').replace(/\s+/g,' ').trim().toLowerCase()!=='contact') return null;
     return a;
   }
+  // Capture phase + stopImmediatePropagation: crt-effects.js binds its page-transition
+  // handler directly on every nav <a>. Since the nav is built during parsing (C706) those
+  // handlers sit on the final Contact link and would navigate to sost-contact.html before a
+  // bubbling document listener ever ran. Capturing on document runs first and stops them.
   document.addEventListener('click',function(e){
     if(e.defaultPrevented || e.button!==0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
     var a=navContactLink(e.target);
@@ -1421,8 +1425,9 @@
     var tgt=(a.getAttribute('target')||'').toLowerCase();
     if(tgt && tgt!=='_self') return;
     e.preventDefault();
+    e.stopImmediatePropagation();
     open(a);
-  });
+  },true);
   document.addEventListener('keydown',function(e){
     if(!isOpen) return;
     if(e.key==='Escape' || e.key==='Esc'){ e.preventDefault(); e.stopPropagation(); close(); return; }
