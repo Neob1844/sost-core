@@ -853,7 +853,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </div>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-20-v579-explorer-rpc-polling';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-26-v581-node-protocol-tx';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1935,6 +1935,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
       <button class="tx-filter active" data-filter="ALL" onclick="setTxFilter('ALL')">ALL</button>
       <button class="tx-filter" data-filter="TRANSFER" onclick="setTxFilter('TRANSFER')">TRANSFERS</button>
       <button class="tx-filter" data-filter="COINBASE" onclick="setTxFilter('COINBASE')">COINBASE</button>
+      <button class="tx-filter" data-filter="NODE" onclick="setTxFilter('NODE')" title="NODE BIND / NODE HEARTBEAT: protocol operations, not payments">NODE</button>
       <button class="tx-filter" data-filter="BOND" onclick="setTxFilter('BOND')">BONDS</button>
     </div>
     <table class="tbl"><thead><tr><th>TXID</th><th>CAPSULE</th><th>BLOCK</th><th>TYPE</th><th title="Number of UTXOs the wallet spent (input count, not SOST)">IN<br><span style="font-size:9px;color:var(--text3);font-weight:normal">UTXOs</span></th><th title="Number of new outputs created (not SOST)">OUT<br><span style="font-size:9px;color:var(--text3);font-weight:normal">outputs</span></th><th title="External payment amount (excludes change)">AMOUNT<br><span style="font-size:9px;color:var(--text3);font-weight:normal">payment</span></th><th>FEE</th></tr></thead>
@@ -6739,6 +6740,7 @@ async function showTxDetail(txid){
 }
 // Render confirmed TX from tx-index (full fee/input data)
 function renderIndexedTx(tx,c){
+  var _np=nodeProtoTx(tx); if(_np){renderNodeProtoTx(tx,_np,c);return;}
   var bh=tx.block_height||0;var confs=tx.confirmations||0;
   var isCB=(tx.vin&&tx.vin.length===1&&tx.vin[0].prev_txid==='0000000000000000000000000000000000000000000000000000000000000000');
   var fee=tx.fee||0;var feeSOST=fSx(fee);
@@ -6938,7 +6940,44 @@ function renderFallbackTx(txid,outputs,c){
   c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid">'+navTopHtml+'<div class="k">txid</div><div class="v" style="color:var(--cyan)">'+txid+cpBtn(txid)+'</div>'+navBotHtml+'<div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+totalOut.toFixed(8)+' SOST</span></div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--text3);font-size:9px">PARTIAL \u00B7 gettxout fallback</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
   _paintTxNeighbors(txid, bh);
 }
+// NODE BIND / NODE HEARTBEAT detail: a protocol operation, never shown as a payment to an address.
+function renderNodeProtoTx(tx,np,c){
+  function npEsc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(ch){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]);});}
+  var bh=tx.block_height||0, confs=tx.confirmations||0, pending=!bh||tx.in_mempool;
+  var col=np.kind==='BIND'?'#22d3ee':'#c084fc';
+  var g='<div class="k">txid</div><div class="v" style="color:var(--cyan);word-break:break-all">'+npEsc(tx.txid)+cpBtn(tx.txid)+'</div>'
+    +'<div class="k">block</div><div class="v">'+(pending?'<span style="color:var(--yellow)">mempool (unconfirmed)</span>':'<span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations')+'</div>'
+    +'<div class="k">type</div><div class="v"><b style="color:'+col+'">'+np.label+'</b> <span style="color:var(--text3)">\u00B7 protocol operation, not a transfer</span></div>'
+    +'<div class="k">amount</div><div class="v">0 SOST <span style="color:var(--text3)">\u00B7 moves no funds</span></div>'
+    +'<div class="k">fee</div><div class="v">0 SOST</div>';
+  if(np.node)g+='<div class="k">node key</div><div class="v" style="word-break:break-all;color:#39ff14">'+npEsc(np.node)+'</div>'
+    +'<div class="k">bound miner</div><div class="v" id="npMiner" style="color:var(--text3)">looking up NODE_BIND index\u2026</div>';
+  if(np.kind==='HEARTBEAT'){
+    var es=NODE_EPOCH_START+np.epoch*NODE_EPOCH_LEN, rh=es-1;
+    g+='<div class="k">epoch</div><div class="v">'+np.epoch+' <span style="color:var(--text3)">(blocks #'+es.toLocaleString()+'\u2013#'+(es+NODE_EPOCH_LEN-1).toLocaleString()+')</span></div>'
+      +'<div class="k">reference block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+rh+')">#'+rh+'</span> <span style="word-break:break-all;color:var(--text3)">'+npEsc(np.tipRef)+'</span></div>';
+  } else if(np.kind==='BIND'){
+    g+='<div class="k">mining key</div><div class="v" style="word-break:break-all">'+npEsc(np.miningPub)+'</div>'
+      +'<div class="k">bind sequence</div><div class="v">'+np.seq+' <span style="color:var(--text3)">\u00B7 payload v'+np.version+'</span></div>';
+  }
+  var what=np.kind==='HEARTBEAT'
+    ? 'A <b>NODE HEARTBEAT</b> is the once-per-epoch \u201cstill alive\u201d signature of a node that has a NODE_BIND. It names its epoch and the block it saw at the start of that epoch, and consensus accepts it only if both are right. Heartbeats count towards Jackpot V2 eligibility.'
+    : np.kind==='BIND'
+    ? 'A <b>NODE BIND</b> links a mining identity to a node key, signed by both keys. It is the identity Jackpot V2 eligibility is checked against.'
+    : 'A node-participation protocol operation.';
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> '+(pending?'':'<span class="dtl-tag">'+confs+' conf</span> ')+'<span class="dtl-tag" style="border-color:'+col+';color:'+col+'">'+np.label.toLowerCase()+'</span></div>'
+    +'<div class="dtl-grid">'+g+'</div>'
+    +'<div class="tx-flow"><div class="tx-flow-title">// <b>PROTOCOL OPERATION</b></div><div style="font-size:11px;line-height:1.6;color:var(--text2);padding:4px 2px">'+what
+    +' It has no inputs and one zero-value protocol output that can never be spent; the output carries signed data, not a payment, so it has no destination address.</div></div>';
+  if(np.node)fetch('api/node_participation.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(d){
+    var el=document.getElementById('npMiner'); if(!el)return;
+    var hit=(d&&d.nodes||[]).filter(function(x){return String(x.node_key).toLowerCase()===np.node;})[0];
+    if(hit&&hit.miner){el.style.color='var(--cyan)';el.innerHTML='<span class="td-link" onclick="showAddress(\''+String(hit.miner).replace(/[^0-9A-Za-z]/g,'')+'\')">'+npEsc(hit.miner)+'</span>'+(hit.status?' <span style="color:var(--text3)">\u00B7 '+npEsc(hit.status)+'</span>':'');}
+    else el.textContent='not found in the NODE_BIND index';
+  }).catch(function(){var el=document.getElementById('npMiner'); if(el)el.textContent='NODE_BIND index unavailable';});
+}
 function renderMempoolTx(tx,c){
+  var _np=nodeProtoTx(tx); if(_np){tx.in_mempool=true;renderNodeProtoTx(tx,_np,c);return;}
   var totalOut=tx.vout.reduce(function(s,v){var a=typeof v.value==='number'?v.value:parseFloat(v.value);return s+a;},0);
   var fee=typeof tx.fee==='number'?tx.fee:0;
   var feeRate=tx.size>0?(fee/tx.size).toFixed(1):'\u2014';
@@ -7275,6 +7314,11 @@ function _addrInfoGet(addr){
 async function showAddress(addr){
   openDetail();var c=document.getElementById('detailContent');
   pushNav('addr',sH(addr),addr);
+  if(addr===NODE_PROTO_ADDR){
+    c.innerHTML='<div class="dtl-head"><b>Not an address</b> <span class="dtl-tag">protocol output</span></div><div style="font-size:12px;line-height:1.6;color:var(--text2);padding:8px 2px">'
+      +'<span style="color:var(--cyan);word-break:break-all">'+NODE_PROTO_ADDR+'</span> is the all-zero placeholder the node prints for the zero-value protocol output of <b>NODE BIND</b> and <b>NODE HEARTBEAT</b> transactions. Nobody owns it, nothing can be sent to it and it never holds a balance.</div>';
+    return;
+  }
   var _gen=(window.__addrGen=(window.__addrGen||0)+1);
   var _r0=ROLES[addr]||null;
   c.innerHTML='<div class="dtl-head"><b>Address</b>'+(_r0?' <span class="dtl-tag">'+_r0+'</span>':'')+'</div>'
@@ -8319,7 +8363,10 @@ async function _scanBlocksToRows(fromHeight, toHeight){
     }));
     for(var j=0;j<nonCb.length;j++){
       var _e=nonCb[j], _tx=txs[j];
-      if(_tx){
+      var _np=_tx?nodeProtoTx(_tx):null;
+      if(_np){
+        rows.push({txid:_e.txid,height:_e.height,type:'NODE',typeLabel:_np.label,inputs:0,outputs:1,amount:'0 SOST',amountTooltip:'Protocol operation: moves no SOST',fee:'\u2014',capsule:null});
+      } else if(_tx){
         var _tot=0;for(var _v=0;_v<(_tx.vout||[]).length;_v++){var _a=_tx.vout[_v].amount;_tot+=(typeof _a==='number'?_a:parseFloat(_a));}
         var _cap=_tx.capsule||null;
         if(!_cap&&_tx.vout&&_tx.vout[0]&&_tx.vout[0].payload_hex){_cap=parseCapsuleHexJS(_tx.vout[0].payload_hex);}
@@ -8368,7 +8415,28 @@ async function loadOlderTxHistoryBatch(){
     _txHistoryLoading=false;
   }
 }
+// V16 node-participation txs (TX_TYPE_NODE_BIND 0x20 / TX_TYPE_NODE_HEARTBEAT 0x21, from #30,000):
+// no inputs and ONE 0-amount OUT_NODE_PROTOCOL (0x30) output whose payload is the canonical bytes of
+// include/sost/node_participation.h. They move no SOST and pay no fee; the output's "address" is the
+// all-zero placeholder the RPC prints for a protocol output, not a real SOST address.
+var OUT_NODE_PROTOCOL=0x30, NODE_PROTO_ADDR='sost10000000000000000000000000000000000000000';
+var NODE_EPOCH_START=30000, NODE_EPOCH_LEN=288;   // params.h: HIST_JACKPOT_V2_HEIGHT, NODE_EPOCH_LENGTH (mainnet)
+function nodeProtoTx(tx){
+  if(!tx||(tx.vin&&tx.vin.length)||!tx.vout||tx.vout.length!==1)return null;
+  var o=tx.vout[0];
+  if(o.type!==undefined&&o.type!==null){ if(Number(o.type)!==OUT_NODE_PROTOCOL)return null; }
+  else if(o.address!==NODE_PROTO_ADDR)return null;   // mempool JSON has no output type
+  var h=String(o.payload_hex||'').toLowerCase(); if(!/^[0-9a-f]*$/.test(h))h='';
+  var n=h.length/2;
+  function le64(off){var v=0,m=1;for(var i=0;i<8;i++){v+=parseInt(h.substr((off+i)*2,2),16)*m;m*=256;}return v;}
+  // heartbeat: node_pubkey 33 | epoch_idx u64le | tip_ref_hash 32 | node_sig 64  (137 B)
+  if(n===137)return{kind:'HEARTBEAT',label:'NODE HEARTBEAT',node:h.substr(0,66),epoch:le64(33),tipRef:h.substr(82,64)};
+  // bind: mining_pubkey 33 | node_pubkey 33 | bind_seq u64le | mining_sig 64 [| node_sig 64 in v2]  (138 / 202 B)
+  if(n===202||n===138)return{kind:'BIND',label:'NODE BIND',miningPub:h.substr(0,66),node:h.substr(66,66),seq:le64(66),version:n===202?2:1};
+  return{kind:'PROTOCOL',label:'NODE PROTOCOL'};
+}
 function classifyTx(tx){
+  if(nodeProtoTx(tx))return'NODE';
   if(!tx.vin||tx.vin.length===0||tx.vin[0].coinbase)return'COINBASE';
   for(var i=0;i<(tx.vout||[]).length;i++){var t=tx.vout[i].type;if(t===16||t===17||t===0x10||t===0x11)return'BOND';}
   return'TRANSFER';
@@ -8483,14 +8551,14 @@ function renderTxTable(){
   tb.innerHTML='';
   for(var i=0;i<page.length;i++){
     var r=page[i];
-    var typeColor=r.type==='COINBASE'?'var(--yellow)':r.type==='BOND'?'var(--purple)':'var(--green)';
+    var typeColor=r.type==='COINBASE'?'var(--yellow)':r.type==='BOND'?'var(--purple)':r.type==='NODE'?(r.typeLabel==='NODE BIND'?'#22d3ee':'#c084fc'):'var(--green)';
     var capCell=formatCapsuleCell(r.capsule);
     var capClickable=(r.capsule&&r.capsule.type&&r.capsule.type!=='unknown')
       ? '<span class="td-link" onclick="showTxDetail(\''+r.txid+'\')" title="'+(r.capsule.text?String(r.capsule.text).replace(/"/g,'&quot;').substring(0,120):'')+'">'+capCell+'</span>'
       : capCell;
     var tr=document.createElement('tr');
     var amtTipAttr=r.amountTooltip?(' title="'+String(r.amountTooltip).replace(/"/g,'&quot;')+'"'):'';
-    tr.innerHTML='<td><span class="td-link" onclick="showTxDetail(\''+r.txid+'\')">'+sH(r.txid)+'</span>'+cpBtn(r.txid)+'</td><td>'+capClickable+'</td><td><span class="td-height" onclick="showBlockByHeight('+r.height+')">#'+r.height+'</span></td><td><span style="color:'+typeColor+';font-weight:600;font-size:10px">'+r.type+'</span></td><td>'+r.inputs+'</td><td>'+r.outputs+'</td><td><span class="td-amt"'+amtTipAttr+'>'+r.amount+'</span></td><td>'+(r.fee||'\u2014')+'</td>';
+    tr.innerHTML='<td><span class="td-link" onclick="showTxDetail(\''+r.txid+'\')">'+sH(r.txid)+'</span>'+cpBtn(r.txid)+'</td><td>'+capClickable+'</td><td><span class="td-height" onclick="showBlockByHeight('+r.height+')">#'+r.height+'</span></td><td><span style="color:'+typeColor+';font-weight:600;font-size:10px">'+(r.typeLabel||r.type)+'</span></td><td>'+r.inputs+'</td><td>'+r.outputs+'</td><td><span class="td-amt"'+amtTipAttr+'>'+r.amount+'</span></td><td>'+(r.fee||'\u2014')+'</td>';
     tb.appendChild(tr);
   }
 }
@@ -8513,6 +8581,7 @@ async function loadLatestTxs(){
         for(var i=0;i<transfers.length;i++){
           var tr=transfers[i];
           if(rows.some(function(r){return r.txid===tr.txid;}))continue;
+          if(tr.inputs===0){rows.push({txid:tr.txid,height:tr.height,type:'NODE',typeLabel:'NODE PROTOCOL',inputs:0,outputs:tr.outputs,amount:'0 SOST',amountTooltip:'Protocol operation: moves no SOST',fee:'\u2014',capsule:null});continue;}
           var hasPay=(typeof tr.payment_amount==='number');
           var amtStr=(hasPay?fS(tr.payment_amount):fS(tr.total_output))+' SOST';
           var amtTip=hasPay
