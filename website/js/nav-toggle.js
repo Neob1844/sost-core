@@ -5,6 +5,51 @@
    Compatible with the existing index.html implementation: when a button
    with id="navToggleBtn" already exists, the script only attaches its
    visual styling and lets the in-page handler do the toggling. */
+/* Nav first paint (C706). The script loads synchronously in <head>, so every block
+   below that builds the nav registers through __sostNavReady and runs the moment the
+   parser has closed </nav> — before the next paint — instead of after the whole page
+   (the Explorer is ~900 KB of HTML, so DOMContentLoaded came seconds after the raw
+   nav was already on screen and then got replaced). The nav stays invisible only for
+   those few milliseconds; DOMContentLoaded is the fallback if anything goes wrong. */
+(function () {
+  "use strict";
+  var q = [], done = false, mo = null, de = document.documentElement;
+  function navClosed() {
+    var nav = document.querySelector("nav");
+    if (!nav) return false;
+    for (var e = nav; e && e !== document.body && e !== de; e = e.parentNode) {
+      if (e.nextSibling) return true;
+    }
+    return false;
+  }
+  function run(fn) { try { fn(); } catch (e) { if (window.console) console.error(e); } }
+  function flush() {
+    if (done) return;
+    done = true;
+    if (mo) { mo.disconnect(); mo = null; }
+    for (var i = 0; i < q.length; i++) run(q[i]);
+    q.length = 0;
+    de.classList.remove("sost-nav-pending");
+  }
+  window.__sostNavReady = function (fn) {
+    if (done) { run(fn); return; }
+    q.push(fn);
+    if (document.readyState !== "loading" || navClosed()) flush();
+  };
+  if (document.readyState === "loading") {
+    de.classList.add("sost-nav-pending");
+    var st = document.createElement("style");
+    st.id = "sost-nav-pending-style";
+    st.textContent = "html.sost-nav-pending nav{visibility:hidden!important}";
+    (document.head || de).appendChild(st);
+    try {
+      mo = new MutationObserver(function () { if (navClosed()) flush(); });
+      mo.observe(de, { childList: true, subtree: true });
+    } catch (e) { /* DOMContentLoaded below still runs everything */ }
+    document.addEventListener("DOMContentLoaded", flush, { once: true });
+  }
+})();
+
 (function () {
   "use strict";
 
@@ -258,11 +303,7 @@
     applyState(collapsed);
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+  window.__sostNavReady(init);
 })();
 
 /* ============================================================================
@@ -391,8 +432,7 @@
     styleNavButtons(nl);
     sxWatch(nl);
   }
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectNav, {once:true});
-  else injectNav();
+  window.__sostNavReady(injectNav);
 })();
 
 /* ============================================================================
@@ -489,8 +529,7 @@
       +'<span style="color:#f59e0b;font-size:'+tx+'px;font-weight:900;letter-spacing:.5px;line-height:1.08;text-align:center;text-shadow:0 0 8px rgba(245,158,11,.6)">NEWS &amp;<br>UPDATES</span>';
     watch.parentNode.insertBefore(a, watch.nextSibling);
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectNewsBtn,{once:true});
-  else injectNewsBtn();
+  window.__sostNavReady(injectNewsBtn);
 })();
 
 /* ============================================================================
@@ -623,8 +662,7 @@
       +'text-align:center;margin-top:2px">DETERMINISTIC<br>TOKEN<br>DISTRIBUTION</span>';
     anchor.parentNode.insertBefore(a, anchor);
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectDtdBtn,{once:true});
-  else injectDtdBtn();
+  window.__sostNavReady(injectDtdBtn);
 })();
 
 /* ============================================================================
@@ -665,8 +703,7 @@
     nav.querySelectorAll('a.atomix-btn').forEach(function(e){ wrap(e,'ax'); });
     nav.querySelectorAll('.sost-news-btn').forEach(function(e){ wrap(e,'news'); });
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tag,{once:true});
-  else tag();
+  window.__sostNavReady(tag);
   setTimeout(tag,0); setTimeout(tag,400); setTimeout(tag,1200);
 })();
 
@@ -745,8 +782,7 @@
     a.appendChild(img);
     cx.parentNode.insertBefore(a, cx);   // JUST BEFORE ConvergenceX
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',inject,{once:true});
-  else inject();
+  window.__sostNavReady(inject);
   setTimeout(inject,0); setTimeout(inject,350); setTimeout(inject,800);
 })();
 
@@ -824,8 +860,7 @@
       num.textContent='\u2026'; ready.then(show); setTimeout(show,4000);
     });
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',mountCounter,{once:true});
-  else mountCounter();
+  window.__sostNavReady(mountCounter);
   setTimeout(mountCounter,600); setTimeout(mountCounter,1600);
 })();
 
@@ -882,8 +917,7 @@
     else axBox.parentNode.insertBefore(a,axBox.nextSibling);
   }
   function run(){ inject(); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true});
-  else run();
+  window.__sostNavReady(run);
   setTimeout(run,0); setTimeout(run,450); setTimeout(run,1300);
 })();
 
@@ -973,8 +1007,7 @@
     function hide(){ el.classList.remove('show'); setTimeout(show,15000); }
     show();
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',inject,{once:true});
-  else inject();
+  window.__sostNavReady(inject);
   setTimeout(inject,500);
 })();
 
@@ -1024,7 +1057,7 @@
     window.addEventListener('resize',onScroll,{passive:true});
     sync();
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  window.__sostNavReady(init);
 })();
 
 /* ============================================================================
