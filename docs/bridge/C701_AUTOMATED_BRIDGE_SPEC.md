@@ -1,5 +1,7 @@
 # C701 — SOST Automated Bridge, Gold Access Key y Gold Reserve V2
 
+> **2026-10-26 — YA NO ES LA ARQUITECTURA OBJETIVO.** La arquitectura objetivo es el **SOST Atomic Bridge (Atomic Reserve Vault)**: ver `SOST_ATOMIC_BRIDGE_ARV.md`. Este documento queda como MODELO CONVENCIONAL DE REFERENCIA (lock/mint) y fuente de componentes (clasificación en ARV §9).
+
 **Estado:** especificación de DESARROLLO. Nada desplegado (ni mainnet, ni testnet pública, ni web).
 **Veredicto de producción:** NOT_READY (ver §12). Este documento describe exactamente lo que el
 código de la rama `feat/c701-automated-bridge` hace y lo que todavía no hace.
