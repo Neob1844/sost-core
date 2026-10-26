@@ -4,6 +4,15 @@ Target architecture · design + audit · 2026-10-26
 
 STATUS: RESEARCH / DEVELOPMENT · NOT ACTIVE · NOT MAINNET DEPLOYED · NOT AUDITED · NOT YET PROVEN
 
+> **C705 update (2026-10-26):** the custody problem of §6 is resolved at design level in
+> [C705_NATIVE_RESERVE_FEASIBILITY.md](C705_NATIVE_RESERVE_FEASIBILITY.md).
+>
+> * The reserve is keyless: N1 (keyless ARV outputs) + N2 (SOST verifies Ethereum finality),
+>   plus a SOST header relay on Ethereum.
+> * The cross-chain legs are settled by proofs; HTLCs remain an optional fast path.
+> * Multisig and P1–P3 are not used.
+> * Both primitives are a hard fork, so this targets V18, not V17.
+
 This document sets the **target architecture** of the SOST bridge between native SOST and wSOST
 on Ethereum. The architecture is called the **SOST Atomic Bridge**. Its mechanism is the
 **Atomic Reserve Vault (ARV)**.
