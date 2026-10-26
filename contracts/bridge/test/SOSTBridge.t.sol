@@ -170,7 +170,7 @@ contract GoldAccessKeyTest is Test {
     /// Expected values computed independently with exact rationals (python fractions).
     function test_feeTable_20_examples() public {
         uint256[20] memory eur = [uint256(0), 10, 50, 100, 250, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000, 15000, 25000, 50000, 100000, 500000, 1000000];
-        uint256[20] memory units = [uint256(0), 0, 0, 135, 135, 135, 202, 270, 404, 539, 808, 1347, 2020, 2694, 4040, 6733, 13466, 13466, 13466, 13466];
+        uint256[20] memory units = [uint256(0), 0, 0, 135, 135, 135, 202, 270, 404, 539, 808, 1347, 2020, 2694, 4040, 6733, 13466, 26932, 67329, 67329];
         for (uint256 i = 0; i < 20; i++) {
             if (eur[i] < 100) {
                 vm.expectRevert(GoldAccessKey.BelowMinimumOperation.selector);
@@ -184,8 +184,9 @@ contract GoldAccessKeyTest is Test {
     function test_feeEur_band() public view {
         assertEq(h.feeEur8(100e8, 1), 50_000_000);         // 0.50 floor
         assertEq(h.feeEur8(750e8, 1), 75_000_000);         // 0.10 %
-        assertEq(h.feeEur8(50_000e8, 1), 5_000_000_000);   // exactly 50
-        assertEq(h.feeEur8(1_000_000e8, 1), 5_000_000_000); // cap
+        assertEq(h.feeEur8(50_000e8, 1), 5_000_000_000);   // 50 at 0.10 %
+        assertEq(h.feeEur8(250_000e8, 1), 25_000_000_000); // exactly 250
+        assertEq(h.feeEur8(1_000_000e8, 1), 25_000_000_000); // cap
     }
 
     function test_minimumBoundary() public {
@@ -210,13 +211,13 @@ contract GoldAccessKeyTest is Test {
         // exact fee in EUR8 as rational n/d
         uint256 n; uint256 d;
         if (vNum < 5e7 * 1000 * 1e8) { n = 5e7; d = 1; }
-        else if (vNum > 5e9 * 1000 * 1e8) { n = 5e9; d = 1; }
+        else if (vNum > 25e9 * 1000 * 1e8) { n = 25e9; d = 1; }
         else { n = vNum; d = 1e8 * 1000; }
         // f * x * d >= n * 1e6  and  (f-1) * x * d < n * 1e6
         assertGe(f * x * d, n * 1e6);
         assertLt((f - 1) * x * d, n * 1e6);
-        // never more than the 50 EUR cap, never less than the 0.50 EUR floor
-        assertLe(f, (5e9 * 1e6 + x - 1) / x);
+        // never more than the 250 EUR cap, never less than the 0.50 EUR floor
+        assertLe(f, (25e9 * 1e6 + x - 1) / x);
         assertGe(f, (5e7 * 1e6 + x - 1) / x);
     }
 
@@ -392,6 +393,8 @@ contract SOSTBridgeTest is BridgeBase {
         else if (field == 6) a.sostBlockHash = bytes32(uint256(a.sostBlockHash) ^ delta);
         else a.confirmations = a.confirmations + uint32(delta % 1000) + 1;
         if (field == 3 && a.expiry == uint64(block.timestamp + 30 minutes)) a.expiry += 1;
+        // a tampered recipient of 0 is refused earlier (ZeroRecipient): still no mint, but not this check
+        vm.assume(a.recipient != address(0));
         vm.prank(user);
         vm.expectRevert(SOSTBridge.BadSignatures.selector);
         bridge.mint(a, q, s, ps);

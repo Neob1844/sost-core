@@ -88,7 +88,7 @@ existe). Si el usuario envía sin cápsula o con otra cápsula, el depósito que
 ## 4. Gold Access Key
 
 ```
-feeEUR  = min(50, max(0.50, bridgeValueEUR × 0.001))
+feeEUR  = min(250, max(0.50, bridgeValueEUR × 0.001))   (tope 50 → 250 EUR el 2026-10-26)
 feeXAUT = feeEUR / verifiedXAUTPriceEUR        redondeo HACIA ARRIBA a 6 decimales (1e-6 XAUT)
 operación mínima 100 EUR (inferiores: rechazadas, no se ejecutan)
 100 % a Gold Reserve V2 · gas Ethereum a cargo del usuario · retorno sin segundo peaje XAUT
@@ -123,9 +123,9 @@ Tabla (1 XAUT = 3.713,13 EUR, valor fijo ilustrativo del 2026-10-19, NO es cotiz
 | 15.000 | 15,00 | 0,004040 | OK |
 | 25.000 | 25,00 | 0,006733 | OK |
 | 50.000 | 50,00 | 0,013466 | OK |
-| 100.000 | 50,00 | 0,013466 | OK |
-| 500.000 | 50,00 | 0,013466 | OK |
-| 1.000.000 | 50,00 | 0,013466 | OK |
+| 100.000 | 100,00 | 0,026932 | OK |
+| 500.000 | 250,00 | 0,067329 | OK (tope) |
+| 1.000.000 | 250,00 | 0,067329 | OK (tope) |
 
 (Calculada de forma independiente con racionales exactos en Python y verificada en Solidity y Python.)
 

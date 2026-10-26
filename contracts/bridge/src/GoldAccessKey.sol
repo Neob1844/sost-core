@@ -15,7 +15,7 @@ library GoldAccessKey {
     uint256 internal constant STOCKS_PER_SOST = 1e8;      // SOST and wSOST: 8 decimals
     uint256 internal constant XAUT_UNIT = 1e6;            // XAUT on Ethereum: 6 decimals (verified)
     uint256 internal constant FEE_MIN_EUR8 = 50_000_000;  // 0.50 EUR
-    uint256 internal constant FEE_MAX_EUR8 = 5_000_000_000; // 50 EUR
+    uint256 internal constant FEE_MAX_EUR8 = 25_000_000_000; // 250 EUR
     uint256 internal constant MIN_OPERATION_EUR8 = 10_000_000_000; // 100 EUR
     uint256 internal constant RATE_DEN = 1000;            // 0.10 % = 1 / 1000
 
@@ -42,7 +42,7 @@ library GoldAccessKey {
         if (vNum < FEE_MIN_EUR8 * RATE_DEN * vDen) {
             num = FEE_MIN_EUR8; den = 1;                 // floor of 0.50 EUR
         } else if (vNum > FEE_MAX_EUR8 * RATE_DEN * vDen) {
-            num = FEE_MAX_EUR8; den = 1;                 // cap of 50 EUR
+            num = FEE_MAX_EUR8; den = 1;                 // cap of 250 EUR
         } else {
             num = vNum; den = vDen * RATE_DEN;           // exact 0.10 %
         }

@@ -66,7 +66,7 @@ class Env:
 
 # ---------------------------------------------------------------- fee math
 def test_fee_table_20_rows():
-    expected = [None, None, None, 135, 135, 135, 202, 270, 404, 539, 808, 1347, 2020, 2694, 4040, 6733, 13466, 13466, 13466, 13466]
+    expected = [None, None, None, 135, 135, 135, 202, 270, 404, 539, 808, 1347, 2020, 2694, 4040, 6733, 13466, 26932, 67329, 67329]
     rows = F.example_table(XAUT8)
     assert len(rows) == 20
     assert [r["fee_xaut_units"] for r in rows] == expected
@@ -88,7 +88,7 @@ def test_fee_ceiling_property_exhaustive_sample():
     from fractions import Fraction
     import math
     for amount in [100 * 10**8, 123_456_789_01, 7_777_777_777_777, 10**15, 49_999 * 10**8 + 1]:
-        exact = min(Fraction(50), max(Fraction(1, 2), Fraction(amount, 10**8) / 1000))
+        exact = min(Fraction(250), max(Fraction(1, 2), Fraction(amount, 10**8) / 1000))
         assert F.fee_xaut_for_amount(amount, 10**8, XAUT8) == math.ceil(exact / Fraction(XAUT8, 10**8) * 10**6)
 
 
