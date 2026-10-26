@@ -1197,8 +1197,9 @@ Example at a fixed illustrative price 1 XAUT = 3,713.13 EUR (2026-10-19, illustr
   100 EUR -> 0.50 EUR -> 0.000135 XAUT      1,000 EUR -> 1.00 -> 0.000270 XAUT
   10,000 EUR -> 10.00 -> 0.002694 XAUT      100,000 EUR -> 100.00 -> 0.026932 XAUT
   >= 250,000 EUR -> 250.00 -> 0.067329 XAUT (1,000,000 EUR: effective 0.025%)
-(the cap was revised from 50 EUR to 250 EUR on 2026-10-26: a 50 EUR cap meant 0.005% at
-1,000,000 EUR, the price level of issuer burn-and-mint bridges that have no reserve to build)
+(the cap was revised from 50 EUR to 250 EUR on 2026-10-26: with 50 EUR a 1,000,000 EUR
+operation contributed 0.005%; with 250 EUR it contributes 0.025%. Fees of other bridges price
+capital, relayers and gas and are not directly comparable to this contribution)
 ```
 
 How it differs from most bridges:
@@ -1219,6 +1220,23 @@ Harmony Horizon 2022: 2 of 5 multisig keys; Wormhole 2022: a signature-verificat
 120,000 wrapped ETH). The SOST design has no pool (always exactly 1:1), no outside federation,
 no fee on the return, and its fee builds a public gold reserve. It is NOT trustless: in its
 first version the engine is a single central point of trust, which is why it is not active.
+No bridge model is universally better: each trades trust, capital, speed and cost differently.
+
+State machine (design name / prototype name):
+
+```
+CREATED / REQUEST_CREATED -> WAITING_SOST / AWAITING_SOST -> SOST_SEEN, CONFIRMING / VERIFYING
+-> SOST_FINAL / DEPOSIT_CONFIRMED (30 conf.) -> AUTHORIZED / AUTH_READY (EIP-712, 30 min)
+-> WAITING_ETHEREUM / AWAITING_METAMASK -> MINTED / MINTING -> COMPLETED
+exceptions: EXPIRED (no deposit) · PAUSED (minting paused; burns continue)
+            RECOVERY_PENDING, REFUND_ELIGIBLE / PENDING_RECOVERY -> REFUNDED (revoke on Ethereum first)
+            SECURITY_HOLD / SECURITY_ERROR (reorg after authorization, inconsistency)
+never REFUNDED and MINTED for the same deposit; each deposit (txid, vout) is consumed once
+```
+
+Custody target with V17 (#40,000) native multisig: a 3-of-5 Bridge Vault, whose spending keys
+are separate from the Ethereum mint-authorization key, so that compromising one does not
+compromise the other. Status: not audited; contracts and engine are development prototypes.
 
 Two valuation inputs are needed: XAUT/EUR (signed, fresh, bounded, deviation-limited) and
 SOST/EUR. SOST/EUR has NO approved methodology; while it is absent the contract refuses every
