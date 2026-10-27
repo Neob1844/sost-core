@@ -1,6 +1,6 @@
 {
   "contract": "AtomicSwapHTLCv2",
-  "creation_bytecode_keccak256": "0xbe82b2ed28271272808f25f639d66d0b308911af41fe43d50617a5d5d004deeb",
+  "creation_bytecode_keccak256": "0x63b368e607ed34bca071b3bad9162d1ac5d6d4842d6f527550442732d2bbd98e",
   "solc": "0.8.24",
   "optimizer_runs": 200,
   "creation_gas_estimate": 1234479,
@@ -8,6 +8,11 @@
     "ethereum": null,
     "sepolia": null,
     "bnb": null
+  },
+  "deprecated_vulnerable_bytecode": {
+    "creation_bytecode_keccak256": "0xbe82b2ed28271272808f25f639d66d0b308911af41fe43d50617a5d5d004deeb",
+    "reason": "F-1: claimNative does not check token == address(0); an ERC-20 swap's claimer can take native ETH escrowed by other swaps",
+    "sepolia_test_instance": "0x395295622fDE4702BA199e4898F85B9d85175794"
   },
   "note": "addresses are null until an OWNER deploys and pastes them here; the DEX keeps v2-only assets (USDT/PAXG/XAUT) DISABLED while the address for the active network is null."
 }

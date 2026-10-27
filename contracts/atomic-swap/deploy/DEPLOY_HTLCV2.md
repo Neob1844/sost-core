@@ -1,13 +1,24 @@
 # Deploy AtomicSwapHTLCv2 — owner action (gas)
 
 The v2 HTLC (weird-ERC20-safe: USDT no-return, PAXG fee-on-transfer balance-delta + slippage) is LAB
-VERIFIED (14 tests; full suite 71/71) but **NOT deployed**. Deploying spends gas and is an explicit owner
-action. v1 was never deployed either (corrected 2026-10-12: no EVM HTLC contract is deployed on any network; all addresses are null).
+VERIFIED (F-1 fixed, see below; not externally audited) but **NOT deployed**. Deploying spends gas and is an explicit owner
+action. v1 was never deployed either. Correction (C713, 2026-10-27): no EVM HTLC deployment is recorded for any mainnet (read-only check: the stage-2 deployer has nonce 0 and the Sepolia
+address has no code on Ethereum, Arbitrum, BNB and Base), but a Sepolia
+test instance of the PRE-FIX v2 exists (see below); the canonical addresses in `htlc-v2-config.json` stay null.
+
+> **F-1 (C713, CRITICAL) — the earlier v2 bytecode is vulnerable and must never be deployed or used.**
+> Before the fix, `claimNative` did not check that the swap is a native one, so the claimer of any ERC-20
+> swap (even a worthless self-made token) was paid `lockedAmount` wei out of other swaps' native ETH escrow.
+> The Sepolia test instance `0x395295622fDE4702BA199e4898F85B9d85175794` (deployed 2026-10-13) runs that
+> vulnerable bytecode (creation keccak `0xbe82b2ed…deeb`); treat it as deprecated and never paste it into
+> `htlc-v2-config.json`. The fixed source enforces the asset kind on all four claim/refund paths and has
+> adversarial, fuzz and invariant tests (`test/AtomicSwapHTLCv2Isolation.t.sol`). It is NOT externally
+> audited; the creation gas below has to be re-measured for the new bytecode.
 
 ## Facts
 - contract: `contracts/atomic-swap/src/AtomicSwapHTLCv2.sol`, solc 0.8.24, optimizer runs 200
 - constructor: none (no owner/admin/pause/drain)
-- creation bytecode keccak256: `0xbe82b2ed28271272808f25f639d66d0b308911af41fe43d50617a5d5d004deeb`
+- creation bytecode keccak256: `0x63b368e607ed34bca071b3bad9162d1ac5d6d4842d6f527550442732d2bbd98e` (F-1 fixed; was `0xbe82b2ed…deeb`)
 - creation gas: ~1,234,479
 - ABI: `deploy/AtomicSwapHTLCv2.abi.json` · bytecode: `deploy/AtomicSwapHTLCv2.bytecode.txt`
 

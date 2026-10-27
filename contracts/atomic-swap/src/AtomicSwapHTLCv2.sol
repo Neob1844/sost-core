@@ -21,7 +21,20 @@ pragma solidity 0.8.24;
 //     the claimer's measured balance delta is below it — the claimer is never
 //     told they will receive X unless the transfer actually delivers >= X.
 //
-// v1 is NOT modified and stays deployed/valid; v2 is a separate deployment.
+// v1 is NOT modified; v2 is a separate deployment.
+//
+// ASSET ISOLATION (F-1 fix, C713). Every claim/refund path checks the asset
+// kind of the swap before moving anything: claimNative/refundNative require
+// token == address(0) (NOT_NATIVE), claimERC20/refundERC20 require
+// token != address(0) (NOT_ERC20). Before this fix claimNative did not check
+// the kind, so the claimer of any ERC-20 swap (even a worthless self-made
+// token) was paid lockedAmount wei out of other swaps' native escrow and the
+// ERC-20 swap was marked CLAIMED without its tokens moving. The bytecode
+// deployed on Sepolia at 0x395295622fDE4702BA199e4898F85B9d85175794 is the
+// VULNERABLE pre-fix build and must not be used. All state changes happen
+// before any external call (checks-effects-interactions) and every
+// state-changing entry point is nonReentrant (one shared lock, so a token or a
+// claimer cannot re-enter any other function either).
 // NOT externally audited. Deploying to any network is an explicit operator step
 // requiring gas and credentials NOT stored in this repo.
 // =============================================================================
@@ -83,6 +96,7 @@ contract AtomicSwapHTLCv2 {
     function lockERC20(bytes32 swapId, address token, uint256 amount, bytes32 hashlock, uint256 refundTime, address claimer, address refunder) external nonReentrant {
         require(swaps[swapId].state == State.NONE, "SWAP_EXISTS");
         require(token != address(0), "BAD_TOKEN");
+        require(token.code.length > 0, "NOT_CONTRACT"); // a call to an EOA "succeeds" with empty return data
         require(amount > 0, "ZERO_AMOUNT");
         require(refundTime > block.number, "BAD_REFUND_TIME");
         require(claimer != address(0) && refunder != address(0), "BAD_PARTY");
@@ -103,6 +117,7 @@ contract AtomicSwapHTLCv2 {
 
     function claimNative(bytes32 swapId, bytes32 preimage) external nonReentrant {
         Swap storage s = _checkClaim(swapId, preimage);
+        require(s.token == address(0), "NOT_NATIVE"); // F-1: an ERC-20 swap must never release native ETH
         require(msg.sender == s.claimer, "NOT_CLAIMER");
         uint256 amt = s.lockedAmount; s.state = State.CLAIMED;
         (bool ok, ) = s.claimer.call{value: amt}(""); require(ok, "SEND_FAILED");
@@ -112,8 +127,8 @@ contract AtomicSwapHTLCv2 {
     // minReceive: the claimer's required minimum measured delivery (fee-on-transfer safety)
     function claimERC20(bytes32 swapId, bytes32 preimage, uint256 minReceive) external nonReentrant {
         Swap storage s = _checkClaim(swapId, preimage);
-        require(msg.sender == s.claimer, "NOT_CLAIMER");
         require(s.token != address(0), "NOT_ERC20");
+        require(msg.sender == s.claimer, "NOT_CLAIMER");
         uint256 amt = s.lockedAmount; s.state = State.CLAIMED;
         uint256 before = IERC20v2(s.token).balanceOf(s.claimer);
         _safeTransfer(s.token, s.claimer, amt);
