@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-27-v585-explorer-schedule-lag">
+<meta name="explorer-html-version" content="2026-10-27-v586-explorer-lag-labels">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -853,7 +853,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </div>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-27-v585-explorer-schedule-lag';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-27-v586-explorer-lag-labels';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1772,7 +1772,7 @@ createCollapsibleProducerList('dwzJpListPanel','winner list');
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">WALL CLOCK ELAPSED</div><div id="csWall" style="font-size:16px;font-weight:600;color:var(--green)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">real time since genesis</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CHAIN TIME ELAPSED</div><div id="csChain" style="font-size:16px;font-weight:600;color:var(--purple)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">height × 10 min target</div></div>
-        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BLOCK LAG</div><div id="csLag" style="font-size:16px;font-weight:600;color:var(--orange)">—</div><div id="csLagSub" style="font-size:9px;color:var(--text3);margin-top:2px">expected − actual</div><div id="csLagCountdown" style="font-size:10px;color:#fbbf24;margin-top:4px;display:none"></div><div id="csLagCascade" style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.4;display:none" title="V12 7-step triangular cascade — the only active cASERT relief mechanism at the current height. Arms at 540s into the current block search; advances one step every 60s; cap at n=7 (max drop 28 levels). Drop applied = n*(n+1)/2. Floor stays at E7. Source: compute_v11_cascade_drop_triangular_h in src/pow/casert.cpp."></div></div>
+        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BLOCK LAG · WALL CLOCK</div><div id="csLag" style="font-size:16px;font-weight:600;color:var(--orange)">—</div><div id="csLagSub" style="font-size:9px;color:var(--text3);margin-top:2px">expected − actual</div><div id="csLagCountdown" style="font-size:10px;color:#fbbf24;margin-top:4px;display:none"></div><div id="csLagCascade" style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.4;display:none" title="V12 7-step triangular cascade — the only active cASERT relief mechanism at the current height. Arms at 540s into the current block search; advances one step every 60s; cap at n=7 (max drop 28 levels). Drop applied = n*(n+1)/2. Floor stays at E7. Source: compute_v11_cascade_drop_triangular_h in src/pow/casert.cpp."></div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">EXPECTED BLOCKS</div><div id="csExpected" style="font-size:16px;font-weight:600;color:var(--yellow)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at 10 min/block target</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">ACTUAL BLOCKS</div><div id="csActual" style="font-size:16px;font-weight:600;color:var(--red)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">mined on chain</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">TIME OFFSET</div><div id="csOffset" style="font-size:16px;font-weight:600;color:var(--cyan)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at tip · <span id="csSinceTip" style="color:var(--yellow)">—</span> since last block</div></div>
@@ -2214,6 +2214,23 @@ function getProfileFromLag(lag) {
   var idx = Math.min(CASERT_PROFILES.length - 1, 7 + profile_h); // B0=index 7
   return CASERT_PROFILES[idx];
 }
+// Exact mirror of casert_compute() for heights >= 12,000 (src/pow/casert.cpp; checked against it on
+// 200,000 random inputs and all recent blocks). lag = tipHeight - floor((tipTime - genesis)/600): it
+// is frozen between blocks and does NOT follow the wall clock (since #6,700). The live profile moves
+// only through the V12 cascade (from 540 s) and anti-stall (from 3,600 s).
+function casertNow(tipH,tipT,tipPi,now){
+  var lag=tipH-Math.floor((tipT-GENESIS_TS)/600), target=lag<=0?0:Math.min(lag,35);
+  var p=Math.max(-7,Math.min(35,tipPi)), e=Math.max(0,now-tipT), H;
+  if(target>=p)H=target;else H=Math.max(target,p-Math.max(1,Math.floor(e/600)));
+  var base=H;
+  if(lag<=0)H=Math.min(H,0);
+  if(e>=3600&&H>0){var d=H-1,dt=e-3600;while(d>0&&dt>0){var c=d>=7?600:(d>=4?900:1200);if(dt<c)break;dt-=c;d--;}H=d;}
+  if(e>=3600&&H<=0&&e-3600>21600)H=Math.max(-7,-Math.floor((e-3600-21600)/1800));
+  if(e>=540){var n=Math.min(7,1+Math.floor((e-540)/60));H=Math.min(H,Math.max(base-n*(n+1)/2,-7));}
+  return {lag:lag,base:base,H:H,elapsed:e};
+}
+function casertName(H){return H<0?'E'+(-H):H===0?'B0':'H'+H;}
+var _tipProfileIdx=null;
 // Backward compat: old callers used getProfile(signal)
 function getProfile(signal) { return getProfileFromLag(signal); }
 // Legacy compat
@@ -4126,7 +4143,7 @@ async function updateDashboard(info){
       el.style.color=since>=3600?'#fb010d':(since>=1800?'#fbbf24':'#4ade80');
     }
     window._renderScheduleNow=_renderScheduleNow;
-    function _renderLag(lagId,avgSec,windowSize){
+    function _renderLag(lagId,avgSec,windowSize,inWindow){
       var el=document.getElementById(lagId);if(!el)return;
       if(!isFinite(avgSec)||avgSec<=0||windowSize<=0){el.textContent='⏱ —';el.style.color='#9CA3AF';return;}
       var lagBlocks=windowSize*(600-avgSec)/600;
@@ -4141,9 +4158,10 @@ async function updateDashboard(info){
       if(abs<0.05)text='⏱ on schedule';
       else if(lagBlocks>0)text='⏱ +'+abs.toFixed(1)+' blk ahead';
       else text='⏱ −'+abs.toFixed(1)+' blk behind';
+      if(inWindow)text=text.replace(' ahead',' gained').replace(' behind',' lost')+' in last '+windowSize;
       el.textContent=text;el.style.color=color;
     }
-    _renderLag('dAvgTimeLag',avg,times.length-1);
+    _renderLag('dAvgTimeLag',avg,times.length-1,true);
     // Long-window informational cards (avg600 + avg1000). Same pulse logic,
     // text colors are fixed (yellow / red) — never recolored by deviation.
     // These metrics are NOT used by consensus; avg288 is the canonical one.
@@ -4196,8 +4214,8 @@ async function updateDashboard(info){
       _applyLongAvgPulse('avgTime1000Card','dAvgTime1000','dAvgTime1000Sub',t1,'#fb010d',1000);
       var s6=document.getElementById('dAvgTime600Sub'); if(s6)s6.textContent=(t6.length>=600)?'600 blocks · rolling average':(t6.length.toLocaleString()+' / 600 blocks available');
       var s1=document.getElementById('dAvgTime1000Sub'); if(s1)s1.textContent=(t1.length>=1000)?'1,000 blocks · rolling average':(t1.length.toLocaleString()+' / 1,000 blocks available');
-      _renderLag('dAvgTime600Lag',(t6.length>=2)?(t6[0]-t6[t6.length-1])/(t6.length-1):0,t6.length-1);
-      _renderLag('dAvgTime1000Lag',(t1.length>=2)?(t1[0]-t1[t1.length-1])/(t1.length-1):0,t1.length-1);
+      _renderLag('dAvgTime600Lag',(t6.length>=2)?(t6[0]-t6[t6.length-1])/(t6.length-1):0,t6.length-1,true);
+      _renderLag('dAvgTime1000Lag',(t1.length>=2)?(t1[0]-t1[t1.length-1])/(t1.length-1):0,t1.length-1,true);
     }
     async function _updateLongAvgCards(tip){
       if(window._btBusy||!tip||tip<2)return; window._btBusy=true;
@@ -4261,7 +4279,7 @@ async function updateDashboard(info){
     var _avgGenesis=(times.length>0&&info.blocks>0)?((times[0]-GENESIS_TS)/info.blocks):0;
     _applyDirectAvgPulse('avgTimeGenesisCard','dAvgTimeGenesis','dAvgTimeGenesisSub',_avgGenesis,'#ec4899','since block 0 · '+info.blocks+' blocks');
     _renderLag('dAvgTimeGenesisLag',_avgGenesis,info.blocks);
-    (function(el){if(el&&el.textContent.indexOf('⏱')===0)el.textContent=el.textContent.replace('⏱','⏱ at tip:');})(document.getElementById('dAvgTimeGenesisLag'));
+    (function(el){if(el&&el.textContent.indexOf('⏱')===0&&times.length){var cl=info.blocks-Math.floor((times[0]-GENESIS_TS)/600);el.textContent=el.textContent.replace('⏱','⏱ at tip:')+' (consensus lag '+(cl>0?'+':'')+cl+')';}})(document.getElementById('dAvgTimeGenesisLag'));
     // CURRENT SCHEDULE LAG: against the wall clock, not the tip timestamp.
     window._schedTip={h:info.blocks,t:times.length?times[0]:0};
     if(!window._schedTimer){window._schedTimer=setInterval(_renderScheduleNow,10000);}
@@ -4473,6 +4491,7 @@ async function updateDashboard(info){
     _tipBlockHash=tipHash;
     var tipBlock=await rpc('getblock',[tipHash]);
     if(tipBlock.casert_mode)_lastBlockCasertMode=tipBlock.casert_mode;
+    if(tipBlock.casert_profile_index!=null)_tipProfileIdx=parseInt(tipBlock.casert_profile_index,10);
     if(tipBlock.time)_lastBlockTime=tipBlock.time; // ensure mining panel has timing
   }catch(e){console.warn('tip block fetch:',e)}
   if(RPC_USER&&RPC_PASS){try{
@@ -4544,19 +4563,18 @@ function updateChainSync(){
   // mining panel and chain timing stay consistent on profile identity. Live
   // lag is shown as the main number; tip lag is shown as an annotation so the
   // user can see both.
-  var displayProfile=_rpcCasertProfile||getProfileFromLag(lag).name;
+  // The profile is NOT derived from this wall-clock lag: consensus uses the lag at the tip
+  // timestamp (frozen between blocks) and then eases through the cascade. Show both, labelled.
+  var cn=(_lastBlockTime&&_tipProfileIdx!==null)?casertNow(H,_lastBlockTime,_tipProfileIdx,now):null;
+  var displayProfile=cn?casertName(cn.H):(_rpcCasertProfile||'—');
+  var consLag=rpcLag!==null?rpcLag:(cn?cn.lag:null);
   var tipAnnotation='';
-  if(rpcLag!==null&&rpcLag!==lag){
-    tipAnnotation=' <span style="color:var(--text3);font-size:10px">(at tip: '+(rpcLag>0?'+'+rpcLag+' ahead':rpcLag<0?rpcLag+' behind':'on schedule')+')</span>';
+  if(consLag!==null){
+    tipAnnotation=' <span style="color:var(--text3);font-size:10px">(consensus lag at tip: '+(consLag>0?'+'+consLag:consLag)+(cn?' · base '+casertName(cn.base)+(cn.H!==cn.base?' → '+casertName(cn.H)+' after '+Math.floor(cn.elapsed/60)+'m '+(cn.elapsed%60)+'s':''):'')+')</span>';
   }
-  // Lag-adjust indicator: show when live lag implies a different profile than what miner is using
   var lagAdjustHtml='';
-  var expectedProf=getProfileFromLag(lag);
-  if(_rpcCasertProfile&&expectedProf.name!==_rpcCasertProfile){
-    lagAdjustHtml=' <span style="color:#fbbf24;font-size:10px;animation:v6pulse 1.5s ease-in-out infinite">\u27F3 lag-adjust pending: expected '+expectedProf.name+' (mining '+_rpcCasertProfile+')</span>';
-  }
-  if(lag<0){document.getElementById('csLag').innerHTML=fComma(-lag)+' behind \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='live: '+fComma(-lag)+' blocks behind wall-clock schedule';}
-  else if(lag>0){document.getElementById('csLag').innerHTML=fComma(lag)+' ahead \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='live: '+fComma(lag)+' blocks ahead of wall-clock schedule';}
+  if(lag<0){document.getElementById('csLag').innerHTML=fComma(-lag)+' behind \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='wall clock now (display only): '+fComma(-lag)+' blocks behind';}
+  else if(lag>0){document.getElementById('csLag').innerHTML=fComma(lag)+' ahead \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='wall clock now (display only): '+fComma(lag)+' blocks ahead';}
   else{document.getElementById('csLag').innerHTML='on schedule \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='live: perfect wall-clock sync';}
   // Lag-adjust countdown: time until lag drops by 1 (next 600s boundary)
   var cdEl=document.getElementById('csLagCountdown');
@@ -6084,7 +6102,10 @@ function updateMiningPanel(elapsed){
   // Profile name + params + stability rate (human-readable lag, matches Chain Timing panel)
   var pn=document.getElementById('miningProfileName');
   var lagTxt=tipLag>0?(tipLag+' ahead'):tipLag<0?((-tipLag)+' behind'):'on schedule';
-  var profSrc=' <span style="color:#555;font-size:8px">(lag='+lagTxt+', src='+profSource+')</span>';
+  var cnm=(_lastBlockTime&&_tipProfileIdx!==null)?casertNow(H,_lastBlockTime,_tipProfileIdx,now_mp):null;
+  // Same second as the breakdown below: the getinfo value is only as fresh as the last poll.
+  if(cnm){var cp=CASERT_PROFILES.find(function(p){return p.H===cnm.H;});if(cp){effProf=cp;profSource='live';}}
+  var profSrc=' <span style="color:#555;font-size:8px">(consensus lag='+lagTxt+(cnm?' · base '+casertName(cnm.base)+(cnm.H!==cnm.base?' − cascade '+(cnm.base-cnm.H)+' at '+Math.floor(cnm.elapsed/60)+'m '+(cnm.elapsed%60)+'s':''):'')+', src='+profSource+')</span>';
   if(pn)pn.innerHTML='<span style="color:'+getLevelColor(effProf.H)+'">'+effProf.name+'</span>'+profSrc;
   var pp=document.getElementById('miningProfileParams');
   if(pp)pp.textContent='(scale='+effProf.scale+' k='+effProf.k+' margin='+effProf.margin+' steps='+effProf.steps+')';
