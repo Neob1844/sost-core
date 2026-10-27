@@ -195,3 +195,6 @@ td { padding: 6px 8px; border-bottom: 1px solid var(--line); font-family: var(--
 .navshow { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); right: 12px; z-index: 6; background: rgba(5,6,7,.92);
   box-shadow: 0 0 10px rgba(34,211,238,.25); }
 body.cr-nav-hidden .top { display: none; }
+.candbtn { display: block; width: 100%; max-width: 100%; margin-top: 12px; padding: 9px 12px; border-radius: 8px; text-align: left; white-space: normal; letter-spacing: 1px; text-transform: uppercase; }
+.candbtn[aria-expanded="true"] { color: var(--cyan); border-color: rgba(34,211,238,.45); }
+#jpCandList[hidden] { display: none; }

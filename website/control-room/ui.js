@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   const S = window.CRState;
+  let candOpen = false;   // DTD Jackpot candidate list, folded by default
   const $ = (id) => document.getElementById(id);
   const esc = (x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const num = (v, d = 0) => (v == null || isNaN(v) ? '—' : Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }));
@@ -138,7 +139,8 @@
       <div class="kv"><span class="k">Pot / reserve</span><span class="v">${num(j.pot.value, 2)} / ${num(j.reserve.value, 2)} SOST</span>
       <span class="k">Rules</span><span class="v">≥ ${num(j.minPowBlocks.value)} PoW blocks in ${num(j.powWindow.value)} · heartbeats ${num(j.heartbeatRequired.value)}</span></div>
       <div class="sub">A separate draw from the normal DTD: NODE_BIND + heartbeats + SbPoW blocks, weighted by PoW, no cooldown and no anti-dominance. The normal DTD winner of a jackpot block is <b>not</b> the jackpot winner.</div>
-      <div class="tbl-wrap"><table><thead><tr><th>Candidate</th><th>PoW blocks</th><th>NODE_BIND</th><th>Heartbeats</th><th>Eligible</th></tr></thead><tbody>${cand}</tbody></table></div></div>`);
+      <button type="button" class="badge navbtn candbtn" id="jpCandToggle" aria-controls="jpCandList" aria-expanded="${candOpen}">${candOpen ? '▲ Hide' : '▼ Show'} Jackpot Candidates (${num(j.candidateList.length)})</button>
+      <div class="tbl-wrap" id="jpCandList"${candOpen ? '' : ' hidden'}><table><thead><tr><th>Candidate</th><th>PoW blocks</th><th>NODE_BIND</th><th>Heartbeats</th><th>Eligible</th></tr></thead><tbody>${cand}</tbody></table></div></div>`);
 
     html.push(`<div class="p w6"><h3>Supply ${tag('live')}${src(s.total)}</h3>
       <div class="big">${num(s.total.value, 4)} <small>SOST total</small></div>${supplyBar(st)}
@@ -147,7 +149,9 @@
       <span class="k">Gold Vault</span><span class="v">${num(s.goldVault.value, 4)}</span>
       <span class="k">PoPC Pool</span><span class="v">${num(s.popcPool.value, 4)}</span>
       <span class="k">Jackpot reserve (= Vault + Pool)</span><span class="v">${num(s.jackpotReserve.value, 4)}</span></div></div>`);
+    const hadFocus = document.activeElement && document.activeElement.id === 'jpCandToggle';
     $('activeGrid').innerHTML = html.join('');
+    if (hadFocus && $('jpCandToggle')) $('jpCandToggle').focus();
   }
 
   function renderEvents(st) {
@@ -308,6 +312,18 @@
   setInterval(refresh, POLL_MS);
   (function second() { tick(); setTimeout(second, 1000 - ((source.now() * 1000) % 1000) + 5); })();   // on the second boundary
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+
+  // DTD Jackpot candidate list: folded on every page load; the refresh re-renders it in the state the
+  // viewer chose (candOpen), so a poll never opens or closes it.
+  $('activeGrid').addEventListener('click', (e) => {
+    const b = e.target.closest('#jpCandToggle');
+    if (!b) return;
+    candOpen = !candOpen;
+    const list = $('jpCandList');
+    if (list) list.hidden = !candOpen;
+    b.setAttribute('aria-expanded', String(candOpen));
+    b.textContent = b.textContent.replace(candOpen ? '▼ Show' : '▲ Hide', candOpen ? '▲ Hide' : '▼ Show');
+  });
 
   // HIDE NAV / SHOW NAV — hides the sticky top bar; the choice is remembered on this browser only.
   const navHide = $('navHide'), navShow = $('navShow');
