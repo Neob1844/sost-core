@@ -1805,7 +1805,7 @@ createCollapsibleProducerList('dwzJpListPanel','winner list');
       <div style="margin-top:8px;font-size:10px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap;font-family:var(--code);">
         <span title="Hash and difficulty of the block BEFORE the one being mined now">prev: <a id="miningPrev" href="#" style="color:var(--cyan);text-decoration:none;" onclick="return false;">—</a> <span id="miningPrevDiff" style="color:var(--yellow);"></span></span>
         <span class="pi" onclick="toggleParamInfo('bitsq')">bitsQ: <span id="miningBitsQRaw" style="color:var(--yellow);font-weight:600;">—</span> <span class="pi-i">ⓘ</span></span>
-        <span class="pi" onclick="toggleParamInfo('profile')" title="Estimated from current chain lag — actual consensus profile may differ by ±1 level">profile: <span id="miningProfileName" style="font-weight:600;">—</span> <span id="miningProfileParams" style="color:var(--red);">(scale=1 k=4 margin=165 steps=4)</span> <span class="pi-i">ⓘ</span></span>
+        <span class="pi" onclick="toggleParamInfo('profile')" title="EFFECTIVE PROFILE as reported by the node (getinfo casert_profile). Values computed in the browser are labelled estimate and never replace the node value.">profile: <span id="miningProfileName" style="font-weight:600;">—</span> <span id="miningProfileParams" style="color:var(--red);">(scale=1 k=4 margin=165 steps=4)</span> <span class="pi-i">ⓘ</span></span>
         <span class="pi" onclick="toggleParamInfo('stability')">stability: <span id="miningStabRate" style="font-weight:600;">—</span> <span class="pi-i">ⓘ</span></span>
         <span id="miningLotteryInfo" style="color:var(--text3);font-weight:600;">DTD: —</span>
         <span id="miningDecayInfo" style="color:#fbbf24;display:none;"></span>
@@ -2230,6 +2230,17 @@ function casertNow(tipH,tipT,tipPi,now){
   return {lag:lag,base:base,H:H,elapsed:e};
 }
 function casertName(H){return H<0?'E'+(-H):H===0?'B0':'H'+H;}
+// Labels shared by Chain Timing and the mining panel. Node (RPC) values always come first and are
+// the only official ones; the browser mirror is shown only as an estimate, and only when it adds
+// something (base profile, or a newer cascade step than the last getinfo poll).
+function casertLabels(consLag,rpcProf,cn,noEff){
+  var a=[];
+  if(consLag!==null)a.push('CONSENSUS LAG (node, at tip): '+(consLag>0?'+'+consLag:consLag));
+  if(rpcProf&&!noEff)a.push('EFFECTIVE PROFILE (node): '+rpcProf);
+  if(cn){a.push('BASE PROFILE (estimate): '+casertName(cn.base));
+    if(!rpcProf||casertName(cn.H)!==rpcProf)a.push('estimate now: '+casertName(cn.H)+(cn.H!==cn.base?' (cascade −'+(cn.base-cn.H)+' at '+Math.floor(cn.elapsed/60)+'m '+(cn.elapsed%60)+'s)':'')+(rpcProf?', node value pending next poll':''));}
+  return a.join(' · ');
+}
 var _tipProfileIdx=null;
 // Backward compat: old callers used getProfile(signal)
 function getProfile(signal) { return getProfileFromLag(signal); }
@@ -4335,7 +4346,7 @@ async function updateDashboard(info){
     _prevBlockInterval=(times.length>=2)?(times[0]-times[1]):0;
     _chainTipHeight=info.blocks||0;
     // Store cASERT profile from RPC (Phase 5A fix)
-    if(info.casert_profile)_rpcCasertProfile=info.casert_profile;
+    if(info.casert_profile){_rpcCasertProfile=info.casert_profile;_rpcCasertTs=Math.floor(Date.now()/1000);}
     if(info.casert_profile_index!==undefined)_rpcCasertProfileIdx=info.casert_profile_index;
     if(info.casert_lag!==undefined)_rpcCasertLag=info.casert_lag;
     if(info.casert_stability_pct!==undefined)_rpcStabilityPct=info.casert_stability_pct;
@@ -4566,41 +4577,22 @@ function updateChainSync(){
   // The profile is NOT derived from this wall-clock lag: consensus uses the lag at the tip
   // timestamp (frozen between blocks) and then eases through the cascade. Show both, labelled.
   var cn=(_lastBlockTime&&_tipProfileIdx!==null)?casertNow(H,_lastBlockTime,_tipProfileIdx,now):null;
-  var displayProfile=cn?casertName(cn.H):(_rpcCasertProfile||'—');
+  var displayProfile=_rpcCasertProfile||(cn?casertName(cn.H)+' (estimate)':'—');
   var consLag=rpcLag!==null?rpcLag:(cn?cn.lag:null);
   var tipAnnotation='';
-  if(consLag!==null){
-    tipAnnotation=' <span style="color:var(--text3);font-size:10px">(consensus lag at tip: '+(consLag>0?'+'+consLag:consLag)+(cn?' · base '+casertName(cn.base)+(cn.H!==cn.base?' → '+casertName(cn.H)+' after '+Math.floor(cn.elapsed/60)+'m '+(cn.elapsed%60)+'s':''):'')+')</span>';
-  }
+  var lbl=casertLabels(consLag,_rpcCasertProfile||null,cn);
+  if(lbl)tipAnnotation='<div style="color:var(--text3);font-size:10px;font-weight:400;margin-top:2px">'+lbl+'</div>';
   var lagAdjustHtml='';
-  if(lag<0){document.getElementById('csLag').innerHTML=fComma(-lag)+' behind \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='wall clock now (display only): '+fComma(-lag)+' blocks behind';}
-  else if(lag>0){document.getElementById('csLag').innerHTML=fComma(lag)+' ahead \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='wall clock now (display only): '+fComma(lag)+' blocks ahead';}
-  else{document.getElementById('csLag').innerHTML='on schedule \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='live: perfect wall-clock sync';}
+  if(lag<0){document.getElementById('csLag').innerHTML=fComma(-lag)+' behind'+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='wall clock now (display only): '+fComma(-lag)+' blocks behind';}
+  else if(lag>0){document.getElementById('csLag').innerHTML=fComma(lag)+' ahead'+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='wall clock now (display only): '+fComma(lag)+' blocks ahead';}
+  else{document.getElementById('csLag').innerHTML='on schedule'+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='wall clock now (display only): on schedule';}
   // Lag-adjust countdown: time until lag drops by 1 (next 600s boundary)
   var cdEl=document.getElementById('csLagCountdown');
   if(cdEl&&lag>0){
     var nextBoundary=(expected+1)*600;
     var secsToNext=Math.max(0,Math.ceil(nextBoundary-wallSec));
     var cdM=Math.floor(secsToNext/60),cdS=Math.floor(secsToNext%60);
-    // Use the canonical getProfileFromLag() (defined line 2190) instead
-    // of a hardcoded Math.min(lag,10) cap, which dated from an earlier
-    // ceiling era and produced "target H10" while the rest of the UI
-    // (block detail page, lag-adjust indicator) correctly reported H13
-    // for the same lag. The helper respects the current dynamic cap
-    // and matches the block-detail cASERT_target / cASERT_mined values.
-    var targetProfObj  = getProfileFromLag(lag);
-    var nextProfObj    = getProfileFromLag(Math.max(lag-1,0));
-    var targetProf     = targetProfObj.H;
-    var nextLagProf    = nextProfObj.H;
-    var targetName     = targetProfObj.name;
-    var nextName       = nextProfObj.name;
-    var miningProf=_rpcCasertProfile||targetName;
-    var line='\u23F1 lag '+lag+' \u2192 '+(lag-1)+' in <b style="color:#00ff88">'+cdM+'m '+('0'+cdS).slice(-2)+'s</b>';
-    if(miningProf!==targetName){
-      line+=' \u00B7 mining <b style="color:#ff8800">'+miningProf+'</b> \u2192 target <b style="color:#00ff88">'+targetName+'</b>';
-    } else {
-      line+=' \u00B7 '+targetName+' \u2192 '+nextName;
-    }
+    var line='\u23F1 wall-clock lag '+lag+' \u2192 '+(lag-1)+' in <b style="color:#00ff88">'+cdM+'m '+('0'+cdS).slice(-2)+'s</b> \u00B7 display only: the consensus lag and profile do not change until the next block';
     cdEl.style.display='block';
     cdEl.innerHTML=line;
     if(secsToNext<=30)cdEl.style.color='#00ff88';
@@ -4608,10 +4600,10 @@ function updateChainSync(){
     else cdEl.style.color='#67e8f9';
   } else if(cdEl&&lag===0){
     cdEl.style.display='block';cdEl.style.color='#67e8f9';
-    cdEl.innerHTML='\u23F1 on schedule \u00B7 profile B0';
+    cdEl.innerHTML='\u23F1 wall clock on schedule (display only)';
   } else if(cdEl&&lag<0){
     cdEl.style.display='block';cdEl.style.color='var(--orange)';
-    cdEl.innerHTML='\u23F1 behind schedule \u00B7 profile B0';
+    cdEl.innerHTML='\u23F1 wall clock behind schedule (display only)';
   } else if(cdEl){cdEl.style.display='none';}
 
   // V12 7-step triangular cascade — the SOLE relief mechanism at the
@@ -5731,7 +5723,7 @@ function setupDpTooltip(canvasId,dataArr,fmtFn){
   cv.addEventListener('mouseleave',function(){tip.style.display='none';});
 }
 var _lastBitsQ=0;
-var _rpcCasertProfile='';var _rpcCasertProfileIdx=null;var _rpcCasertLag=null;var _rpcStabilityPct=-1;
+var _rpcCasertProfile='';var _rpcCasertTs=0;var _rpcCasertProfileIdx=null;var _rpcCasertLag=null;var _rpcStabilityPct=-1;
 var _lastBlockCasertMode='';
 var _nextBitsQ=0;
 var _tipBlockHash='';
@@ -6096,16 +6088,18 @@ function updateMiningPanel(elapsed){
   var tipLag=(_rpcCasertLag!==null&&_rpcCasertLag!==undefined)?parseInt(_rpcCasertLag):(H-expected_mp);
   // Profile: RPC casert_profile (node PID truth), fallback to wall-clock estimate
   var rpcProf=_rpcCasertProfile?CASERT_PROFILES.find(function(p){return p.name===_rpcCasertProfile;}):null;
-  var effProf=rpcProf||getProfileFromLag(tipLag);
-  var profSource=rpcProf?'rpc':'est';
+  var effProf=rpcProf;
+  var profSource=rpcProf?'node':'estimate';
   var dc={active:false};
   // Profile name + params + stability rate (human-readable lag, matches Chain Timing panel)
   var pn=document.getElementById('miningProfileName');
   var lagTxt=tipLag>0?(tipLag+' ahead'):tipLag<0?((-tipLag)+' behind'):'on schedule';
   var cnm=(_lastBlockTime&&_tipProfileIdx!==null)?casertNow(H,_lastBlockTime,_tipProfileIdx,now_mp):null;
   // Same second as the breakdown below: the getinfo value is only as fresh as the last poll.
-  if(cnm){var cp=CASERT_PROFILES.find(function(p){return p.H===cnm.H;});if(cp){effProf=cp;profSource='live';}}
-  var profSrc=' <span style="color:#555;font-size:8px">(consensus lag='+lagTxt+(cnm?' · base '+casertName(cnm.base)+(cnm.H!==cnm.base?' − cascade '+(cnm.base-cnm.H)+' at '+Math.floor(cnm.elapsed/60)+'m '+(cnm.elapsed%60)+'s':''):'')+', src='+profSource+')</span>';
+  // The node's getinfo value wins; the browser mirror is only a fallback, always marked as an estimate.
+  if(!effProf&&cnm)effProf=CASERT_PROFILES.find(function(p){return p.H===cnm.H;});
+  if(!effProf)effProf=getProfileFromLag(tipLag);
+  var profSrc=' <span style="color:#555;font-size:8px">(EFFECTIVE PROFILE, src='+profSource+' · '+casertLabels(tipLag,rpcProf?rpcProf.name:null,cnm,true)+')</span>';
   if(pn)pn.innerHTML='<span style="color:'+getLevelColor(effProf.H)+'">'+effProf.name+'</span>'+profSrc;
   var pp=document.getElementById('miningProfileParams');
   if(pp)pp.textContent='(scale='+effProf.scale+' k='+effProf.k+' margin='+effProf.margin+' steps='+effProf.steps+')';
