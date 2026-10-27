@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-20-v579-explorer-rpc-polling">
+<meta name="explorer-html-version" content="2026-10-27-v585-explorer-schedule-lag">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -853,7 +853,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </div>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-26-v581-node-protocol-tx';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-27-v585-explorer-schedule-lag';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1070,10 +1070,10 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </div>
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label" style="color:var(--red)">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
-  <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff;border:2px solid #fb010d;box-shadow:0 0 14px rgba(251,1,13,.4),inset 0 0 6px rgba(251,1,13,.18);position:relative" title="Consensus-relevant average. cASERT bitsQ adjusts based on this 288-block window."><div style="position:absolute;top:-8px;right:8px;background:#fb010d;color:#fff;font-size:8px;font-weight:800;letter-spacing:1.5px;padding:2px 6px;border-radius:3px;box-shadow:0 0 6px rgba(251,1,13,.6)">CONSENSUS</div><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 288 blocks</div><div class="dash-lag" id="dAvgTimeLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
-  <div class="dash-card" id="avgTime600Card" onclick="toggleDashPanel('avgtime')" style="color:#fbbf24" title="Long-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fbbf24">LAST 600 BLOCKS</div><div class="dash-val" id="dAvgTime600" style="color:#fbbf24">&mdash;</div><div class="dash-sub" id="dAvgTime600Sub" style="color:#fbbf24">loading &hellip;</div><div class="dash-lag" id="dAvgTime600Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
-  <div class="dash-card" id="avgTime1000Card" onclick="toggleDashPanel('avgtime')" style="color:#fb010d" title="Maturity-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fb010d">LAST 1,000 BLOCKS</div><div class="dash-val" id="dAvgTime1000" style="color:#fb010d">&mdash;</div><div class="dash-sub" id="dAvgTime1000Sub" style="color:#fb010d">loading &hellip;</div><div class="dash-lag" id="dAvgTime1000Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
-  <div class="dash-card" id="avgTimeGenesisCard" onclick="toggleDashPanel('avgtime')" style="color:#ec4899" title="All-time average since genesis. O(1) computed as (tip_time - GENESIS_TIME) / tip_height. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#ec4899">AVG &middot; GENESIS</div><div class="dash-val" id="dAvgTimeGenesis" style="color:#ec4899">&mdash;</div><div class="dash-sub" id="dAvgTimeGenesisSub" style="color:#ec4899">since block 0 &middot; visual</div><div class="dash-lag" id="dAvgTimeGenesisLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
+  <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff;border:2px solid #fb010d;box-shadow:0 0 14px rgba(251,1,13,.4),inset 0 0 6px rgba(251,1,13,.18);position:relative" title="Consensus-relevant average. cASERT bitsQ adjusts based on this 288-block window."><div style="position:absolute;top:-8px;right:8px;background:#fb010d;color:#fff;font-size:8px;font-weight:800;letter-spacing:1.5px;padding:2px 6px;border-radius:3px;box-shadow:0 0 6px rgba(251,1,13,.6)">CONSENSUS</div><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 288 blocks</div><div class="dash-lag" id="dAvgTimeLag" title="Schedule deviation accumulated INSIDE this window: intervals × (600 s − window average) / 600 s. Historical, from block timestamps; it is not the chain's current lag (see AVG · GENESIS, NOW line)." style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
+  <div class="dash-card" id="avgTime600Card" onclick="toggleDashPanel('avgtime')" style="color:#fbbf24" title="Long-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fbbf24">LAST 600 BLOCKS</div><div class="dash-val" id="dAvgTime600" style="color:#fbbf24">&mdash;</div><div class="dash-sub" id="dAvgTime600Sub" style="color:#fbbf24">loading &hellip;</div><div class="dash-lag" id="dAvgTime600Lag" title="Schedule deviation accumulated INSIDE this window: intervals × (600 s − window average) / 600 s. Historical, from block timestamps; it is not the chain's current lag (see AVG · GENESIS, NOW line)." style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
+  <div class="dash-card" id="avgTime1000Card" onclick="toggleDashPanel('avgtime')" style="color:#fb010d" title="Maturity-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fb010d">LAST 1,000 BLOCKS</div><div class="dash-val" id="dAvgTime1000" style="color:#fb010d">&mdash;</div><div class="dash-sub" id="dAvgTime1000Sub" style="color:#fb010d">loading &hellip;</div><div class="dash-lag" id="dAvgTime1000Lag" title="Schedule deviation accumulated INSIDE this window: intervals × (600 s − window average) / 600 s. Historical, from block timestamps; it is not the chain's current lag (see AVG · GENESIS, NOW line)." style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
+  <div class="dash-card" id="avgTimeGenesisCard" onclick="toggleDashPanel('avgtime')" style="color:#ec4899" title="All-time average since genesis. O(1) computed as (tip_time - GENESIS_TIME) / tip_height. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#ec4899">AVG &middot; GENESIS</div><div class="dash-val" id="dAvgTimeGenesis" style="color:#ec4899">&mdash;</div><div class="dash-sub" id="dAvgTimeGenesisSub" style="color:#ec4899">since block 0 &middot; visual</div><div class="dash-lag" id="dAvgTimeGenesisLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF" title="Schedule deviation at the TIP BLOCK's timestamp: tip height minus (tip time − genesis) / 600 s. It does not move while no block is found.">&mdash;</div><div class="dash-lag" id="dScheduleNow" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF" title="CURRENT SCHEDULE LAG: tip height minus (now − genesis) / 600 s, using this device's clock. Unlike the window cards, it keeps growing while no block is found, so it shows a stalled chain.">&mdash;</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label" style="color:var(--green)">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="True circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE. Counts all SOST currently in user wallets (miners + reward recipients). The DTD reward payouts ARE circulating — they sit in winners' wallets. The CIRCULATING MINING card next to this one shows only the miner-side share (excluding lottery)."><div class="dash-label" style="color:#FFFF00">CIRCULATING SUPPLY</div><div class="dash-val" id="dCircReal" style="color:#FFFF00">—</div><div class="dash-sub" id="dCircRealSub" style="color:#FFFF00">total − vault − pool</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Miner-side circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD REWARD BALANCE. Excludes DTD reward payouts (those are shown as part of TRUE CIRCULATING SUPPLY to the left). Computed deterministically from consensus constants (V11 Phase 2 activation #7100, bootstrap cadence 2-of-3 until #12100, then 1-of-3 permanent; 50% of subsidy per triggered block). No background scan required."><div class="dash-label" style="color:var(--red)">CIRCULATING MINING</div><div class="dash-val red" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − reward</div></div>
@@ -1089,7 +1089,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
   <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Cumulative, monotonic count of distinct addresses that have produced an accepted Phase II block since the #12100 (V13) update — it never decreases (all miners that have ever updated, active now or not). Accumulated across visits and floored at the full-chain DTD-eligibility count (PEAK ACTIVE MINERS). Card pulses red permanently as a standing centralisation reminder." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #12100 V13</div></div>
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label" style="color:var(--green)">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label" style="color:var(--purple)">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
-  <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Active SOST nodes known to this gateway: the local mainnet node (counted once, and only while its RPC answers on mainnet with a fresh tip) plus distinct external machines connected over P2P with a completed handshake. Miners, historical block producers and unverified addresses are not counted. Discovered-but-unconnected nodes are not available: the P2P protocol has no address exchange."><div class="dash-label" style="color:var(--cyan)">&#9741; UNIQUE NODES ONLINE</div><div class="dash-val cyan" id="dNodes">&mdash;</div><div class="dash-sub" id="dNodesSub">local + active visible peers</div></div>
+  <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Active SOST nodes known to this gateway: the local mainnet node (counted once, and only while its RPC answers on mainnet with a fresh tip) plus distinct external machines connected over P2P with a completed handshake. Miners, historical block producers and unverified addresses are not counted. Discovered-but-unconnected nodes are not available: the P2P protocol has no address exchange."><div class="dash-label" style="color:var(--cyan)">&#9741; UNIQUE NODES ONLINE</div><div class="dash-val cyan" id="dNodes">&mdash;</div><div class="dash-sub" id="dNodesSub" style="color:var(--cyan)">local + active visible peers</div></div>
   <div class="dash-card" onclick="var w=document.getElementById('boundNodesWrap');if(w)w.scrollIntoView({behavior:'smooth'})" title="Mining identities linked to a node key by a NODE_BIND transaction on chain (from #30,000), indexed from canonical blocks. ACTIVE = heartbeat in the current or last completed epoch. Node-ready = the bound node already meets the heartbeat condition of the next Jackpot V2 draw (PoW is checked separately). A NODE_BIND is a chain identity, not a P2P connection: it is not linked to the UNIQUE NODES count."><div class="dash-label" style="color:#39ff14">&#9939; NODE_BIND</div><div class="dash-val" id="dBound" style="color:#39ff14">&mdash;</div><div class="dash-sub" id="dBoundSub">bound identities on chain</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Distinct addresses that have produced at least one accepted block since genesis — MONOTONIC (it never decreases; floored across visits). This is NOT the same as 'eligible now': the live DTD-reward eligibility count (shown in the DTD panel) rises and falls as miners enter/leave the recent-miner cooldown and the V13 dominance gate. Non-producing nodes (peer-only, validators, observers) are NOT counted. Click for the DTD panel."><div class="dash-label" style="color:var(--cyan)">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div><div class="dash-sub" style="font-size:8.5px;color:var(--text3);line-height:1.4;margin-top:2px">only miners who found &ge;1 block<br>excludes non-producing nodes</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
@@ -4117,6 +4117,15 @@ async function updateDashboard(info){
     // Lag indicator helper: positive = ahead (chain faster than 600s target),
     // negative = behind. Color reflects how far the lag is from the cASERT
     // ±15s dead-band (which is ±N*15/600 blocks for window N).
+    function _renderScheduleNow(){
+      var el=document.getElementById('dScheduleNow'),st=window._schedTip;if(!el)return;
+      if(!st||!st.h||!st.t){el.textContent='NOW —';el.style.color='#9CA3AF';return;}
+      var now=Date.now()/1000, lag=st.h-(now-GENESIS_TS)/600, since=Math.max(0,now-st.t), abs=Math.abs(lag);
+      var ago=since<3600?Math.floor(since/60)+'m':Math.floor(since/3600)+'h '+Math.floor((since%3600)/60)+'m';
+      el.textContent='NOW '+(lag>=0?'+':'−')+abs.toFixed(1)+' blk '+(lag>=0?'ahead':'behind')+' · last block '+ago+' ago';
+      el.style.color=since>=3600?'#fb010d':(since>=1800?'#fbbf24':'#4ade80');
+    }
+    window._renderScheduleNow=_renderScheduleNow;
     function _renderLag(lagId,avgSec,windowSize){
       var el=document.getElementById(lagId);if(!el)return;
       if(!isFinite(avgSec)||avgSec<=0||windowSize<=0){el.textContent='⏱ —';el.style.color='#9CA3AF';return;}
@@ -4174,10 +4183,14 @@ async function updateDashboard(info){
     // These two cards need 600 / 1000 REAL blocks, so a SEPARATE background window
     // cache (height->time) is kept incrementally: the first run fills up to 1000, then
     // later ticks fetch ONLY the new tip delta. It NEVER reuses the 288 window.
-    function _btGet(hh){var T=4;return (function att(n){return rpc('getblockhash',[String(hh)]).then(function(hash){return hash?rpc('getblock',[hash]):null;}).then(function(b){return (b&&typeof b.time==='number')?b.time:(n<T?new Promise(function(z){setTimeout(z,160*(n+1));}).then(function(){return att(n+1);}):null);}).catch(function(){return n<T?new Promise(function(z){setTimeout(z,160*(n+1));}).then(function(){return att(n+1);}):null;});})(0);}
+    function _btGet(hh){var T=4;return (function att(n){return rpc('getblockhash',[String(hh)]).then(function(hash){return hash?rpc('getblock',[hash]):null;}).then(function(b){return (b&&typeof b.time==='number'&&b.hash&&b.previousblockhash)?{t:b.time,h:b.hash,p:b.previousblockhash}:(n<T?new Promise(function(z){setTimeout(z,160*(n+1));}).then(function(){return att(n+1);}):null);}).catch(function(){return n<T?new Promise(function(z){setTimeout(z,160*(n+1));}).then(function(){return att(n+1);}):null;});})(0);}
+    // Only a run of CONSECUTIVE heights from the tip whose hashes chain (entry.p == hash of the
+    // height below) is ever averaged, so a gap or a block left over from a reorged branch can
+    // never enter a window.
+    function _btChain(byH,tip){var t=[];for(var h=tip;h>=1&&byH[h];h--){if(h<tip&&byH[h].h!==byH[h+1].p)break;t.push(byH[h].t);}return t;}
     function _renderLongAvg(byH,tip){
-      var hs=Object.keys(byH).map(Number).filter(function(h){return h<=tip;}).sort(function(a,b){return b-a;});
-      function win(n){var t=[];for(var i=0;i<hs.length&&t.length<n;i++)t.push(byH[hs[i]]);return t;}
+      var run=_btChain(byH,tip);
+      function win(n){return run.slice(0,n);}
       var t6=win(600),t1=win(1000);
       _applyLongAvgPulse('avgTime600Card','dAvgTime600','dAvgTime600Sub',t6,'#fbbf24',600);
       _applyLongAvgPulse('avgTime1000Card','dAvgTime1000','dAvgTime1000Sub',t1,'#fb010d',1000);
@@ -4189,19 +4202,28 @@ async function updateDashboard(info){
     async function _updateLongAvgCards(tip){
       if(window._btBusy||!tip||tip<2)return; window._btBusy=true;
       try{
-        if(!window._btByH){ window._btByH={}; try{var raw=localStorage.getItem('sost_bt_v1'); if(raw){var o=JSON.parse(raw); if(o&&o.byH)window._btByH=o.byH;}}catch(e){} }
-        var byH=window._btByH, lo=Math.max(1,tip-999);
-        for(var k in byH){ if(+k<lo-100) delete byH[k]; }
-        var missing=[]; for(var h=tip;h>=lo;h--){ if(byH[h]==null)missing.push(h); }
-        _renderLongAvg(byH,tip);
-        var CZ=24;
-        for(var i=0;i<missing.length;i+=CZ){
-          var sl=missing.slice(i,i+CZ);
-          var rr=await Promise.all(sl.map(function(hh){return _btGet(hh);}));
-          for(var j=0;j<sl.length;j++){ if(rr[j]!=null)byH[sl[j]]=rr[j]; }
+        if(!window._btByH){ window._btByH={}; try{localStorage.removeItem('sost_bt_v1');var raw=localStorage.getItem('sost_bt_v2'); if(raw){var o=JSON.parse(raw); if(o&&o.byH)window._btByH=o.byH;}}catch(e){} }
+        var byH=window._btByH, lo=Math.max(1,tip-999), CZ=24;
+        for(var k in byH){ var e0=byH[k]; if(+k<lo-100||+k>tip||!e0||typeof e0!=='object'||!e0.h||!e0.p) delete byH[k]; }
+        // The newest 12 heights are always re-read: a shallow reorg replaces them.
+        for(var r=tip;r>tip-12&&r>=lo;r--) delete byH[r];
+        for(var pass=0;pass<3;pass++){
+          var missing=[]; for(var h=tip;h>=lo;h--){ if(byH[h]==null)missing.push(h); }
           _renderLongAvg(byH,tip);
+          for(var i=0;i<missing.length;i+=CZ){
+            var sl=missing.slice(i,i+CZ);
+            var rr=await Promise.all(sl.map(function(hh){return _btGet(hh);}));
+            for(var j=0;j<sl.length;j++){ if(rr[j]!=null)byH[sl[j]]=rr[j]; }
+            _renderLongAvg(byH,tip);
+          }
+          // Deeper reorg: the first height whose hash does not match the parent link of the block
+          // above it, and everything below it, belongs to the old branch. Drop it and read again.
+          var brk=-1; for(var h2=tip-1;h2>=lo;h2--){ if(!byH[h2]||!byH[h2+1])continue; if(byH[h2].h!==byH[h2+1].p){brk=h2;break;} }
+          if(brk<0)break;
+          for(var h3=brk;h3>=lo;h3--) delete byH[h3];
         }
-        try{localStorage.setItem('sost_bt_v1',JSON.stringify({tip:tip,byH:byH}));}catch(e){}
+        _renderLongAvg(byH,tip);
+        try{localStorage.setItem('sost_bt_v2',JSON.stringify({tip:tip,byH:byH}));}catch(e){}
       }catch(e){}
       window._btBusy=false;
     }
@@ -4239,6 +4261,11 @@ async function updateDashboard(info){
     var _avgGenesis=(times.length>0&&info.blocks>0)?((times[0]-GENESIS_TS)/info.blocks):0;
     _applyDirectAvgPulse('avgTimeGenesisCard','dAvgTimeGenesis','dAvgTimeGenesisSub',_avgGenesis,'#ec4899','since block 0 · '+info.blocks+' blocks');
     _renderLag('dAvgTimeGenesisLag',_avgGenesis,info.blocks);
+    (function(el){if(el&&el.textContent.indexOf('⏱')===0)el.textContent=el.textContent.replace('⏱','⏱ at tip:');})(document.getElementById('dAvgTimeGenesisLag'));
+    // CURRENT SCHEDULE LAG: against the wall clock, not the tip timestamp.
+    window._schedTip={h:info.blocks,t:times.length?times[0]:0};
+    if(!window._schedTimer){window._schedTimer=setInterval(_renderScheduleNow,10000);}
+    _renderScheduleNow();
     // Dual hashrate display (SOST has profile-dependent stability filter,
     // so a single number is misleading; we show both).
     //
@@ -8926,7 +8953,7 @@ refresh();
       var st=ln.status==='ONLINE'?'':' <span style="color:var(--yellow)">(local '+String(ln.status||'?').toLowerCase()+')</span>';
       var nc=s.connections, ns=s.self_connections||0;
       sub.innerHTML=s.local_nodes+' local + '+s.connected_external+' external machine'+(s.connected_external===1?'':'s')+st+
-        (nc!=null?'<div style="font-size:9px;color:var(--text3);margin-top:3px">from '+nc+' P2P connection'+(nc===1?'':'s')+(ns?' ('+ns+' self = this node, counted once)':'')+'</div>':'');
+        (nc!=null?'<div style="font-size:9px;color:var(--cyan);margin-top:3px">from '+nc+' P2P connection'+(nc===1?'':'s')+(ns?' ('+ns+' self = this node, counted once)':'')+'</div>':'');
       renderLocalNode(ln);
       var info=document.getElementById('nodesLocal');
       if(info) info.innerHTML='LOCAL NODE <b style="color:'+(ln.online?'var(--green)':'var(--yellow)')+'">'+(ln.status||'?')+'</b>'+
