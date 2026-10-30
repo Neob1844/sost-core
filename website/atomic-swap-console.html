@@ -294,6 +294,7 @@
       <h2>EVM operate — real LOCK / CLAIM / REFUND (MetaMask)</h2>
       <p>This runs the <b>real</b> <code>AtomicSwapHTLC</code> contract via your wallet: it builds the exact calldata (verified against the contract ABI) and your wallet signs &amp; sends. ETH/BNB native + ERC-20 (USDT/USDC/PAXG/XAUT). <b>BTC is excluded (signing OFF by default).</b> No seed/private key ever touches this page.</p>
       <div class="warnmsg err" id="evmDeployWarn"><b>Contract status:</b> the <code>AtomicSwapHTLC</code> contract is <b>NOT deployed</b> by default (unaudited). Operations stay disabled until you deploy it and paste its address per network below. This is intentional — the console will not let you call a contract that does not exist.</div>
+      <div class="warnmsg err" id="evmRetiredWarn"><b>Security notice (2026-10-30):</b> the Sepolia test contract <code>0x395295622fDE4702BA199e4898F85B9d85175794</code> (AtomicSwapHTLC <b>v2</b>, pre-fix build) and the experimental wSOST Stage 2 Sepolia contracts (<code>0x4F71ef1D…F946C0</code>, <code>0x8ef5A156…ee1A0</code>, <code>0x3cDaaD6a…92534B</code>) are <b>RETIRED / VULNERABLE — DO NOT USE</b>. This console uses AtomicSwapHTLC v1 and only accepts an address whose bytecode matches the repo build exactly.</div>
     </div>
 
     <div class="card" id="evmFounderGate">
