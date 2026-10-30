@@ -954,7 +954,7 @@
  <div class="wg-not"><div>&#9940; NOT LIVE &middot; DEMO ONLY</div><div>&#9940; NO BRIDGE CONTRACT DEPLOYED</div><div>&#9940; NO GOLD RESERVE V2 FUNDS YET</div><div>&#9940; REAL OPERATIONS BLOCKED: NO APPROVED SOST/EUR VALUATION</div><div>&#9989; CURRENT SOST CONSENSUS UNCHANGED</div></div>
  <div class="box cyan"><div class="bt">#30,000 &rarr; #40,000</div><b>#30,000 built the current foundation</b> (V30000 is live). <b>#40,000 is the current coordinated research horizon</b> for the next major phase. <b>Nothing activates automatically at #40,000.</b> If engineering, external audit, legal or operational gates are not complete, the work moves later (for example #50,000). Every consensus change would need its own release, tests, audit and public notice.</div>
  <div class="wg-toc">
-  <a href="#atomic-bridge"><b>SOST Atomic Bridge (target)</b></a><a href="#ab-custody">Reserve custody problem</a><a href="#ab-conventional">vs conventional bridge</a><a href="#ab-systems">vs Atomiq / THORChain / Chainflip</a><a href="#bridge">Bridge dashboard (demo)</a><a href="#backing">Backing</a><a href="#gold-access-key">Gold Access Key</a><a href="#bridge-return">Return wSOST &rarr; SOST</a><a href="#bridge-explained">Conventional reference, explained</a><a href="#bridge-examples">Reference examples</a><a href="#bridge-compare">vs other bridges</a><a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#how-to-wrap">How the bridge works</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#trust">Bridge trust</a><a href="#swap-separate">Atomic Swap (separate)</a><a href="#blockers">Open blockers</a><a href="#superseded">Historical / superseded design</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
+  <a href="#atomic-bridge"><b>SOST Atomic Bridge (target)</b></a><a href="#ab-custody">Reserve custody problem</a><a href="#ab-conventional">vs conventional bridge</a><a href="#ab-systems">vs Atomiq / THORChain / Chainflip</a><a href="#bridge">Bridge dashboard (demo)</a><a href="#backing">Backing</a><a href="#gold-access-key">Gold Access Key</a><a href="#bridge-return">Return wSOST &rarr; SOST</a><a href="#bridge-explained">Conventional reference, explained</a><a href="#bridge-examples">Reference examples</a><a href="#bridge-compare">vs other bridges</a><a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#how-to-wrap">How the bridge works</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#popr">Dead Vault (PoPR)</a><a href="#trust">Bridge trust</a><a href="#swap-separate">Atomic Swap (separate)</a><a href="#blockers">Open blockers</a><a href="#superseded">Historical / superseded design</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
  </div>
 </div></div></section>
 
@@ -1829,6 +1829,60 @@ Circulating SOST         2,000,000
 Informational ratio      $250,000 / 2,000,000 = <span class="g">$0.125 of gold reserve per circulating SOST</span></div>
  <div class="box red"><div class="bt">READ THIS</div><b>THIS IS NOT A REDEMPTION VALUE. THIS IS NOT A GUARANTEED FLOOR.</b> A SOST holder has no right to claim any of the gold.</div>
  <div class="box gray"><div class="bt">ISSUER RISK</div>XAUT and PAXG are issued by companies that can freeze, upgrade or retire their tokens. "Perpetual" can only ever mean "under the reserve's own rules", which is why an emergency migration path exists.</div>
+ <div class="box cyan"><div class="bt">PROPOSAL &middot; 30 OCT 2026</div>Under research: the XAUT in this reserve could be used for one purpose only &mdash; buying wSOST back so that the same amount of native SOST is retired forever. See <a href="#popr">SOST Dead Vault (PoPR)</a>. Not active; the reserve stays locked.</div>
+</div></div></section>
+
+<section class="section" id="popr"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">PROPOSAL &middot; RESEARCH &middot; 30 OCT 2026</div><h2 class="section-title"><span class="wm-sost">SOST</span> Dead Vault &mdash; <span class="accent">Proof of Permanent Retirement (PoPR)</span></h2></div>
+ <span class="st res">RESEARCH</span> <span class="st nd">NOT ACTIVE</span> <span class="st nd">NOT DEPLOYED</span> <span class="st gated">NEEDS A HARD FORK AFTER V17</span>
+ <p>A proposed use for the XAUT collected by the <b>Gold Access Key</b>: periodically <b>buy wSOST back from the market</b> and take the same amount of native SOST <b>out of circulation forever</b>. Ordinary users of the SOST Atomic Bridge are not affected: entering and leaving keep working exactly as described above (wSOST from and back to the inventory, no mint, no burn).</p>
+ <div class="box gold" style="border-color:#d4af37;background:rgba(212,175,55,.06)"><div class="bt" style="color:#d4af37">THE CONSTITUTIONAL RULE</div><b>For every N wSOST permanently retired on Ethereum, exactly N native SOST are permanently immobilized on SOST.</b> In base units, with no rounding and no fee taken out of either side.</div>
+
+ <h3>How it would work &mdash; option A (chosen): permanent immobilization, no burn</h3>
+ <div class="pre"><span class="g">1 &middot; GOLD ACCESS KEY</span>      XAUT from bridge entries accumulates in Gold Reserve V2
+<span class="g">2 &middot; BUYBACK</span>              periodically, anyone can trigger a capped purchase of wSOST with that XAUT
+                         (max price, max slippage, max size; no safe liquidity &rarr; <b>no purchase</b>, the XAUT stays)
+<span class="e">3 &middot; RETIRED INVENTORY</span>    the wSOST bought go to a <b>permanent retired inventory</b> on Ethereum
+                         that has no exit: they are never sold, lent, re-issued or returned to the market
+<span class="c">4 &middot; DEAD VAULT</span>           after that step is final, exactly the same amount of native SOST moves from the
+                         bridge reserve into the <b>SOST Dead Vault</b> &mdash; an output type nobody can ever spend</div>
+ <p>Option A keeps the founding rule of the SOST Atomic Bridge: <b>wSOST is issued once and its total supply never changes</b>. The retired wSOST still exist on Ethereum, but they sit in a contract with no way out, and they are counted separately from the ordinary inventory. (Option B &mdash; really burning them and reducing <code>totalSupply()</code> &mdash; was considered and <b>not chosen</b>.)</p>
+
+ <h3>Example &mdash; one year retires 10,000 SOST</h3>
+ <div class="tw"><table><tr><th>Account</th><th>Before</th><th>After retiring 10,000</th></tr>
+  <tr><td>A &middot; wSOST total supply</td><td>1,000,000</td><td>1,000,000 <small>(unchanged)</small></td></tr>
+  <tr><td>B &middot; wSOST in the ordinary inventory</td><td>950,000</td><td>950,000</td></tr>
+  <tr><td>C &middot; wSOST circulating</td><td>50,000</td><td>40,000</td></tr>
+  <tr><td>D &middot; wSOST in the retired inventory (no exit)</td><td>0</td><td>10,000</td></tr>
+  <tr><td>E &middot; native SOST in the bridge reserve</td><td>50,000</td><td>40,000</td></tr>
+  <tr><td>F &middot; native SOST in the Dead Vault (no exit)</td><td>0</td><td>10,000</td></tr>
+  <tr><td>Backing of circulating wSOST (E / C)</td><td>100%</td><td>100%</td></tr>
+  <tr><td>SOST ever mined / SOST destroyed</td><td>unchanged / 0</td><td>unchanged / 0</td></tr></table></div>
+ <div class="pre">invariants checked in EVERY state, not only at month end:
+  C &le; E                         circulating wSOST is always fully backed
+  D = F + G                       G = retirements final on Ethereum, not yet immobilized on SOST
+  A = B + C + D                   no wSOST appears or disappears
+  each retirement id used once    no double counting, no replay
+figures are illustrative</div>
+ <p>The order is fixed: <b>first</b> the wSOST are final in the retired inventory, <b>then</b> the native SOST move. If the second step is delayed, what remains is a public, pending obligation to immobilize &mdash; never wSOST circulating without backing.</p>
+
+ <h3>The SOST Dead Vault</h3>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#39ff14">WHAT IT IS</div>a new SOST output type (working name <code>OUT_PERMANENT_RESERVE</code>) that nodes refuse to spend &middot; accepts deposits only &middot; every entry public and verifiable</div>
+  <div class="card"><div class="h" style="color:#ff3b3f">WHAT IT IS NOT</div>not a wallet &middot; no private key, owner, admin, guardian or vote can move it &middot; no staking, lending or rewards &middot; <b>not the historical Gold Vault</b>, whose coins have their own DTD Jackpot rules</div>
+ </div>
+ <p>The Dead Vault <b>immobilizes</b> SOST, it does not burn it: the emission schedule and the 4,669,201 hard cap are untouched. An address &ldquo;with no known key&rdquo; would not give the same guarantee, which is why it needs a consensus rule.</p>
+
+ <h3>What it needs &mdash; and what it does not promise</h3>
+ <div class="tw"><table><tr><th>Piece</th><th>Status</th></tr>
+  <tr><td>Retired-inventory contract on Ethereum</td><td><span class="st res">RESEARCH</span> new Solidity, not written</td></tr>
+  <tr><td>Permissionless, capped buyback (DEX / auction / tranches)</td><td><span class="st res">RESEARCH</span> needs real wSOST liquidity, which does not exist</td></tr>
+  <tr><td>Dead Vault output type on SOST</td><td><span class="st gated">HARD FORK AFTER V17</span> not part of #40,000</td></tr>
+  <tr><td>SOST verifying, by itself, that the wSOST were retired on Ethereum</td><td><span class="st gated">RESEARCH</span> same open problem as the keyless reserve (C705)</td></tr>
+  <tr><td>SOST Atomic Bridge itself</td><td><span class="st nd">NOT BUILT</span> PoPR cannot exist before it</td></tr></table></div>
+ <div class="box red"><div class="bt">READ THIS</div>
+  <b>Nothing here is active, deployed or scheduled.</b> Retiring SOST reduces the supply available to circulate; it does <b>not</b> guarantee any price. Spending XAUT on buybacks turns part of the gold reserve into permanently immobilized SOST &mdash; whether part of the XAUT stays as gold is still open. While mining is concentrated and Ethereum cannot verify SOST without custodians, this cannot be called trustless, and Gold Reserve V2 stays locked and only accumulates. &ldquo;Forever&rdquo; means under the protocol's rules: a future hard fork accepted by the network could technically change any rule.</div>
+ <div style="margin-top:10px;border:1px solid rgba(255,209,102,.35);border-radius:12px;padding:12px 14px;background:rgba(255,209,102,.04)" lang="es"><p style="margin:0"><b>En pocas palabras.</b> Con el XAUT de la Gold Access Key se recomprarían wSOST periódicamente. Esos wSOST quedarían en un inventario retirado del que nunca pueden salir, y la misma cantidad exacta de SOST nativos pasaría a una bóveda sin clave ni salida: <b>1 wSOST retirado = 1 SOST inmovilizado</b>. Los intercambios normales del puente no cambian, no se emite ni se quema nada y la emisión de SOST queda intacta. Es investigación: necesita el puente atómico y un hard fork posterior a V17, no está activo y no garantiza ningún precio.</p></div>
 </div></div></section>
 
 <section class="section" id="superseded"><div class="container"><div class="wg">

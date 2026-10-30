@@ -245,7 +245,7 @@
 <section class="section" id="sost-atomic-bridge-explained"><span id="c704-atomic-bridge"></span><span id="c703-automated-bridge-v2"></span><span id="c702-bridge-comparison"></span><span id="c701-bridge-architecture"></span><span id="wsost-gold-reserve-v2"></span><div class="container">
   <article class="nb" style="border:2px solid #d4af37;border-radius:14px;background:linear-gradient(180deg,rgba(212,175,55,.07),transparent 60%);padding:20px 22px">
     <div class="chips">
-      <span style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ffd166">// RESEARCH / DEVELOPMENT &middot; 26 OCT 2026</span>
+      <span style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ffd166">// RESEARCH / DEVELOPMENT &middot; 26 OCT 2026 &middot; UPDATED 30 OCT 2026</span>
       <span class="chip" style="color:#39ff14;border-color:#1f6b12">TARGET ARCHITECTURE</span>
       <span class="chip" style="color:#ff6b6b;border-color:#7a2b2b">NOT ACTIVE</span>
       <span class="chip" style="color:#ff6b6b;border-color:#7a2b2b">NOT ON MAINNET</span>
@@ -350,8 +350,26 @@
       <tr><td>Next step</td><td>a test-network proof of concept of the keyless design</td></tr>
       <tr><td>Real funds, contracts, launch date</td><td>none</td></tr>
     </table></div>
+    <h3>9 &middot; Update 30 Oct 2026 &mdash; proposed: SOST Dead Vault (Proof of Permanent Retirement)</h3>
+    <p>A new research proposal for the XAUT collected by the Gold Access Key: periodically <b>buy wSOST back</b> and retire the same amount of native SOST <b>forever</b>. The rule: <b>for every N wSOST retired on Ethereum, exactly N native SOST are immobilized on SOST</b>.</p>
+    <div class="three">
+      <div class="bx" style="--c:var(--g)"><b>1 &middot; Buyback.</b> Anyone can trigger a capped purchase of wSOST with the accumulated XAUT. No safe liquidity or a manipulated price &rarr; no purchase.</div>
+      <div class="bx" style="--c:var(--e)"><b>2 &middot; Retired inventory.</b> The wSOST bought go to a contract with <b>no exit</b>. Not burned: the wSOST supply stays fixed, as in the Atomic Bridge (option A).</div>
+      <div class="bx" style="--c:var(--s)"><b>3 &middot; Dead Vault.</b> Then exactly the same amount of native SOST moves from the bridge reserve into an output type <b>nobody can ever spend</b>: no key, admin, guardian or vote.</div>
+    </div>
+    <div class="tw"><table>
+      <tr><th>Example: one year retires 10,000</th><th>Before</th><th>After</th></tr>
+      <tr><td>wSOST circulating</td><td>50,000</td><td>40,000</td></tr>
+      <tr><td>wSOST in the retired inventory (no exit)</td><td>0</td><td>10,000</td></tr>
+      <tr><td>SOST in the bridge reserve</td><td>50,000</td><td>40,000</td></tr>
+      <tr><td>SOST in the Dead Vault (no exit)</td><td>0</td><td>10,000</td></tr>
+      <tr><td>Backing of circulating wSOST</td><td>100%</td><td>100%</td></tr>
+      <tr><td>wSOST total supply &middot; SOST ever mined</td><td colspan="2">unchanged &middot; nothing minted, nothing burned</td></tr>
+    </table></div>
+    <p>Ordinary entries and exits do not change. The Dead Vault <b>immobilizes</b> SOST, it does not burn it, and it is <b>not</b> the historical Gold Vault (whose coins fund the DTD Jackpot). It needs the Atomic Bridge first, a new consensus output type in a hard fork <b>after V17</b>, and a way for SOST to verify Ethereum by itself. <b>Not active, not deployed, not scheduled, no price promise.</b> Until then Gold Reserve V2 stays locked and only accumulates.</p>
+
     <div style="margin-top:10px;border:1px solid rgba(255,209,102,.35);border-radius:12px;padding:12px 14px;background:rgba(255,209,102,.04)" lang="es"><p style="margin:0"><b>En pocas palabras.</b> El SOST Atomic Bridge quiere llevar SOST a Ethereum y traerlo de vuelta 1:1 <b>sin que nadie tenga una clave capaz de llevarse las monedas</b>: ni una empresa, ni un servidor, ni un grupo de firmantes. Los wSOST se emiten una sola vez y esperan bloqueados; al entrar recibes wSOST que ya existían y al salir los devuelves. Los SOST quedan en una reserva sin clave que solo pueden mover las reglas de consenso, ante una prueba de devolución o de cancelación que cualquiera puede presentar. Para eso SOST necesita dos reglas de consenso nuevas: no están en V17 y no hay nada activo, ni desplegado, ni auditado.</p></div>
-    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7;margin-top:12px">Read more: <a href="sost-wsost-gold-vault.html#atomic-bridge" style="color:#ffd166">SOST Atomic Bridge &mdash; diagrams and live accounting example</a> &middot; <a href="sost-wsost-gold-vault.html#ab-custody" style="color:#ffd166">who controls the reserve</a> &middot; <a href="sost-wsost-gold-vault.html#ab-systems" style="color:#ffd166">compared with Atomiq, THORChain, Chainflip</a> &middot; <a href="sost-wsost-gold-vault.html#gold-access-key" style="color:#ffd166">Gold Access Key calculator</a> &middot; <a href="whitepaper-reader.html#research-wsost-grv2" style="color:#ffd166">Whitepaper &sect;3.16</a>.</p>
+    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7;margin-top:12px">Read more: <a href="sost-wsost-gold-vault.html#atomic-bridge" style="color:#ffd166">SOST Atomic Bridge &mdash; diagrams and live accounting example</a> &middot; <a href="sost-wsost-gold-vault.html#popr" style="color:#ffd166">SOST Dead Vault (PoPR)</a> &middot; <a href="sost-wsost-gold-vault.html#ab-custody" style="color:#ffd166">who controls the reserve</a> &middot; <a href="sost-wsost-gold-vault.html#ab-systems" style="color:#ffd166">compared with Atomiq, THORChain, Chainflip</a> &middot; <a href="sost-wsost-gold-vault.html#gold-access-key" style="color:#ffd166">Gold Access Key calculator</a> &middot; <a href="whitepaper-reader.html#research-wsost-grv2" style="color:#ffd166">Whitepaper &sect;3.16</a>.</p>
   </article>
 </div></section>
 
