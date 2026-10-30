@@ -1,0 +1,7 @@
+testLimit: 100000
+seqLen: 50
+shrinkLimit: 2000
+balanceContract: 1000000000000000000000
+workers: 2
+format: text
+cryticArgs: ["--compile-force-framework", "solc"]
