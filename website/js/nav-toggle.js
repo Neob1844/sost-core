@@ -591,10 +591,10 @@
       +'<div id="sv-chooser" class="sv-chooser"><div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>'
       +'<div class="sv-cards">'
       +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4?v=20261011b\',\'SOST in 3 Minutes &middot; protocol, mining &amp; tokenization\')">'
-      +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg?v=20261011b\')"><span class="sv-play">&#9654;</span></span>'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg?v=rs20261112g\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">SOST in 3 Minutes</span><span class="sv-card-s">Protocol, mining &amp; tokenization</span></button>'
       +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-mechanisms.mp4?v=20261011c\',\'SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot\')">'
-      +'<span class="sv-thumb" style="background-image:url(\'sost-mechanisms-poster.jpg?v=20261011\')"><span class="sv-play">&#9654;</span></span>'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-mechanisms-poster.jpg?v=rs20261112g\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span></button>'
       +'</div></div>'
       +'<div id="sv-player" class="sv-player" style="display:none">'
@@ -747,7 +747,7 @@
 /* ============================================================================
    SOST TOKENIZATION (Asset Layer) — global nav logo. A COLOUR-INVERTED TWIN of the
    SOST logo: identical size, shape and silhouette (asset-layer-logo.png is a pixel
-   swap of sost-logo.png — red body, black Σ). No text, no badge. PULSING WHITE glow
+   swap of sost-logo.png?v=rs20261112g — red body, black Σ). No text, no badge. PULSING WHITE glow
    (in sync with the SOST mark). Sits IMMEDIATELY BEFORE the
    ConvergenceX logo. Links to sost-universal-assets.html. Additional module; never
    replaces the SOST logo. No consensus/backend involvement.
@@ -882,7 +882,7 @@
    ========================================================================== */
 (function(){
   "use strict";
-  var IMG='assets/wsost/wsost-gold-vault-nav-256.webp?v=v554', IMG_PNG='assets/wsost/wsost-gold-vault-nav-256.png?v=v554';
+  var IMG='assets/wsost/wsost-gold-vault-nav-256.webp?v=rs20261112g', IMG_PNG='assets/wsost/wsost-gold-vault-nav-256.png?v=rs20261112g';
   function styleOnce(){
     if(document.getElementById('sost-wsost-btn-style')) return;
     var st=document.createElement('style'); st.id='sost-wsost-btn-style';

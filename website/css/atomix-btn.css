@@ -1,7 +1,7 @@
 /* ATOMIC SWAP DEX nav tile.
  *
  * Geometry is NOT defined here. The tile keeps the inline 110x110 box of the old
- * ATOMIC SWAP DEX tile, and js/nav-toggle.js wraps it like every other large
+ * ATOMIC SWAP DEX tile, and js/nav-toggle.js?v=rs20261112g wraps it like every other large
  * module (kind "ax"): the element is masked to the shared superellipse, its
  * ::before carries the body, and the halo is a drop-shadow on the wrapper so it
  * follows that same silhouette. This file only paints that module:
@@ -15,7 +15,7 @@
  * Nothing here changes size or position (no transform, margin or padding on the
  * tile, and the masked pseudo-elements never move). */
 
-/* ---- wrapped module (normal case, js/nav-toggle.js present) ---------------- */
+/* ---- wrapped module (normal case, js/nav-toggle.js?v=rs20261112g present) ---------------- */
 
 .sq-wrap.sq-wrap-ax{animation:atomixHalo 10.5s linear infinite}
 

@@ -1,11 +1,11 @@
 // SOST — Sovereign Stock Token — Service Worker v84
-const CACHE_NAME = 'sost-app-v84';
+const CACHE_NAME = 'sost-app-v85';   // rs20261112g: brand identity (Gold Sigma) cache refresh
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './icon-192.png?v=rs20261112g',
+  './icon-512.png?v=rs20261112g'
 ];
 
 self.addEventListener('install', e => {
