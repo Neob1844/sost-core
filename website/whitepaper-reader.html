@@ -205,7 +205,7 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <img src="sost-logo.png?v=v392" alt="SOST" style="">
-      <h3>Technical Whitepaper v4.0</h3>
+      <h3>Technical Whitepaper v4.0 · status v4.6</h3>
       <p><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> + PoPC + Metals Reserve</p>
     </div>
     <div class="sidebar-actions">
@@ -302,6 +302,16 @@
   </div>
 </div>
 
+<div id="wp46Status" style="margin:0 0 22px;background:rgba(103,232,249,0.06);border-left:3px solid #67e8f9;padding:12px 18px;font-family:var(--code,monospace);font-size:12px;color:#67e8f9;line-height:1.7;"><b>WHITEPAPER v4.6 — STATUS AT 12 NOVEMBER 2026 (mainnet height ≈ 34,800).</b>
+    <ol style="margin:8px 0 10px 18px;padding:0;color:var(--text-primary,#e7e7ea);font-family:var(--code,monospace);font-size:11.5px;line-height:1.7;">
+      <li><b style="color:#22c55e">Live consensus: V16</b> (activated at #30,000, release V30000): 50% miner / 50% DTD, permissionless DTD for addresses that mined in the last 288 blocks, DTD Jackpot V2 every 288 blocks (≥ 3 SbPoW blocks in the last 2,016 + NODE_BIND + heartbeats in 3 of the last 4 epochs). Coinbase maturity 1,000 blocks. MAX_REORG_DEPTH 500.</li>
+      <li><b style="color:#fbbf24">Network incident, 12 Nov 2026:</b> a 2-block reorg at #34,794–#34,795 caused by a V16 P2P propagation defect (a node stops relaying blocks to a peer that has not sent it blocks for ~50 blocks; dead links are not detected). Consensus behaved correctly; the root cause is reproduced and a node-only hotfix (no consensus change) is in validation, not yet installed. See §SACS.</li>
+      <li><b style="color:#fbbf24">Block #40,000 (V17) is a candidate, not a commitment.</b> Under study: DTD-F1 (jackpot entropy hardening), chain-selection review (bitsQ / ConvergenceX work), the P2P fixes above, full ConvergenceX re-verification of historical blocks, and the research items below (80/15/5 split, participation-based maturity 1,000 / 5,000). Nothing of V17 is activated; the activation height is not final.</li>
+      <li><b style="color:#fbbf24">Bridge (SOST ↔ wSOST):</b> working end-to-end on local development networks only; <b>not deployed, NO-GO for production</b>. Protocol fee 0: users pay only the real external costs (gas, relay). The Gold Access Key / XAUT contribution is retired. See §3.16.0.</li>
+      <li><b style="color:#f87171">No independent external security audit</b> of the consensus code, the wallet or the bridge has been performed. All results quoted in this document are internal tests.</li>
+      <li><b>Decentralization:</b> in the 288 blocks up to #34,837 a single address produced every block, and there is one public node. See §Honest Assessment.</li>
+    </ol>
+    This reader is the v4.0 long-form specification; where it conflicts with the status above, the status above is current. No independent external audit has been performed. This is a technical whitepaper, not a crypto-asset white paper under the EU MiCA Regulation.</div>
 <h2 id="sec-0" class="wp-h">SOST</h2>
 <div class="wp-spacer"></div>
 <h3 id="sec-1" class="wp-h">Proof of Irreversible Convergence</h3>
@@ -1239,6 +1249,24 @@ Creating nodes adds nothing. Doing work does.</div>
 <div class="cx-t" style="color:#ff4d4d">STATUS: RESEARCH / DEVELOPMENT &middot; NOT ACTIVE &middot; NOT READY FOR PRODUCTION</div>
 <h3>SOST Atomic Bridge (Atomic Reserve Vault), Gold Access Key, Gold Reserve V2 and governance (#40,000 research horizon)</h3>
 <p><b>The target architecture of the bridge is the SOST Atomic Bridge</b> (3.16.1). C701 replaced the previous federated design with automated verification; its lock/mint model is now the conventional reference (3.16.2). The bridge, wSOST and Gold Reserve V2 exist only as development contracts, a verification-engine prototype and tests on a <b>local development chain</b>. Nothing is deployed on any public chain, no contract is live, no funds exist and there is <b>no launch date</b>; real operations are <b>blocked by design</b> until the open blockers below are closed, and any future activation is subject to security work, an external audit and legal/regulatory review. Current consensus (50% miner / 50% DTD) is unchanged; #40,000 is a research horizon, <b>not an activation commitment</b>. Public explanation and DEMO: <a href="sost-wsost-gold-vault.html#bridge" style="color:#ffd166">wSOST &amp; Gold Vault</a>.</p>
+<h4 id="research-bridge-status">3.16.0 Current status and economics (v4.6, November 2026) — supersedes conflicting text below</h4>
+<div class="cx-t" style="color:#ff4d4d">STATUS: LOCAL LAB ONLY · NOT DEPLOYED · NO-GO FOR PRODUCTION · NOT AUDITED</div>
+<div class="cx-pre">economics     protocol fee = 0; no commercial margin; users pay only real external costs
+              (Ethereum gas, relay / range publication, data availability), computed on chain
+              from the prices of the block where the cost was paid, shown before confirmation
+              Gold Access Key / XAUT contribution: RETIRED (sections below kept as history)
+reserve       preminted wSOST, immobilized in the Ethereum vault; no minter; 1:1 with the native reserve
+verification  SOST headers relayed optimistically in ranges; any watcher can challenge with a
+              ConvergenceX fraud proof (bisection to one step checked on chain); a quorum of
+              independent watchers must attest before a release
+lab results   SOST devnet + local Ethereum (anvil): SOST → wSOST → SOST, refunds, replay, reorgs,
+              relayer loss and restarts; internal E2E 110/110; verifier checked on 256 real
+              mainnet blocks; regression suites green. Internal tests, not an audit.
+open blocker  two colluding malicious watchers, with every honest watcher offline, can still pass
+              a fake deposit. Candidate fixes: proof-of-work verification at claim time with
+              difficulty anchored to real elapsed time, or succinct (zk) validity proofs. Until
+              closed: NO-GO. Then independent review, then a separate owner decision.</div>
+<p>Where the text below describes XAUT escrow, a Gold Access Key fee, a central authorizer key or an unstarted proof of concept, it is the October 2026 design and is superseded by this block.</p>
 <h4>Two services only</h4>
 <div class="cx-pre">SOST Bridge        native SOST &harr; wSOST on Ethereum, 1:1 (this section)
 SOST Atomic Swap   separate P2P HTLC service: no SOST&harr;wSOST pair, no Gold Access Key, never touches Gold Reserve V2</div>
@@ -1280,7 +1308,7 @@ P4 covenant: reserve spendable only into exit HTLCs refunding to the reserve, ra
 P5 SOST able to verify Ethereum state (light client / proof)</div>
 <p>Cross-chain proofs keep a role, no longer for every exchange: the entry release, public reserve verification, settlement checks, reorg detection and recovery. ConvergenceX has a compact transcript proof (about 10-20 ms natively, no 4 GB dataset), so a SOST light client on Ethereum is not ruled out; its EVM cost with the cASERT rules is unmeasured and expected to be high.</p>
 <p>Comparison (official documentation, 2026-10): Atomiq verifies Bitcoin PoW with an on-chain light client and releases LP liquidity from UTXO-controlled vaults; THORChain uses a bonded validator set, TSS vaults and liquidity pools; Chainflip uses 150 validators and an aggregate key with FROST 100-of-150 signing. The SOST design aims to avoid a separate validator network and a pool; it is not claimed to be more secure, more advanced or novel. Neither model A (lock/mint) nor model B (ARV) is automatically trustless.</p>
-<p>Proof of concept (testnet / devnet only, NOT STARTED): 100 fictitious preminted wSOST; entry, exit, counterparty disappears, deadline ordering, engine stops, secret replay, concurrent swaps, reserve insufficient, reorg, attempted reserve theft; decisive test 500 SOST → 500 wSOST → 500 SOST with 1:1 kept and no operator permission. The theft test is expected to fail with today's primitives. Until all of it is shown, the Atomic Reserve Vault is RESEARCH ONLY.</p>
+<p><b>[Superseded by 3.16.0: the lab proof of concept now exists.]</b> Original plan — proof of concept (testnet / devnet only): 100 fictitious preminted wSOST; entry, exit, counterparty disappears, deadline ordering, engine stops, secret replay, concurrent swaps, reserve insufficient, reorg, attempted reserve theft; decisive test 500 SOST → 500 wSOST → 500 SOST with 1:1 kept and no operator permission. The theft test is expected to fail with today's primitives. Until all of it is shown, the Atomic Reserve Vault is RESEARCH ONLY.</p>
 <h4 id="research-keyless-reserve">C705 feasibility result — a keyless native reserve</h4>
 <p>A reserve that nobody holds a key to can only react to events its own chain can verify. Hashlocks alone cannot protect it: with no deciding counterparty, anyone could make it lock SOST under a secret of their own choosing. The keyless form of the Atomic Bridge therefore replaces "who signs" with "what is proven", in both directions: the Ethereum vault releases inventory only against a proof of a confirmed SOST deposit, and SOST pays from the reserve only against a proof of a finalized Ethereum return. HTLCs remain only as an optional fast path for market makers swapping their own funds. Minimum new SOST primitives (research only, none authorized, consensus unchanged):</p>
 <div class="cx-pre">N1 = P4  keyless ARV outputs, no pubkey, no script, fixed spend paths:
@@ -1318,7 +1346,7 @@ No wSOST without a verified, confirmed native deposit · gold never mints wSOST 
 wSOST → SOST   any holder burns N wSOST (no XAUT) → vault releases N SOST minus the SOST network fee
                (capsule C701R:0x&lt;releaseId&gt;) → verified and recorded on Ethereum
 A transaction hash typed by a user is a search hint, never proof.</div>
-<h4>Gold Access Key</h4>
+<h4>Gold Access Key — RETIRED (November 2026; kept as history)</h4>
 <div class="cx-pre">feeEUR  = min(250, max(0.50, bridgeValueEUR × 0.001))      0.10% · min 0.50 EUR · max 250 EUR
 feeXAUT = feeEUR / verified XAUT price, rounded UP to XAUT's 6 decimals (integer math)
 minimum operation 100 EUR · 100% to Gold Reserve V2 · Ethereum gas paid by the user, shown separately

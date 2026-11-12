@@ -19,19 +19,19 @@
 <link rel="icon" type="image/png" href="sost-logo.png?v=v392">
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST Whitepaper — ConvergenceX Proof-of-Work &amp; metals reserve (historical)</title>
+<title>SOST Whitepaper v4.6 — ConvergenceX Proof-of-Work</title>
 <meta name="description" content="Read the SOST whitepaper. ConvergenceX memory-hard PoW, cASERT difficulty adjustment, a metals reserve that stopped receiving emission at block #25,000, emission model, and protocol specification.">
 <meta name="keywords" content="SOST whitepaper, ConvergenceX whitepaper, proof of work whitepaper, metals reserve (historical, no longer funded) whitepaper, cASERT, constitutional protocol">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SOST Whitepaper — ConvergenceX PoW &amp; metals reserve (historical)">
+<meta property="og:title" content="SOST Whitepaper v4.6 — ConvergenceX Proof-of-Work">
 <meta property="og:description" content="Read the SOST whitepaper. ConvergenceX memory-hard PoW, cASERT difficulty adjustment, a metals reserve that stopped receiving emission at block #25,000, emission model, and protocol specification.">
 <meta property="og:url" content="https://sostcore.com/sost-whitepaper.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="SOST Whitepaper — ConvergenceX PoW &amp; metals reserve (historical)">
+<meta name="twitter:title" content="SOST Whitepaper v4.6 — ConvergenceX Proof-of-Work">
 <meta name="twitter:description" content="Read the SOST whitepaper. ConvergenceX memory-hard PoW, cASERT difficulty adjustment, a metals reserve that stopped receiving emission at block #25,000, emission model, and protocol specification.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -723,7 +723,16 @@
      main body; until then the banner is the canonical pointer. -->
 <div id="wpRevisionBanner" style="max-width:1400px;margin:16px auto 0;padding:0 24px;">
   <div style="background:rgba(103,232,249,0.06);border-left:3px solid #67e8f9;padding:12px 18px;font-family:var(--code,monospace);font-size:11.5px;color:#67e8f9;line-height:1.7;">
-    <b>⚠ V13 / V14 SCOPE UPDATE — REVISION TO v4.6 IN PROGRESS.</b>
+    <b>WHITEPAPER v4.6 — STATUS AT 12 NOVEMBER 2026 (mainnet height ≈ 34,800).</b>
+    <ol style="margin:8px 0 10px 18px;padding:0;color:var(--text-primary,#e7e7ea);font-family:var(--code,monospace);font-size:11.5px;line-height:1.7;">
+      <li><b style="color:#22c55e">Live consensus: V16</b> (activated at #30,000, release V30000): 50% miner / 50% DTD, permissionless DTD for addresses that mined in the last 288 blocks, DTD Jackpot V2 every 288 blocks (≥ 3 SbPoW blocks in the last 2,016 + NODE_BIND + heartbeats in 3 of the last 4 epochs). Coinbase maturity 1,000 blocks. MAX_REORG_DEPTH 500.</li>
+      <li><b style="color:#fbbf24">Network incident, 12 Nov 2026:</b> a 2-block reorg at #34,794–#34,795 caused by a V16 P2P propagation defect (a node stops relaying blocks to a peer that has not sent it blocks for ~50 blocks; dead links are not detected). Consensus behaved correctly; the root cause is reproduced and a node-only hotfix (no consensus change) is in validation, not yet installed. See §SACS.</li>
+      <li><b style="color:#fbbf24">Block #40,000 (V17) is a candidate, not a commitment.</b> Under study: DTD-F1 (jackpot entropy hardening), chain-selection review (bitsQ / ConvergenceX work), the P2P fixes above, full ConvergenceX re-verification of historical blocks, and the research items below (80/15/5 split, participation-based maturity 1,000 / 5,000). Nothing of V17 is activated; the activation height is not final.</li>
+      <li><b style="color:#fbbf24">Bridge (SOST ↔ wSOST):</b> working end-to-end on local development networks only; <b>not deployed, NO-GO for production</b>. Protocol fee 0: users pay only the real external costs (gas, relay). The Gold Access Key / XAUT contribution is retired. See §3.16.0.</li>
+      <li><b style="color:#f87171">No independent external security audit</b> of the consensus code, the wallet or the bridge has been performed. All results quoted in this document are internal tests.</li>
+      <li><b>Decentralization:</b> in the 288 blocks up to #34,837 a single address produced every block, and there is one public node. See §Honest Assessment.</li>
+    </ol>
+    <b>Historical revision notes (V13 / V14, May–October 2026).</b>
     Whitepaper <b>v4.6</b>: the current-state summary above and the correction banners are current (October 2026); the sections below remain the <b>v4.5</b> base architecture (March 2026, consensus, monetary policy, four pillars), with each delta noted inline. It predates the 2026-05-18 V13 scope decisions and predates the V13 RC1 release. <b>For the canonical current scope</b>, read <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_PUBLIC_SCOPE_UPDATE.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_PUBLIC_SCOPE_UPDATE.md</a>, <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</a>, <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</a> and <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_DTD_FLIP_12100_AUTOMATIC.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_DTD_FLIP_12100_AUTOMATIC.md</a>. The four critical updates relative to v4.5 are:
     <ol style="margin:8px 0 0 18px;padding:0;color:var(--text-primary,#e7e7ea);font-family:var(--code,monospace);font-size:11.5px;line-height:1.7;">
       <li><b style="color:#22c55e">V13 confirmed at block 12,000</b> — full cASERT equalizer range <b>E7-H35</b> (not the H20 ceiling described in §PILLAR 1 below), DTD reward cooldown 5 → 6, future-timestamp drift cap 60 s → 30 s (<b>NTP synchronisation strongly recommended post-V13</b>), Beacon Phase II-A. RC1 metadata is signed (release_status = <code>signed_metadata_only</code>); binaries upload is the next manual operator step.</li>
@@ -1306,6 +1315,7 @@ Validators recompute the profile; the block's declared profile must match exactl
         <li><b>SACS Core — LAB VERIFIED (V16-compatible, not yet deployed).</b> Fork/reorg monitoring, structured chain-safety events, a read-only <code>getchainsafety</code> RPC, a transaction-safety state machine (CONFIRMED → REORGED → REENTERED_MEMPOOL → CONFLICTED) and reconciliation for the wallet, Explorer, DEX and exchanges, plus recovery/persistence hardening. This is observability and application protection — <b>it changes no consensus rule</b>: a SACS alert can make an application wait or pause, never turn a valid block invalid, never halt honest mining. Blockchain truth outranks any local database or UI.</li>
         <li><b>SACS Deep-Reorg Recovery — FUTURE RESEARCH (devnet only).</b> Studies treating the 500-block depth as an <b>operational alert</b> rather than an automatic rejection, so that after a long partition a node can fully re-verify the alternative branch (work, UTXO, emission, difficulty), protect sensitive operations, and converge on the valid higher-work chain. Any such change is consensus-affecting and would require a future coordinated upgrade — it is <b>not</b> part of the V16 fork at block #30,000.</li>
       </ul>
+      <p><b>Incident of 12 November 2026 and P2P hotfix.</b> Two blocks mined by one miner (#34,794–#34,795) were replaced by a heavier branch from the dominant producer after a peer reconnected. Consensus selected the most-work chain correctly; the cause was propagation. In V16 a node stops relaying blocks to a peer whose last reported height is more than 50 blocks behind, a peer's height is only updated at handshake or when it sends blocks, dead links are never detected, and reconnection happens only when a node has no peers at all. This was reproduced on a local devnet. A node-only hotfix (no consensus change) adds sent-height tracking, stale-link detection, re-dial, re-relay of transactions returned by a reorg, a <code>getnetworkhealth</code> RPC and a reorg log for the Explorer; it passed 15 devnet scenarios (partitions, restarts, encrypted links, abuse, deep-reorg cap intact) and is in a 24-hour mainnet soak. It is <b>not installed</b> yet; the block producer must upgrade first.</p>
       <p style="color:var(--text-muted,#64748b)"><b>Status:</b> SACS Core is code-complete and lab-verified on a research branch; it is <b>not</b> live on mainnet and no node binary is swapped before #30,000. SACS provides autonomous detection, recovery support and transaction-safety signals — it does not provide absolute, irreversible finality.</p>
       <div class="reward-research-update" style="margin-top:12px;background:rgba(215,255,0,.06);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:10px;padding:14px 16px;color:#e8ffb0;text-shadow:0 0 8px rgba(215,255,0,.22)">
         <div style="color:#d7ff00;font:900 12px/1.2 ui-monospace;letter-spacing:.8px;margin-bottom:8px;text-shadow:0 0 10px rgba(215,255,0,.5)">&#11042; MOST LIKELY CURRENT RESEARCH SCENARIO &mdash; NOT CONSENSUS</div>
@@ -1319,6 +1329,7 @@ Validators recompute the profile; the block's declared profile must match exactl
         <p style="font-size:12px;line-height:1.7;margin:0 0 6px;color:#e8ffb0">This gives <b>two complementary incentives</b>: (1) a <b>direct PoW incentive</b> for the miners securing the chain, and (2) an <b>accumulated Jackpot incentive</b> for eligible network participants that maintain the required network infrastructure.</p>
         <div style="font:700 12px/1.9 ui-monospace;color:#d7ff00;margin:8px 0;text-shadow:0 0 6px rgba(215,255,0,.3)">80% &rarr; direct PoW miner reward (chain security)<br>15% &rarr; continuous normal DTD per block<br>5% &rarr; accumulates in the existing DTD Jackpot pool (not a direct node payment)</div>
         <p style="font-size:11.5px;line-height:1.7;margin:6px 0 0;color:#cfe88a"><b style="color:#d7ff00">No new supply.</b> All three allocations come from the <b>existing block emission</b>. <b style="color:#d7ff00">Not consensus.</b> Blocks #40,000 and #50,000 are the two most likely activation scenarios &mdash; <b>neither height is final</b>. The <b>80/15/5</b> structure is the <b>leading research candidate, not active consensus</b> (current consensus is unchanged: 50% miner / 50% DTD) and supersedes 75/20/5 as the leading scenario. Any implementation would require explicit consensus rules and a <b>future hard fork</b>. <b style="color:#d7ff00">SOST is also actively pursuing full decentralization of the system as soon as possible.</b></p>
+        <p style="font-size:11.5px;line-height:1.7;margin:6px 0 0;color:#cfe88a"><b style="color:#d7ff00">Second research item — participation-based maturity (prototype, not approved).</b> New miner rewards would mature after <b>1,000 blocks</b> if the miner met the DTD Jackpot V2 eligibility rules at the block before, otherwise after <b>5,000 blocks</b>; fixed at creation, never retroactive, no supply change. A lab prototype and tests exist; it will not be proposed for #40,000 until the chain-selection audit is closed and it is shown not to harm small or new miners disproportionately.</p>
       </div>
 
     </div>
@@ -1332,7 +1343,8 @@ Validators recompute the profile; the block's declared profile must match exactl
       <h2 class="section-title">Honest <span>Assessment</span></h2>
     </div>
     <div style="max-width:800px;margin:0 auto;font-size:14px;line-height:1.8;color:var(--text-secondary);">
-      <p>The network and mining layers are already partially decentralized: multiple independent nodes, multiple active miners, open-source code, and no admin keys for block production.</p>
+      <p><b>Current state (12 November 2026), measured on chain:</b> the code is open source and no admin key controls block production, but the network is <b>not yet decentralized in practice</b>. In the 288 blocks up to #34,837 a single address produced every block, and the network relies on one public node (seed.sostcore.com resolves to the same host). A dominant producer can reorganize recent blocks and censor transactions; on 12 November 2026 a 2-block reorg replaced two blocks mined by another miner (see §SACS). Adding independent miners and independently operated nodes is the first priority; adding nodes under the same operator does not count as decentralization, and a node does not replace independent hashpower.</p>
+      <p><b>Audit status:</b> no independent external audit has been performed. <b>Regulatory note:</b> this is a technical whitepaper; it is not a crypto-asset white paper in the sense of the EU MiCA Regulation (EU 2023/1114).</p>
       <p style="margin-top:16px;">However, two economic custody components are still temporarily centralized during Phase I (until governance activates — originally targeted for V6 / block 10,000, deferred to <b style="color:#fbbf24">V14 / block 15,000</b> after the 2026-05-18 scope review; see banner above and <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code>):</p>
       <ul style="margin:12px 0 12px 24px;color:var(--text-primary);">
         <li><strong style="color:var(--gold);">Gold Vault</strong> (25% of every block reward (until #25,000; 0 since)): the 5-defense governance model once targeted for V14 / block 15,000 was <b>deferred and never activated</b> and is now <b style="color:#fbbf24">paused indefinitely / legacy</b>. From <b>V15 (block 25,000)</b> the accumulated reserve is redistributed on-chain to miners via the <b>DTD / DTD Jackpot</b> architecture (supply-neutral). Historical audit at <code>docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</code>.</li>
@@ -1343,9 +1355,9 @@ Validators recompute the profile; the block's declared profile must match exactl
       <ul style="margin:12px 0 12px 24px;">
         <li><strong>Block 15,000 (V14 hard fork):</strong> H3/H4 consensus hardening. The <b>Gold Vault governance</b> model (5-defense: purpose restriction, dual destination whitelists, per-spend cap, rate limiting, &ge;90 % miner signaling over a 67-block window, plus the Transitional Guardian role) and the <b>PoPC single-bond</b> once proposed for enforcement here / at V15 were <b>deferred and never activated</b>. Both are now <b style="color:#fbbf24">paused indefinitely / legacy</b>, superseded by the <b>DTD / DTD Jackpot</b> architecture: from V15 (block 25,000) the accumulated Gold Vault + PoPC reserve is redistributed to miners on-chain (supply-neutral), and from V16 (block 30,000) the DTD Accumulated Reward V2 becomes an independent node-gated draw. Governance threshold history retained for reference: 75 % (original whitepaper) → 95 % (V6 internal review) → 90 % (V13 review).</li>
         <li>Gold reserve purchases become externally verifiable on Ethereum (already started: 1.2 oz committed)</li>
-        <li><strong>Phase III (12&ndash;24 months):</strong> Migration from tokenized gold (XAUT/PAXG) to physical gold custody in a regulated vault. No bridges, no wSOST, no cross-chain attack surface.</li>
+        <li><strong>Phase III (12&ndash;24 months):</strong> Migration from tokenized gold (XAUT/PAXG) to physical gold custody in a regulated vault (historical plan; not scheduled). <b>Superseded on one point:</b> this plan said &ldquo;no bridges, no wSOST&rdquo;; the current direction is a SOST &harr; wSOST bridge under development (§3.16.0), which never touches the metals reserve.</li>
       </ul>
-      <p style="margin-top:16px;color:var(--text-primary);font-weight:500;">The custody arrangement during Phase I is at SOST developer&rsquo;s operational discretion. The transition to network custody at block 10,000 has a hard date encoded in the consensus rules &mdash; it is not subject to the developer&rsquo;s later willingness to step back. <em>The Gold Vault must be able to change form, but not purpose.</em></p>
+      <p style="margin-top:16px;color:var(--text-primary);font-weight:500;">The custody arrangement during Phase I is at SOST developer&rsquo;s operational discretion. <b>Correction (v4.6):</b> earlier versions said the transition to network custody had a hard date encoded in consensus (block 10,000). That never happened: the governance model was deferred and is paused indefinitely, so the historical Gold Vault and PoPC balances remain under developer custody today. From #25,000 they receive no new emission. <em>The Gold Vault must be able to change form, but not purpose.</em></p>
     </div>
   </div>
 </section>
@@ -1474,6 +1486,24 @@ Creating nodes adds nothing. Doing work does.</div>
 <div class="cx-t" style="color:#ff4d4d">STATUS: RESEARCH / DEVELOPMENT &middot; NOT ACTIVE &middot; NOT READY FOR PRODUCTION</div>
 <h3>SOST Atomic Bridge (Atomic Reserve Vault), Gold Access Key, Gold Reserve V2 and governance (#40,000 research horizon)</h3>
 <p><b>The target architecture of the bridge is the SOST Atomic Bridge</b> (3.16.1). C701 replaced the previous federated design with automated verification; its lock/mint model is now the conventional reference (3.16.2). The bridge, wSOST and Gold Reserve V2 exist only as development contracts, a verification-engine prototype and tests on a <b>local development chain</b>. Nothing is deployed on any public chain, no contract is live, no funds exist and there is <b>no launch date</b>; real operations are <b>blocked by design</b> until the open blockers below are closed, and any future activation is subject to security work, an external audit and legal/regulatory review. Current consensus (50% miner / 50% DTD) is unchanged; #40,000 is a research horizon, <b>not an activation commitment</b>. Public explanation and DEMO: <a href="sost-wsost-gold-vault.html#bridge" style="color:#ffd166">wSOST &amp; Gold Vault</a>.</p>
+<h4 id="research-bridge-status">3.16.0 Current status and economics (v4.6, November 2026) — supersedes conflicting text below</h4>
+<div class="cx-t" style="color:#ff4d4d">STATUS: LOCAL LAB ONLY · NOT DEPLOYED · NO-GO FOR PRODUCTION · NOT AUDITED</div>
+<div class="cx-pre">economics     protocol fee = 0; no commercial margin; users pay only real external costs
+              (Ethereum gas, relay / range publication, data availability), computed on chain
+              from the prices of the block where the cost was paid, shown before confirmation
+              Gold Access Key / XAUT contribution: RETIRED (sections below kept as history)
+reserve       preminted wSOST, immobilized in the Ethereum vault; no minter; 1:1 with the native reserve
+verification  SOST headers relayed optimistically in ranges; any watcher can challenge with a
+              ConvergenceX fraud proof (bisection to one step checked on chain); a quorum of
+              independent watchers must attest before a release
+lab results   SOST devnet + local Ethereum (anvil): SOST → wSOST → SOST, refunds, replay, reorgs,
+              relayer loss and restarts; internal E2E 110/110; verifier checked on 256 real
+              mainnet blocks; regression suites green. Internal tests, not an audit.
+open blocker  two colluding malicious watchers, with every honest watcher offline, can still pass
+              a fake deposit. Candidate fixes: proof-of-work verification at claim time with
+              difficulty anchored to real elapsed time, or succinct (zk) validity proofs. Until
+              closed: NO-GO. Then independent review, then a separate owner decision.</div>
+<p>Where the text below describes XAUT escrow, a Gold Access Key fee, a central authorizer key or an unstarted proof of concept, it is the October 2026 design and is superseded by this block.</p>
 <h4>Two services only</h4>
 <div class="cx-pre">SOST Bridge        native SOST &harr; wSOST on Ethereum, 1:1 (this section)
 SOST Atomic Swap   separate P2P HTLC service: no SOST&harr;wSOST pair, no Gold Access Key, never touches Gold Reserve V2</div>
@@ -1515,7 +1545,7 @@ P4 covenant: reserve spendable only into exit HTLCs refunding to the reserve, ra
 P5 SOST able to verify Ethereum state (light client / proof)</div>
 <p>Cross-chain proofs keep a role, no longer for every exchange: the entry release, public reserve verification, settlement checks, reorg detection and recovery. ConvergenceX has a compact transcript proof (about 10-20 ms natively, no 4 GB dataset), so a SOST light client on Ethereum is not ruled out; its EVM cost with the cASERT rules is unmeasured and expected to be high.</p>
 <p>Comparison (official documentation, 2026-10): Atomiq verifies Bitcoin PoW with an on-chain light client and releases LP liquidity from UTXO-controlled vaults; THORChain uses a bonded validator set, TSS vaults and liquidity pools; Chainflip uses 150 validators and an aggregate key with FROST 100-of-150 signing. The SOST design aims to avoid a separate validator network and a pool; it is not claimed to be more secure, more advanced or novel. Neither model A (lock/mint) nor model B (ARV) is automatically trustless.</p>
-<p>Proof of concept (testnet / devnet only, NOT STARTED): 100 fictitious preminted wSOST; entry, exit, counterparty disappears, deadline ordering, engine stops, secret replay, concurrent swaps, reserve insufficient, reorg, attempted reserve theft; decisive test 500 SOST → 500 wSOST → 500 SOST with 1:1 kept and no operator permission. The theft test is expected to fail with today's primitives. Until all of it is shown, the Atomic Reserve Vault is RESEARCH ONLY.</p>
+<p><b>[Superseded by 3.16.0: the lab proof of concept now exists.]</b> Original plan — proof of concept (testnet / devnet only): 100 fictitious preminted wSOST; entry, exit, counterparty disappears, deadline ordering, engine stops, secret replay, concurrent swaps, reserve insufficient, reorg, attempted reserve theft; decisive test 500 SOST → 500 wSOST → 500 SOST with 1:1 kept and no operator permission. The theft test is expected to fail with today's primitives. Until all of it is shown, the Atomic Reserve Vault is RESEARCH ONLY.</p>
 <h4 id="research-keyless-reserve">C705 feasibility result — a keyless native reserve</h4>
 <p>A reserve that nobody holds a key to can only react to events its own chain can verify. Hashlocks alone cannot protect it: with no deciding counterparty, anyone could make it lock SOST under a secret of their own choosing. The keyless form of the Atomic Bridge therefore replaces "who signs" with "what is proven", in both directions: the Ethereum vault releases inventory only against a proof of a confirmed SOST deposit, and SOST pays from the reserve only against a proof of a finalized Ethereum return. HTLCs remain only as an optional fast path for market makers swapping their own funds. Minimum new SOST primitives (research only, none authorized, consensus unchanged):</p>
 <div class="cx-pre">N1 = P4  keyless ARV outputs, no pubkey, no script, fixed spend paths:
@@ -1553,7 +1583,7 @@ No wSOST without a verified, confirmed native deposit · gold never mints wSOST 
 wSOST → SOST   any holder burns N wSOST (no XAUT) → vault releases N SOST minus the SOST network fee
                (capsule C701R:0x&lt;releaseId&gt;) → verified and recorded on Ethereum
 A transaction hash typed by a user is a search hint, never proof.</div>
-<h4>Gold Access Key</h4>
+<h4>Gold Access Key — RETIRED (November 2026; kept as history)</h4>
 <div class="cx-pre">feeEUR  = min(250, max(0.50, bridgeValueEUR × 0.001))      0.10% · min 0.50 EUR · max 250 EUR
 feeXAUT = feeEUR / verified XAUT price, rounded UP to XAUT's 6 decimals (integer math)
 minimum operation 100 EUR · 100% to Gold Reserve V2 · Ethereum gas paid by the user, shown separately
@@ -1569,7 +1599,8 @@ liquidity network          relayers / pool protocol        yes    LPs, relayers,
 guardian / messaging       external guardian set           no     relayers / protocol
 issuer burn-and-mint       the issuer                      no     - (gas only)
 rollup / light client      the destination chain itself    no     - (gas only)
-SOST bridge (design)       SOST's automated engine         no     nobody: 100% to Gold Reserve V2</div>
+SOST bridge (Oct design)   SOST's automated engine         no     nobody: 100% to Gold Reserve V2
+SOST bridge (Nov 2026 lab) Ethereum contract + fraud proofs no     nobody: protocol fee 0, cost recovery only</div>
 <p>Most bridges pay their fee to liquidity providers, relayers, a treasury or token holders, and many depend on an outside key set or a pool (Ronin 2022: 5 of 9 validator keys; Harmony Horizon 2022: 2 of 5 multisig keys; Wormhole 2022: a signature-verification bug minted 120,000 wrapped ETH). The SOST design has no pool (always exactly 1:1), no outside federation, no fee on the return, and its fee builds a public gold reserve. It is <b>not trustless</b>: in its first version the engine is a single central point of trust, which is why it is not active. No bridge model is universally better.</p>
 <h4>State machine</h4>
 <div class="cx-pre">CREATED → WAITING_SOST → SOST_SEEN / CONFIRMING → SOST_FINAL (30 conf.)
