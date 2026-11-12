@@ -951,6 +951,13 @@
   </div>
  </div>
  <div class="c701-status" role="note">STATUS: RESEARCH / DEVELOPMENT &middot; NOT ACTIVE &middot; NOT MAINNET DEPLOYED &middot; NOT AUDITED &middot; NOT YET PROVEN<small>SOST Atomic Bridge (Atomic Reserve Vault) &middot; no contract deployed &middot; no launch date &middot; subject to security work, external audit and legal / regulatory review</small></div>
+<div class="box red" id="bridge-status-nov2026" role="note"><div class="bt">STATUS · 12 NOVEMBER 2026 · NO-GO FOR PRODUCTION</div>
+ <ul style="margin:6px 0 0 18px;line-height:1.7">
+  <li><b>Protocol fee = 0.</b> No commercial margin. Users pay only the real external costs they cause (Ethereum gas, relay / range publication, data availability), computed on chain and shown before confirmation. The <b>Gold Access Key / XAUT contribution is retired</b>; the simulator below is kept as history only.</li>
+  <li><b>Lab only:</b> SOST devnet + local Ethereum. SOST &rarr; wSOST &rarr; SOST, refunds, replay, reorgs, relayer loss and restarts pass internal end-to-end tests (110/110); the verifier was checked on 256 real mainnet blocks. Internal tests are <b>not</b> an audit.</li>
+  <li><b>Open blocker:</b> two colluding malicious watchers, with every honest watcher offline, can still pass a fake deposit. Until this is closed cryptographically, and an independent review is done, nothing is deployed.</li>
+ </ul>
+ <p style="margin-top:6px">Details: <a href="sost-whitepaper.html#research-bridge-status" style="color:#ffd166">whitepaper §3.16.0</a>.</p></div>
  <div class="wg-not"><div>&#9940; NOT LIVE &middot; DEMO ONLY</div><div>&#9940; NO BRIDGE CONTRACT DEPLOYED</div><div>&#9940; NO GOLD RESERVE V2 FUNDS YET</div><div>&#9940; REAL OPERATIONS BLOCKED: NO APPROVED SOST/EUR VALUATION</div><div>&#9989; CURRENT SOST CONSENSUS UNCHANGED</div></div>
  <div class="box cyan"><div class="bt">#30,000 &rarr; #40,000</div><b>#30,000 built the current foundation</b> (V30000 is live). <b>#40,000 is the current coordinated research horizon</b> for the next major phase. <b>Nothing activates automatically at #40,000.</b> If engineering, external audit, legal or operational gates are not complete, the work moves later (for example #50,000). Every consensus change would need its own release, tests, audit and public notice.</div>
  <div class="wg-toc">
@@ -1341,7 +1348,7 @@ Backing rule:  CIRCULATING wSOST  &lt;=  CONFIRMED NATIVE SOST RESERVE   (equal 
 NOT:           totalSupply(wSOST) &lt;= reserve   (totalSupply includes the immobilized inventory)</div>
  <div class="box red"><div class="bt">THE XAUT CONTRIBUTION IS NOT BACKING</div>The Gold Access Key in XAUT is <b>NOT backing</b> of SOST or of wSOST, <b>NOT a peg</b>, <b>NOT a price floor</b>, <b>NOT a price guarantee</b>, <b>NOT a redemption promise</b> and <b>NOT 1:1 gold backing</b>. The gold held by Gold Reserve V2 gives <b>no individual redemption right</b>. The only backing of circulating wSOST is the native SOST in the reserve.</div>
 
- <h3 id="gold-access-key">Gold Access Key &mdash; fee simulator</h3>
+ <h3 id="gold-access-key">Gold Access Key &mdash; fee simulator <span style="color:#f87171">(RETIRED November 2026 &mdash; protocol fee is 0; kept as history)</span></h3>
  <div class="box"><div class="bt">FORMULA</div><code>feeEUR = min(250, max(0.50, bridgeValueEUR &times; 0.001))</code> &middot; <code>feeXAUT = feeEUR / XAUT price</code>, rounded <b>up</b> to XAUT's 6 decimals (verified on the official XAUT contract). Minimum operation 100 EUR. Paid in XAUT, <b>100% to Gold Reserve V2</b>. Ethereum gas is separate and paid by you. The return wSOST &rarr; SOST has <b>no</b> XAUT fee. Not free, and never presented as free.</div>
  <div class="box red"><div class="bt">FIXED, DATED PRICE &mdash; NOT A QUOTE</div>The simulator uses <b>1 XAUT = 3,713.13 EUR</b>, a fixed illustrative value dated <b>2026-10-19</b>. It is illustrative only: not live, not a quote and not an offer, and the simulator creates no transaction. A real operation would use a signed, fresh, bounded XAUT/EUR price. The bridge value in EUR is a number <b>you</b> type here: SOST has <b>no approved EUR valuation methodology</b>, so real operations stay blocked. The informational SOST gold reference (0.8886707657 mg) is not a market price and is never used for fees.</div>
  <div class="cb-sim">
