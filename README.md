@@ -1,4 +1,4 @@
-<p align="center"><img src="website/brand/exchange/sost-icon-200.png" width="120" height="120" alt="SOST official logo: rainbow Sigma"></p>
+<p align="center"><img src="website/brand/exchange/sost-icon-200.png" width="120" height="120" alt="SOST official logo: Gold Sigma / Rainbow Edition"></p>
 
 # SOST Protocol
 

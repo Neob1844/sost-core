@@ -15,7 +15,9 @@ import hashlib, io, json, os, shutil, sys
 import numpy as np
 from PIL import Image, ImageFilter
 
-SRC = {'sost': '/mnt/c/Users/ferna/Downloads/Emblema Sigma de Energía Arcoíris.png',
+# SOST: definitive CEX logo 'Gold Sigma / Rainbow Edition' (owner GO 12-Nov-2026, 19:35 local file). The rainbow-disc Sigma
+# ('Emblema Sigma de Energía Arcoíris.png', d93e1364…) of the same morning is historical (brand/legacy/rainbow-disc/).
+SRC = {'sost': os.environ.get('SOST_SRC', '/mnt/c/Users/ferna/Downloads/Sigma dorada en órbita multicolor.png'),
        'wsost': '/mnt/c/Users/ferna/Downloads/Emblema wΣ de Neón Arcoíris.png'}
 OUT, WEB = sys.argv[1], sys.argv[2]
 KIT_SIZES = [2048, 1024, 512, 256, 128, 64, 32]
@@ -147,9 +149,23 @@ LS = 640
 base = rs(s, LS); A = np.asarray(base).astype(np.float64)
 lum = A[..., :3].mean(-1) * (A[..., 3] / 255)
 yy, xx = np.mgrid[0:LS, 0:LS]; central = np.hypot(xx - LS / 2, yy - LS / 2) < LS * 0.22
-glyph = central & (A[..., 0] > 235) & (A[..., 1] > 200) & (A[..., 2] > 150)
-gy, gx = np.nonzero(glyph); g0x, g1x, g0y, g1y = gx.min(), gx.max(), gy.min(), gy.max()
-m = 6; sx0, sy0 = g0x - m, g0y - m; sw = max(g1x - g0x, g1y - g0y) + 2 * m + 1
+R_, G_, B_ = A[..., 0], A[..., 1], A[..., 2]
+box_c = (np.abs(xx - LS / 2) < LS * 0.21) & (np.abs(yy - LS / 2) < LS * 0.21)
+warm_white = (R_ > 235) & (G_ > 200) & (B_ > 150)                                    # rainbow-disc edition: white-hot Sigma
+import matplotlib.colors as _mc
+_h = _mc.rgb_to_hsv(np.clip(A[..., :3] / 255, 0, 1)); _hue, _sat, _val = _h[..., 0] * 360, _h[..., 1], _h[..., 2]
+gold = (R_ > 140) & (_val > 0.5) & (((_hue >= 28) & (_hue <= 56)) | (_sat < 0.35))   # gold body + its near-white highlights
+if os.path.basename(SRC['sost']).startswith('Sigma dorada'):
+    from scipy import ndimage as _nd
+    _g = _nd.binary_closing(box_c & (A[..., 3] > 200) & gold, structure=np.ones((9, 9)))
+    _lab, _n = _nd.label(_g)
+    gold = _lab == (1 + int(np.argmax(_nd.sum(_g, _lab, range(1, _n + 1)))))       # largest connected region = the Sigma
+    _hl, _hn = _nd.label(_nd.binary_fill_holes(gold) & ~gold)                       # fill only small holes (specular highlights)
+    if _hn: gold |= np.isin(_hl, 1 + np.nonzero(_nd.sum(np.ones_like(_hl), _hl, range(1, _hn + 1)) < 400)[0])
+glyph = box_c & (A[..., 3] > 200) & (gold if os.path.basename(SRC['sost']).startswith('Sigma dorada') else warm_white)
+gy, gx = np.nonzero(glyph)
+g0x, g1x, g0y, g1y = gx.min(), gx.max(), gy.min(), gy.max()
+m = 12; sx0, sy0 = g0x - m, g0y - m; sw = max(g1x - g0x, g1y - g0y) + 2 * m + 1
 sig_mask = Image.fromarray((glyph * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8))
 sig = Image.new('RGBA', (LS, LS), (255, 209, 163, 0)); sig.putalpha(sig_mask)
 sig = sig.crop((sx0, sy0, sx0 + sw, sy0 + sw))
