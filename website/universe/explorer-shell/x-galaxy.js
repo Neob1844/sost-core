@@ -272,10 +272,13 @@
     c.lineWidth = 1; c.font = '10px ui-monospace,monospace';
     var lastLX = -1e9, LA = -.5;
     WL().forEach(function (w) {
-      var rr = Math.sqrt(Math.min(w, N) / N) * R; c.strokeStyle = w === st.win ? '#22d3ee55' : '#ffffff12';
+      var rr = Math.sqrt(Math.min(w, N) / N) * R, on = w === st.win;
+      // inner reference rings in the same cyan as the outer one (a faint 3 px glow under a 1 px line); the selected window stays the strongest
+      if (!on) { c.strokeStyle = '#22d3ee12'; c.lineWidth = 3; c.beginPath(); c.ellipse(W / 2, H / 2, rr, rr * TILT, 0, 0, Math.PI * 2); c.stroke(); c.lineWidth = 1; }
+      c.strokeStyle = on ? '#22d3ee55' : '#22d3ee3a';
       var lx = W / 2 + Math.cos(LA) * rr, ly = H / 2 + Math.sin(LA) * rr * TILT, lbl = (w === N ? (st.wk === 'genesis' && N > M.recentN ? 'genesis · ' : '') + fmt(N) + ' blocks' : w === M.recentN ? 'all ' + fmt(w) : 'last ' + w + (w === 288 ? ' · consensus' : '')) + ' · ' + span(Math.min(w, N));
       c.beginPath(); c.ellipse(W / 2, H / 2, rr, rr * TILT, 0, 0, Math.PI * 2); c.stroke();
-      c.fillStyle = w === st.win ? '#22d3eeee' : '#ffffff80'; if (lx - lastLX > 34 / st.z || w === st.win) { c.font = (10.5 / st.z).toFixed(2) + 'px ui-monospace,monospace'; c.fillText(lbl, Math.min(lx + 3 / st.z, W / 2 + (W / 2 - 4 - st.ox) / st.z - c.measureText(lbl).width), ly - 3 / st.z); lastLX = lx; }
+      c.fillStyle = on ? '#22d3eeee' : '#bfeaf5b8'; if (lx - lastLX > 34 / st.z || w === st.win) { c.font = (10.5 / st.z).toFixed(2) + 'px ui-monospace,monospace'; c.fillText(lbl, Math.min(lx + 3 / st.z, W / 2 + (W / 2 - 4 - st.ox) / st.z - c.measureText(lbl).width), ly - 3 / st.z); lastLX = lx; }
     });
     var core = c.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, R * .22);
     core.addColorStop(0, '#fff8'); core.addColorStop(.25, '#e879f933'); core.addColorStop(1, '#0000');
@@ -286,6 +289,8 @@
     c.setTransform(dpr, 0, 0, dpr, 0, 0);   // markers in screen space (xy() already applies zoom / pan)
     var ph = RM ? .5 : (performance.now() / 1600) % 1, last = P[P.length - 1], q = xy(last);
     c.strokeStyle = col(M.rows[N - 1].m, 70); c.globalAlpha = 1 - ph; c.beginPath(); c.arc(q[0], q[1], 3 + ph * 12, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1;
+    pulsar();
+    lens();
     // new block that arrived with the last refresh: a short bright flash and its height (static marker with reduced motion)
     if (flash) { var fp = null; for (var fi = P.length - 1; fi >= 0 && fi >= P.length - 3; fi--) if (P[fi][4] === flash.h) fp = P[fi];
       var ft = RM ? .4 : (performance.now() - flash.t0) / 2600;
@@ -297,6 +302,57 @@
     var mk = st.blk != null ? st.blk : st.sel && M.byAddr[st.sel] ? M.byAddr[st.sel].last : null;
     if (mk != null) { for (var bi = P.length - 1; bi >= 0; bi--) if (P[bi][4] === mk) { var bq = xy(P[bi]); c.strokeStyle = '#ffffff'; c.lineWidth = 1.5; c.beginPath(); c.arc(bq[0], bq[1], 7, 0, Math.PI * 2); c.stroke();
       c.globalAlpha = .45; c.beginPath(); c.arc(bq[0], bq[1], 12, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1; c.lineWidth = 1; break; } }
+  }
+  // GENESIS view: the origin of the chain breathes like a pulsar (soft halo, two faint slowly turning beams, a label).
+  // Block #0 has no coinbase and is not a star; the marker sits on the first mined block (#1), the outermost star.
+  // Pure decoration in screen space: it never changes positions, selection or hit testing. Reduced motion: static.
+  function pulsar() {
+    if (st.wk !== 'genesis' || !P.length || P[0][4] > 1) return;
+    var c = ctx, q = xy(P[0]), now = performance.now(), b = RM ? .5 : Math.pow(.5 + .5 * Math.sin(now / 2400 * Math.PI * 2), 1.6);
+    var zz = Math.min(1.6, Math.sqrt(st.z)), hr = (20 + 8 * b) * zz, g = c.createRadialGradient(q[0], q[1], 0, q[0], q[1], hr);
+    g.addColorStop(0, 'rgba(240,252,255,' + (.7 + .3 * b).toFixed(3) + ')'); g.addColorStop(.16, 'rgba(160,236,252,' + (.4 + .25 * b).toFixed(3) + ')'); g.addColorStop(.5, 'rgba(34,211,238,' + (.1 + .08 * b).toFixed(3) + ')'); g.addColorStop(1, 'rgba(34,211,238,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(q[0], q[1], hr, 0, Math.PI * 2); c.fill();
+    var a = RM ? .6 : now / 7000, bl = (24 + 10 * b) * zz, k, ex, ey, lg;
+    for (k = 0; k < 2; k++) { ex = Math.cos(a + k * Math.PI) * bl; ey = Math.sin(a + k * Math.PI) * bl * .55;
+      lg = c.createLinearGradient(q[0], q[1], q[0] + ex, q[1] + ey); lg.addColorStop(0, 'rgba(215,247,255,' + (.5 + .3 * b).toFixed(3) + ')'); lg.addColorStop(1, 'rgba(210,245,255,0)');
+      c.strokeStyle = lg; c.lineWidth = 1.3; c.beginPath(); c.moveTo(q[0], q[1]); c.lineTo(q[0] + ex, q[1] + ey); c.stroke(); }
+    if (!RM) { var ph = (now / 2400 + .25) % 1; c.strokeStyle = 'rgba(160,236,252,' + (.32 * (1 - ph)).toFixed(3) + ')'; c.lineWidth = 1; c.beginPath(); c.ellipse(q[0], q[1], (5 + ph * 26) * zz, (5 + ph * 26) * zz * .7, 0, 0, Math.PI * 2); c.stroke(); }   // one soft pulse per beat
+    c.lineWidth = 1; c.fillStyle = '#ffffff'; c.beginPath(); c.arc(q[0], q[1], 2.3 * zz, 0, Math.PI * 2); c.fill();
+    c.font = '600 10.5px ui-monospace,monospace'; c.fillStyle = 'rgba(214,246,255,' + (.72 + .2 * b).toFixed(3) + ')';
+    var lab = 'GENESIS', lx = q[0] + 12, ly = q[1] - 9; if (lx + c.measureText(lab).width > W - 4) lx = q[0] - 12 - c.measureText(lab).width; c.fillText(lab, lx, Math.max(12, ly));
+  }
+  // meteor graze (FX layer, only when FX are allowed): a small meteor crosses an outer arm; the stars right under its head are
+  // lensed (magnified and pushed along its path for a moment) and settle back as it passes. It copies a small patch of the
+  // already drawn frame onto itself, so no star, position, selection or hit test is modified.
+  var lensCv = null, lensCv2 = null;
+  function lens() {
+    if (typeof FX !== 'object' || !FX.items.length) return;
+    var c = ctx, now = performance.now();
+    FX.items.forEach(function (o) {
+      if (o.k !== 'graze') return; var p = (now - o.t0) / o.dur; if (p <= 0 || p >= 1) return;
+      var fade = Math.sin(Math.PI * p), hx = o.x + (o.x1 - o.x) * p, hy = o.y + (o.y1 - o.y) * p, dx = o.x1 - o.x, dy = o.y1 - o.y, m = Math.sqrt(dx * dx + dy * dy) || 1;
+      [[0, 1], [-.06, .55]].forEach(function (t) {   // at the head, and a weaker wake behind it
+        var cx = hx + dx * t[0], cy = hy + dy * t[0], L = 22, k = .14 * fade * t[1], sh = 3.2 * fade * t[1], n = Math.ceil(2 * L * dpr), sx = Math.round((cx - L) * dpr), sy = Math.round((cy - L) * dpr);
+        // the patch REPLACES the frame with a feathered mask (orig·(1−m) + lensed·m): never drawn on top, so the semi-transparent
+        // background is not doubled and no disc outline can appear
+        if (!lensCv) { lensCv = d.createElement('canvas'); lensCv2 = d.createElement('canvas'); }
+        if (lensCv.width !== n) { lensCv.width = lensCv.height = lensCv2.width = lensCv2.height = n; }
+        var a1 = lensCv.getContext('2d'), a2 = lensCv2.getContext('2d'), mid = n / 2, mg;
+        a1.setTransform(1, 0, 0, 1, 0, 0); a1.clearRect(0, 0, n, n); a1.drawImage(cv, sx, sy, n, n, 0, 0, n, n);
+        a2.setTransform(1, 0, 0, 1, 0, 0); a2.globalCompositeOperation = 'source-over'; a2.clearRect(0, 0, n, n);
+        var zs = 1 + k, ox = (dx / m) * sh * dpr, oy = (dy / m) * sh * dpr;
+        a2.drawImage(lensCv, mid - mid * zs + ox, mid - mid * zs + oy, n * zs, n * zs);
+        mg = a2.createRadialGradient(mid, mid, 0, mid, mid, mid); mg.addColorStop(0, 'rgba(0,0,0,1)'); mg.addColorStop(.55, 'rgba(0,0,0,.85)'); mg.addColorStop(1, 'rgba(0,0,0,0)');
+        a2.globalCompositeOperation = 'destination-in'; a2.fillStyle = mg; a2.fillRect(0, 0, n, n); a2.globalCompositeOperation = 'source-over';
+        c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
+        mg = c.createRadialGradient(sx + mid, sy + mid, 0, sx + mid, sy + mid, mid); mg.addColorStop(0, 'rgba(0,0,0,1)'); mg.addColorStop(.55, 'rgba(0,0,0,.85)'); mg.addColorStop(1, 'rgba(0,0,0,0)');
+        c.globalCompositeOperation = 'destination-out'; c.fillStyle = mg; c.fillRect(sx, sy, n, n);
+        c.globalCompositeOperation = 'source-over'; c.drawImage(lensCv2, sx, sy); c.restore();
+      });
+      var tl = 46, tx = hx - dx / m * tl, ty = hy - dy / m * tl, g = c.createLinearGradient(hx, hy, tx, ty);
+      g.addColorStop(0, 'rgba(255,236,210,' + (.75 * fade).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,236,210,0)');
+      c.strokeStyle = g; c.lineWidth = 1.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy); c.lineTo(tx, ty); c.stroke(); c.lineCap = 'butt'; c.lineWidth = 1;
+    });
   }
   function frame(t) {
     raf = 0;
@@ -638,7 +694,7 @@
   var nav = root.navigator || {}, LOWEND = !!((nav.hardwareConcurrency && nav.hardwareConcurrency <= 2) || (nav.deviceMemory && nav.deviceMemory <= 2) || (nav.connection && nav.connection.saveData));
   function fxAllowed() { return FX.mode === 'on' || (FX.mode === 'auto' && !RM && !LOWEND && !FX.slow); }
   function fxWhy() { return FX.mode === 'off' ? 'off' : FX.mode === 'on' ? (RM ? 'on (reduced motion: flashes only)' : 'on') : RM ? 'auto: off (reduced motion)' : LOWEND ? 'auto: off (low-end device)' : FX.slow ? 'auto: off (page below 24 fps)' : 'auto: on'; }
-  function fxLabel() { fxB.textContent = 'FX: ' + FX.mode.toUpperCase() + (FX.mode === 'auto' && !fxAllowed() ? ' · off' : ''); fxB.title = 'Decorative effects (comets, shooting stars), not data — ' + fxWhy() + '. Click: AUTO → ON → OFF.'; fxB.setAttribute('aria-label', 'Decorative effects: ' + fxWhy()); fxB.setAttribute('data-fx-state', fxAllowed() ? 'on' : 'off'); }
+  function fxLabel() { fxB.textContent = 'FX: ' + FX.mode.toUpperCase() + (FX.mode === 'auto' && !fxAllowed() ? ' · off' : ''); fxB.title = 'Decorative effects (comets, shooting stars, meteor grazes), not data — ' + fxWhy() + '. Click: AUTO → ON → OFF.'; fxB.setAttribute('aria-label', 'Decorative effects: ' + fxWhy()); fxB.setAttribute('data-fx-state', fxAllowed() ? 'on' : 'off'); }
   function fxSize() { if (fxCv.width !== cv.width || fxCv.height !== cv.height) { fxCv.width = cv.width; fxCv.height = cv.height; } }
   function fxClear() { FX.items = []; fxc.setTransform(1, 0, 0, 1, 0, 0); fxc.clearRect(0, 0, fxCv.width, fxCv.height); }
   function fxSchedule() {
@@ -651,6 +707,12 @@
       for (var tr = 0; tr < 12; tr++) { var fx0 = Math.random() * W, fy0 = Math.random() * H, ex = (fx0 - W / 2 - st.ox) / (R * st.z * 1.08), ey = (fy0 - H / 2 - st.oy) / (R * TILT * st.z * 1.08);
         if (ex * ex + ey * ey > 1) return { k: 'flash', x: fx0, y: fy0, t0: now, dur: 1200 }; }
       return { k: 'flash', x: -99, y: -99, t0: now, dur: 1 };
+    }
+    if (r >= .62 && r < .8) {   // meteor graze across an outer arm (see lens()); drawn on the galaxy canvas, above the stars
+      var a0 = Math.random() * Math.PI * 2, sw = (.5 + Math.random() * .45) * (Math.random() < .5 ? 1 : -1), rr0 = 1.12, rr1 = .78 + Math.random() * .18;
+      var pt = function (ang, rad) { return [W / 2 + st.ox + Math.cos(ang) * rad * R * st.z, H / 2 + st.oy + Math.sin(ang) * rad * R * TILT * st.z]; };
+      var s0 = pt(a0, rr0), s1 = pt(a0 + sw, rr1);
+      return { k: 'graze', x: s0[0], y: s0[1], x1: s1[0] + (s1[0] - s0[0]) * .25, y1: s1[1] + (s1[1] - s0[1]) * .25, t0: now, dur: 1700 + Math.random() * 900 };
     }
     if (r < .75) {   // shooting star: a short fast streak through the upper band
       var left = Math.random() < .5, a = (left ? .42 : Math.PI - .42) + (Math.random() - .5) * .35, sp = (W + H) * (.0007 + Math.random() * .0004);
@@ -669,6 +731,7 @@
     FX.items = FX.items.filter(function (o) { return now - o.t0 < o.dur; });
     FX.items.forEach(function (o) {
       var p = (now - o.t0) / o.dur, fade = Math.sin(Math.PI * Math.min(1, Math.max(0, p))), g;
+      if (o.k === 'graze') return;
       if (o.k === 'flash') { c.strokeStyle = 'rgba(210,228,255,' + (.38 * fade).toFixed(3) + ')'; c.lineWidth = .8; c.beginPath(); c.moveTo(o.x - 7, o.y); c.lineTo(o.x + 7, o.y); c.moveTo(o.x, o.y - 7); c.lineTo(o.x, o.y + 7); c.stroke(); return; }
       var dt = now - o.t0, hx = o.x + o.vx * dt, hy = o.y + o.vy * dt, m = Math.sqrt(o.vx * o.vx + o.vy * o.vy) || 1, tx = hx - o.vx / m * o.len, ty = hy - o.vy / m * o.len;
       g = c.createLinearGradient(hx, hy, tx, ty);
@@ -695,7 +758,7 @@
   fxLabel(); fxSchedule();
 
   U.explorerGalaxy = { state: st, model: M, setWindow: setWk, select: function (a) { select(a, true); }, pickBlock: pickBlock, render: render, zoom: zoomBy, ambiguous: ambiguous,
-    fx: function () { return { mode: FX.mode, allowed: fxAllowed(), why: fxWhy(), alive: FX.items.length, slow: FX.slow, spawn: fxSpawn }; },
+    fx: function () { return { mode: FX.mode, allowed: fxAllowed(), why: fxWhy(), alive: FX.items.length, slow: FX.slow, spawn: fxSpawn, items: FX.items.map(function (o) { return { k: o.k, x: o.x, y: o.y, x1: o.x1, y1: o.y1, t0: o.t0, dur: o.dur }; }) }; },
     fullscreen: function () { return fsOn() ? (host.classList.contains('xs-imm') ? 'immersive' : 'native') : 'off'; },
     points: function () { return P.map(function (p) { var q = xy(p); return [p[4], +q[0].toFixed(2), +q[1].toFixed(2), p[3]]; }); } };   // read-only, for tests: [height, x, y, age bucket] in canvas CSS px
 })(window);
