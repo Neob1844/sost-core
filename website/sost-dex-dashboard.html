@@ -4,10 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SOST DEX — Operational Dashboard (admin)</title>
-<meta name="description" content="SOST DEX V2 — native cross-chain swap & trade dashboard (mainnet pre-activation preview (activates #30,000) · controlled developer access; no real prices, orders, or liquidity).">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<meta name="description" content="SOST DEX V2 — native cross-chain swap & trade dashboard (PREVIEW — SOST-layer DEX NOT ACTIVE, deferred / fail-closed on mainnet · controlled developer access; no real prices, orders, or liquidity).">
 <style>
   /* ---- SOST DEX identity (pinned): black ground, red primary, gold accents ---- */
   :root{
@@ -238,8 +235,13 @@
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
+<div class="sost-gold-discarded" role="note" style="position:relative;z-index:50;margin:0;padding:12px 18px;background:#2a1a00;border-bottom:2px solid #f59e0b;color:#ffe2a8;font:600 13.5px/1.6 system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:left">&#9888; DISCARDED MODEL &mdash; HISTORICAL RECORD ONLY. SOST has <b>no gold backing</b>, <b>no committed reserves</b> and <b>no obligation to acquire, hold or contribute gold, XAUT or PAXG</b>. There is no convertibility, redemption right or guarantee linked to gold or to any external asset. <span style="font-weight:400">The current model is Proof of Work + DTD and DTD Jackpot, which distribute SOST itself (V16, active: 50&nbsp;% miner / 50&nbsp;% DTD). The proposed V17 split (80&nbsp;% / 15&nbsp;% / 5&nbsp;%) is not active. Gold-related content below describes abandoned plans and is not in force.</span></div>
+
 <div style="max-width:1400px;margin:10px auto 0;padding:9px 16px;border:1px solid #fb010d;border-radius:8px;background:rgba(251,1,13,.10);font:700 12px/1.5 ui-monospace,monospace;color:#ffb3b3;text-align:center">⛔ OPERATIONAL DASHBOARD — authenticated admin access only. All protocol operations are additionally enforced by the consensus ADMIN GATE (S14 RESTRICTED DEVELOPER MODE): a native-asset / tokenization / DEX operation is rejected by the network unless it carries the admin authorization. Public operations are blocked. <a href="sost-dex.html" style="color:#9fe8ff">← back to public info</a></div>
 <!-- Canonical SOST global navigation (identical mechanism to every other page).
      nav-toggle.js?v=rs20261112g auto-injects the DTD + NEWS circular icons, the HIDE NAV control
@@ -247,7 +249,7 @@
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -259,10 +261,12 @@
 
   </div>
 </nav>
+<!-- SECURITY NOTICE H-01: retired HTLC atomic swap contracts (docs/security/ADVISORY_2026-10-30_HTLCv2.md) -->
+<div style="padding:0 12px;position:relative;z-index:5"><div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;max-width:1100px;margin:14px auto 0;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div></div>
 <div class="wrap">
 
   <div style="margin:0 0 14px;padding:11px 15px;border-radius:10px;border:1px solid #f0a92b;background:rgba(240,169,43,.10);color:#f0a92b;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.3px;text-align:center">
-    SOST-layer DEX &mdash; activates at block #30,000 (automatic by height) but is admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled &mdash; no public trading. No real prices, orders, liquidity or executable quotes. Not an offer, solicitation or invitation to trade. Public launch pending CEX price, security audit and regulatory review.
+    SOST-layer DEX is NOT ACTIVE (deferred / fail-closed on mainnet, see protocol-status.json) and admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled &mdash; no public trading. No real prices, orders, liquidity or executable quotes. Not an offer, solicitation or invitation to trade. Public launch pending CEX price, security audit and regulatory review.
   </div>
   <div style="margin:-6px 0 14px;font-size:12px;color:var(--txt-3);text-align:center">Looking for the encrypted OTC deal-channel console (signed offers, deal market, positions)? <a href="sost-dex-otc.html" style="color:var(--gold)">Open the OTC console &rarr;</a></div>
 
@@ -279,7 +283,7 @@
       </div>
     </div>
     <span class="top-spacer"></span>
-    <span class="badge test" id="modeBadge" title="V30000 is deployed on mainnet; the protocol activates automatically at block #30,000. Controlled developer access; public trading disabled. This interface uses demo data and non-executable quotes during validation.">MAINNET · PRE-ACTIVATION #30,000</span>
+    <span class="badge test" id="modeBadge" title="SOST-layer DEX NOT ACTIVE on mainnet (deferred / fail-closed, protocol-status.json). Controlled developer access; public trading disabled. This interface uses demo data and non-executable quotes.">PREVIEW · NOT ACTIVE</span>
     <button class="btn-wallet" id="walletBtn" onclick="openWallet()"><span class="dot" id="wdot"></span><span id="walletLabel">Connect Wallets</span></button>
   </header>
 
@@ -418,7 +422,7 @@
     <p class="lab-note">This mirrors a real laboratory swap: SOST devnet ⇄ Bitcoin regtest, funds bridged by the preimage revealed on-chain. A swap is only <b>Completed</b> after both legs confirm the required depth.</p>
   </section>
 
-  <p class="lab-note" style="margin-top:34px; color:var(--txt-4)">SOST DEX V2 — the SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE); public access disabled — no public trading. No real prices, orders, liquidity, or executable quotes are shown or implied. Not an offer or solicitation.</p>
+  <p class="lab-note" style="margin-top:34px; color:var(--txt-4)">SOST DEX V2 — the SOST-layer DEX is NOT ACTIVE (deferred / fail-closed on mainnet, see protocol-status.json) and admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE); public access disabled — no public trading. No real prices, orders, liquidity, or executable quotes are shown or implied. Not an offer or solicitation.</p>
 </div>
 
 <!-- wallet modal -->
@@ -454,8 +458,8 @@
 <script>
 "use strict";
 /* SOST DEX V2 — Phase 1 dashboard shell. DEMO ONLY: no real prices, balances, quotes,
-   orders or liquidity. State is illustrative; the SOST-layer DEX activates at #30,000
-   (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE),
+   orders or liquidity. State is illustrative; the SOST-layer DEX is NOT ACTIVE (deferred /
+   fail-closed on mainnet), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE),
    public access disabled. */
 
 /* ---- tab routing ---- */
@@ -521,7 +525,7 @@ function onQuoteInputs(){
   function openWallet(){ document.getElementById('walletModal').classList.add('open'); renderWalletModal(); }
   function closeWallet(){ document.getElementById('walletModal').classList.remove('open'); }
   function icGlyph(sym){
-    // SOST uses the OFFICIAL logo (sost-logo.png?v=rs20261112g via the canonical registry), same as the
+    // SOST uses the OFFICIAL logo (sost-logo.png?v=sl20261113 via the canonical registry), same as the
     // rest of the site; BTC/ETH use neutral original glyphs (no licensed third-party art).
     if(sym==='sost' && window.SOSTAssets){ return SOSTAssets.logoHtml('SOST'); }
     var m={sost:'SOST',btc:'BTC',eth:'ETH'}; var t=m[sym];
@@ -609,6 +613,7 @@ function onQuoteInputs(){
     if(r.ready){ cta.textContent='Get Quote'; cta.disabled=false; cta.title=''; cta.classList.add('secondary'); }
     else { cta.textContent='Connect Wallet'; cta.title=r.why||''; cta.disabled=false; cta.classList.remove('secondary'); } }
   function ctaClick(){
+    var c0=document.getElementById('swapCta'); if(c0){c0.disabled=true;c0.textContent='Atomic swaps RETIRED (H-01)';} return; /* H-01: unconditional */
     if(!WM.swapReady(pairLabel()).ready){ openWallet(); return; }
     var cta=document.getElementById('swapCta');
     // Ask the REAL RFQ engine. Fail-closed: no maker + no verifier in the lab => no firm quote,
@@ -738,7 +743,7 @@ function relayHealth(){
     var pill=document.getElementById('relayPill'), msg=document.getElementById('relayMsg'), btn=document.getElementById('labSwapBtn');
     pill.className='pill ok'; pill.textContent='Lab relay: connected';
     msg.textContent='SOST '+(h.sost&&h.sost.up?'up (h='+h.sost.height+')':'down')+' \u00b7 BTC '+(h.btc&&h.btc.up?'up':'down')+' \u00b7 EVM '+(h.evm&&h.evm.up?'up':'down')+' \u00b7 harness '+(h.harness?'ready':'missing');
-    btn.disabled=!(h.sost&&h.sost.up&&h.btc&&h.btc.up&&h.harness);
+    btn.disabled=true; /* H-01: RETIRED (was: !(h.sost&&h.sost.up&&h.btc&&h.btc.up&&h.harness)) */
   }).catch(function(){
     var pill=document.getElementById('relayPill'), msg=document.getElementById('relayMsg');
     pill.className='pill demo'; pill.textContent='Lab relay: not running';
@@ -747,6 +752,7 @@ function relayHealth(){
   });
 }
 function startLabSwap(){
+  return; /* H-01: RETIRED HTLC atomic swaps, unconditional */
   var btn=document.getElementById('labSwapBtn'); btn.disabled=true; btn.textContent='Running\u2026';
   RELAY&&fetch(RELAY+'/api/swap/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pair:'SOST/BTC'})})
     .then(function(r){return r.json();}).then(function(d){

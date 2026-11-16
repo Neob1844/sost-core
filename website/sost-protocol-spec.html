@@ -3,20 +3,20 @@
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <!-- M26 OG / Twitter fallback -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta charset="UTF-8">
 <link rel="canonical" href="https://sostcore.com/sost-protocol-spec.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Protocol Specification — Consensus Rules, Validation, Parameters</title>
 <meta name="description" content="Complete SOST specification: consensus rules, transaction validation, block structure, cASERT profiles, ConvergenceX parameters, constitutional addresses.">
@@ -28,12 +28,11 @@
 <meta property="og:description" content="Complete SOST specification: consensus rules, transaction validation, block structure, cASERT profiles, ConvergenceX parameters, constitutional addresses.">
 <meta property="og:url" content="https://sostcore.com/sost-protocol-spec.html">
 <meta property="og:site_name" content="SOST">
-<meta property="og:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
+<meta property="og:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Protocol Specification — Consensus Rules, Validation, Parameters">
 <meta name="twitter:description" content="Complete SOST specification: consensus rules, transaction validation, block structure, cASERT profiles, ConvergenceX parameters, constitutional addresses.">
-<meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <style>
 :root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;--border-dim:#1a1a1a;--border-med:#2a2a2a;--red-primary:#fb010d;--red-bright:#ff2d3b;--red-dim:#8b1a22;--red-glow:#fb010d33;--red-subtle:#fb010d18;--green-primary:#4ade80;--cyan-primary:#22d3ee;--text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;--font-mono:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif;--bg:#000;--bg2:#0a0a0a;--bg3:#111720;--bdr:#1a2233;--bdr2:#243044;--red:#fb010d;--green:#4ade80;--cyan:#22d3ee;--yellow:#fbbf24;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -90,6 +89,12 @@ footer a{color:var(--t3);text-decoration:none}
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
 
@@ -101,7 +106,7 @@ footer a{color:var(--t3);text-decoration:none}
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -117,8 +122,8 @@ footer a{color:var(--t3);text-decoration:none}
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html" class="active">Protocol Spec</a>
@@ -146,7 +151,7 @@ footer a{color:var(--t3);text-decoration:none}
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
@@ -402,8 +407,8 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <h3>Constitutional Addresses</h3>
 <table>
 <tr><th>Role</th><th>Address</th><th>Allocation</th></tr>
-<tr><td>Gold Funding Vault</td><td><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></td><td>25% of every block until #25,000 (0 since)</td></tr>
-<tr><td>PoPC Pool</td><td><code>sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</code></td><td>25% of every block until #25,000 (0 since)</td></tr>
+<tr><td>Gold Funding Vault</td><td><code><a class="u-cl" href="sost-explorer.html?search=sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" title="Open address sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d in the Explorer">sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</a></code></td><td>25% of every block until #25,000 (0 since)</td></tr>
+<tr><td>PoPC Pool</td><td><code><a class="u-cl" href="sost-explorer.html?search=sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f" title="Open address sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f in the Explorer">sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</a></code></td><td>25% of every block until #25,000 (0 since)</td></tr>
 </table>
 <p>The remaining 50% goes to whichever miner solves the block (configured via <code>--address</code>). The miner address is NOT constitutional &mdash; it changes per miner. Only the Gold Vault and PoPC Pool addresses are hardcoded and immutable.</p>
 <p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the split in force at its height, or sending gold/popc to wrong addresses, is rejected. <b style="color:#f59e0b">The split changed at V15 (#25,000):</b> blocks below that height carry 50/25/25 (miner / Gold Vault / PoPC) and are validated against it forever; from #25,000 the consensus split is <b>50% miner / 50% DTD</b> and the gold and PoPC coinbase outputs are <b>zero</b> &mdash; see <code>src/sost-node.cpp</code> (the V15 emission-transition branch). <em>Source: params.h:187-188</em></p>
@@ -434,7 +439,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 
 <h3>Comparison: SOST vs Bitcoin vs Monero</h3>
 <table>
-<tr><th>Aspect</th><th><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</th><th><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Monero (RandomX)</th><th><img src="assets/coins/sost.png?v=rs20261112g" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST (ConvergenceX)</th></tr>
+<tr><th>Aspect</th><th><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</th><th><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Monero (RandomX)</th><th><img src="assets/coins/sost.png?v=sl20261113" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST (ConvergenceX)</th></tr>
 <tr><td>PoW algorithm</td><td>SHA256d</td><td>RandomX</td><td>Gradient descent + stability</td></tr>
 <tr><td>Mining hardware</td><td>ASICs</td><td>CPU (anti-ASIC)</td><td>CPU (8GB memory-hard)</td></tr>
 <tr><td>Mining memory</td><td>Negligible</td><td>~2GB</td><td>~8GB</td></tr>
@@ -450,7 +455,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <h2>8b. Codebase <span>Footprint</span></h2>
 <p>Lines-of-code totals for the SOST stack as of <b>2026-05-10</b>, side by side with the Bitcoin Core reference implementation. LOC is a rough engineering metric &mdash; <b>not</b> a quality, security or decentralisation metric &mdash; but it gives a sense of how much surface area the project covers.</p>
 <table>
-<tr><th>Component</th><th><img src="assets/coins/sost.png?v=rs20261112g" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</th><th><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Core</th></tr>
+<tr><th>Component</th><th><img src="assets/coins/sost.png?v=sl20261113" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</th><th><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Core</th></tr>
 <tr><td>Blockchain core (C++ / protocol)</td><td>36,740</td><td>~280&ndash;310k</td></tr>
 <tr><td>Consensus &amp; integration tests (C++ / Python)</td><td>37,187</td><td>&mdash;</td></tr>
 <tr><td>Front-end &amp; explorer (HTML + JS + CSS)</td><td>76,283</td><td>&mdash;</td></tr>
@@ -481,7 +486,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <!-- 10. POPC -->
 <section id="popc"><div class="c">
 <h2>10. Future: Proof of <span>Personal Custody</span></h2>
-<div class="warn"><strong>Status:</strong> Output types OUT_BOND_LOCK (0x10) and OUT_ESCROW_LOCK (0x11) are declared in code but blocked before height 5000 (R11). Full PoPC audit/slash/reward logic is NOT yet implemented. Design only.</div>
+<div class="warn"><strong>Status:</strong> Output types OUT_BOND_LOCK (0x10) and OUT_ESCROW_LOCK (0x11) are declared in code but blocked before height 5000 (R11). Full PoPC audit/slash/reward logic is NOT implemented. Design only. <b>The gold-custody models below (XAUT/PAXG) are discarded and not in force; SOST has no gold reserves or gold obligations.</b></div>
 
 <h3>Model A &mdash; Self-Custody Bonds</h3>
 <p>User locks SOST bond (20-30% of gold value), maintains XAUT/PAXG in own Ethereum wallet (EOA only). Random audits from ConvergenceX entropy triple (block_id, commit, checkpoints_root). Audit probability: 30% at 0 stars, 5% at 5 stars. Slash on failure: 50% to PoPC Pool + 50% to Gold Vault. Rewards: 1/4/9/14/20% annualized (1-5 year tiers), network fee 3%. Dynamic participation tiers (100%/75%/50%/30%/15%/8% based on active contracts: 0-25/26-50/51-100/101-200/201-500/501-1000). 1,000 SOST hard cap per contract.</p>
@@ -497,19 +502,16 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 
 <footer><div class="c">
 <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--t4)">SOST</p>
-<p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>
+<p>Sovereign Stock Token &middot; <a href="https://github.com/Neob1844/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>
 <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
 </div></footer>
 
 <script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
-<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
-<script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
-<script src="js/sost-music.js?v=v392"></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -635,5 +637,13 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='technology'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
+<!-- site soundtrack player (owner order 4 Nov 2026): replaces the NES chiptune button, js/retro-sounds.js and js/sost-music.js -->
+<link rel="stylesheet" href="universe/core/u-audio.css?v=gm-20261104">
+<script src="universe/core/u-audio.js?v=gm-20261104" data-autoplay data-dock="low" defer></script>
+<script src="universe/core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
 </body>
 </html>

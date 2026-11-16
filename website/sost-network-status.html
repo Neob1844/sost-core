@@ -3,23 +3,23 @@
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}</style>
 <!-- M26 favicon + icon pack -->
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <!-- M26 OG / Twitter fallback -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=rs20261112g">
+<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <meta charset="UTF-8">
 <link rel="canonical" href="https://sostcore.com/sost-network-status.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
-<link rel="apple-touch-icon" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=sl20261113">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Network Status — height, hashrate, miners, nodes</title>
 <meta name="description" content="Current SOST network state: chain height, average block time, estimated hashrate, unique miners, visible nodes, mempool, Gold Vault balance.">
@@ -30,9 +30,7 @@
 <meta property="og:description" content="Live SOST network state: height, hashrate, miners, nodes, vaults.">
 <meta property="og:url" content="https://sostcore.com/sost-network-status.html">
 <meta property="og:site_name" content="SOST">
-<meta property="og:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta property="og:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <style>
   :root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;
     --border-dim:#1a1a1a;--border-med:#2a2a2a;
@@ -121,6 +119,12 @@ nav .nav-links { width: 100%; }
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
 
@@ -132,7 +136,7 @@ nav .nav-links { width: 100%; }
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -148,8 +152,8 @@ nav .nav-links { width: 100%; }
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
@@ -177,7 +181,7 @@ nav .nav-links { width: 100%; }
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
@@ -302,9 +306,8 @@ nav .nav-links { width: 100%; }
   setInterval(refresh, 30000);
 })();
 </script>
-<script src="js/sost-music.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -430,5 +433,13 @@ nav .nav-links { width: 100%; }
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='blockchain'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
+<!-- site soundtrack player (owner order 4 Nov 2026): replaces the NES chiptune button, js/retro-sounds.js and js/sost-music.js -->
+<link rel="stylesheet" href="universe/core/u-audio.css?v=gm-20261104">
+<script src="universe/core/u-audio.js?v=gm-20261104" data-autoplay data-dock="low" defer></script>
+<script src="universe/core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
 </body>
 </html>

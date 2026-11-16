@@ -11,6 +11,12 @@
    (the Explorer is ~900 KB of HTML, so DOMContentLoaded came seconds after the raw
    nav was already on screen and then got replaced). The nav stays invisible only for
    those few milliseconds; DOMContentLoaded is the fallback if anything goes wrong. */
+/* Convergence Universe shell (owner P0 «unificación», 5 Nov 2026): pages that carry the shared header (universe/core/u-nav.js?v=rs20261112g,
+   marked in <head> by u-legacy-skin.css, or the Explorer's #uNav) have ONE global navigation. This old script must not add a second
+   one into it (HIDE NAV button, NEWS / DTD / wSOST / tokenization tiles, canonical link list, callouts): __sostNavHost() returns
+   null there, so every injector below stops at the source. Pages without the shell (old wallets, dashboards) keep the old bar. */
+window.__sostUniverseShell = function () { return !!document.querySelector('link[href*="u-legacy-skin.css"],#uNav,nav.u-nav'); };
+window.__sostNavHost = function () { return window.__sostUniverseShell() ? null : document.querySelector('nav'); };
 (function () {
   "use strict";
   var q = [], done = false, mo = null, de = document.documentElement;
@@ -275,6 +281,7 @@
     var collapsed = false;
     try { collapsed = sessionStorage.getItem("sost_nav_collapsed") === "1"; }
     catch (e) { /* ignore */ }
+    if (window.__sostUniverseShell()) return;
     var nav = document.querySelector("nav");
     if (!nav) {
       // No nav on this page — still apply the state so a future inject
@@ -330,8 +337,8 @@
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-universal-assets.html" style="color:#DAA520">Tokenization &amp; Offers</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
@@ -364,14 +371,14 @@
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
 `;
   /* Console-style nav buttons: every section gets its OWN colour, all taken from colours the
      site already uses; no two neighbours (window of 4) are alike — min ΔE76 31. Mine=bright SOST red,
      Price Reference=gold, Explorer=amber, Markets=LIVE green are kept on purpose. */
-  var SOST_NAV_COLORS = {"javascript:void(0)":"#f59e0b","index.html":"#d946ef","sost-genesis.html":"#22d3ee","sost-technology.html":"#00ff88","sost-transactions.html":"#ff8a8a","sost-gold-reserve.html":"#ff6600","sost-reference.html":"#d4af37","sost-universal-assets.html":"#ff00ff","sost-popc.html":"#00aaff","sost-tokenomics.html":"#39ff14","sost-roadmap.html":"#26a17b","sost-protocol-spec.html":"#b8860b","sost-whitepaper.html":"#ff5ccd","sost-mine.html":"#ff2d3b","sost-network-status.html":"#88ff00","sost-mining-calculator.html":"#38bdf8","sost-why-no-pools.html":"#fde68a","sost-getting-started.html":"#f472b6","sost-quickstart.html":"#ff6b35","sost-community.html":"#d7ff00","sost-foundation.html":"#9fe8ff","sost-foundation-balances.html":"#ffd166","sost-popc-contracts.html":"#ec4899","sost-popc-quickstart.html":"#cfe88a","sost-e2e.html":"#4488ff","sost-gold-dex.html":"#7ee2a8","sost-security.html":"#ffb86b","sost-faq.html":"#cbb6e6","beacon.html":"#e879f9","protocol-registry.html":"#a3e635","casert-spec.html":"#ff6b6b","sost-explorer.html":"#fbbf24","sost-help.html":"#7fb3ff","sost-miner-troubleshooter.html":"#c084fc","sost-markets.html":"#4ade80","sost-infrastructure.html":"#e6d9b6","sost-otc.html":"#ffff00","sost-wallet.html":"#ff8800","sost-app/":"#00ffff","sost-talk.html":"#8b9bf4","sost-contact.html":"#f5c889"};
+  var SOST_NAV_COLORS = {"javascript:void(0)":"#f59e0b","index.html":"#d946ef","sost-genesis.html":"#22d3ee","sost-technology.html":"#00ff88","sost-transactions.html":"#ff8a8a","sost-gold-reserve.html":"#ff6600","sost-reference.html":"#d4af37","sost-universal-assets.html":"#ff00ff","sost-popc.html":"#00aaff","sost-tokenomics.html":"#39ff14","sost-roadmap.html":"#26a17b","sost-protocol-spec.html":"#b8860b","sost-whitepaper.html":"#ff5ccd","sost-mine.html":"#ff2d3b","sost-network-status.html":"#88ff00","sost-mining-calculator.html":"#38bdf8","sost-why-no-pools.html":"#fde68a","sost-getting-started.html":"#f472b6","sost-quickstart.html":"#ff6b35","sost-community.html":"#d7ff00","sost-foundation.html":"#9fe8ff","sost-foundation-balances.html":"#ffd166","sost-popc-contracts.html":"#ec4899","sost-popc-quickstart.html":"#cfe88a","sost-e2e.html":"#4488ff","sost-gold-dex.html":"#7ee2a8","sost-security.html":"#ffb86b","sost-faq.html":"#cbb6e6","beacon.html":"#e879f9","protocol-registry.html":"#a3e635","casert-spec.html":"#ff6b6b","sost-explorer.html":"#fbbf24","sost-help.html":"#7fb3ff","sost-miner-troubleshooter.html":"#c084fc","sost-markets.html":"#4ade80","sost-infrastructure.html":"#e6d9b6","sost-otc.html":"#ffff00","sost-wallet.html":"#ff8800","universe/install.html":"#00ffff","sost-talk.html":"#8b9bf4","sost-contact.html":"#f5c889"};
   function sxRgba(h,a){ var n=parseInt(h.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
   function styleNavButtons(nl){
     if(!document.getElementById('sost-nav-sx-style')){ var st=document.createElement('style'); st.id='sost-nav-sx-style';
@@ -428,7 +435,7 @@
     run();
   }
   function injectNav(){
-    var nl = document.querySelector("nav .nav-links");
+    var nl = window.__sostNavHost() && document.querySelector("nav .nav-links");
     if(!nl) return;
     nl.innerHTML = SOST_NAV_LINKS;
     var page = (location.pathname.split("/").pop() || "index.html").toLowerCase();
@@ -518,7 +525,7 @@
     (document.head||document.documentElement).appendChild(st);
   }
   function injectNewsBtn(){
-    var nav=document.querySelector('nav');
+    var nav=window.__sostNavHost();
     if(!nav) return;
     if(nav.querySelector('a[href="news.html"]')) return;          // already present
     // Anchor on the big Atomic Swap tile so NEWS lands in the large-button row, right
@@ -651,7 +658,7 @@
     (document.head||document.documentElement).appendChild(st);
   }
   function injectDtdBtn(){
-    var nav=document.querySelector('nav');
+    var nav=window.__sostNavHost();
     if(!nav) return;
     // Already there — the home page ships its own inline copy and must not gain a second.
     if(nav.querySelector('.sost-dtd-btn') || nav.querySelector('a[href$="#dtd"]')) return;
@@ -695,7 +702,7 @@
     el.classList.add('sq','sq-'+kind);
   }
   function tag(){
-    var nav=document.querySelector('nav');
+    var nav=window.__sostNavHost();
     if(!nav) return;
     // ConvergenceX: the <img> gains a tile of its own so it reads as the same kind of module.
     var cx=nav.querySelector('img[src*="convergencex-logo"]');
@@ -745,16 +752,17 @@
 })();
 
 /* ============================================================================
-   SOST TOKENIZATION (Asset Layer) — global nav logo. A COLOUR-INVERTED TWIN of the
-   SOST logo: identical size, shape and silhouette (asset-layer-logo.png is a pixel
-   swap of sost-logo.png?v=rs20261112g — red body, black Σ). No text, no badge. PULSING WHITE glow
-   (in sync with the SOST mark). Sits IMMEDIATELY BEFORE the
+   SOST TOKENIZATION (Asset Layer) — global nav logo. Its own illustration (V30000,
+   owner 5 Nov 2026: never a second eye next to the header emblem, never the old Σ):
+   a real-world asset as a 3×3×3 block with one unit lifted out in gold — a tokenised
+   fraction — on the black disc / red rim of the wSOST badge family. No text.
+   PULSING WHITE glow (in sync with the SOST mark). Sits IMMEDIATELY BEFORE the
    ConvergenceX logo. Links to sost-universal-assets.html. Additional module; never
    replaces the SOST logo. No consensus/backend involvement.
    ========================================================================== */
 (function(){
   "use strict";
-  var LOGO='asset-layer-logo.png?v=v434';
+  var LOGO='asset-layer-logo.png?v=id30000';
   function styleOnce(){
     if(document.getElementById('sost-tok-logo-style')) return;
     var st=document.createElement('style'); st.id='sost-tok-logo-style';
@@ -774,7 +782,7 @@
     (document.head||document.documentElement).appendChild(st);
   }
   function inject(){
-    var nav=document.querySelector('nav'); if(!nav) return;
+    var nav=window.__sostNavHost(); if(!nav) return;
     if(nav.querySelector('a.sost-tok-logo')) return;
     var cx=nav.querySelector('a[href="casert-spec.html"]'); if(!cx) return; // no canonical bar here
     styleOnce();
@@ -834,7 +842,7 @@
   }
   function ensureHost(){
     var h=document.getElementById('vcx-sost'); if(h) return h;
-    var nav=document.querySelector('nav'); if(!nav) return null;
+    var nav=window.__sostNavHost(); if(!nav) return null;
     var nl=nav.querySelector('.nav-links'); var parent=(nl&&nl.parentNode)||nav;
     h=document.createElement('span'); h.id='vcx-sost';
     h.style.cssText='margin-left:auto;display:inline-flex;align-items:center';
@@ -874,7 +882,8 @@
 })();
 
 /* ============================================================================
-   wSOST & GOLD VAULT — large circular nav module (research roadmap page).
+   wSOST — large circular nav module (SOST Atomic Bridge research page). Owner P0 5 Nov 2026: the «wSOST & Gold Vault»
+   badge is retired as identity; the emblem is the official wSOST eye (WΣ in the iris), universe/assets/brand/wsost/.
    Sits between ATOMIC SWAP DEX and NEWS & UPDATES in the large-button row of every
    page that has one (Explorer included). Circular by design: the emblem is the SOST
    Sigma inside a single red ring ("wrapped"). Links to sost-wsost-gold-vault.html.
@@ -882,7 +891,7 @@
    ========================================================================== */
 (function(){
   "use strict";
-  var IMG='assets/wsost/wsost-gold-vault-nav-256.webp?v=rs20261112g', IMG_PNG='assets/wsost/wsost-gold-vault-nav-256.png?v=rs20261112g';
+  var IMG_PNG='universe/assets/brand/wsost/wsost-eye-256.png?v=sl20261113';
   function styleOnce(){
     if(document.getElementById('sost-wsost-btn-style')) return;
     var st=document.createElement('style'); st.id='sost-wsost-btn-style';
@@ -901,7 +910,7 @@
     (document.head||document.documentElement).appendChild(st);
   }
   function inject(){
-    var nav=document.querySelector('nav'); if(!nav) return;
+    var nav=window.__sostNavHost(); if(!nav) return;
     if(nav.querySelector('a.sost-wsost-btn')) return;
     var ax=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
     if(!ax) return;                                         // no large-button row on this page
@@ -911,12 +920,11 @@
     sz=Math.round(sz*1.2*0.93*1.02);                        // +20%, -7%, then +2% vs the sibling modules (owner requests)
     var a=document.createElement('a');
     a.href='sost-wsost-gold-vault.html'; a.className='sost-wsost-btn';
-    a.title='wSOST & Gold Vault — bridge, Gold Reserve V2 and governance (research roadmap, not live)';
-    a.setAttribute('aria-label','wSOST & Gold Vault');
+    a.title='wSOST · SOST Atomic Bridge (research, not active, not deployed)';
+    a.setAttribute('aria-label','wSOST · SOST Atomic Bridge (research)');
     a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
     var pic=document.createElement('picture');
-    pic.innerHTML='<source srcset="'+IMG+'" type="image/webp">';
-    var img=document.createElement('img'); img.src=IMG_PNG; img.alt='wSOST & Gold Vault'; img.width=sz; img.height=sz;
+    var img=document.createElement('img'); img.src=IMG_PNG; img.alt='wSOST'; img.width=sz; img.height=sz;
     pic.appendChild(img); a.appendChild(pic);
     pic.style.cssText='display:block;width:100%;height:100%';
     // Before NEWS & UPDATES (or its square wrapper); otherwise right after ATOMIC SWAP DEX.
@@ -996,7 +1004,7 @@
     el.style.top=(i.top+i.height/2-h/2-b.top)+'px';
   }
   function inject(){
-    nav=document.querySelector('nav'); if(!nav||nav.querySelector('a.sost-xp-callout')) return;
+    nav=window.__sostNavHost(); if(!nav||nav.querySelector('a.sost-xp-callout')) return;
     logo=nav.querySelector('a.nav-logo[href$="sost-explorer.html"]'); if(!logo) return;
     img=logo.querySelector('img'); if(!img) return;
     box=logo.parentNode;
@@ -1073,7 +1081,7 @@
 /* ============================================================================
    SOST nav "Contact" -> floating image -> contact form.
    A plain left click on the nav's Contact item shows the contact emblem
-   (media/sost-contact-email.png) floating over the page. A click on the emblem
+   (media/sost-contact-email.png?v=id30000) floating over the page. A click on the emblem
    (or Enter / Space) turns it, with a short fade, into a small contact form
    in the same dialog. Sending is gated by CONTACT_SEND_ENABLED below: while it
    is false the SEND button is disabled, a "not active yet" note is shown and
@@ -1113,7 +1121,7 @@
   // Resolve the image next to this script (js/../media/), so it works from any page path.
   var BASE='media/';
   try{ var cs=document.currentScript; if(cs && cs.src) BASE=new URL('../media/', cs.src).href; }catch(e){}
-  var SRC=BASE+'sost-contact-email.png', SRC512=BASE+'sost-contact-email-512.png';
+  var SRC=BASE+'sost-contact-email.png?v=id30000', SRC512=BASE+'sost-contact-email-512.png?v=id30000';
   function reduced(){ try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
   function styleOnce(){
     if(document.getElementById('sost-contact-float-style')) return;

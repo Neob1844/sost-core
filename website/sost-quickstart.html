@@ -3,21 +3,21 @@
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <!-- M26 OG / Twitter fallback -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta charset="UTF-8">
 <link rel="canonical" href="https://sostcore.com/sost-quickstart.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
-<link rel="apple-touch-icon" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=sl20261113">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Quick Start — Build, Run, Mine in Minutes</title>
 <meta name="description" content="Get started with SOST. Build from source, run a full node, start mining, and set up your wallet. Step-by-step guide.">
@@ -29,13 +29,11 @@
 <meta property="og:description" content="Get started with SOST. Build from source, run a full node, start mining, and set up your wallet. Step-by-step guide.">
 <meta property="og:url" content="https://sostcore.com/sost-quickstart.html">
 <meta property="og:site_name" content="SOST">
-<meta property="og:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
+<meta property="og:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Quick Start — Build, Run, Mine in Minutes">
 <meta name="twitter:description" content="Get started with SOST. Build from source, run a full node, start mining, and set up your wallet. Step-by-step guide.">
-<meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <style>
   :root {
     --bg-deep: #000000;
@@ -194,6 +192,12 @@
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
 
@@ -205,7 +209,7 @@
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -221,8 +225,8 @@
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
@@ -250,7 +254,7 @@
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
@@ -262,8 +266,7 @@
 
 <!-- HERO -->
 <div style="max-width:960px;margin:14px auto;padding:12px 16px;border:1px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.08);font-size:14px;line-height:1.6">
-<b style="color:#ffd166">Already running a node or a miner?</b> <b>SOST V30000</b> is out &mdash; <b>all three binaries changed</b> (node, miner and CLI; none byte-identical to v16.2.x). Re-download, verify and swap all three before #30,000 &mdash;
-<a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">read the upgrade guide</a>.
+<b style="color:#ffd166">Already running a node or a miner?</b> <b>SOST V30000</b> (V16 rules) has been <b>active since block #30,000</b> &mdash; run the V30000 FINAL.1 node, miner and CLI (<a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">upgrade guide</a>). <b>V17 (#40,000) is a proposed upgrade, not released and not active</b>: there is nothing to install for it yet (<a href="sost-v17.html" style="color:#39ff14;font-weight:700">V17 status</a>).
 </div>
 <section class="hero">
   <div class="container">
@@ -428,11 +431,11 @@
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">git clone https://github.com/Neob1844/sost-core.git</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">cd sost-core</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">git fetch --tags</span></div>
-        <div class="code-block"><span class="prompt">$ </span><span class="cmd">git checkout v30000</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">git checkout v30000-final.1</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">mkdir build &amp;&amp; cd build</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">cmake .. -DCMAKE_BUILD_TYPE=Release</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">make -j$(nproc)</span></div>
-        <div style="margin:12px 0;padding:12px 14px;border:1px solid #ffd166;border-left:3px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.07);font-size:13px;line-height:1.6;color:#d8c9a0"><b style="color:#ffd166">Important for block #30,000.</b> The V30000 release source is the <b>v30000 tag</b> (checked out above). Building the current <code>main</code> branch does <b>not</b> currently reproduce the V30000 release, so a node built from <code>main</code> would apply the old rules at #30,000 and fork off the network. New operators must build from the <b>v30000</b> tag &mdash; or use the published V30000 binaries.<div style="margin-top:6px">Prefer prebuilt V30000 binaries? See the <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">upgrade guide</a> &mdash; official release tag <b>v30000</b> with node / miner / cli SHA-256 (<code>SHA256SUMS</code>).</div></div>
+        <div style="margin:12px 0;padding:12px 14px;border:1px solid #ffd166;border-left:3px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.07);font-size:13px;line-height:1.6;color:#d8c9a0"><b style="color:#ffd166">Production release.</b> The V30000 production source is the <b>v30000-final.1</b> tag (checked out above, commit <code>59a4e666</code>). Build from this tag &mdash; or use the published V30000 binaries and check them against the release <code>SHA256SUMS</code>.<div style="margin-top:6px">Prefer prebuilt V30000 binaries? See the <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">upgrade guide</a> &mdash; official release tag <b>v30000-final.1</b> with node / miner / cli SHA-256 (<code>SHA256SUMS</code>).</div></div>
         <p>The last command takes 2&ndash;5 minutes. Lots of text will scroll &mdash; that's normal. Wait until you see <span style="color:var(--green-primary)">[100%] Built target</span>.</p>
       </div>
     </div>
@@ -530,7 +533,7 @@
         <p style="margin-top:12px;">Generate secure credentials:</p>
         <div class="code-block"><span class="prompt">$ </span>echo "USER: $(openssl rand -hex 10)"
 <span class="prompt">$ </span>echo "PASS: $(openssl rand -hex 20)"</div>
-        <p style="margin-top:8px;color:var(--text-dim);font-size:12px;">Save these values securely. Use them in both <code style="color:var(--cyan-primary)">--rpc-user</code> and <code style="color:var(--cyan-primary)">--rpc-pass</code> for node and miner.</p>
+        <p style="margin-top:8px;color:var(--text-dim);font-size:12px;">Save these values securely. Use them in <code style="color:var(--cyan-primary)">--rpc-user</code> and, for the password, a private file read with <code style="color:var(--cyan-primary)">--rpc-pass-file</code> by node, miner and sost-cli.</p>
 
         <div style="background:rgba(251,1,13,0.08);border:1px solid var(--red-dim);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin-top:16px;">
           <div style="font-size:11px;color:var(--red-primary);letter-spacing:2px;font-weight:700;margin-bottom:8px;">SECURITY WARNINGS</div>
@@ -575,14 +578,14 @@
     <span class="flag">--genesis</span> <span class="val">genesis_block.json</span> <span class="flag">--chain</span> <span class="val">chain.json</span> \
     <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
     <span class="flag">--rpc-user</span> <span class="val">SAME_USERNAME_AS_STEP_4</span> \
-    <span class="flag">--rpc-pass</span> <span class="val">SAME_PASSWORD_AS_STEP_4</span> \
+    <span class="flag">--rpc-pass-file</span> <span class="val">~/.sost/rpc.pass</span> \
     <span class="flag">--blocks</span> <span class="val">999999</span> <span class="flag">--profile</span> <span class="val">mainnet</span> <span class="flag">--threads</span> <span class="val">4</span></div>
         <p>Replace:</p>
         <ul style="color:var(--text-secondary);margin:8px 0 16px 20px;line-height:2;">
           <li><span style="color:var(--cyan-primary)">wallet.json</span> = the wallet file you created in Step 3 (default name)</li>
           <li><span style="color:var(--cyan-primary)">mining</span> = the label you used with <code>getnewaddress "mining"</code> in Step 3</li>
           <li><span style="color:var(--red-primary)">SAME_USERNAME_AS_STEP_4</span> = same username from Step 4</li>
-          <li><span style="color:var(--red-primary)">SAME_PASSWORD_AS_STEP_4</span> = same password from Step 4</li>
+          <li><span style="color:var(--cyan-primary)">~/.sost/rpc.pass</span> = the same private password file the node uses (Step 4)</li>
         </ul>
         <p>Numbers will scroll on screen. When it finds a block you will see: <span style="color:var(--green-primary);font-weight:600;">BLOCK FOUND!</span></p>
         <p>Leave it running to keep earning coins.</p>
@@ -613,13 +616,13 @@
 
         <p style="margin-top:16px;font-weight:500;color:var(--text-primary);">Check your balance:</p>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-cli getbalance</span> <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
-    <span class="flag">--rpc-user</span> <span class="val">YOUR_USER</span> <span class="flag">--rpc-pass</span> <span class="val">YOUR_PASS</span></div>
+    <span class="flag">--rpc-user</span> <span class="val">YOUR_USER</span> <span class="flag">--rpc-pass-file</span> <span class="val">~/.sost/rpc.pass</span></div>
         <p>Shows: <span style="color:var(--green-primary)">Total</span> / <span style="color:var(--cyan-primary)">Available</span> / <span style="color:var(--red-primary)">Locked (immature)</span></p>
 
         <p style="margin-top:20px;font-weight:500;color:var(--text-primary);">Send coins to someone:</p>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-cli send</span> <span class="flag">--to</span> <span class="val">sost1THEIR_ADDRESS</span> <span class="flag">--amount</span> <span class="val">1.5</span> \
     <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
-    <span class="flag">--rpc-user</span> <span class="val">YOUR_USER</span> <span class="flag">--rpc-pass</span> <span class="val">YOUR_PASS</span></div>
+    <span class="flag">--rpc-user</span> <span class="val">YOUR_USER</span> <span class="flag">--rpc-pass-file</span> <span class="val">~/.sost/rpc.pass</span></div>
 
         <p>You can also use the web wallet at <a href="https://sostcore.com/sost-wallet.html" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">sostcore.com/sost-wallet.html</a> (the official SOST wallet)</p>
       </div>
@@ -648,7 +651,7 @@
 
       <div class="faq-item">
         <div class="faq-q">How much electricity does it use?</div>
-        <div class="faq-a">Similar to running a video game. Each mining thread uses about 8 GB RAM (4 GB dataset + 4 GB scratchpad) and moderate CPU. Your electricity bill impact is minimal for 1&ndash;4 cores.</div>
+        <div class="faq-a">Similar to running a video game. The miner uses about 8 GB RAM in total (4 GB dataset + 4 GB scratchpad, shared by all its threads) and moderate CPU. Your electricity bill impact is minimal for 1&ndash;4 cores.</div>
       </div>
 
       <div class="faq-item">
@@ -753,13 +756,10 @@ function showOS(os) {
 </script>
 <script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
-<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
-<script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
-<script src="js/sost-music.js?v=v392"></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -885,5 +885,13 @@ function showOS(os) {
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='mining'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
+<!-- site soundtrack player (owner order 4 Nov 2026): replaces the NES chiptune button, js/retro-sounds.js and js/sost-music.js -->
+<link rel="stylesheet" href="universe/core/u-audio.css?v=gm-20261104">
+<script src="universe/core/u-audio.js?v=gm-20261104" data-autoplay data-dock="low" defer></script>
+<script src="universe/core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
 </body>
 </html>

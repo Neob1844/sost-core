@@ -4,20 +4,18 @@
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <link rel="canonical" href="https://sostcore.com/atomic-swap.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
 <meta name="robots" content="noindex,nofollow">
-<title>SOST Atomic Swap — Send SOST, receive crypto (experimental)</title>
+<title>SOST Atomic Swap — RETIRED (security finding H-01, not authorized)</title>
 <meta name="description" content="Consumer-friendly SOST Atomic Swap: pick what you send and receive, review, confirm. Trust-minimised cross-chain swaps (HTLC). Experimental / founder-testing — no custody, no keys in the browser.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;
@@ -142,13 +140,19 @@
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
 
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -159,13 +163,13 @@
     <div class="nav-links">
             <a href="index.html" data-watch="1" title="Watch · SOST videos">▶ Watch</a>
             <a href="index.html">Home</a>
-      <a href="atomic-swap.html" style="color:var(--red-primary);font-weight:700" title="SOST Atomic Swap — consumer">⚛ Atomic Swap</a>
+      <a href="atomic-swap.html" style="color:var(--red-primary);font-weight:700" title="SOST Atomic Swap — RETIRED, not authorized">⚛ Atomic Swap (RETIRED)</a>
       <a href="sost-protocol-spec.html">Layer 1</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
@@ -192,18 +196,20 @@
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html">SOST Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
   </div>
 </nav>
+<!-- SECURITY NOTICE H-01: retired HTLC atomic swap contracts (docs/security/ADVISORY_2026-10-30_HTLCv2.md) -->
+<div style="padding:0 12px;position:relative;z-index:5"><div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;max-width:1100px;margin:14px auto 0;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div></div>
 
 
 
 
 <!-- Testnet vs mainnet — unmistakable. Colour + text change once a wallet reports its chain. -->
-<div class="netbar experimental" id="netbar">EXPERIMENTAL · FOUNDER-TESTING · NOT FOR PUBLIC USE · NO PAIR IS LIVE YET</div>
+<div class="netbar experimental" id="netbar">RETIRED · SECURITY FINDING H-01 · NOT AUTHORIZED · DO NOT USE</div>
 
 <div class="hero"><div class="container">
   <div class="hero-label">// Cross-chain · Atomic Swap · Trust-minimised</div>
@@ -213,7 +219,7 @@
     <span class="chip red"><span class="dot"></span>Experimental · Founder-testing</span>
     <span class="chip cyan" id="statusChip"><span class="dot"></span>Network: checking…</span>
     <span class="chip" id="heightChip">SOST height: —</span>
-    <span class="chip amber"><a href="atomic-swap-console.html" style="color:inherit;text-decoration:none">⚙ Advanced / Developer console →</a></span>
+    <span class="chip amber" aria-disabled="true" style="opacity:.5">⚙ Advanced / Developer console — RETIRED</span>
   </div>
 </div></div>
 
@@ -336,6 +342,20 @@
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
+/* SECURITY NOTICE H-01 (docs/security/ADVISORY_2026-10-30_HTLCv2.md, finding F-1): the HTLC atomic swap
+   contracts are RETIRED. Unconditional hard block: no flag, no global, no override. Re-enabling any of
+   these controls requires a new reviewed commit. */
+(function(){
+  var MSG='SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized.';
+  var IDS=['reviewBtn', 'confirmBtn', 'handoffBtn', 'sendAmt', 'recvAsset'];
+  function hit(ev){var t=ev.target&&ev.target.closest?ev.target.closest('[id]'):null;
+    if(t&&IDS.indexOf(t.id)>=0){ev.preventDefault();ev.stopImmediatePropagation();}}
+  ['click','input','change','keydown','keypress','paste','submit'].forEach(function(k){document.addEventListener(k,hit,true);});
+  function off(){IDS.forEach(function(id){var e=document.getElementById(id);if(!e)return;
+    e.disabled=true;e.setAttribute('aria-disabled','true');e.title=MSG;
+    e.style.opacity='.45';e.style.cursor='not-allowed';e.style.filter='grayscale(1)';});}
+  off();document.addEventListener('DOMContentLoaded',off);window.addEventListener('load',off);
+})();
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 const A=window.ASWEVM;               // reuse the EVM codec / network+asset config from the console
 const HIST_KEY='sost_consumer_swaps';
@@ -399,6 +419,7 @@ async function refreshHeight(){
 }
 function isTestnet(cid){return cid==='0xaa36a7'||cid==='0x61';}
 function paintNetBanner(){
+  return; /* H-01: keep the RETIRED bar */
   const bar=$('netbar'),chip=$('statusChip');
   if(EVM_CHAIN&&isTestnet(EVM_CHAIN)){
     const net=A.NETWORKS[EVM_CHAIN];
@@ -446,7 +467,7 @@ function refreshQuote(){
   // TESTING pairs are preparable (hand-off to console); everything else is blocked.
   const canPrepare=(p.status==='AVAILABLE'||p.status==='TESTING');
   const rb=$('reviewBtn');
-  rb.disabled=!(canPrepare && amt>0);
+  rb.disabled=true; /* H-01: RETIRED (was: !(canPrepare && amt>0)) */
   rb.textContent = p.status==='AVAILABLE' ? 'Review swap'
     : p.status==='TESTING' ? 'Prepare swap (founder testing)'
     : p.status==='COMING_SOON' ? 'Coming soon'
@@ -478,6 +499,7 @@ async function genSwapParams(){
    ===================================================================== */
 let PENDING=null;   // the swap being reviewed
 $('reviewBtn').addEventListener('click',async function(){
+  return; /* H-01: RETIRED */
   const p=currentPair();const amt=parseFloat($('sendAmt').value);
   if(!p||!(amt>0))return;
   const params=await genSwapParams();
@@ -529,7 +551,7 @@ function advKV(s){
 }
 
 $('confirmBtn').addEventListener('click',function(){
-  if(!PENDING)return;
+  return; /* H-01: RETIRED */
   // AVAILABLE-only path. Not reachable today (no pair is AVAILABLE), kept honest for when one is.
   PENDING.status='LOCKED';
   saveSwap(PENDING);renderHistory();showActive(PENDING);
@@ -612,6 +634,10 @@ if(eth()){
   if(eth().on){eth().on('chainChanged',c=>{EVM_CHAIN=c;paintNetBanner();refreshQuote();});}
 }
 </script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='ecosystem'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body>
 </html>

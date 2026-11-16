@@ -3,21 +3,21 @@
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <!-- M26 OG / Twitter fallback -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta charset="UTF-8">
 <link rel="canonical" href="https://sostcore.com/sost-wallet.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
-<link rel="apple-touch-icon" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" href="sost-logo.png?v=sl20261113">
+<link rel="apple-touch-icon" href="sost-logo.png?v=sl20261113">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Wallet — Secure Web Wallet | Send, Receive, HD Seed Phrases</title>
 <meta name="description" content="Client-side SOST wallet. Keys never leave your browser. HD seed phrases (BIP39), address book, UTXO management. Send and receive SOST securely.">
@@ -29,11 +29,11 @@
 <meta property="og:description" content="Client-side SOST wallet. Keys never leave your browser. HD seed phrases (BIP39), address book, UTXO management. Send and receive SOST securely.">
 <meta property="og:url" content="https://sostcore.com/sost-wallet.html">
 <meta property="og:site_name" content="SOST">
-<meta property="og:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png?v=sl20261113">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Wallet — Secure Web Wallet">
 <meta name="twitter:description" content="Client-side SOST wallet. Keys never leave your browser. HD seed phrases (BIP39), address book, UTXO management. Send and receive SOST securely.">
-<meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=sl20261113">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- noble/secp256k1 loaded via dynamic import() in module script below -->
@@ -321,6 +321,11 @@
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) — owner order 13-Nov-2026: the wallet takes the shared site header -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
+<link rel="stylesheet" href="css/wallet-skin.css?v=wl20261114v17">
 </head>
 <body>
 
@@ -332,14 +337,14 @@
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="sost-logo.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a class="atomix-btn" aria-disabled="true" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;cursor:not-allowed;filter:grayscale(1) brightness(.75)" title="RETIRED — DO NOT USE. The HTLC atomic swap contracts were retired after security finding H-01. Do not send funds to them." aria-label="Atomic swap: retired, do not use (H-01)"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#8856;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">SWAP<br>RETIRED</span></a><!-- H-01b: retired, no link -->
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -365,7 +370,7 @@
       <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
       <!-- DEX link replaced by rainbow button next to logo -->
-      <a href="sost-gold-dex.html">Atomic Swap DEX</a>
+      <a aria-disabled="true" title="RETIRED — DO NOT USE (security finding H-01)" style="color:#f87171;cursor:not-allowed">Atomic Swap · RETIRED (H-01)</a><!-- H-01b: retired, no link -->
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
       <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
@@ -377,7 +382,7 @@
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html" class="active" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
@@ -536,9 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <div id="walletLanding">
 <!-- HERO -->
-<div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
-<b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
-</div>
+<div style="max-width:1000px;margin:10px auto;padding:7px 14px;border:1px solid rgba(255,255,255,.14);border-left:3px solid #d4af37;border-radius:8px;background:rgba(255,255,255,.03);font-size:12.5px;line-height:1.55;color:#cfd3da" data-sost-hist="2"><b style="color:#d4af37">Rewards today:</b> 50% miner / 50% DTD (since V15). Any 50/25/25 split, Gold Funding Vault or PoPC Pool share described below applies only to blocks before #25,000 (<a href="news.html#historical-network-upgrades" style="color:#d4af37">history</a>). <b style="color:#d4af37">V17 candidate for #40,000</b> (not active): 80% miner / 15% DTD / 5% Jackpot &mdash; <a href="sost-v17.html#rewards" style="color:#d4af37;font-weight:700">what&rsquo;s changing</a>.</div>
 <section class="hero">
   <div class="container">
     <div class="hero-label fade-in">Web Wallet</div>
@@ -746,9 +749,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <button class="sidebar-btn" data-view="multisig" onclick="showView('multisig')">
         <span class="icon">&#128273;</span> <span>Multisig</span>
       </button>
-      <button class="sidebar-btn" data-view="popc" onclick="showView('popc')">
-        <span class="icon">&#x1F6E1;</span> <span>PoPC</span>
-      </button>
       <!-- SOST Gateway — hidden until SOST_GATEWAY_ENABLED=true (design skeleton, inert) -->
       <button class="sidebar-btn" id="navGatewayBtn" data-view="gateway" onclick="showView('gateway')" style="display:none">
         <span class="icon">&#x1F6AA;</span> <span>SOST Gateway</span>
@@ -781,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <!-- WELCOME (no wallet loaded) -->
     <div id="view-welcome" class="view">
-      <h2>Welcome to <span class="accent">SOST Wallet</span></h2>
+      <h2>Welcome to SOST <span class="accent">Wallet</span></h2>
       <p class="subtitle">Client-side wallet — your private keys never leave this device.</p>
       <div class="card">
         <h3>Get Started</h3>
@@ -1640,72 +1640,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
     <!-- PoPC — Proof of Personal Custody -->
-    <div id="view-popc" class="view hidden">
-      <h2>Proof of Personal <span class="accent">Custody</span></h2>
-      <p class="subtitle">Bond your SOST to prove custody of real gold (XAUT/PAXG)</p>
-
-      <div id="popcActivationBadge" style="margin-bottom:16px;padding:8px 14px;border-radius:6px;font-size:12px;display:inline-block"></div>
-
-      <div class="card">
-        <h3>How It Works</h3>
-        <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
-          <p><strong>1.</strong> You hold XAUT or PAXG in your Ethereum wallet</p>
-          <p><strong>2.</strong> You lock a SOST bond (12-30% of gold value) on the SOST chain</p>
-          <p><strong>3.</strong> Random audits verify your gold balance via Ethereum RPC</p>
-          <p><strong>4.</strong> If you maintain custody: <span style="color:var(--green-primary)">bond returned + reward (up to 20%, dynamic tiers)</span></p>
-          <p><strong>5.</strong> If you sell your gold: <span style="color:var(--red-primary)">bond is slashed automatically</span></p>
-          <p style="margin-top:8px;font-style:italic;color:var(--text-dim)">Your gold NEVER leaves your wallet. Only the SOST bond is at risk.</p>
-        </div>
-      </div>
-
-      <div class="card" id="popcRegisterForm">
-        <h3>Register for PoPC</h3>
-        <div class="form-group">
-          <label class="form-label">Your Ethereum Address (holding XAUT/PAXG)</label>
-          <input type="text" id="popcEthAddr" class="form-input" placeholder="0x..." maxlength="42">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Declared XAUT (oz)</label>
-          <input type="number" id="popcXaut" class="form-input" placeholder="0.0" step="0.01" min="0">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Declared PAXG (oz)</label>
-          <input type="number" id="popcPaxg" class="form-input" placeholder="0.0" step="0.01" min="0">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Commitment Period</label>
-          <select id="popcDuration" class="form-input" onchange="updatePopcCalc()">
-            <option value="1">1 month (up to 1% reward)</option>
-            <option value="3">3 months (up to 4% reward)</option>
-            <option value="6">6 months (up to 9% reward)</option>
-            <option value="9">9 months (up to 14% reward)</option>
-            <option value="12" selected>12 months (up to 20% reward)</option>
-          </select>
-        </div>
-        <div id="popcCalcResult" style="margin:12px 0;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border-dim);border-radius:6px;font-size:12px;color:var(--text-secondary);line-height:1.8">
-          Enter gold amounts above to see bond calculation.
-        </div>
-        <button class="btn btn-primary" id="popcRegisterBtn" onclick="registerPopc()" disabled>Register & Lock Bond</button>
-        <div id="popcResult" class="notice hidden" style="margin-top:12px"></div>
-      </div>
-
-      <div class="card">
-        <h3>Reward Table</h3>
-        <table style="width:100%;border-collapse:collapse;font-size:12px;color:var(--text-secondary)">
-          <tr style="border-bottom:1px solid var(--border-dim)"><th style="text-align:left;padding:6px">Duration</th><th style="text-align:right;padding:6px">Reward % (of bond)</th><th style="text-align:right;padding:6px">Annualized</th></tr>
-          <tr style="border-bottom:1px solid var(--border-dim)"><td style="padding:6px">1 month</td><td style="text-align:right;padding:6px">1%</td><td style="text-align:right;padding:6px;color:var(--text-dim)">12%</td></tr>
-          <tr style="border-bottom:1px solid var(--border-dim)"><td style="padding:6px">3 months</td><td style="text-align:right;padding:6px">4%</td><td style="text-align:right;padding:6px;color:var(--text-dim)">16%</td></tr>
-          <tr style="border-bottom:1px solid var(--border-dim)"><td style="padding:6px">6 months</td><td style="text-align:right;padding:6px">9%</td><td style="text-align:right;padding:6px;color:var(--text-dim)">18%</td></tr>
-          <tr style="border-bottom:1px solid var(--border-dim)"><td style="padding:6px">9 months</td><td style="text-align:right;padding:6px">14%</td><td style="text-align:right;padding:6px;color:var(--text-dim)">18.7%</td></tr>
-          <tr><td style="padding:6px">12 months</td><td style="text-align:right;padding:6px;color:var(--green-primary);font-weight:600">20%</td><td style="text-align:right;padding:6px;color:var(--green-primary)">20%</td></tr>
-        </table>
-        <p style="font-size:11px;color:var(--text-dim);margin-top:8px">Rates are <strong>Tier 1 maximums</strong> (first 25 contracts). Dynamic participation tiers reduce rates as contracts grow. Hard cap: 1,000 SOST/contract. Anti-whale tiers above 10 oz. Protocol fee: 3% (Model A) / 8% (Model B). Bond returned on completion.</p>
-      </div>
-
-      <div class="notice" style="border-left:3px solid var(--red-primary)">
-        <strong>Important:</strong> PoPC is a voluntary commitment protocol, NOT a yield product. Bond slashing is automatic if custody fails. Reward rates may be adjusted. This is not financial advice.
-      </div>
-    </div>
+    <!-- PoPC gold-custody view removed 16-Nov-2026: discarded model (no gold commitments) -->
 
     <!-- TOTP 2FA -->
     <div id="view-totp" class="view hidden">
@@ -1786,7 +1721,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <button class="tab-btn"        data-gw="pay"       onclick="showGatewayTab('pay')">Pay</button>
         <button class="tab-btn"        data-gw="escrow"    onclick="showGatewayTab('escrow')">Escrow</button>
         <button class="tab-btn"        data-gw="swap"      onclick="showGatewayTab('swap')">Swap</button>
-        <button class="tab-btn"        data-gw="popc_bond" onclick="showGatewayTab('popc_bond')">PoPC Bond</button>
+        <button class="tab-btn"        data-gw="popc_bond" onclick="showGatewayTab('popc_bond')">PoPC (retired)</button>
       </div>
 
       <div class="card gw-pane" id="gw-hold" style="padding:16px 18px;max-width:760px">
@@ -1819,52 +1754,27 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
 
       <div class="card gw-pane" id="gw-swap" style="display:none;padding:16px 18px;max-width:760px">
+        <div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;margin:0 0 12px;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div>
         <h3 style="margin-top:0">Need SOST? Swap <span style="font-size:11px;color:var(--text-dim)">&mdash; cross-chain HTLC (advanced)</span></h3>
         <p style="font-size:13px;color:var(--text-secondary)">Liquidity bridge, not the checkout. v1 is a <strong>link to the Atomic Swap console</strong>; deep in-wallet integration waits for V15 / a mature SOST leg.</p>
         <p style="font-size:12px;color:var(--text-dim)">Pairs: <code id="gwSwapPairs"></code></p>
         <p style="font-size:12px;color:var(--text-dim)" id="gwSwapNote"></p>
-        <div><a class="btn btn-small" id="gwSwapLink" href="#" onclick="return false;">Open Atomic Swap console &rarr;</a></div>
+        <div><a class="btn btn-small" id="gwSwapLink" href="#" onclick="return false;" aria-disabled="true" style="opacity:.45;pointer-events:none">Atomic Swap console &mdash; RETIRED</a></div>
       </div>
 
       <div class="card gw-pane" id="gw-popc_bond" style="display:none;padding:16px 18px;max-width:820px">
-        <h3 style="margin-top:0">PoPC Bond Dashboard <span style="font-size:11px;color:var(--text-dim)">&mdash; native SOST bond · create · monitor · claim</span></h3>
+        <h3 style="margin-top:0">PoPC bonds (retired) <span style="font-size:11px;color:var(--text-dim)">&mdash; list and settle existing bonds</span></h3>
 
         <!-- Activation status -->
         <div id="gwPopcStatus" style="border-radius:8px;padding:10px 14px;margin:6px 0 14px;font-size:13px"></div>
 
         <!-- Create / simulate bond -->
-        <div style="border:1px solid var(--border,#2a2a2a);border-radius:10px;padding:14px 16px;margin-bottom:14px">
-          <div style="font-weight:700;margin-bottom:10px">Create PoPC Bond</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <label style="font-size:12px;color:var(--text-secondary)">Bond amount (SOST)
-              <input id="gwPopcAmount" type="number" min="1" step="1" value="1000" class="form-input" style="width:100%"></label>
-            <label style="font-size:12px;color:var(--text-secondary)">Duration
-              <select id="gwPopcMonths" class="form-input" style="width:100%">
-                <option value="1">1 month — 1%</option>
-                <option value="3">3 months — 4%</option>
-                <option value="6">6 months — 9%</option>
-                <option value="9">9 months — 14%</option>
-                <option value="12" selected>12 months — 20%</option>
-              </select></label>
-            <label style="font-size:12px;color:var(--text-secondary)">Your SOST address
-              <input id="gwPopcSost" type="text" class="form-input" placeholder="sost1..." style="width:100%"></label>
-            <label style="font-size:12px;color:var(--text-secondary)">Ethereum EOA (future custody proof)
-              <input id="gwPopcEth" type="text" class="form-input" placeholder="0x..." style="width:100%"></label>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;font-size:12px;color:var(--text-dim)">
-            <div>Base reward<br><b id="gwPopcEstReward" style="font-size:15px;color:#35d6a0">—</b></div>
-            <div>Total at unlock<br><b id="gwPopcEstTotal" style="font-size:15px;color:var(--text-primary)">—</b></div>
-            <div>Unlock block<br><b id="gwPopcEstUnlock" style="font-size:15px;color:var(--text-primary)">—</b></div>
-          </div>
-          <p style="font-size:11px;color:#e0a030;margin:10px 0 0;line-height:1.5">&#9888; Only the native SOST bond is collateral and can be slashed. Gold is <b>not</b> collateral. Gold Boost is <b>disabled on mainnet</b>.</p>
-          <button id="gwPopcCreate" class="btn btn-small" style="margin-top:10px" disabled>Create PoPC Bond</button>
-          <span id="gwPopcCreateState" style="font-size:11px;color:var(--text-dim);margin-left:8px"></span>
-        </div>
+        <div style="margin:6px 0 14px;padding:10px 14px;border:1px solid #f59e0b;border-left:4px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.08);color:#ffe2a8;font-size:13px;line-height:1.6"><b>PoPC is retired.</b> New bonds cannot be created. PoPC is not linked to gold: SOST has no gold backing and no XAUT/PAXG obligations. If you created a bond earlier, it is listed below and can be settled when it unlocks.</div>
 
         <!-- My bonds -->
         <div style="border:1px solid var(--border,#2a2a2a);border-radius:10px;padding:14px 16px;margin-bottom:14px">
           <div style="font-weight:700;margin-bottom:8px">My bonds</div>
-          <div id="gwPopcBonds" style="font-size:12px;color:var(--text-dim)">Connect the node RPC to list your bonds (create · status · claim).</div>
+          <div id="gwPopcBonds" style="font-size:12px;color:var(--text-dim)">Connect the node RPC to list your existing bonds (status · settle).</div>
         </div>
 
         <!-- Result of a settle (popc_release) -->
@@ -1872,7 +1782,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <!-- Safety -->
         <ul style="font-size:12px;color:var(--text-dim);line-height:1.7;margin:0 0 12px;padding-left:18px">
-          <li>PoPC base activates at block 25,000. Gold Boost: future only. Gold Vault governance: future only.</li>
+          <li>PoPC is retired: no new bonds. Gold Boost and Gold Vault governance were discarded.</li>
           <li id="gwPopcBondPt"></li>
         </ul>
 
@@ -4174,7 +4084,6 @@ window.refreshBalance = async function() {
     // immature" (NaN - height = NaN, NaN >= 1000 = false).
     window._lastChainHeight = chainHeight;
     updateCapsuleActivation(chainHeight);
-    updatePopcActivation(chainHeight);
     if (typeof window.gwPopcRender === 'function') window.gwPopcRender();  // refresh PoPC Bond dashboard
     const utxos = addrInfo.utxos || [];
     window._lastUtxos = utxos; // cache for TX history
@@ -4276,106 +4185,7 @@ window.refreshBalance = async function() {
   }
 };
 
-// ==================== PoPC ====================
-
-const POPC_REWARD_TABLE = {1: 0.01, 3: 0.04, 6: 0.09, 9: 0.14, 12: 0.20};
-const POPC_BOND_TABLE = [
-  [0.0001, 0.12], [0.001, 0.15], [0.01, 0.20], [0.1, 0.25],
-  [0.2, 0.26], [0.3, 0.27], [0.4, 0.28], [0.5, 0.29], [Infinity, 0.30]
-];
-
-function getBondPct(ratio) {
-  for (const [threshold, pct] of POPC_BOND_TABLE) {
-    if (ratio < threshold) return pct;
-  }
-  return 0.30;
-}
-
-window.updatePopcCalc = function() {
-  const xaut = parseFloat(document.getElementById('popcXaut').value) || 0;
-  const paxg = parseFloat(document.getElementById('popcPaxg').value) || 0;
-  const months = parseInt(document.getElementById('popcDuration').value) || 12;
-  const totalOz = xaut + paxg;
-  const el = document.getElementById('popcCalcResult');
-
-  if (totalOz <= 0) {
-    el.innerHTML = 'Enter gold amounts above to see bond calculation.';
-    return;
-  }
-
-  // Pre-launch reference: SOST=$1, Gold=$3000/oz
-  const sostPrice = 1.0;
-  const goldPrice = 3000.0;
-  const ratio = sostPrice / goldPrice;
-  const bondPct = getBondPct(ratio);
-  const goldValue = totalOz * goldPrice;
-  const bondUsd = goldValue * bondPct;
-  const bondSost = bondUsd / sostPrice;
-  const rewardPct = POPC_REWARD_TABLE[months] || 0;
-  const baseReward = bondSost * rewardPct;
-  const protocolFee = baseReward * 0.05;
-  const userReward = baseReward - protocolFee;
-  const total = bondSost + userReward;
-
-  el.innerHTML = `
-    <div style="line-height:2">
-      <div>Gold declared: <b>${totalOz.toFixed(2)} oz</b> (~$${goldValue.toLocaleString()} USD)</div>
-      <div>SOST/Gold ratio: <b>${ratio.toFixed(6)}</b> → Bond: <b>${(bondPct*100).toFixed(0)}%</b></div>
-      <div>Required bond: <b style="color:var(--green-primary)">${bondSost.toFixed(2)} SOST</b> ($${bondUsd.toFixed(0)} USD)</div>
-      <div>Reward (${months}mo, ${(rewardPct*100).toFixed(0)}%): <b style="color:var(--green-primary)">${userReward.toFixed(4)} SOST</b> (after 3% fee)</div>
-      <div>Total returned: <b>${total.toFixed(4)} SOST</b> (bond + reward)</div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Reference prices: SOST=$${sostPrice}, Gold=$${goldPrice}/oz. Actual bond calculated at market rate on registration day.</div>
-    </div>
-  `;
-};
-
-// Update activation badge
-function updatePopcActivation(height) {
-  const badge = document.getElementById('popcActivationBadge');
-  const form = document.getElementById('popcRegisterForm');
-  const btn = document.getElementById('popcRegisterBtn');
-  if (!badge) return;
-
-  if (height >= 5000) {
-    badge.style.background = 'rgba(74,222,128,0.1)';
-    badge.style.border = '1px solid rgba(74,222,128,0.3)';
-    badge.style.color = '#4ade80';
-    badge.textContent = '✅ PoPC ACTIVE — Bond Lock enabled at block #' + height;
-    if (form) form.style.opacity = '1';
-    if (btn) btn.disabled = false;
-  } else {
-    const blocksLeft = 5000 - height;
-    const daysLeft = Math.ceil(blocksLeft * 10 / 60 / 24);
-    badge.style.background = 'rgba(251,191,36,0.1)';
-    badge.style.border = '1px solid rgba(251,191,36,0.3)';
-    badge.style.color = '#fbbf24';
-    badge.textContent = '⏳ PoPC activates at block 25,000 (~' + daysLeft + ' days) — Currently #' + height;
-    if (form) form.style.opacity = '0.5';
-    if (btn) btn.disabled = true;
-  }
-}
-
-window.registerPopc = function() {
-  const ethAddr = document.getElementById('popcEthAddr').value.trim();
-  if (!ethAddr.startsWith('0x') || ethAddr.length !== 42) {
-    return showError('popcResult', 'Invalid Ethereum address. Must be 0x + 40 hex characters.');
-  }
-  showError('popcResult', 'Registration will be available when PoPC launches. Bond Lock transactions activate at block 25,000. Your registration data is saved locally.');
-  // Save to localStorage for when PoPC goes live
-  const reg = { ethAddr, xaut: parseFloat(document.getElementById('popcXaut').value)||0,
-                paxg: parseFloat(document.getElementById('popcPaxg').value)||0,
-                months: parseInt(document.getElementById('popcDuration').value)||12,
-                savedAt: new Date().toISOString() };
-  localStorage.setItem('sost_popc_registration', JSON.stringify(reg));
-};
-
-// Listen for gold amount changes
-document.addEventListener('DOMContentLoaded', () => {
-  ['popcXaut','popcPaxg','popcDuration'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', updatePopcCalc);
-  });
-});
+// PoPC gold-custody UI removed 16-Nov-2026 (discarded model).
 
 // ==================== CAPSULE UI ====================
 
@@ -6848,7 +6658,8 @@ document.addEventListener('DOMContentLoaded', function () {
   fill('gwEscrowStates', GW.Escrow.STATES.join(', '));
   fill('gwSwapPairs', GW.Swap.PAIRS.join('  ·  '));
   fill('gwSwapNote', GW.Swap.note());
-  var link = document.getElementById('gwSwapLink'); if (link) link.setAttribute('href', GW.Swap.consoleUrl());
+  /* H-01: atomic swap console link disabled, unconditional (was: link.setAttribute('href', GW.Swap.consoleUrl())) */
+  var link = document.getElementById('gwSwapLink'); if (link) { link.setAttribute('aria-disabled', 'true'); link.style.opacity = '.45'; link.style.pointerEvents = 'none'; }
   // ---- PoPC Bond dashboard — pure helpers + LIVE node RPC (popc_register/release/status) ----
   // Wire the gateway RPC hook to the wallet's existing rpcCall (endpoint/auth from the connection
   // bar). On the public proxy these operator methods may be blocked (401) — handled gracefully.
@@ -6871,8 +6682,7 @@ document.addEventListener('DOMContentLoaded', function () {
       el.style.background = st.active ? 'rgba(0,255,136,0.08)' : 'rgba(251,191,36,0.07)';
       el.style.border = '1px solid ' + (st.active ? 'rgba(0,255,136,0.30)' : 'rgba(251,191,36,0.30)');
       el.innerHTML = '<b style="color:' + (st.active ? '#00ff88' : '#fbbf24') + '">' +
-        (st.active ? '● PoPC active' : '○ Scheduled, not active yet') + '</b> — ' +
-        st.label + ' · current height ' + chainHeight();
+        '○ PoPC retired: no new bonds' + '</b> — existing bonds can be listed and settled below · current height ' + chainHeight();
     }
     function recompute() {
       var amt = Number(($('gwPopcAmount') || {}).value) || 0;
@@ -7179,7 +6989,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
@@ -7396,5 +7206,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   else document.addEventListener('DOMContentLoaded', wireBanner);
 })();
 </script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='ecosystem'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body>
 </html>

@@ -3,23 +3,23 @@
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <!-- M26 OG / Twitter fallback -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=rs20261112g">
+<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <meta charset="UTF-8">
 <link rel="canonical" href="https://sostcore.com/sost-otc-alpha.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
-<link rel="apple-touch-icon" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=sl20261113">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST OTC Desk — Request Quotes for SOST and Gold-Linked Positions</title>
 <meta name="description" content="SOST OTC Desk: request quotes for SOST tokens and gold-referenced positions. Operator-assisted execution with transparent fees.">
@@ -31,9 +31,7 @@
 <meta property="og:description" content="SOST OTC Desk: request quotes for SOST tokens and gold-referenced positions with operator-assisted execution.">
 <meta property="og:url" content="https://sostcore.com/sost-otc-alpha.html">
 <meta property="og:site_name" content="SOST">
-<meta property="og:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta property="og:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <style>
   :root {
     --bg-deep: #000000;
@@ -147,6 +145,12 @@
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
 
@@ -158,7 +162,7 @@
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -174,8 +178,8 @@
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
@@ -203,18 +207,20 @@
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
   </div>
 </nav>
+<!-- SECURITY NOTICE H-01: retired HTLC atomic swap contracts (docs/security/ADVISORY_2026-10-30_HTLCv2.md) -->
+<div style="padding:0 12px;position:relative;z-index:5"><div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;max-width:1100px;margin:14px auto 0;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div></div>
 <div style="max-width:1100px;margin:12px auto 0;padding:0 24px;">
   <a href="sost-dex.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:4px;color:#f59e0b;text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px;transition:all 0.2s">&larr; RETURN TO DEX</a>
 </div>
 
 <!-- HERO -->
-<div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing &mdash; Atomic Swap / OTC.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) in the current release (V30000); the signed-offer SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is non-custodial swap &amp; OTC coordination (signed offers, encrypted deal channels).</div>
+<div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing &mdash; OTC / P2P.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) in the current release (V30000); the signed-offer SOST-layer DEX is NOT ACTIVE (deferred / fail-closed on mainnet, see protocol-status.json) and admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is OTC / P2P coordination only (signed offers, encrypted deal channels); it provides no settlement, custody or security guarantee, and public atomic swaps are not currently authorized.</div>
 <section class="hero">
   <div class="container">
     <div class="hero-label fade-in">OTC Desk</div>
@@ -373,7 +379,7 @@
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
-    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-dex.html">SOST DEX</a></p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-dex.html">SOST DEX</a></p>
     <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
   </div>
 </footer>
@@ -458,7 +464,7 @@ setInterval(fetchOtcRequests, _refreshMs);
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
@@ -586,5 +592,9 @@ setInterval(fetchOtcRequests, _refreshMs);
   });
 </script>
 <script src="js/popc-dex-gate.js?v=v392"></script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='ecosystem'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body>
 </html>

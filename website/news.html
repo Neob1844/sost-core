@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
-<link rel="apple-touch-icon" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=sl20261113">
 <meta name="theme-color" content="#05070a">
 <meta charset="UTF-8">
 <link rel="canonical" href="https://sostcore.com/news.html">
@@ -19,12 +19,10 @@
 <meta property="og:description" content="Every SOST hard fork, upgrade and milestone, explained in detail. Newest-first changelog.">
 <meta property="og:url" content="https://sostcore.com/news.html">
 <meta property="og:site_name" content="SOST">
-<meta property="og:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
+<meta property="og:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST News &amp; Updates — Forks, Upgrades &amp; Announcements">
-<meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <style>
   :root {
     --bg-deep: #000000; --bg-panel: #050505; --bg-card: #0a0a0a; --bg-hover: #111111;
@@ -103,8 +101,16 @@
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
+<div class="sost-gold-discarded" role="note" style="position:relative;z-index:50;margin:0;padding:12px 18px;background:#2a1a00;border-bottom:2px solid #f59e0b;color:#ffe2a8;font:600 13.5px/1.6 system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:left">&#9888; DISCARDED MODEL &mdash; HISTORICAL RECORD ONLY. SOST has <b>no gold backing</b>, <b>no committed reserves</b> and <b>no obligation to acquire, hold or contribute gold, XAUT or PAXG</b>. There is no convertibility, redemption right or guarantee linked to gold or to any external asset. <span style="font-weight:400">The current model is Proof of Work + DTD and DTD Jackpot, which distribute SOST itself (V16, active: 50&nbsp;% miner / 50&nbsp;% DTD). The proposed V17 split (80&nbsp;% / 15&nbsp;% / 5&nbsp;%) is not active. Gold-related content below describes abandoned plans and is not in force.</span></div>
+
 
 
 
@@ -116,7 +122,7 @@
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -132,8 +138,8 @@
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
@@ -162,12 +168,14 @@
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
   </div>
 </nav>
+<!-- SECURITY NOTICE H-01: retired HTLC atomic swap contracts (docs/security/ADVISORY_2026-10-30_HTLCv2.md) -->
+<div style="padding:0 12px;position:relative;z-index:5"><div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;max-width:1100px;margin:14px auto 0;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div></div>
 
 
 
@@ -180,6 +188,144 @@
     <p class="hero-sub">Every SOST hard fork, network upgrade and milestone since genesis (2026-03-15) — ordered newest-first and explained in detail. This is the canonical changelog. Public announcements are cross-posted on the <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk ANN thread</a>. Public launch: <b>2026-06-16</b>.</p>
   </div>
 </section>
+<!-- ============ V17 — PHASE 1 (PREPARATION), 14-Nov-2026 ============ -->
+<section class="section" id="v17-network-upgrade-40000"><div class="container">
+  <article style="border:2px solid #d4af37;border-radius:14px;background:linear-gradient(180deg,rgba(212,175,55,.07),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px ui-monospace,monospace;letter-spacing:1.5px;color:#d4af37;text-transform:uppercase">14 Nov 2026 &middot; Network upgrade &middot; Phase 1 &mdash; preparation &middot; status: TESTING</div>
+    <h2 style="font-size:24px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0);text-wrap:balance">SOST V17 &mdash; network upgrade targeting block <span style="color:#d4af37">#40,000</span></h2>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)">SOST is preparing a coordinated network upgrade targeting block #40,000. Proposed improvements include revised mining and DTD rewards (80% miner / 15% DTD / 5% Jackpot accumulator), new coinbase maturity rules, stronger reorganization safeguards, improved P2P synchronization and enhanced node and wallet security. Node operators and miners must prepare compatible, verified software before activation. <b>The release remains subject to final testing and approval; nothing is active yet and there is nothing to install today.</b></p>
+    <div style="margin:12px 0;padding:11px 14px;border:2px solid #FB010D;border-radius:9px;background:rgba(251,1,13,.08);color:#ffe3e3;font-size:14px;line-height:1.65"><b style="color:#ff4d55">CRITICAL &mdash; risk of blockchain split.</b> All validating nodes and miners must install the approved V17 release before block #40,000. Incompatible software after activation can split the network, with rejected blocks, divergent balances and unreliable confirmations. Recommended coordinated restart window: <b style="color:#fff">blocks #39,900&ndash;#39,999</b>. The release will be published before the window opens.</div>
+    <p style="font-size:14px;color:var(--text-secondary,#94a3b8)">Phases: <b>1 preparation</b> (now) &middot; 2 approved release (binaries, checksums, calendar) &middot; 3 window #39,900 reminder &middot; 4 activation check after #40,000 &middot; 5 network status report.</p>
+    <p style="margin-top:10px"><a href="sost-v17.html" style="color:#f6d77a;font-weight:700">What&rsquo;s changing in V17</a> &nbsp;&middot;&nbsp; <a href="sost-v17-upgrade.html" style="color:#f6d77a;font-weight:700">Operator Upgrade Guide</a> &nbsp;&middot;&nbsp; <a href="sost-v17-upgrade.html#release" style="color:#f6d77a;font-weight:700">Release &amp; Checksums</a></p>
+  </article>
+</div></section>
+
+<!-- ============ HISTORICAL NETWORK UPGRADES (archive of the former site-wide V30000 notices) ============ -->
+<section class="section" id="historical-network-upgrades"><div class="container">
+  <article style="border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:18px 22px;background:rgba(255,255,255,.02)">
+    <div style="font:800 11px ui-monospace,monospace;letter-spacing:1.5px;color:#a3abb8;text-transform:uppercase">Archive</div>
+    <h2 style="font-size:22px;margin:8px 0 6px;color:var(--text-primary,#e2e8f0)">Historical Network Upgrades</h2>
+    <p style="font-size:14px;line-height:1.7;color:var(--text-secondary,#94a3b8)">The large notices that used to sit on every page are kept here. Instructions that are still needed to operate the network today (V30000 FINAL binaries and checksums) stay valid until V17 activates.</p>
+    <ul style="font-size:14px;line-height:1.8;color:var(--text-secondary,#94a3b8)">
+      <li><b>V30000 &mdash; block #30,000</b> (Oct 2026): Jackpot V2, NODE_BIND and heartbeats, V30000 FINAL security build and the optional node-only hardening v30000-final.1. <a href="sost-v30000-history.html" style="color:#39ff14">Full operator notice and checksums</a>.</li>
+      <li><b>V15 &mdash; block #25,000:</b> reward split changed from 50% miner / 25% Gold Funding Vault / 25% PoPC Pool to <b>50% miner / 50% DTD</b>; the Gold Vault and PoPC emission shares became zero and the DTD became permissionless. Any page that describes 50/25/25 refers to blocks before #25,000.</li>
+      <li>Earlier upgrades are described in the entries further down this page.</li>
+    </ul>
+    <details style="margin-top:8px"><summary style="cursor:pointer;color:#d4af37;font-weight:700">Show the V30000 announcements as published (2)</summary>
+<section class="section" id="v30000-active-final1"><div class="container">
+  <div style="border:2px solid #39ff14;border-radius:14px;background:linear-gradient(180deg,rgba(57,255,20,.06),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#39ff14">// NETWORK UPDATE &middot; V30000 ACTIVE &middot; 2026-10-10</div>
+    <h2 style="font-size:23px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0)">V30000 is active &mdash; optional <span style="color:#39ff14">node-only hardening</span> (v30000-final.1)</h2>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7">Block <b>#30,000</b> activated on schedule with no reorg, no rejected block and no node restart. Nodes and miners on <b>V30000 FINAL</b> need no action.</p>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7"><b>v30000-final.1</b> is an <b>optional, recommended update for node operators</b>: it replaces <b>only <code>sost-node</code></b> and changes <b>no consensus rule</b> (blocks, rewards 50/50, supply and NODE_BIND unchanged). It hardens chain replay (a damaged chain file is never half-loaded), failed-reorg recovery (stop rather than serve partial state) and chain-file persistence during reorgs. <b><code>sost-miner</code> and <code>sost-cli</code> are byte-identical</b> &mdash; miners do not recompile.</p>
+    <div style="font:12px/1.7 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto"><pre style="margin:0;white-space:pre">sost-node    7ca5ea630a50f45d70cedd073c1bbb239abd69ac6f2e30c316236121c601b736   (v30000-final.1, optional)
+sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd   (V30000 FINAL, still valid)
+sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75   (unchanged)
+sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b   (unchanged)</pre></div>
+    <p style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.7">Release: <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final.1" target="_blank" rel="noopener" style="color:#22d3ee">releases/tag/v30000-final.1</a>. Install: stop node &rarr; replace <code>sost-node</code> &rarr; verify SHA256 &rarr; start node (chain data kept). <b style="color:#39ff14">Update 11 Oct: NODE_BIND is open</b> &mdash; first bind #30,194, first heartbeat #30,196 (see the NODE_BIND article above). Still on an older binary? Update to V30000 FINAL now.</p>
+  </div>
+</div></section>
+
+<!-- ============ V30000 FINAL SECURITY BUILD (2026-10-08) ============ -->
+<section class="section" id="v30000-final-security-build"><div class="container">
+  <div style="border:2px solid #fb010d;border-radius:14px;background:linear-gradient(180deg,rgba(251,1,13,.07),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ff6b6b">// OPERATOR NOTICE &middot; V30000 FINAL SECURITY BUILD &middot; 2026-10-08</div>
+    <h2 style="font-size:23px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0)">V30000 FINAL SECURITY BUILD &mdash; update <span style="color:#ff6b6b">node + miner + CLI</span> before #30,000</h2>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7">A final pre-activation security review of V30000 found and fixed issues in transaction admission, native-asset validation, peer recovery after a chain split and NODE_BIND ownership. <b>All earlier V30000 builds &mdash; the original v30000 release, v30000-rc1 and the intermediate emergency build &mdash; are SUPERSEDED.</b> Do not install them. <b>All three binaries changed</b>; verify each against the official <code>SHA256SUMS</code>.</p>
+    <div style="font:12px/1.7 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto"><pre style="margin:0;white-space:pre">V30000 FINAL SECURITY BUILD   commit 3acd952bd2c3
+sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd
+sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75
+sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b
+
+sha256sum -c SHA256SUMS      # all three must print: OK</pre></div>
+    <ul style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:8px 0 8px 18px">
+      <li><b>Download:</b> <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee">github.com/Neob1844/sost-core/releases/tag/v30000-final</a> &middot; step-by-step: <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</li>
+      <li><b>Activation is automatic at #30,000</b> by block height. Nothing needs to be restarted exactly at #30,000 &mdash; but every validating node and every miner <b>must restart on this build between #29,900 and #30,000</b> and still run it at #30,000; older software may split from the chain and will not apply the new protocol rules.</li>
+      <li><b style="color:#39ff14">Update 11 Oct 2026: the go-ahead is given &mdash; NODE_BIND is open.</b> Until then the instruction here was to wait; the first bind confirmed at #30,194 and its first heartbeat at #30,196. Every miner must still be on this build.</li>
+      <li><b>NODE_BIND (after #30,000):</b> a bind now carries a second signature by your <b>node key</b>, so only the holder of a node key can bind it. Command (unchanged): <code>sost-cli --wallet &lt;wallet.json&gt; --mining-key-label &lt;label&gt; createnodebind 1 --node-key-file ~/.sost/node.key</code>. After it confirms, check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it gives no access to wallets and cannot create, spend or burn SOST.</li>
+      <li><b>Native Assets:</b> DEFERRED / FAIL-CLOSED on mainnet. <b>SACS V2:</b> DEFERRED on mainnet.</li>
+      <li><b>Monetary rule unchanged:</b> 50% miner / 50% DTD. <b>SOST has no burn mechanism</b> &mdash; none supported, none planned.</li>
+    </ul>
+    <div style="margin:14px 0;padding:12px 14px;border:2px solid #fb010d;border-radius:9px;background:rgba(251,1,13,.07);font-size:13.5px;line-height:1.7;color:#e9eef5">
+      <b style="color:#ff6b6b;font-size:15px">&#9888; ALL NODES AND ALL MINERS: RECOMPILE (OR DOWNLOAD AND VERIFY) THE NEW BINARIES AND RESTART NODE AND MINER AFTER BLOCK #29,900 AND BEFORE BLOCK #30,000.</b><br>
+      <b>Now</b> &mdash; you can already build or download the FINAL binaries and verify their SHA256 (steps below).<br>
+      <b style="color:#ff6b6b">#29,900 &rarr; #30,000 &mdash; MANDATORY:</b> restart your node <b>and</b> your miner on the FINAL binaries, and keep them running through #30,000.<br>
+      <b>#30,000</b> &mdash; activation is automatic by block height. <b style="color:#ff6b6b">Otherwise there is a real danger of a CHAIN SPLIT, and the new protocol changes will NOT apply to your node or miner.</b>
+    </div>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">OPTION A &middot; RECOMPILE FROM SOURCE (Ubuntu / Debian / WSL2)</div>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Verified: a clean clone of the tag built exactly like this reproduces the three official hashes byte-for-byte (Ubuntu 22.04, gcc 11.4).</p>
+    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># 1. build dependencies (once)
+sudo apt update
+sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
+
+# 2. get the FINAL source
+git clone https://github.com/Neob1844/sost-core.git sost-v30000-final
+cd sost-v30000-final
+git checkout v30000-final
+git log -1 --format=%H        # must print 3acd952bd2c321fe9c6cb276259ff712d6b466bb
+
+# 3. build &mdash; the build directory MUST be named "build"
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+
+# 4. verify
+sha256sum build/sost-node build/sost-miner build/sost-cli
+#   ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd  build/sost-node
+#   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75  build/sost-miner
+#   09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b  build/sost-cli</pre>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Different hashes? Your compiler or libraries differ from the reference build &mdash; use Option B. <b style="color:#ff6b6b">Never run a binary whose hash you cannot match.</b></p>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">OPTION B &middot; DOWNLOAD THE OFFICIAL BINARIES</div>
+    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre">mkdir sost-v30000-final &amp;&amp; cd sost-v30000-final
+for f in sost-node sost-miner sost-cli SHA256SUMS; do
+  wget -q https://github.com/Neob1844/sost-core/releases/download/v30000-final/$f
+done
+sha256sum -c SHA256SUMS       # all three MUST print: OK
+chmod +x sost-node sost-miner sost-cli</pre>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR NODE ON THE NEW sost-node &mdash; between #29,900 and #30,000</div>
+    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># systemd:
+sudo systemctl stop sost-node
+sudo cp /path/to/your/sost-node /path/to/your/sost-node.bak-before-final     # rollback copy
+sudo install -m 0755 build/sost-node /path/to/your/sost-node                 # (Option B: ./sost-node)
+sha256sum /path/to/your/sost-node                                            # ef608cf9e7f6434f...
+sudo systemctl start sost-node
+
+# by hand: stop it (Ctrl+C), then start the NEW binary with your usual flags
+./sost-node --genesis genesis_block.json --chain chain.json \
+  --rpc-user &lt;your-user&gt; --rpc-pass-file ~/.sost/rpc.pass \
+  --profile mainnet --p2p-enc on
+
+# check: up, on the chain, with peers
+curl -s -u &lt;your-user&gt;:$(cat ~/.sost/rpc.pass) -H 'content-type: application/json' \
+  --data '{"method":"getblockcount","params":[],"id":1}' http://127.0.0.1:18232/
+curl -s -u &lt;your-user&gt;:$(cat ~/.sost/rpc.pass) -H 'content-type: application/json' \
+  --data '{"method":"getpeerinfo","params":[],"id":1}' http://127.0.0.1:18232/</pre>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Your chain data is kept &mdash; no resync, no reindex.</p>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR MINER ON THE NEW sost-miner &mdash; between #29,900 and #30,000</div>
+    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># stop the old miner (Ctrl+C, or kill its PID &mdash; never a broad pkill on a shared box)
+sha256sum build/sost-miner     # 53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75
+
+./build/sost-miner \
+  --wallet ~/sost-keys/my-wallet.json \
+  --mining-key-label "my-mining-key" \
+  --genesis genesis_block.json \
+  --rpc 127.0.0.1:18232 \
+  --rpc-user &lt;your-user&gt; \
+  --rpc-pass-file ~/.sost/rpc.pass \
+  --blocks 999999 --max-nonce 500000 \
+  --profile mainnet --realtime --threads &lt;N&gt;</pre>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0"><b>--realtime is mandatory</b> (without it every block is rejected: &ldquo;timestamp too far in future&rdquo;). Healthy miner output: <code>bitsQ sync ... node canonical=...</code>, <code>[MINING] h=&lt;height+1&gt;</code>, and on a find <code>[BLOCK N] ... submitted to node OK</code>.</p>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">NODE_BIND &mdash; OPEN SINCE 11 OCT 2026 (first bind #30,194)</div>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">The go-ahead is given. Use the FINAL CLI (same command, it now signs with both keys): <code>./build/sost-cli --wallet ~/sost-keys/my-wallet.json --mining-key-label "my-mining-key" createnodebind 1 --node-key-file ~/.sost/node.key</code>. Then check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it cannot touch wallets or create, spend or burn SOST.</p>
+    <p style="font-size:11px;color:#64748b;line-height:1.6;margin:8px 0 0">Earlier news items below describe the superseded builds and are kept as history only.</p>
+  </div>
+</div></section>
+
+<!-- ============ WAR-ROOM: SECURITY + DECENTRALIZATION (2026-10-05) ============ -->
+<!-- ============ TRANSACTION CAPACITY & SCALABILITY (2026-10-06) ============ -->
+    </details>
+  </article>
+</div></section>
+
 
 <!-- DECENTRALIZATION AUDIT — featured, glow + pulse -->
 <style>
@@ -552,117 +698,7 @@ MATURE NETWORK  (only once objective maturity conditions hold)
 </div></section>
 
 <!-- ============ V30000 ACTIVE + FINAL.1 NODE HARDENING (2026-10-10) ============ -->
-<section class="section" id="v30000-active-final1"><div class="container">
-  <div style="border:2px solid #39ff14;border-radius:14px;background:linear-gradient(180deg,rgba(57,255,20,.06),transparent 60%);padding:20px 22px">
-    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#39ff14">// NETWORK UPDATE &middot; V30000 ACTIVE &middot; 2026-10-10</div>
-    <h2 style="font-size:23px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0)">V30000 is active &mdash; optional <span style="color:#39ff14">node-only hardening</span> (v30000-final.1)</h2>
-    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7">Block <b>#30,000</b> activated on schedule with no reorg, no rejected block and no node restart. Nodes and miners on <b>V30000 FINAL</b> need no action.</p>
-    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7"><b>v30000-final.1</b> is an <b>optional, recommended update for node operators</b>: it replaces <b>only <code>sost-node</code></b> and changes <b>no consensus rule</b> (blocks, rewards 50/50, supply and NODE_BIND unchanged). It hardens chain replay (a damaged chain file is never half-loaded), failed-reorg recovery (stop rather than serve partial state) and chain-file persistence during reorgs. <b><code>sost-miner</code> and <code>sost-cli</code> are byte-identical</b> &mdash; miners do not recompile.</p>
-    <div style="font:12px/1.7 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto"><pre style="margin:0;white-space:pre">sost-node    7ca5ea630a50f45d70cedd073c1bbb239abd69ac6f2e30c316236121c601b736   (v30000-final.1, optional)
-sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd   (V30000 FINAL, still valid)
-sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75   (unchanged)
-sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b   (unchanged)</pre></div>
-    <p style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.7">Release: <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final.1" target="_blank" rel="noopener" style="color:#22d3ee">releases/tag/v30000-final.1</a>. Install: stop node &rarr; replace <code>sost-node</code> &rarr; verify SHA256 &rarr; start node (chain data kept). <b style="color:#39ff14">Update 11 Oct: NODE_BIND is open</b> &mdash; first bind #30,194, first heartbeat #30,196 (see the NODE_BIND article above). Still on an older binary? Update to V30000 FINAL now.</p>
-  </div>
-</div></section>
-
-<!-- ============ V30000 FINAL SECURITY BUILD (2026-10-08) ============ -->
-<section class="section" id="v30000-final-security-build"><div class="container">
-  <div style="border:2px solid #fb010d;border-radius:14px;background:linear-gradient(180deg,rgba(251,1,13,.07),transparent 60%);padding:20px 22px">
-    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ff6b6b">// OPERATOR NOTICE &middot; V30000 FINAL SECURITY BUILD &middot; 2026-10-08</div>
-    <h2 style="font-size:23px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0)">V30000 FINAL SECURITY BUILD &mdash; update <span style="color:#ff6b6b">node + miner + CLI</span> before #30,000</h2>
-    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7">A final pre-activation security review of V30000 found and fixed issues in transaction admission, native-asset validation, peer recovery after a chain split and NODE_BIND ownership. <b>All earlier V30000 builds &mdash; the original v30000 release, v30000-rc1 and the intermediate emergency build &mdash; are SUPERSEDED.</b> Do not install them. <b>All three binaries changed</b>; verify each against the official <code>SHA256SUMS</code>.</p>
-    <div style="font:12px/1.7 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto"><pre style="margin:0;white-space:pre">V30000 FINAL SECURITY BUILD   commit 3acd952bd2c3
-sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd
-sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75
-sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b
-
-sha256sum -c SHA256SUMS      # all three must print: OK</pre></div>
-    <ul style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:8px 0 8px 18px">
-      <li><b>Download:</b> <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee">github.com/Neob1844/sost-core/releases/tag/v30000-final</a> &middot; step-by-step: <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</li>
-      <li><b>Activation is automatic at #30,000</b> by block height. Nothing needs to be restarted exactly at #30,000 &mdash; but every validating node and every miner <b>must restart on this build between #29,900 and #30,000</b> and still run it at #30,000; older software may split from the chain and will not apply the new protocol rules.</li>
-      <li><b style="color:#39ff14">Update 11 Oct 2026: the go-ahead is given &mdash; NODE_BIND is open.</b> Until then the instruction here was to wait; the first bind confirmed at #30,194 and its first heartbeat at #30,196. Every miner must still be on this build.</li>
-      <li><b>NODE_BIND (after #30,000):</b> a bind now carries a second signature by your <b>node key</b>, so only the holder of a node key can bind it. Command (unchanged): <code>sost-cli --wallet &lt;wallet.json&gt; --mining-key-label &lt;label&gt; createnodebind 1 --node-key-file ~/.sost/node.key</code>. After it confirms, check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it gives no access to wallets and cannot create, spend or burn SOST.</li>
-      <li><b>Native Assets:</b> DEFERRED / FAIL-CLOSED on mainnet. <b>SACS V2:</b> DEFERRED on mainnet.</li>
-      <li><b>Monetary rule unchanged:</b> 50% miner / 50% DTD. <b>SOST has no burn mechanism</b> &mdash; none supported, none planned.</li>
-    </ul>
-    <div style="margin:14px 0;padding:12px 14px;border:2px solid #fb010d;border-radius:9px;background:rgba(251,1,13,.07);font-size:13.5px;line-height:1.7;color:#e9eef5">
-      <b style="color:#ff6b6b;font-size:15px">&#9888; ALL NODES AND ALL MINERS: RECOMPILE (OR DOWNLOAD AND VERIFY) THE NEW BINARIES AND RESTART NODE AND MINER AFTER BLOCK #29,900 AND BEFORE BLOCK #30,000.</b><br>
-      <b>Now</b> &mdash; you can already build or download the FINAL binaries and verify their SHA256 (steps below).<br>
-      <b style="color:#ff6b6b">#29,900 &rarr; #30,000 &mdash; MANDATORY:</b> restart your node <b>and</b> your miner on the FINAL binaries, and keep them running through #30,000.<br>
-      <b>#30,000</b> &mdash; activation is automatic by block height. <b style="color:#ff6b6b">Otherwise there is a real danger of a CHAIN SPLIT, and the new protocol changes will NOT apply to your node or miner.</b>
-    </div>
-    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">OPTION A &middot; RECOMPILE FROM SOURCE (Ubuntu / Debian / WSL2)</div>
-    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Verified: a clean clone of the tag built exactly like this reproduces the three official hashes byte-for-byte (Ubuntu 22.04, gcc 11.4).</p>
-    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># 1. build dependencies (once)
-sudo apt update
-sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
-
-# 2. get the FINAL source
-git clone https://github.com/Neob1844/sost-core.git sost-v30000-final
-cd sost-v30000-final
-git checkout v30000-final
-git log -1 --format=%H        # must print 3acd952bd2c321fe9c6cb276259ff712d6b466bb
-
-# 3. build &mdash; the build directory MUST be named "build"
-cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
-
-# 4. verify
-sha256sum build/sost-node build/sost-miner build/sost-cli
-#   ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd  build/sost-node
-#   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75  build/sost-miner
-#   09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b  build/sost-cli</pre>
-    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Different hashes? Your compiler or libraries differ from the reference build &mdash; use Option B. <b style="color:#ff6b6b">Never run a binary whose hash you cannot match.</b></p>
-    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">OPTION B &middot; DOWNLOAD THE OFFICIAL BINARIES</div>
-    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre">mkdir sost-v30000-final &amp;&amp; cd sost-v30000-final
-for f in sost-node sost-miner sost-cli SHA256SUMS; do
-  wget -q https://github.com/Neob1844/sost-core/releases/download/v30000-final/$f
-done
-sha256sum -c SHA256SUMS       # all three MUST print: OK
-chmod +x sost-node sost-miner sost-cli</pre>
-    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR NODE ON THE NEW sost-node &mdash; between #29,900 and #30,000</div>
-    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># systemd:
-sudo systemctl stop sost-node
-sudo cp /path/to/your/sost-node /path/to/your/sost-node.bak-before-final     # rollback copy
-sudo install -m 0755 build/sost-node /path/to/your/sost-node                 # (Option B: ./sost-node)
-sha256sum /path/to/your/sost-node                                            # ef608cf9e7f6434f...
-sudo systemctl start sost-node
-
-# by hand: stop it (Ctrl+C), then start the NEW binary with your usual flags
-./sost-node --genesis genesis_block.json --chain chain.json \
-  --rpc-user &lt;your-user&gt; --rpc-pass-file ~/.sost/rpc.pass \
-  --profile mainnet --p2p-enc on
-
-# check: up, on the chain, with peers
-curl -s -u &lt;your-user&gt;:$(cat ~/.sost/rpc.pass) -H 'content-type: application/json' \
-  --data '{"method":"getblockcount","params":[],"id":1}' http://127.0.0.1:18232/
-curl -s -u &lt;your-user&gt;:$(cat ~/.sost/rpc.pass) -H 'content-type: application/json' \
-  --data '{"method":"getpeerinfo","params":[],"id":1}' http://127.0.0.1:18232/</pre>
-    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Your chain data is kept &mdash; no resync, no reindex.</p>
-    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR MINER ON THE NEW sost-miner &mdash; between #29,900 and #30,000</div>
-    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># stop the old miner (Ctrl+C, or kill its PID &mdash; never a broad pkill on a shared box)
-sha256sum build/sost-miner     # 53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75
-
-./build/sost-miner \
-  --wallet ~/sost-keys/my-wallet.json \
-  --mining-key-label "my-mining-key" \
-  --genesis genesis_block.json \
-  --rpc 127.0.0.1:18232 \
-  --rpc-user &lt;your-user&gt; \
-  --rpc-pass-file ~/.sost/rpc.pass \
-  --blocks 999999 --max-nonce 500000 \
-  --profile mainnet --realtime --threads &lt;N&gt;</pre>
-    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0"><b>--realtime is mandatory</b> (without it every block is rejected: &ldquo;timestamp too far in future&rdquo;). Healthy miner output: <code>bitsQ sync ... node canonical=...</code>, <code>[MINING] h=&lt;height+1&gt;</code>, and on a find <code>[BLOCK N] ... submitted to node OK</code>.</p>
-    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">NODE_BIND &mdash; OPEN SINCE 11 OCT 2026 (first bind #30,194)</div>
-    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">The go-ahead is given. Use the FINAL CLI (same command, it now signs with both keys): <code>./build/sost-cli --wallet ~/sost-keys/my-wallet.json --mining-key-label "my-mining-key" createnodebind 1 --node-key-file ~/.sost/node.key</code>. Then check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it cannot touch wallets or create, spend or burn SOST.</p>
-    <p style="font-size:11px;color:#64748b;line-height:1.6;margin:8px 0 0">Earlier news items below describe the superseded builds and are kept as history only.</p>
-  </div>
-</div></section>
-
-<!-- ============ WAR-ROOM: SECURITY + DECENTRALIZATION (2026-10-05) ============ -->
-<!-- ============ TRANSACTION CAPACITY & SCALABILITY (2026-10-06) ============ -->
-<section class="section" id="sost-tps-scalability-2026-10-06"><div style="max-width:1100px;margin:0 auto;padding:0 24px;box-sizing:border-box"><div class="scw" style="border:1px solid var(--border-dim);border-radius:14px;background:var(--bg-panel);padding:22px 24px;box-sizing:border-box;min-width:0"><style>.scw{font-family:var(--font-display)}.scw-card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:12px;padding:17px 19px;margin:14px 0;transition:border-color .3s}.scw-card:hover{border-color:var(--border-med)}.scw-h{display:flex;align-items:center;gap:9px;margin:0 0 4px;font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--text-primary)}.scw-dot{width:8px;height:8px;border-radius:2px;flex:0 0 auto}.scw-tag{margin-left:auto;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid;border-radius:4px}.scw-p{font-family:var(--font-display);font-weight:300;font-size:13.5px;line-height:1.75;color:var(--text-secondary);margin:9px 0}.scw-lbl{font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;margin:15px 0 2px}.scw-pre{font-family:var(--font-mono);font-size:12px;line-height:1.7;background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:8px;padding:13px 15px;margin:11px 0;overflow-x:auto;white-space:pre;color:#9fe8ff}.scw-tw{overflow-x:auto;max-width:100%;margin:12px 0}.scw-t{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px;min-width:560px}.scw-t th{padding:11px 14px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);border-bottom:2px solid var(--border-med);background:var(--bg-panel)}.scw-t td{padding:9px 14px;border-bottom:1px solid var(--border-dim);color:var(--text-secondary);font-weight:300;vertical-align:top}.scw-t tr:last-child td{border-bottom:none}.scw-t tr:hover td{background:var(--bg-hover)}.scw-t td:first-child{color:var(--text-primary);font-weight:500;white-space:nowrap}.scw-note{border-left:3px solid;border-radius:0 8px 8px 0;padding:10px 14px;font-family:var(--font-display);font-size:13px;line-height:1.6;font-weight:300;margin:11px 0}.scw-src{color:var(--text-muted);font-family:var(--font-mono);font-size:10px;line-height:1.7;margin:14px 0 0}.scw-t code,.scw-p code{color:var(--green-primary);background:rgba(34,197,94,.08);padding:1px 6px;border-radius:3px;font-family:var(--font-mono)}</style><div style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#fbbf24;margin-bottom:4px">2026-10-06 &middot; Research note</div><h3 style="font-family:var(--font-display);font-size:23px;font-weight:600;color:var(--text-primary);margin:0 0 4px;line-height:1.2">How many transactions can SOST really process?</h3><p class="scw-p" style="margin-top:2px">Short answer: <b style="color:var(--green-primary)">~5&ndash;10 TPS</b> of protocol capacity today &mdash; and <b style="color:#fbbf24">~7 TPS does not mean 7 transactions per block</b>. It means thousands of transactions per ~1 MB block &divide; ~600 s.</p><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--cyan-primary);box-shadow:0 0 7px var(--cyan-primary)66"></span><span>Capacity by transaction size</span><span class="scw-tag" style="color:var(--cyan-primary);border-color:var(--cyan-primary)55">APPROXIMATE</span></div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:#fbbf24">Average TX size</th><th style="color:var(--cyan-primary)">Approx TX / block</th><th style="color:var(--green-primary)">Approx TPS</th></tr></thead><tbody><tr><td>170 bytes</td><td>~5,800</td><td><b style='color:var(--green-primary)'>~9.7</b></td></tr><tr><td>200 bytes</td><td>~5,000</td><td>~8.3</td></tr><tr><td>250 bytes</td><td>~4,000</td><td>~6.7</td></tr><tr><td>300 bytes</td><td>~3,300</td><td>~5.5</td></tr><tr><td>500 bytes</td><td>~2,000</td><td>~3.3</td></tr></tbody></table></div><p class="scw-p"><span style='color:#fbbf24'>Approximations</span> from verified consensus params (<code>1,000,000</code> B block, <code>600</code> s spacing, ~170 B minimal transfer). One UTXO transaction can also batch many payments.</p></div><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--cyan-primary);box-shadow:0 0 7px var(--cyan-primary)66"></span><span>Honest comparison &mdash; top 10 PoW + non-PoW contrast</span><span class="scw-tag" style="color:var(--cyan-primary);border-color:var(--cyan-primary)55">SOURCED &amp; LABELLED</span></div><div class="scw-note" style="border-color:var(--red-primary);background:rgba(251,1,13,.07);color:#e9eef5"><b style='color:var(--red-bright)'>TPS across blockchains is not directly comparable</b> &mdash; UTXO vs account models, contract execution, vote transactions, and theoretical vs benchmarked vs observed metrics all differ. Not a leaderboard.</div><div class="scw-lbl" style="color:var(--green-primary)">Top Proof-of-Work chains (SOST&rsquo;s camp)</div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:var(--green-primary)">Network</th><th style="color:var(--text-muted)">Consensus / model</th><th style="color:var(--text-muted)">Block / slot</th><th style="color:var(--cyan-primary)">Approx TPS</th><th style="color:var(--text-muted)">How measured</th></tr></thead><tbody><tr><td><img src="assets/coins/sost.png?v=rs20261112g" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;"><b style='color:var(--green-primary)'>SOST</b></td><td>PoW &middot; ConvergenceX (CPU) &middot; UTXO</td><td>~1 MB / ~600 s</td><td><b>~5&ndash;10</b></td><td>protocol-capacity estimate &mdash; <b>not</b> benchmarked</td></tr><tr><td><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</td><td>PoW &middot; SHA-256d &middot; UTXO</td><td>~1&ndash;4 MB wt / ~600 s</td><td>~7 (up to ~27 batched)</td><td>practical, weight-dependent</td></tr><tr><td><img src="assets/coins/ltc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Litecoin</td><td>PoW &middot; Scrypt &middot; UTXO</td><td>~1 MB / ~150 s</td><td>~56 (capacity)</td><td>capacity (faster blocks)</td></tr><tr><td><img src="assets/coins/doge.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Dogecoin</td><td>PoW &middot; Scrypt (merged) &middot; UTXO</td><td>~1 MB / ~60 s</td><td>~33 (capacity)</td><td>capacity</td></tr><tr><td><img src="assets/coins/bch.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Cash</td><td>PoW &middot; SHA-256d &middot; UTXO</td><td>~32 MB / ~600 s</td><td>~100&ndash;200+ (capacity)</td><td>capacity (big blocks)</td></tr><tr><td><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Monero</td><td>PoW &middot; RandomX (CPU)</td><td>dynamic / ~120 s</td><td>~a few (flexible)</td><td>dynamic block + privacy</td></tr><tr><td><img src="assets/coins/etc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ethereum Classic</td><td>PoW &middot; Etchash &middot; EVM</td><td>gas-limited / ~13 s</td><td>~15 (gas-limited)</td><td>gas-limited</td></tr><tr><td><img src="assets/coins/zec.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Zcash</td><td>PoW &middot; Equihash &middot; shielded</td><td>~2 MB / ~75 s</td><td>~27 (capacity)</td><td>capacity (shielded heavier)</td></tr><tr><td><img src="assets/coins/dash.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Dash</td><td>PoW &middot; X11 &middot; UTXO</td><td>~2 MB / ~150 s</td><td>~28&ndash;56 (InstantSend)</td><td>capacity / InstantSend</td></tr><tr><td><img src="assets/coins/kas.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Kaspa</td><td>PoW &middot; kHeavyHash &middot; BlockDAG</td><td>~1 block/s</td><td>~hundreds&ndash;1,000s</td><td>high block rate (GHOSTDAG)</td></tr><tr><td><img src="assets/coins/rvn.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ravencoin</td><td>PoW &middot; KAWPOW &middot; UTXO</td><td>~1 min</td><td>~tens (capacity)</td><td>capacity</td></tr></tbody></table></div><div class="scw-lbl" style="color:#a78bfa">For contrast &mdash; high-throughput non-PoW</div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:#a78bfa">Network</th><th style="color:var(--text-muted)">Model</th><th style="color:var(--cyan-primary)">Approx TPS</th><th style="color:var(--text-muted)">How measured</th></tr></thead><tbody><tr><td><img src="assets/coins/eth.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ethereum (L1)</td><td>PoS &middot; account/EVM</td><td>~15 (L1)</td><td>gas-limited; scales on L2</td></tr><tr><td><img src="assets/coins/trx.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">TRON</td><td>DPoS (27 super reps)</td><td>~2,000 <b style='color:#fbbf24'>(claimed)</b></td><td>claimed; real throughput <b>questioned lower</b></td></tr><tr><td><img src="assets/coins/sol.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Solana</td><td>PoH + PoS &middot; parallel</td><td>~65,000 theo. / ~1&ndash;3k real</td><td>theoretical vs observed non-vote</td></tr></tbody></table></div><p class="scw-p">The high-TPS chains use a more centralized architecture. <b style='color:var(--green-primary)'>SOST sits in the Bitcoin camp</b> &mdash; trading raw throughput for security, decentralization and CPU-fair mining.</p></div><div class="scw-note" style="border-color:#fbbf24;background:rgba(251,191,36,.05);color:#e9eef5"><b style='color:#fbbf24'>Scaling is research, not consensus.</b> No announced change to block size or block time, no activation height. Bigger blocks / shorter block times trade accessibility and decentralization for throughput &mdash; see the full breakdown on the Transactions page.</div><p class="scw-p" style="margin-top:10px">Full tables (block-size &amp; block-time cost, mempool, daily capacity) on the <a href="sost-transactions.html#scalability" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim)">Transactions &rarr; Capacity &amp; Scalability</a> section.</p><p class="scw-src">Verified from source: <code>consensus_constants.h</code> (1,000,000 B), <code>params.h</code> (600 s), <code>transaction.cpp</code> (input 133 B, output 30 B+), <code>mempool.h</code> (template 4,096). External figures are approximate and labelled by how measured; capacity &ne; current utilization, theoretical &ne; benchmarked. Sources: ethereum.org; TRON network-claimed ~2,000 TPS (real throughput questioned in public reporting); Solana docs/explorers (~65,000 theoretical vs ~1,000&ndash;3,000 real non-vote); other PoW figures are approximate protocol capacities.</p></div></div></section>
+<section class="section" id="sost-tps-scalability-2026-10-06"><div style="max-width:1100px;margin:0 auto;padding:0 24px;box-sizing:border-box"><div class="scw" style="border:1px solid var(--border-dim);border-radius:14px;background:var(--bg-panel);padding:22px 24px;box-sizing:border-box;min-width:0"><style>.scw{font-family:var(--font-display)}.scw-card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:12px;padding:17px 19px;margin:14px 0;transition:border-color .3s}.scw-card:hover{border-color:var(--border-med)}.scw-h{display:flex;align-items:center;gap:9px;margin:0 0 4px;font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--text-primary)}.scw-dot{width:8px;height:8px;border-radius:2px;flex:0 0 auto}.scw-tag{margin-left:auto;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid;border-radius:4px}.scw-p{font-family:var(--font-display);font-weight:300;font-size:13.5px;line-height:1.75;color:var(--text-secondary);margin:9px 0}.scw-lbl{font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;margin:15px 0 2px}.scw-pre{font-family:var(--font-mono);font-size:12px;line-height:1.7;background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:8px;padding:13px 15px;margin:11px 0;overflow-x:auto;white-space:pre;color:#9fe8ff}.scw-tw{overflow-x:auto;max-width:100%;margin:12px 0}.scw-t{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px;min-width:560px}.scw-t th{padding:11px 14px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);border-bottom:2px solid var(--border-med);background:var(--bg-panel)}.scw-t td{padding:9px 14px;border-bottom:1px solid var(--border-dim);color:var(--text-secondary);font-weight:300;vertical-align:top}.scw-t tr:last-child td{border-bottom:none}.scw-t tr:hover td{background:var(--bg-hover)}.scw-t td:first-child{color:var(--text-primary);font-weight:500;white-space:nowrap}.scw-note{border-left:3px solid;border-radius:0 8px 8px 0;padding:10px 14px;font-family:var(--font-display);font-size:13px;line-height:1.6;font-weight:300;margin:11px 0}.scw-src{color:var(--text-muted);font-family:var(--font-mono);font-size:10px;line-height:1.7;margin:14px 0 0}.scw-t code,.scw-p code{color:var(--green-primary);background:rgba(34,197,94,.08);padding:1px 6px;border-radius:3px;font-family:var(--font-mono)}</style><div style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#fbbf24;margin-bottom:4px">2026-10-06 &middot; Research note</div><h3 style="font-family:var(--font-display);font-size:23px;font-weight:600;color:var(--text-primary);margin:0 0 4px;line-height:1.2">How many transactions can SOST really process?</h3><p class="scw-p" style="margin-top:2px">Short answer: <b style="color:var(--green-primary)">~5&ndash;10 TPS</b> of protocol capacity today &mdash; and <b style="color:#fbbf24">~7 TPS does not mean 7 transactions per block</b>. It means thousands of transactions per ~1 MB block &divide; ~600 s.</p><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--cyan-primary);box-shadow:0 0 7px var(--cyan-primary)66"></span><span>Capacity by transaction size</span><span class="scw-tag" style="color:var(--cyan-primary);border-color:var(--cyan-primary)55">APPROXIMATE</span></div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:#fbbf24">Average TX size</th><th style="color:var(--cyan-primary)">Approx TX / block</th><th style="color:var(--green-primary)">Approx TPS</th></tr></thead><tbody><tr><td>170 bytes</td><td>~5,800</td><td><b style='color:var(--green-primary)'>~9.7</b></td></tr><tr><td>200 bytes</td><td>~5,000</td><td>~8.3</td></tr><tr><td>250 bytes</td><td>~4,000</td><td>~6.7</td></tr><tr><td>300 bytes</td><td>~3,300</td><td>~5.5</td></tr><tr><td>500 bytes</td><td>~2,000</td><td>~3.3</td></tr></tbody></table></div><p class="scw-p"><span style='color:#fbbf24'>Approximations</span> from verified consensus params (<code>1,000,000</code> B block, <code>600</code> s spacing, ~170 B minimal transfer). One UTXO transaction can also batch many payments.</p></div><div class="scw-card"><div class="scw-h"><span class="scw-dot" style="background:var(--cyan-primary);box-shadow:0 0 7px var(--cyan-primary)66"></span><span>Honest comparison &mdash; top 10 PoW + non-PoW contrast</span><span class="scw-tag" style="color:var(--cyan-primary);border-color:var(--cyan-primary)55">SOURCED &amp; LABELLED</span></div><div class="scw-note" style="border-color:var(--red-primary);background:rgba(251,1,13,.07);color:#e9eef5"><b style='color:var(--red-bright)'>TPS across blockchains is not directly comparable</b> &mdash; UTXO vs account models, contract execution, vote transactions, and theoretical vs benchmarked vs observed metrics all differ. Not a leaderboard.</div><div class="scw-lbl" style="color:var(--green-primary)">Top Proof-of-Work chains (SOST&rsquo;s camp)</div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:var(--green-primary)">Network</th><th style="color:var(--text-muted)">Consensus / model</th><th style="color:var(--text-muted)">Block / slot</th><th style="color:var(--cyan-primary)">Approx TPS</th><th style="color:var(--text-muted)">How measured</th></tr></thead><tbody><tr><td><img src="assets/coins/sost.png?v=sl20261113" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;"><b style='color:var(--green-primary)'>SOST</b></td><td>PoW &middot; ConvergenceX (CPU) &middot; UTXO</td><td>~1 MB / ~600 s</td><td><b>~5&ndash;10</b></td><td>protocol-capacity estimate &mdash; <b>not</b> benchmarked</td></tr><tr><td><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</td><td>PoW &middot; SHA-256d &middot; UTXO</td><td>~1&ndash;4 MB wt / ~600 s</td><td>~7 (up to ~27 batched)</td><td>practical, weight-dependent</td></tr><tr><td><img src="assets/coins/ltc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Litecoin</td><td>PoW &middot; Scrypt &middot; UTXO</td><td>~1 MB / ~150 s</td><td>~56 (capacity)</td><td>capacity (faster blocks)</td></tr><tr><td><img src="assets/coins/doge.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Dogecoin</td><td>PoW &middot; Scrypt (merged) &middot; UTXO</td><td>~1 MB / ~60 s</td><td>~33 (capacity)</td><td>capacity</td></tr><tr><td><img src="assets/coins/bch.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Cash</td><td>PoW &middot; SHA-256d &middot; UTXO</td><td>~32 MB / ~600 s</td><td>~100&ndash;200+ (capacity)</td><td>capacity (big blocks)</td></tr><tr><td><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Monero</td><td>PoW &middot; RandomX (CPU)</td><td>dynamic / ~120 s</td><td>~a few (flexible)</td><td>dynamic block + privacy</td></tr><tr><td><img src="assets/coins/etc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ethereum Classic</td><td>PoW &middot; Etchash &middot; EVM</td><td>gas-limited / ~13 s</td><td>~15 (gas-limited)</td><td>gas-limited</td></tr><tr><td><img src="assets/coins/zec.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Zcash</td><td>PoW &middot; Equihash &middot; shielded</td><td>~2 MB / ~75 s</td><td>~27 (capacity)</td><td>capacity (shielded heavier)</td></tr><tr><td><img src="assets/coins/dash.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Dash</td><td>PoW &middot; X11 &middot; UTXO</td><td>~2 MB / ~150 s</td><td>~28&ndash;56 (InstantSend)</td><td>capacity / InstantSend</td></tr><tr><td><img src="assets/coins/kas.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Kaspa</td><td>PoW &middot; kHeavyHash &middot; BlockDAG</td><td>~1 block/s</td><td>~hundreds&ndash;1,000s</td><td>high block rate (GHOSTDAG)</td></tr><tr><td><img src="assets/coins/rvn.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ravencoin</td><td>PoW &middot; KAWPOW &middot; UTXO</td><td>~1 min</td><td>~tens (capacity)</td><td>capacity</td></tr></tbody></table></div><div class="scw-lbl" style="color:#a78bfa">For contrast &mdash; high-throughput non-PoW</div><div class="scw-tw"><table class="scw-t"><thead><tr><th style="color:#a78bfa">Network</th><th style="color:var(--text-muted)">Model</th><th style="color:var(--cyan-primary)">Approx TPS</th><th style="color:var(--text-muted)">How measured</th></tr></thead><tbody><tr><td><img src="assets/coins/eth.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ethereum (L1)</td><td>PoS &middot; account/EVM</td><td>~15 (L1)</td><td>gas-limited; scales on L2</td></tr><tr><td><img src="assets/coins/trx.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">TRON</td><td>DPoS (27 super reps)</td><td>~2,000 <b style='color:#fbbf24'>(claimed)</b></td><td>claimed; real throughput <b>questioned lower</b></td></tr><tr><td><img src="assets/coins/sol.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Solana</td><td>PoH + PoS &middot; parallel</td><td>~65,000 theo. / ~1&ndash;3k real</td><td>theoretical vs observed non-vote</td></tr></tbody></table></div><p class="scw-p">The high-TPS chains use a more centralized architecture. <b style='color:var(--green-primary)'>SOST sits in the Bitcoin camp</b> &mdash; trading raw throughput for security, decentralization and CPU-fair mining.</p></div><div class="scw-note" style="border-color:#fbbf24;background:rgba(251,191,36,.05);color:#e9eef5"><b style='color:#fbbf24'>Scaling is research, not consensus.</b> No announced change to block size or block time, no activation height. Bigger blocks / shorter block times trade accessibility and decentralization for throughput &mdash; see the full breakdown on the Transactions page.</div><p class="scw-p" style="margin-top:10px">Full tables (block-size &amp; block-time cost, mempool, daily capacity) on the <a href="sost-transactions.html#scalability" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim)">Transactions &rarr; Capacity &amp; Scalability</a> section.</p><p class="scw-src">Verified from source: <code>consensus_constants.h</code> (1,000,000 B), <code>params.h</code> (600 s), <code>transaction.cpp</code> (input 133 B, output 30 B+), <code>mempool.h</code> (template 4,096). External figures are approximate and labelled by how measured; capacity &ne; current utilization, theoretical &ne; benchmarked. Sources: ethereum.org; TRON network-claimed ~2,000 TPS (real throughput questioned in public reporting); Solana docs/explorers (~65,000 theoretical vs ~1,000&ndash;3,000 real non-vote); other PoW figures are approximate protocol capacities.</p></div></div></section>
 
 <!-- ============ SOST vs BITCOIN vs ETHEREUM — comparative maturity (2026-10-05) ============ -->
 <section class="section" id="sost-vs-btc-eth-2026-10-05"><div class="container">
@@ -674,7 +710,7 @@ sha256sum build/sost-miner     # 53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00
     <!-- logos -->
     <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:center;justify-content:center;margin:16px 0 6px">
       <div style="text-align:center">
-        <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:46px;width:auto;vertical-align:middle"><div style="font:800 11px ui-monospace;color:var(--gold-primary,#b8860b);margin-top:4px;letter-spacing:1px">SOST V30000</div>
+        <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:46px;width:auto;vertical-align:middle"><div style="font:800 11px ui-monospace;color:var(--gold-primary,#b8860b);margin-top:4px;letter-spacing:1px">SOST V30000</div>
       </div>
       <div style="text-align:center">
         <svg width="46" height="46" viewBox="0 0 64 64" aria-label="Bitcoin"><circle cx="32" cy="32" r="32" fill="#F7931A"/><text x="32" y="44" font-family="Arial,Helvetica,sans-serif" font-size="40" font-weight="700" fill="#fff" text-anchor="middle">&#8383;</text></svg>
@@ -691,7 +727,7 @@ sha256sum build/sost-miner     # 53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00
       <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px">
         <thead><tr style="border-bottom:2px solid #2a2a2a">
           <th style="text-align:left;padding:8px 10px;color:var(--text-secondary,#94a3b8)">Area</th>
-          <th style="text-align:right;padding:8px 10px;color:#fb010d"><img src="assets/coins/sost.png?v=rs20261112g" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</th>
+          <th style="text-align:right;padding:8px 10px;color:#fb010d"><img src="assets/coins/sost.png?v=sl20261113" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</th>
           <th style="text-align:right;padding:8px 10px;color:#F7931A"><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin</th>
           <th style="text-align:right;padding:8px 10px;color:#8b9bf4"><img src="assets/coins/eth.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Ethereum</th>
         </tr></thead>
@@ -1040,9 +1076,8 @@ NODE STAYS ALIVE</pre></div>
       <p style="font-size:12.5px;color:#cbb6e6;line-height:1.7;margin:0 0 6px"><b>This is a trade-off, not a free improvement.</b> Simulation (S1 high-concentration): moving 50/50 &rarr; 75/20/5 raises the dominant miner&rsquo;s share (36%&rarr;46% for 56% hash), lowers the small-miner uplift (2.58&times;&rarr;1.79&times;) and raises income inequality (Gini 0.26&rarr;0.39). 70/25/5 preserves more redistribution; 80/10/10 pushes furthest toward PoW. <b>No model is declared &ldquo;better&rdquo;</b> &mdash; it depends on future maturity and miner concentration.</p>
       <p style="font-size:12.5px;color:#cbb6e6;line-height:1.7;margin:0"><b>Under study (ranges, nothing fixed):</b> miner 70&ndash;80% / DTD 15&ndash;25% / jackpot 5&ndash;10%; jackpot interval ~2,500&ndash;5,000 blocks (block time verified 600&nbsp;s). A key simulation finding: a uniform-per-identity jackpot is Sybil-gameable, so a large jackpot would need <b>PoW-weighted, capped</b> eligibility (V2-style), not a bare address/identity draw. <b>No activation height. No final interval. No consensus change. Any implementation would require a hard fork.</b> 75/20/5 is a <b>candidate only</b>.</p>
       <div class="reward-research-update" style="margin-top:12px;background:rgba(215,255,0,.06);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:10px;padding:14px 16px;color:#e8ffb0;text-shadow:0 0 8px rgba(215,255,0,.22)">
-        <div style="color:#d7ff00;font:900 12px/1.2 ui-monospace;letter-spacing:.8px;margin-bottom:8px;text-shadow:0 0 10px rgba(215,255,0,.5)">&#11042; MOST LIKELY CURRENT RESEARCH SCENARIO &mdash; NOT CONSENSUS</div>
-        <p style="font-size:12.5px;line-height:1.7;margin:0 0 7px;color:#e8ffb0">The current leading scenario under study is a future activation around <b style="color:#d7ff00">block #40,000 or #50,000</b>, subject to network maturity, miner distribution and further simulation. <b style="color:#d7ff00">80/15/5 supersedes 75/20/5 as the current leading research scenario.</b></p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">
+        <div style="color:#d7ff00;font:900 12px/1.2 ui-monospace;letter-spacing:.8px;margin-bottom:8px;text-shadow:0 0 10px rgba(215,255,0,.5)">&#11042; V17 CANDIDATE &mdash; NOT YET ACTIVE</div>
+        <p style="font-size:12.5px;line-height:1.7;margin:0 0 7px;color:#e8ffb0">The current leading sce<b style="color:#d7ff00">80/15/5 is implemented in the V17 candidate for block #40,000.</b> It is <b>not active</b>: the current rule is 50% miner / 50% DTD, and V17 activates only with an approved release (subject to final testing). Details: <a href="sost-v17.html#rewards" style="color:#d7ff00;font-weight:700">What&rsquo;s changing in V17</a>. The text below is the earlier research note, kept for reference; where it differs, the V17 page is authoritative.="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">
           <div style="flex:1 1 150px;border:1px solid #7a8a00;border-radius:8px;padding:9px 11px;background:rgba(215,255,0,.04)"><div style="font:900 18px ui-monospace;color:#d7ff00;text-shadow:0 0 8px rgba(215,255,0,.4)">80%</div><div style="font-size:10.5px;color:#cfe88a">direct PoW miner reward</div></div>
           <div style="flex:1 1 150px;border:1px solid #7a8a00;border-radius:8px;padding:9px 11px;background:rgba(215,255,0,.04)"><div style="font:900 18px ui-monospace;color:#d7ff00;text-shadow:0 0 8px rgba(215,255,0,.4)">15%</div><div style="font-size:10.5px;color:#cfe88a">normal DTD per block</div></div>
           <div style="flex:1 1 150px;border:1px solid #7a8a00;border-radius:8px;padding:9px 11px;background:rgba(215,255,0,.04)"><div style="font:900 18px ui-monospace;color:#d7ff00;text-shadow:0 0 8px rgba(215,255,0,.4)">5%</div><div style="font-size:10.5px;color:#cfe88a">into the existing DTD Jackpot pool</div></div>
@@ -1249,7 +1284,7 @@ NODE STAYS ALIVE</pre></div>
           <li><b>Asset Passport on-chain — <span style="color:#f59e0b">LAB VERIFIED</span>.</b> A full capsule <code>doc_ref</code> round-trip on a development chain: manifest hash &rarr; signed capsule tx &rarr; node acceptance &rarr; mined block &rarr; read-back &rarr; hash match &rarr; tamper test. Mainnet anchoring remains a future, authorised step.</li>
           <li><b>V16 cutover safety battery — <span style="color:#f59e0b">LAB VERIFIED</span>.</b> The V16 activation lifecycle exercised on an isolated fast devnet. Mainnet V16 still activates at <b>#30,000</b> — unchanged.</li>
         </ul>
-        <p style="margin-top:10px"><b>Why the label matters.</b> "Runs on regtest / Anvil / devnet" is <b>not</b> "live on mainnet". Each item above is real, reproducible laboratory evidence — and is labelled exactly that. <a href="atomic-swap.html" style="color:#22d3ee">Atomic Swap / DEX</a> &middot; <a href="news.html#v16-consensus" style="color:#22d3ee">V16 schedule</a></p>
+        <p style="margin-top:10px"><b>Why the label matters.</b> "Runs on regtest / Anvil / devnet" is <b>not</b> "live on mainnet". Each item above is real, reproducible laboratory evidence — and is labelled exactly that. <a href="atomic-swap.html" style="color:#22d3ee">Atomic Swap (RETIRED)</a> &middot; <a href="news.html#v16-consensus" style="color:#22d3ee">V16 schedule</a></p>
       </div>
     </div>
   </section>
@@ -1384,7 +1419,7 @@ NODE STAYS ALIVE</pre></div>
     <div class="info-card">
       <p><b>What happened.</b> At block&nbsp;25,290 the consensus selected a DTD Jackpot winner and paid <b style="color:#39ff14">100&nbsp;SOST</b> as a dedicated <code>TX_TYPE_JACKPOT</code> transaction (on top of that block's normal DTD payout of ~3.9255&nbsp;SOST to the same address).</p>
       <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
-        <li><b>Winner:</b> <code>sost141bfebb4b830c2f4136fd324318a5e708c2215a4</code></li>
+        <li><b>Winner:</b> <code><a class="u-cl" href="sost-explorer.html?search=sost141bfebb4b830c2f4136fd324318a5e708c2215a4" title="Open address sost141bfebb4b830c2f4136fd324318a5e708c2215a4 in the Explorer">sost141bfebb4b830c2f4136fd324318a5e708c2215a4</a></code></li>
         <li><b>Amount:</b> +100 SOST &middot; <b>TX:</b> <code>5286762e&hellip;</code> &middot; <b>Eligible set:</b> 192 addresses (20,000-block window)</li>
         <li><b>Producer &ne; winner:</b> the block was mined by <code>sost1ad01a&hellip;</code>, but the jackpot went to a <b>different</b> address &mdash; the miner does not control who wins.</li>
       </ul>
@@ -1636,8 +1671,9 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
     <div class="section-header">
       <div class="section-id">// CODING MILESTONE &middot; OTC-1 &rarr; OTC-5 &middot; gate OFF on mainnet</div>
       <div class="section-dates">Published: 2026-06-10 &middot; Last updated: 2026-06-10</div>
+      <div style="margin:6px 0 8px;padding:8px 12px;border:1px solid #f87171;border-radius:6px;color:#fca5a5;font-size:13px"><b>HISTORICAL — RETIRED (H-01).</b> This 2026-06-10 entry describes design goals. Security finding H-01 showed the affected HTLC contract did not deliver them (atomic settlement, no partial states, funds safe without an owner). Those contracts are retired: do not use them or send funds to them.</div>
       <h2 class="section-title">SOST OTC / P2P <span class="accent">Atomic Swap</span></h2>
-      <div class="section-sub">A trustless, non-custodial cross-chain swap engine &mdash; SOST&nbsp;&harr;&nbsp;BTC&nbsp;&middot;&nbsp;ETH&nbsp;&middot;&nbsp;BNB&nbsp;&middot;&nbsp;USDT&nbsp;&middot;&nbsp;USDC&nbsp;&middot;&nbsp;PAXG&nbsp;&middot;&nbsp;XAUT. The mechanism is a Hashed Time-Locked Contract (HTLC) on both chains &mdash; the same primitive that powers Lightning.</div>
+      <div class="section-sub">A cross-chain HTLC swap engine (described at the time as trustless and non-custodial; see the H-01 notice above) &mdash; SOST&nbsp;&harr;&nbsp;BTC&nbsp;&middot;&nbsp;ETH&nbsp;&middot;&nbsp;BNB&nbsp;&middot;&nbsp;USDT&nbsp;&middot;&nbsp;USDC&nbsp;&middot;&nbsp;PAXG&nbsp;&middot;&nbsp;XAUT. The mechanism is a Hashed Time-Locked Contract (HTLC) on both chains &mdash; the same primitive that powers Lightning.</div>
     </div>
     <div class="info-card">
       <p>Swap SOST for another cryptoasset with a stranger, <b>without trusting them</b> and <b>without SOST ever holding either side's funds</b>. Either both legs settle, or both legs refund &mdash; there is no in-between. No intermediary, no escrow operator, no admin key, no upgrade path, no pause switch, no emergency drain.</p>
@@ -2130,13 +2166,10 @@ sudo systemctl restart sost-miner</pre>
 </div>
 
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
-<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
-<script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
-<script src="js/sost-music.js?v=v392"></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->
 <section style="border-top:1px solid var(--border-dim);background:rgba(245,158,11,0.04)">
@@ -2319,5 +2352,13 @@ sudo systemctl restart sost-miner</pre>
 })();
 </script>
 <script src="sost-search.js?v=v553"></script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='ecosystem'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
+<!-- site soundtrack player (owner order 4 Nov 2026): replaces the NES chiptune button, js/retro-sounds.js and js/sost-music.js -->
+<link rel="stylesheet" href="universe/core/u-audio.css?v=gm-20261104">
+<script src="universe/core/u-audio.js?v=gm-20261104" data-autoplay data-dock="low" defer></script>
+<script src="universe/core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
 </body>
 </html>

@@ -3,20 +3,20 @@
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <!-- M26 OG / Twitter fallback -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta charset="UTF-8">
 <link rel="canonical" href="https://sostcore.com/sost-e2e.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>E2E Encrypted P2P Protocol — SOST Secure Node Communications</title>
 <meta name="description" content="SOST E2E Encrypted P2P Protocol: X25519 key exchange, ChaCha20-Poly1305 AEAD encryption, secure node handshake, block sync, DoS protection.">
@@ -28,12 +28,11 @@
 <meta property="og:description" content="SOST E2E Encrypted P2P Protocol: X25519 key exchange, ChaCha20-Poly1305 AEAD encryption, secure node handshake, block sync, DoS protection.">
 <meta property="og:url" content="https://sostcore.com/sost-e2e.html">
 <meta property="og:site_name" content="SOST">
-<meta property="og:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
+<meta property="og:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="E2E Encrypted P2P Protocol — SOST Secure Node Communications">
 <meta name="twitter:description" content="SOST E2E Encrypted P2P Protocol: X25519 key exchange, ChaCha20-Poly1305 AEAD encryption, secure node handshake, block sync, DoS protection.">
-<meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <style>
 :root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;--border-dim:#1a1a1a;--border-med:#2a2a2a;--red-primary:#fb010d;--red-bright:#ff2d3b;--red-dim:#8b1a22;--red-glow:#fb010d33;--red-subtle:#fb010d18;--green-primary:#4ade80;--cyan-primary:#22d3ee;--text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;--font-mono:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif;--bg:#000;--bg2:#0a0a0a;--bg3:#111720;--bdr:#1a2233;--bdr2:#243044;--red:#fb010d;--green:#4ade80;--cyan:#22d3ee;--yellow:#fbbf24;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -90,6 +89,12 @@ footer a{color:var(--t3);text-decoration:none}
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
 
@@ -101,7 +106,7 @@ footer a{color:var(--t3);text-decoration:none}
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -117,8 +122,8 @@ footer a{color:var(--t3);text-decoration:none}
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
@@ -146,7 +151,7 @@ footer a{color:var(--t3);text-decoration:none}
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
@@ -453,7 +458,7 @@ Offset  Size   Field         Description
 
 <footer><div class="c">
 <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--t4)">SOST</p>
-<p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>
+<p>Sovereign Stock Token &middot; <a href="https://github.com/Neob1844/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>
 <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
 </div></footer>
 
@@ -464,7 +469,7 @@ Offset  Size   Field         Description
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
@@ -591,5 +596,9 @@ Offset  Size   Field         Description
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='technology'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body>
 </html>

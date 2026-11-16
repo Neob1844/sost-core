@@ -3,39 +3,37 @@
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <!-- M26 OG / Twitter fallback -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta charset="UTF-8">
 <link rel="canonical" href="https://sostcore.com/sost-wsost-gold-vault.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
-<link rel="apple-touch-icon" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=sl20261113">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>wSOST &amp; Gold Reserve V2 — SOST Automated Bridge (design in development, not active)</title>
-<meta name="description" content="SOST Automated Bridge: native SOST to wSOST 1:1 with a Gold Access Key paid in XAUT to Gold Reserve V2. Design in development, not active, not ready for production; DEMO only: no contract deployed, no real transactions, real operations blocked until an approved SOST/EUR valuation exists. Current consensus unchanged.">
+<title>wSOST — SOST Atomic Bridge (research, not active, not deployed)</title>
+<meta name="description" content="wSOST and the SOST Atomic Bridge: SOST to wSOST 1:1 from a fixed pre-issued inventory, no mint or burn per conversion, no bridge fee, no mandatory XAUT, no Gold Access Key, no privileged custodian. Research, not active, not deployed; DEMO only: no contract deployed, no real transactions, real operations blocked until an approved SOST/EUR valuation exists. Current consensus unchanged.">
 <meta name="keywords" content="wSOST, wrapped SOST, SOST bridge, Gold Reserve V2, Gold Vault, XAUT, governance, SOST governance, block 40000, research horizon">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="wSOST &amp; Gold Reserve V2 — SOST research roadmap">
+<meta property="og:title" content="wSOST — SOST Atomic Bridge (research)">
 <meta property="og:description" content="wSOST (1 wSOST = 1 native SOST locked), Gold Reserve V2 of tokenized gold, on-chain SOST governance and the #40,000 research horizon. Research roadmap, not live: no bridge deployed, current consensus 50% miner / 50% DTD unchanged.">
 <meta property="og:url" content="https://sostcore.com/sost-wsost-gold-vault.html">
 <meta property="og:site_name" content="SOST">
-<meta property="og:image" content="https://sostcore.com/assets/wsost/wsost-gold-vault-512.png?v=rs20261112g">
+<meta property="og:image" content="https://sostcore.com/universe/assets/brand/wsost/wsost-eye-512.png?v=sl20261113">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="wSOST &amp; Gold Reserve V2 — SOST research roadmap">
+<meta name="twitter:title" content="wSOST — SOST Atomic Bridge (research)">
 <meta name="twitter:description" content="wSOST (1 wSOST = 1 native SOST locked), Gold Reserve V2 of tokenized gold, on-chain SOST governance and the #40,000 research horizon. Research roadmap, not live: no bridge deployed, current consensus 50% miner / 50% DTD unchanged.">
-<meta name="twitter:image" content="https://sostcore.com/assets/wsost/wsost-gold-vault-512.png?v=rs20261112g">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<meta name="twitter:image" content="https://sostcore.com/universe/assets/brand/wsost/wsost-eye-512.png?v=sl20261113">
 <style>
   :root {
     --bg-deep: #000000;
@@ -648,8 +646,16 @@
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
+<div class="sost-gold-discarded" role="note" style="position:relative;z-index:50;margin:0;padding:12px 18px;background:#2a1a00;border-bottom:2px solid #f59e0b;color:#ffe2a8;font:600 13.5px/1.6 system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:left">&#9888; DISCARDED MODEL &mdash; HISTORICAL RECORD ONLY. SOST has <b>no gold backing</b>, <b>no committed reserves</b> and <b>no obligation to acquire, hold or contribute gold, XAUT or PAXG</b>. There is no convertibility, redemption right or guarantee linked to gold or to any external asset. <span style="font-weight:400">The current model is Proof of Work + DTD and DTD Jackpot, which distribute SOST itself (V16, active: 50&nbsp;% miner / 50&nbsp;% DTD). The proposed V17 split (80&nbsp;% / 15&nbsp;% / 5&nbsp;%) is not active. Gold-related content below describes abandoned plans and is not in force.</span></div>
+
 
 
 
@@ -659,7 +665,7 @@
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -675,8 +681,8 @@
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
@@ -704,12 +710,14 @@
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
   </div>
 </nav>
+<!-- SECURITY NOTICE H-01: retired HTLC atomic swap contracts (docs/security/ADVISORY_2026-10-30_HTLCv2.md) -->
+<div style="padding:0 12px;position:relative;z-index:5"><div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;max-width:1100px;margin:14px auto 0;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div></div>
 
 
 
@@ -743,6 +751,7 @@
 .st.live{color:#39ff14;border:1px solid #2f8f1c;background:rgba(57,255,20,.07)}
 .st.hist{color:#f59e0b;border:1px solid #8a5a0b;background:rgba(245,158,11,.07)}
 .st.res{color:#67e8f9;border:1px solid #1b5b66;background:rgba(34,211,238,.07)}
+@media (max-width:600px){.st{white-space:normal;max-width:100%}.ab-lanes{grid-template-columns:minmax(0,1fr)}.ab-down i{white-space:normal !important;width:130px;line-height:1.25}} /* phones: long status labels wrap instead of widening the page */
 .st.cc{color:#c084fc;border:1px solid #5a3a7a;background:rgba(192,132,252,.07)}
 .st.nd{color:#ff6b6b;border:1px solid #7a2b2b;background:rgba(255,107,107,.07)}
 .st.gated{color:#fbbf24;border:1px solid #8a6b0b;background:rgba(251,191,36,.07)}
@@ -942,15 +951,19 @@
 
 <section class="section" id="wsost-hero"><div class="container"><div class="wg">
  <div class="wg-hero">
-  <img src="media/wsost-logo-512.png?v=rs20261112g" width="170" height="170" alt="wSOST &amp; Gold Vault emblem">
+  <img src="universe/assets/brand/wsost/wsost-eye-256.png?v=sl20261113" srcset="universe/assets/brand/wsost/wsost-eye-512.png?v=sl20261113 2x" width="170" height="170" alt="wSOST emblem: the SOST eye with WΣ in the iris">
   <div class="t">
-   <div style="font:800 12px ui-monospace,monospace;letter-spacing:2.5px;color:#ffd166">SOST ATOMIC BRIDGE &middot; GOLD ACCESS KEY &middot; GOLD RESERVE V2</div>
-   <h1 style="font-size:34px;line-height:1.15;margin:6px 0 8px;color:#fff"><span class="wm-sost"><span style="color:#fff">w</span><span style="color:#ff1e28">SOST</span></span> <span class="wm-gold">&amp; Gold Reserve V2</span></h1>
+   <div style="font:800 12px ui-monospace,monospace;letter-spacing:2.5px;color:#ffd166">SOST ATOMIC BRIDGE &middot; RESEARCH &mdash; NOT ACTIVE &mdash; NOT DEPLOYED</div>
+   <h1 style="font-size:34px;line-height:1.15;margin:6px 0 8px;color:#fff"><span class="wm-sost"><span style="color:#fff">w</span><span style="color:#ff1e28">SOST</span></span> <span class="wm-gold" style="font-size:.62em;letter-spacing:.06em">&middot; SOST Atomic Bridge</span></h1>
    <span class="st res">TARGET ARCHITECTURE</span> <span class="st gated">RESEARCH / DEVELOPMENT</span> <span class="st nd">NOT ACTIVE</span> <span class="st nd">NOT MAINNET DEPLOYED</span> <span class="st nd">NOT AUDITED</span> <span class="st nd">NOT YET PROVEN</span> <span class="st gated">DEMO ONLY</span> <span class="st res">#40,000 RESEARCH HORIZON</span> <span class="st nd">NOT AN ACTIVATION COMMITMENT</span>
-   <p style="margin-top:10px">The target architecture is the <b>SOST Atomic Bridge</b>: an <b>Atomic Reserve Vault</b> of <b>preissued, immobilized wSOST</b> on Ethereum, exchanged one-for-one against native SOST through <b>atomic swaps in both directions</b> &mdash; no mint per operation, no burn on the return, no liquidity pool. A small <b>Gold Access Key</b> paid in XAUT goes entirely to <b>Gold Reserve V2</b> and is not part of the backing. Nothing here is live, there is no launch date, the keyless native reserve found in research (C705) needs two new SOST consensus rules that are not authorized, and any future activation is subject to security work, an external audit and legal review.</p>
+   <p style="margin-top:10px">The target architecture is the <b>SOST Atomic Bridge</b>: an <b>Atomic Reserve Vault</b> of <b>preissued, immobilized wSOST</b> on Ethereum, exchanged one-for-one against native SOST through <b>atomic swaps in both directions</b> &mdash; no mint per operation, no burn on the return, no liquidity pool. Under the canonical rules below there is <b>no Gold Access Key</b> and <b>no mandatory XAUT</b>. Nothing here is live, there is no launch date, the keyless native reserve found in research (C705) needs two new SOST consensus rules that are not authorized, and any future activation is subject to security work, an external audit and legal review.</p>
   </div>
  </div>
  <div class="c701-status" role="note">STATUS: RESEARCH / DEVELOPMENT &middot; NOT ACTIVE &middot; NOT MAINNET DEPLOYED &middot; NOT AUDITED &middot; NOT YET PROVEN<small>SOST Atomic Bridge (Atomic Reserve Vault) &middot; no contract deployed &middot; no launch date &middot; subject to security work, external audit and legal / regulatory review</small></div>
+ <div class="box" id="canonical-rules" role="note" style="border-color:#22d3ee66;background:rgba(34,211,238,.06)"><div class="bt" style="color:#67e8f9">CANONICAL RULES · OWNER DECISION 5 NOV 2026</div>
+ <b>wSOST</b> is the wrapped form of SOST for the <b>SOST Atomic Bridge</b> research. <b>RESEARCH &mdash; NOT ACTIVE &mdash; NOT DEPLOYED.</b> The canonical rules are:
+ <ul style="margin:8px 0 0 18px;line-height:1.7"><li><b>SOST &harr; wSOST 1:1.</b></li><li><b>Fixed pre-issued inventory</b> of wSOST.</li><li><b>No mint and no burn</b> for an ordinary conversion.</li><li><b>No bridge fee</b> of its own.</li><li><b>No mandatory XAUT.</b></li><li><b>No Gold Access Key.</b></li><li><b>No privileged custodian.</b></li><li><b>No indispensable central relayer.</b></li><li><b>None of the contracts retired by H-01 is reused.</b></li></ul>
+ <p style="margin-top:8px">Sections further down that describe a <b>Gold Access Key paid in XAUT</b>, a <b>Gold Reserve V2</b> funded by it, a lock / mint model or the former <b>Gold Vault</b> branding are <b>earlier research, superseded by these rules</b>, and are kept only as the historical record. The current identity is <b>wSOST</b>; <b>Gold Vault</b> survives only as a historical name (the on-chain Gold Funding Vault of blocks 0&ndash;24,999 and the earlier wSOST &amp; Gold Vault concept).</p></div>
 <div class="box red" id="bridge-status-nov2026" role="note"><div class="bt">STATUS · 12 NOVEMBER 2026 · NO-GO FOR PRODUCTION</div>
  <ul style="margin:6px 0 0 18px;line-height:1.7">
   <li><b>Protocol fee = 0.</b> No commercial margin. Users pay only the real external costs they cause (Ethereum gas, relay / range publication, data availability), computed on chain and shown before confirmation. The <b>Gold Access Key / XAUT contribution is retired</b>; the simulator below is kept as history only.</li>
@@ -958,7 +971,7 @@
   <li><b>Open blocker:</b> two colluding malicious watchers, with every honest watcher offline, can still pass a fake deposit. Until this is closed cryptographically, and an independent review is done, nothing is deployed.</li>
  </ul>
  <p style="margin-top:6px">Details: <a href="sost-whitepaper.html#research-bridge-status" style="color:#ffd166">whitepaper §3.16.0</a>.</p></div>
- <div class="wg-not"><div>&#9940; NOT LIVE &middot; DEMO ONLY</div><div>&#9940; NO BRIDGE CONTRACT DEPLOYED</div><div>&#9940; NO GOLD RESERVE V2 FUNDS YET</div><div>&#9940; REAL OPERATIONS BLOCKED: NO APPROVED SOST/EUR VALUATION</div><div>&#9989; CURRENT SOST CONSENSUS UNCHANGED</div></div>
+<div class="wg-not"><div>&#9940; NOT LIVE &middot; DEMO ONLY</div><div>&#9940; NO BRIDGE CONTRACT DEPLOYED</div><div>&#9940; NO GOLD RESERVE V2 FUNDS YET</div><div>&#9940; REAL OPERATIONS BLOCKED: NO APPROVED SOST/EUR VALUATION</div><div>&#9989; CURRENT SOST CONSENSUS UNCHANGED</div></div>
  <div class="box cyan"><div class="bt">#30,000 &rarr; #40,000</div><b>#30,000 built the current foundation</b> (V30000 is live). <b>#40,000 is the current coordinated research horizon</b> for the next major phase. <b>Nothing activates automatically at #40,000.</b> If engineering, external audit, legal or operational gates are not complete, the work moves later (for example #50,000). Every consensus change would need its own release, tests, audit and public notice.</div>
  <div class="wg-toc">
   <a href="#atomic-bridge"><b>SOST Atomic Bridge (target)</b></a><a href="#ab-custody">Reserve custody problem</a><a href="#ab-conventional">vs conventional bridge</a><a href="#ab-systems">vs Atomiq / THORChain / Chainflip</a><a href="#bridge">Bridge dashboard (demo)</a><a href="#backing">Backing</a><a href="#gold-access-key">Gold Access Key</a><a href="#bridge-return">Return wSOST &rarr; SOST</a><a href="#bridge-explained">Conventional reference, explained</a><a href="#bridge-examples">Reference examples</a><a href="#bridge-compare">vs other bridges</a><a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#how-to-wrap">How the bridge works</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#popr">Dead Vault (PoPR)</a><a href="#trust">Bridge trust</a><a href="#swap-separate">Atomic Swap (separate)</a><a href="#blockers">Open blockers</a><a href="#superseded">Historical / superseded design</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
@@ -2120,7 +2133,7 @@ SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
   <tr><td>Native assets / Asset Market</td><td><span class="st gated">DEVELOPER GATED</span></td></tr>
   <tr><td>SOST Atomic Bridge (Atomic Reserve Vault) &mdash; target</td><td><span class="st gated">RESEARCH / DEVELOPMENT</span> <span class="st nd">NOT ACTIVE</span> <span class="st nd">NOT YET PROVEN</span> &middot; design + audit done, proof of concept not started, native custody unsolved, 9 open blockers</td></tr>
   <tr><td>Conventional lock/mint prototype (C701/C703)</td><td><span class="st hist">REFERENCE / COMPONENT SOURCE</span> &middot; local tests only (Foundry 87/87, engine 25/25), not deployed</td></tr>
-  <tr><td>Gold Access Key (XAUT)</td><td><span class="st gated">DEVELOPMENT</span> &middot; blocked: no approved SOST/EUR valuation</td></tr>
+  <tr><td>Gold Access Key (XAUT)</td><td><span class="st hist">RETIRED</span> &middot; 12 November 2026 (protocol fee = 0); kept as history only</td></tr>
   <tr><td>Gold Reserve V2</td><td><span class="st gated">DEVELOPMENT</span> <span class="st nd">NOT DEPLOYED</span> <span class="st nd">NO FUNDS</span></td></tr>
   <tr><td>Gold &rarr; wSOST desk / treasury wSOST sale</td><td><span class="st hist">HISTORICAL / SUPERSEDED DESIGN</span> &middot; never operational</td></tr>
   <tr><td>Federated observer network</td><td><span class="st hist">HISTORICAL / SUPERSEDED DESIGN</span> &middot; never operational</td></tr>
@@ -2236,7 +2249,7 @@ SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
-    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
     <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Open source. <a href="sost-license.html" style="color:inherit;">MIT License — fully open source</a></p>
   </div>
@@ -2254,7 +2267,7 @@ SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- ============== BEACON — ADVISORY NOTICE CHANNEL (V13) ============== -->
@@ -2463,4 +2476,8 @@ SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
   reset();
 })();
 </script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='ecosystem'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body></html>

@@ -4,20 +4,18 @@
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <link rel="canonical" href="https://sostcore.com/atomic-swap-console.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
 <meta name="robots" content="noindex,nofollow">
 <title>SOST Atomic Swap Console — Founder-only (DO NOT USE)</title>
 <meta name="description" content="Founder-only guided console for the SOST Atomic Swap (HTLC), current release. Educational + command generator. Not public, not custody, no private keys in the browser.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;
@@ -109,6 +107,9 @@
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
 
@@ -117,7 +118,7 @@
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -134,8 +135,8 @@
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
@@ -163,12 +164,14 @@
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)" class="active">OTC / P2P</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
   </div>
 </nav>
+<!-- SECURITY NOTICE H-01: retired HTLC atomic swap contracts (docs/security/ADVISORY_2026-10-30_HTLCv2.md) -->
+<div style="padding:0 12px;position:relative;z-index:5"><div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;max-width:1100px;margin:14px auto 0;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div></div>
 
 
 
@@ -294,6 +297,7 @@
       <h2>EVM operate — real LOCK / CLAIM / REFUND (MetaMask)</h2>
       <p>This runs the <b>real</b> <code>AtomicSwapHTLC</code> contract via your wallet: it builds the exact calldata (verified against the contract ABI) and your wallet signs &amp; sends. ETH/BNB native + ERC-20 (USDT/USDC/PAXG/XAUT). <b>BTC is excluded (signing OFF by default).</b> No seed/private key ever touches this page.</p>
       <div class="warnmsg err" id="evmDeployWarn"><b>Contract status:</b> the <code>AtomicSwapHTLC</code> contract is <b>NOT deployed</b> by default (unaudited). Operations stay disabled until you deploy it and paste its address per network below. This is intentional — the console will not let you call a contract that does not exist.</div>
+      <div class="warnmsg err" id="evmSwapRetiredWarn"><b>SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized.</b></div>
       <div class="warnmsg err" id="evmRetiredWarn"><b>Security notice (2026-10-30):</b> the Sepolia test contract <code>0x395295622fDE4702BA199e4898F85B9d85175794</code> (AtomicSwapHTLC <b>v2</b>, pre-fix build) and the experimental wSOST Stage 2 Sepolia contracts (<code>0x4F71ef1D…F946C0</code>, <code>0x8ef5A156…ee1A0</code>, <code>0x3cDaaD6a…92534B</code>) are <b>RETIRED / VULNERABLE — DO NOT USE</b>. This console uses AtomicSwapHTLC v1 and only accepts an address whose bytecode matches the repo build exactly.</div>
     </div>
 
@@ -476,6 +480,20 @@
 <script src="sost-search.js?v=v553"></script>
 <script>
 const $=id=>document.getElementById(id);
+/* SECURITY NOTICE H-01 (docs/security/ADVISORY_2026-10-30_HTLCv2.md, finding F-1): the HTLC atomic swap
+   contracts are RETIRED. Unconditional hard block: no flag, no global, no override. Re-enabling any of
+   these controls requires a new reviewed commit. */
+(function(){
+  var MSG='SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized.';
+  var IDS=['gateInput', 'evmGateInput', 'genSecret', 'genRefundCmds', 'ckRefundDone', 'genClaimCmds', 'evmConnect', 'evmSaveAddr', 'evmCheckAddr', 'evmApprove', 'evmAllowance', 'evmLock', 'evmClaim', 'evmRefund', 'evmGenSwapId', 'evmGenSecret2', 'evmHtlcAddr'];
+  function hit(ev){var t=ev.target&&ev.target.closest?ev.target.closest('[id]'):null;
+    if(t&&IDS.indexOf(t.id)>=0){ev.preventDefault();ev.stopImmediatePropagation();}}
+  ['click','input','change','keydown','keypress','paste','submit'].forEach(function(k){document.addEventListener(k,hit,true);});
+  function off(){IDS.forEach(function(id){var e=document.getElementById(id);if(!e)return;
+    e.disabled=true;e.setAttribute('aria-disabled','true');e.title=MSG;
+    e.style.opacity='.45';e.style.cursor='not-allowed';e.style.filter='grayscale(1)';});}
+  off();document.addEventListener('DOMContentLoaded',off);window.addEventListener('load',off);
+})();
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 const HEX=/^[0-9a-fA-F]+$/;
 let CUR_HEIGHT=null;
@@ -526,7 +544,7 @@ function evalReady(){
 
 /* ---- founder gate ---- */
 $('gateInput').addEventListener('input',function(){
-  const ok=this.value.trim()==='I UNDERSTAND THIS IS FOUNDER-ONLY';
+  const ok=false; /* H-01: RETIRED, never unlocks (was: this.value.trim()==='I UNDERSTAND THIS IS FOUNDER-ONLY') */
   const m=$('gateMsg');m.style.display='block';
   if(ok){m.className='warnmsg ok';m.textContent='Unlocked. Generators produce commands only — never keys or signatures.';
     $('refundBody').classList.remove('locked');}
@@ -536,6 +554,7 @@ $('gateInput').addEventListener('input',function(){
 /* ---- secret + hashlock (Web Crypto, local only) ---- */
 function toHex(buf){return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');}
 $('genSecret').addEventListener('click',async function(){
+  return; /* H-01 */
   const s=new Uint8Array(32);crypto.getRandomValues(s);
   const H=await crypto.subtle.digest('SHA-256',s);
   $('secretHex').value=toHex(s.buffer);$('hashlockHex').value=toHex(H);$('secretOut').style.display='block';
@@ -549,6 +568,7 @@ function heightGuard(){
   return null;
 }
 $('genRefundCmds').addEventListener('click',function(){
+  return; /* H-01: RETIRED, command generator disabled */
   const out=$('refundCmdOut');const errs=[];
   const cli=gv('cliPrefix')||'./sost-cli';
   const H=gv('hashlockHex');
@@ -585,7 +605,7 @@ $('genRefundCmds').addEventListener('click',function(){
 function block(s){return '<pre class="cmd">'+esc(s)+'</pre>';}
 
 /* ---- claim ---- */
-$('ckRefundDone').addEventListener('change',function(){$('claimBody').classList.toggle('locked',!this.checked);});
+$('ckRefundDone').addEventListener('change',function(){$('claimBody').classList.add('locked'); /* H-01: stays locked */});
 $('claimAsset').addEventListener('change',function(){
   const w=$('assetWarn');const v=this.value;
   if(v==='paxg-xaut-usdt'){w.innerHTML='<div class="warnmsg err">PAXG / XAUT / USDT are non-standard / fee-on-transfer and are NOT validated — do not use them for a swap yet. Pick native ETH/BNB.</div>';}
@@ -593,6 +613,7 @@ $('claimAsset').addEventListener('change',function(){
   else{w.innerHTML='<div class="warnmsg ok">Native asset — the recommended choice for founder testing.</div>';}
 });
 $('genClaimCmds').addEventListener('click',function(){
+  return; /* H-01: RETIRED, command generator disabled */
   const out=$('claimCmdOut');const errs=[];const cli=gv('cliPrefix')||'./sost-cli';
   if($('claimAsset').value==='paxg-xaut-usdt')errs.push('Selected asset class is blocked for testing (PAXG/XAUT/USDT).');
   const f={t:gv('cLockTxid'),v:gv('cLockVout'),a:gv('cLockAmt'),p:gv('cPreimage'),d:gv('cDestPkh'),dust:gv('cDust'),fee:gv('cFee')};
@@ -656,7 +677,7 @@ function evmMsg(box,cls,html){$(box).innerHTML='<div class="warnmsg '+cls+'">'+h
 
 /* founder unlock (independent for the EVM tab) */
 $('evmGateInput').addEventListener('input',function(){
-  const ok=this.value.trim()==='I UNDERSTAND THIS IS FOUNDER-ONLY';const m=$('evmGateMsg');m.style.display='block';
+  const ok=false; /* H-01: RETIRED, never unlocks */ const m=$('evmGateMsg');m.style.display='block';
   if(ok){m.className='warnmsg ok';m.textContent='Unlocked. Calldata is shown before every signature; your wallet signs, not this page.';$('evmBody').classList.remove('locked');}
   else{m.className='warnmsg amber';m.textContent='Type the exact sentence to unlock.';$('evmBody').classList.add('locked');}
 });
@@ -745,6 +766,7 @@ $('evmGenSecret2').addEventListener('click',async function(){const s=new Uint8Ar
   so.innerHTML='secret S (KEEP PRIVATE): <code>0x'+toHex(s.buffer)+'</code> — save it; needed to CLAIM. Never uploaded.';});
 
 function evmGuards(){
+  return 'SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized.'; /* H-01: unconditional */
   if(!ACCOUNT)return 'Connect MetaMask first.';
   if(!NET)return 'Switch to Ethereum or BNB Chain.';
   if(!HTLC)return 'Set the deployed contract address for this network first.';
@@ -752,6 +774,7 @@ function evmGuards(){
 }
 function v0x(s){s=(s||'').trim();return s.startsWith('0x')?s:('0x'+s);}
 async function previewSend(label,to,data,valueWeiHex){
+  throw new Error('SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized.'); /* H-01: the only eth_sendTransaction sink is closed */
   const out=$('evmActionOut');
   const netLine='network: '+(NET?NET.name:'?')+' (chainId '+CHAINID+')'+(isTestnet?(isTestnet()?' · TESTNET rehearsal':' · MAINNET'):'');
   out.innerHTML='<div class="warnmsg err"><b>⚠ Review before signing in MetaMask — DO NOT sign unless ALL of this is correct:</b></div>'+
@@ -860,6 +883,6 @@ $('evmReadSwap').addEventListener('click',async function(){
 refreshHeight();setInterval(refreshHeight,30000);
 if(eth()){eth().request({method:'eth_chainId'}).then(c=>{CHAINID=c;NET=A.NETWORKS[c]||null;}).catch(()=>{});}
 </script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 </body>
 </html>

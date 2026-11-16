@@ -3,39 +3,37 @@
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
-<link rel="icon" href="/favicon.ico?v=rs20261112g" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=rs20261112g">
-<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=rs20261112g">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rs20261112g">
-<link rel="manifest" href="/site.webmanifest?v=rs20261112g">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
 <meta name="theme-color" content="#05070a">
 <!-- M26 OG / Twitter fallback -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta charset="UTF-8">
 <link rel="canonical" href="https://sostcore.com/sost-dex.html">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
-<link rel="apple-touch-icon" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=sl20261113">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST Atomic Swap DEX & OTC — Non-Custodial Swaps & Encrypted Deal Channels</title>
+<title>SOST OTC / P2P — Signed Offers & Encrypted Deal Channels (atomic swaps RETIRED)</title>
 <meta name="description" content="Atomic Swap DEX: non-custodial bilateral signed-offer interface for non-custodial atomic swaps and OTC coordination. Client-side ED25519 signing + X25519 encryption. Encrypted relay (server cannot read). On-chain smart-contract escrow on Ethereum (SOSTEscrow), not SOST-operated escrow. SOST does not custody funds or gold, and does not intermediate, settle, or arbitrate trades.">
 <meta name="keywords" content="Atomic Swap DEX, atomic swap, OTC, signed offers, encrypted deal channels, non-custodial, settlement, tokenized gold, XAUT, PAXG">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SOST Atomic Swap DEX & OTC — Non-Custodial Swaps & Encrypted Deal Channels">
+<meta property="og:title" content="SOST OTC / P2P — Signed Offers & Encrypted Deal Channels (atomic swaps RETIRED)">
 <meta property="og:description" content="Atomic Swap DEX: non-custodial bilateral signed-offer interface. Client-side ED25519 signing, encrypted relay, on-chain smart-contract escrow. SOST does not custody, intermediate, or arbitrate trades.">
 <meta property="og:url" content="https://sostcore.com/sost-dex.html">
 <meta property="og:site_name" content="SOST">
-<meta property="og:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
+<meta property="og:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="SOST Atomic Swap DEX & OTC — Non-Custodial Swaps & Encrypted Deal Channels">
+<meta name="twitter:title" content="SOST OTC / P2P — Signed Offers & Encrypted Deal Channels (atomic swaps RETIRED)">
 <meta name="twitter:description" content="Atomic Swap DEX: non-custodial bilateral signed-offer interface. Client-side ED25519 signing, encrypted relay, on-chain smart-contract escrow. SOST does not custody, intermediate, or arbitrate trades.">
-<meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=rs20261112g">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
 <style>
   :root {
     --bg-deep: #000000;
@@ -80,7 +78,7 @@
   @keyframes glowPulse { 0%,100%{filter:blur(18px) brightness(1)} 50%{filter:blur(28px) brightness(1.3)} }
   .hero-title { font-family: var(--font-display); font-size: clamp(56px, 10vw, 96px); font-weight: 800; line-height: 1.05; margin-bottom: 16px; letter-spacing: -3px; position: relative; display: inline-block; }
   .hero-title .dex-text { background: linear-gradient(90deg,#e63946,#ff6b35,#f59e0b,#fbbf24,#4ade80,#22d3ee,#818cf8,#c084fc,#e63946); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: rainbowShift 3s linear infinite; position: relative; z-index: 1; }
-  .hero-title::after { content: 'Atomic Swap DEX'; position: absolute; top: 0; left: 0; font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; background: linear-gradient(90deg,#e63946,#ff6b35,#f59e0b,#fbbf24,#4ade80,#22d3ee,#818cf8,#c084fc,#e63946); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: rainbowShift 3s linear infinite, glowPulse 2s ease-in-out infinite; opacity: 0.6; z-index: 0; }
+  .hero-title::after { content: 'OTC / P2P'; position: absolute; top: 0; left: 0; font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; background: linear-gradient(90deg,#e63946,#ff6b35,#f59e0b,#fbbf24,#4ade80,#22d3ee,#818cf8,#c084fc,#e63946); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: rainbowShift 3s linear infinite, glowPulse 2s ease-in-out infinite; opacity: 0.6; z-index: 0; }
   .hero-subtitle { font-size: 16px; color: var(--text-secondary); max-width: 600px; line-height: 1.8; font-weight: 300; margin-bottom: 36px; }
   .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
   .hero-btn { display: flex; align-items: center; gap: 10px; padding: 14px 28px; border-radius: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; cursor: pointer; border: 1px solid; transition: all 0.3s; text-decoration: none; text-transform: uppercase; }
@@ -307,8 +305,16 @@ input[type=number]{appearance:textfield;-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}</style>
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
+<div class="sost-gold-discarded" role="note" style="position:relative;z-index:50;margin:0;padding:12px 18px;background:#2a1a00;border-bottom:2px solid #f59e0b;color:#ffe2a8;font:600 13.5px/1.6 system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:left">&#9888; DISCARDED MODEL &mdash; HISTORICAL RECORD ONLY. SOST has <b>no gold backing</b>, <b>no committed reserves</b> and <b>no obligation to acquire, hold or contribute gold, XAUT or PAXG</b>. There is no convertibility, redemption right or guarantee linked to gold or to any external asset. <span style="font-weight:400">The current model is Proof of Work + DTD and DTD Jackpot, which distribute SOST itself (V16, active: 50&nbsp;% miner / 50&nbsp;% DTD). The proposed V17 split (80&nbsp;% / 15&nbsp;% / 5&nbsp;%) is not active. Gold-related content below describes abandoned plans and is not in force.</span></div>
+
 
 
 
@@ -322,7 +328,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -338,8 +344,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-transactions.html">Transactions</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
@@ -366,14 +372,16 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
-      <a href="sost-dex.html" style="color:#fb010d;font-weight:700" title="SOST Atomic Swap Console — founder-only">⚛ Atomic Swap</a>
+      <a href="sost-dex.html" style="color:#fb010d;font-weight:700" title="SOST DEX — PREVIEW; public atomic swaps are not currently authorized">⚛ DEX (PREVIEW)</a>
       <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
   </div>
 </nav>
+<!-- SECURITY NOTICE H-01: retired HTLC atomic swap contracts (docs/security/ADVISORY_2026-10-30_HTLCv2.md) -->
+<div style="padding:0 12px;position:relative;z-index:5"><div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;max-width:1100px;margin:14px auto 0;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div></div>
 
 
 
@@ -383,19 +391,19 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <section class="hero">
   <div class="container">
-    <div class="hero-title fade-in"><span class="dex-text">Atomic Swap DEX</span></div>
+    <div class="hero-title fade-in"><span class="dex-text">OTC / P2P</span></div>
     <p class="hero-subtitle fade-in delay-1" style="color:var(--gold-primary);font-weight:600;margin-bottom:10px;letter-spacing:0.3px">OTC coordination with signed offers and encrypted deal channels.</p>
-    <p class="hero-subtitle fade-in delay-2">Coordinate non-custodial swaps and OTC deals through client-side signed offers + end-to-end encrypted relay messages + on-chain Ethereum smart-contract escrow. The AI assistant only helps you fill the form; you sign every action yourself. Passkey &amp; biometric authentication stay on your device.</p>
+    <p class="hero-subtitle fade-in delay-2">Coordinate non-custodial swaps and OTC deals through client-side signed offers + end-to-end encrypted relay messages + on-chain Ethereum smart-contract escrow (<b style="color:#f87171">RETIRED &mdash; not authorized</b>). The AI assistant only helps you fill the form; you sign every action yourself. Passkey &amp; biometric authentication stay on your device.</p>
     <div class="hero-subtitle fade-in delay-2" style="font-size:13px;margin-top:8px;border:1px solid rgba(255,206,84,.3);border-radius:8px;padding:10px 14px;display:inline-block;max-width:680px;text-align:left;line-height:1.8">
-      <div style="color:#4ade80;font-weight:700;margin-bottom:4px">&#9883; Atomic Swap DEX</div>
-      <div style="color:var(--text-secondary)">Non-custodial swaps, OTC coordination, signed offers, and encrypted deal channels.</div>
+      <div style="color:#f87171;font-weight:700;margin-bottom:4px">&#9883; Atomic swaps &mdash; RETIRED (not authorized)</div>
+      <div style="color:var(--text-secondary)">OTC coordination with signed offers and encrypted deal channels only &mdash; no settlement, custody or security guarantee.</div>
       <div style="color:#fbbf24;font-weight:700;margin:8px 0 4px">&#9670; PoPC Bond Staking <span style="font-weight:400;color:var(--text-secondary)">(separate product)</span></div>
       <div style="color:var(--text-secondary)">Create, monitor, and claim native SOST bonds &mdash; <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</div>
-      <div style="color:#ffce54;margin-top:8px;font-size:12px">&#9216; <b>PoPC bonds are not tradeable in the current release (V30000).</b> PoPC contract trading is disabled (<code>POPC_DEX_ENABLED=false</code>). The signed-offer SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled.</div>
+      <div style="color:#ffce54;margin-top:8px;font-size:12px">&#9216; <b>PoPC bonds are not tradeable in the current release (V30000).</b> PoPC contract trading is disabled (<code>POPC_DEX_ENABLED=false</code>). The signed-offer SOST-layer DEX is NOT ACTIVE (deferred / fail-closed on mainnet, see protocol-status.json) and admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled.</div>
     </div>
     <div class="hero-actions fade-in delay-2">
       <a href="javascript:void(0)" class="hero-btn hero-btn-orange" onclick="var el=document.getElementById('trade-composer');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){var c=document.querySelector('[data-action=otc]');if(c)c.click();},500)"><span>&#9998;</span> OTC REQUEST</a>
-      <a href="atomic-swap-console.html" class="hero-btn hero-btn-gold" title="Founder-only / advanced console"><span>&#9883;</span> ATOMIC SWAP CONSOLE</a>
+      <span class="hero-btn hero-btn-gold" aria-disabled="true" title="RETIRED — public atomic swaps are not currently authorized (security finding H-01)" style="opacity:.45;cursor:not-allowed;filter:grayscale(1);pointer-events:none"><span>&#9883;</span> ATOMIC SWAP CONSOLE &mdash; RETIRED</span>
       <a href="javascript:void(0)" class="hero-btn" style="border-color:rgba(192,132,252,0.5);color:#c084fc;background:rgba(192,132,252,0.08)" onclick="var el=document.getElementById('walletPanel');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){if(typeof SOSTDEX!=='undefined')SOSTDEX.createIdentity();},500)"><span>&#128273;</span> CREATE IDENTITY</a>
       <a href="javascript:void(0)" class="hero-btn" style="border-color:rgba(100,116,139,0.5);color:var(--text-dim);background:rgba(100,116,139,0.06)" onclick="var el=document.getElementById('walletPanel');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){if(typeof SOSTDEX!=='undefined')SOSTDEX.showImport();},500)"><span>&#128229;</span> IMPORT BACKUP</a>
     </div>
@@ -405,9 +413,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <span style="color:var(--gold);font-weight:700;text-align:right;">1.</span><span style="color:var(--text-secondary)">Create a signed swap / OTC offer &mdash; client-side ED25519 signature, you sign every action</span>
         <span style="color:var(--gold);font-weight:700;text-align:right;">2.</span><span style="color:var(--text-secondary)">Share it through an encrypted deal channel &mdash; X25519 end-to-end, the relay cannot read it</span>
         <span style="color:var(--gold);font-weight:700;text-align:right;">3.</span><span style="color:var(--text-secondary)">Verify terms and transaction IDs &mdash; confirm amounts, addresses and on-chain txids before acting</span>
-        <span style="color:var(--gold);font-weight:700;text-align:right;">4.</span><span style="color:var(--text-secondary)">Execute or refund through the non-custodial atomic-swap flow &mdash; on-chain HTLC / smart-contract escrow, SOST never custodies funds</span>
+        <span style="color:var(--gold);font-weight:700;text-align:right;">4.</span><span style="color:var(--text-secondary)">Atomic-swap execution is RETIRED (security finding H-01) &mdash; public atomic swaps are not currently authorized; SOST provides no settlement, custody or escrow</span>
       </div>
-      <p style="margin-top:16px;font-size:11px;color:var(--text-dim);line-height:1.7;font-style:italic;border-top:1px solid var(--border-dim);padding-top:12px;">This is the Atomic Swap / OTC surface. SOST does not custody funds, intermediate, settle, or arbitrate trades. PoPC Bond Staking is a separate product and PoPC bonds are not tradeable in the current release (V30000). The signed-offer SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled.</p>
+      <p style="margin-top:16px;font-size:11px;color:var(--text-dim);line-height:1.7;font-style:italic;border-top:1px solid var(--border-dim);padding-top:12px;">This is the Atomic Swap / OTC surface. SOST does not custody funds, intermediate, settle, or arbitrate trades. PoPC Bond Staking is a separate product and PoPC bonds are not tradeable in the current release (V30000). The signed-offer SOST-layer DEX is NOT ACTIVE (deferred / fail-closed on mainnet, see protocol-status.json) and admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled.</p>
     </div>
     <div class="hero-badges fade-in delay-4" style="margin-top:20px;">
       <span class="hero-badge" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">LIMITED ALPHA</span>
@@ -548,7 +556,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">SCAM 1 &mdash; Fake PoPC contract</div>
       <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Pattern:</b> a counterparty sends you a link to a &quot;PoPC contract&quot; on Ethereum that looks legitimate (same ABI, similar address). Their version of the contract has a hidden backdoor that lets them drain after deposit.</p>
       <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Warning signs:</b> the contract address differs from the official SOSTEscrow address published in the SOST docs. The counterparty insists on &quot;my version&quot; or &quot;the new test contract&quot;. The bytecode has not been verified on Etherscan, or shows unfamiliar admin/owner functions.</p>
-      <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0"><b>Safe response:</b> only use the SOSTEscrow contract address documented in <a href="sost-popc-contracts.html" style="color:var(--cyan-primary)">sost-popc-contracts.html</a>. Verify the contract is open-source-verified on Etherscan. Refuse any &quot;alternative&quot; contract.</p>
+      <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0"><b>Safe response:</b> do not send funds to any PoPC or SOSTEscrow contract: the historical Sepolia SOSTEscrow documented in <a href="sost-popc-contracts.html" style="color:var(--cyan-primary)">sost-popc-contracts.html</a> is <b>RETIRED &mdash; DO NOT USE</b>. Refuse any &quot;alternative&quot; contract.</p>
     </div>
 
     <!-- Scam 2: fake DEX mirror URL -->
@@ -836,38 +844,38 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     </div>
     <p style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;max-width:760px;line-height:1.7">
       Non-custodial cross-chain swap (SOST L1 &harr; EVM) via Hash Time-Locked Contracts. Each step runs in the
-      founder-only <a href="atomic-swap-console.html" style="color:var(--gold);text-decoration:underline">Atomic Swap Console</a>,
+      founder-only Atomic Swap Console (<b style="color:#f87171">RETIRED &mdash; not authorized</b>),
       which validates inputs and generates the exact <code>sost-cli</code> / MetaMask actions &mdash; it never holds keys,
       never signs, never broadcasts for you. <b>You</b> sign and broadcast every action.
     </p>
     <div style="font-size:11px;color:#ffce54;margin-bottom:16px">&#9216; PoPC bonds are <b>not tradeable</b> in the current release (V30000) — this surface is swaps / OTC only. For bonds see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
-      <a href="atomic-swap-console.html#readiness" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+      <a aria-disabled="true" data-retired-href="atomic-swap-console.html#readiness" title="RETIRED — public atomic swaps are not currently authorized (security finding H-01)" style="opacity:.5;cursor:not-allowed;text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
         <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 1 · READINESS</div>
         <div style="color:var(--text-primary);font-weight:600;margin-top:4px">HTLC active? Wallet & contract</div>
         <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">Confirm HTLC is active (block 16,000+; relay 17,000+), founder-only warning, contract deployed, wallet connected.</div>
       </a>
-      <a href="atomic-swap-console.html" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+      <a aria-disabled="true" data-retired-href="atomic-swap-console.html" title="RETIRED — public atomic swaps are not currently authorized (security finding H-01)" style="opacity:.5;cursor:not-allowed;text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
         <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 2 · SECRET</div>
         <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Generate secret & hashlock</div>
         <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">Create the preimage <code>S</code> and <code>sha256(S)</code> hashlock both chains share.</div>
       </a>
-      <a href="atomic-swap-console.html" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+      <a aria-disabled="true" data-retired-href="atomic-swap-console.html" title="RETIRED — public atomic swaps are not currently authorized (security finding H-01)" style="opacity:.5;cursor:not-allowed;text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
         <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 3 · SOST L1 HTLC</div>
         <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Lock on SOST L1</div>
         <div style="color:var(--text-secondary);font-size:11px;margin-top:4px"><code>createhtlclock</code> &rarr; sign with <code>sost-signtx</code> &rarr; broadcast &rarr; status.</div>
       </a>
-      <a href="atomic-swap-console.html" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+      <a aria-disabled="true" data-retired-href="atomic-swap-console.html" title="RETIRED — public atomic swaps are not currently authorized (security finding H-01)" style="opacity:.5;cursor:not-allowed;text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
         <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 4 · EVM HTLC</div>
         <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Lock / Claim / Refund on EVM</div>
         <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">MetaMask LOCK / CLAIM / REFUND and on-chain status.</div>
       </a>
-      <a href="atomic-swap-console.html" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+      <a aria-disabled="true" data-retired-href="atomic-swap-console.html" title="RETIRED — public atomic swaps are not currently authorized (security finding H-01)" style="opacity:.5;cursor:not-allowed;text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
         <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 5 · SWAP STATUS</div>
         <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Track both sides</div>
         <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">Verify both legs and the revealed secret before considering the swap settled.</div>
       </a>
-      <a href="atomic-swap-console.html#refund" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+      <a aria-disabled="true" data-retired-href="atomic-swap-console.html#refund" title="RETIRED — public atomic swaps are not currently authorized (security finding H-01)" style="opacity:.5;cursor:not-allowed;text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
         <div style="font-size:9px;color:#ff8a8a;letter-spacing:1px">STEP 6 · EMERGENCY REFUND</div>
         <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Reclaim after timeout</div>
         <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">If a leg is never claimed, refund your own locked funds after the timelock expires.</div>
@@ -1245,7 +1253,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
-    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-dex.html">Atomic Swap DEX</a></p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-dex.html">Atomic Swap DEX</a></p>
     <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
   </div>
 </footer>
@@ -1895,7 +1903,7 @@ setInterval(fetchAll, _refreshMs);
 })();
 </script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
@@ -2023,5 +2031,9 @@ setInterval(fetchAll, _refreshMs);
   });
 </script>
 <script src="js/popc-dex-gate.js?v=v392"></script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='ecosystem'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body>
 </html>
