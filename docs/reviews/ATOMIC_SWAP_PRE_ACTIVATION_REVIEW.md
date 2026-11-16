@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](../GOLD_MODEL_DISCARDED.md).
+
 # Atomic Swap HTLC — Pre-Activation Safety Review
 
 **Status of branch `feat/atomic-swap-htlc-v13-candidate` as of this review:**

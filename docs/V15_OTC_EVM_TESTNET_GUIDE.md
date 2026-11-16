@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](GOLD_MODEL_DISCARDED.md).
+
 # OTC-3b — EVM leg on testnet (AtomicSwapHTLC.sol)
 
 **Status:** review/testnet only. **NOT deployed, NOT audited, NOT active.** This

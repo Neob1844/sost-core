@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](../GOLD_MODEL_DISCARDED.md).
+
 # Wallet coin selection — Phase 1 audit + Phase 2 design
 
 Branch `feat/wallet-coin-selection` (separate). Wallet-only; NO consensus/emission/maturity/key

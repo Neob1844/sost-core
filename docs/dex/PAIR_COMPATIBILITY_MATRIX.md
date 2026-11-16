@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](../GOLD_MODEL_DISCARDED.md).
+
 # SOST Atomic-Swap Pair Compatibility Matrix
 
 Status of every asset advertised in Atomic Swap / SOST DEX V2. Honest per-asset; adding an

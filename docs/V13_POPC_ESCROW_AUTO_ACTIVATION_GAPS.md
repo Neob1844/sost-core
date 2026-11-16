@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](GOLD_MODEL_DISCARDED.md).
+
 # V13 PoPC + Escrow Auto-Activation Gap Analysis
 
 **Target:** V13 at block **12,000**.

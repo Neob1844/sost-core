@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](../GOLD_MODEL_DISCARDED.md).
+
 # V15 activation-boundary report (P9)
 
 **Result: PASS.** V15 activates on mainnet at height **25000** with a clean `>=` boundary and no

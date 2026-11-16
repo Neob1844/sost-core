@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](GOLD_MODEL_DISCARDED.md).
+
 # V13 Public Scope Update
 
 > **Updated 2026-05-23 — V13 public scope is now CLOSED.** Beacon Phase II-A, II-B, and III

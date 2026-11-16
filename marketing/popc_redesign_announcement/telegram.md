@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](../../docs/GOLD_MODEL_DISCARDED.md).
+
 🛡️ **PoPC Redesigned — One Native Bond, Gold as a Boost**
 
 We've simplified Proof of Personal Custody (PoPC). What used to be two models is now **one SOST-native protocol**.

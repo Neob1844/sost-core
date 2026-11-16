@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](../../docs/GOLD_MODEL_DISCARDED.md).
+
 # V15 cutover runbook — node + miners + explorer (blocks 24,900 → 25,000)
 
 **Scope:** the supervised, human-attended upgrade of the live mainnet to the V15 binary DURING

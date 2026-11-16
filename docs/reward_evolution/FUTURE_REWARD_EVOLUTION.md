@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](../GOLD_MODEL_DISCARDED.md).
+
 # Future Reward Evolution — analysis package (PROPOSAL, NOT CONSENSUS)
 
 Status: **ANALYSIS / DOCUMENTATION ONLY.** No consensus change. No hard fork. No activation

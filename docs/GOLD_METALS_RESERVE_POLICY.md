@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](GOLD_MODEL_DISCARDED.md).
+
 # Protocol Strategic Reserve — Governance Policy
 
 **Status:** read-only policy document (**planned / NOT ACTIVE**). It describes what

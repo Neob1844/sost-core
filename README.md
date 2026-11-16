@@ -4,7 +4,7 @@
 
 Native Layer 1 Proof-of-Work Blockchain
 
-CPU-friendly, memory-hard Proof-of-Work blockchain (ConvergenceX) with a transparent on-chain Gold Vault and Proof of Personal Custody (PoPC) architecture. Each block reward is split **50% miner / 50% DTD** (the on-chain distribution draw). Until V15 (block 25,000) the split was 50% miner / 25% Gold Vault / 25% PoPC; at V15 the Gold Vault and PoPC shares of NEW emission went to 0 and their accumulated balances became the reserve the DTD Jackpot spends — supply-neutral, no new emission. SOST is **not fully gold-backed at issuance**; the Gold Vault is a protocol-level reserve-accumulation mechanism, not a redeemable backing or financial guarantee. Open source under the **MIT License**.
+CPU-friendly, memory-hard Proof-of-Work blockchain (ConvergenceX) with on-chain distribution of SOST to miners through the DTD and the DTD Jackpot. Each block reward is split **50% miner / 50% DTD** (the on-chain distribution draw). Until V15 (block 25,000) the split was 50% miner / 25% Gold Vault / 25% PoPC; at V15 the Gold Vault and PoPC shares of NEW emission went to 0 and their accumulated balances became the reserve the DTD Jackpot spends — supply-neutral, no new emission. SOST is **not backed by gold** or any external asset, has **no gold reserves** and **no obligation to acquire, hold or contribute gold, XAUT or PAXG**; there is no convertibility or redemption right. DTD and the DTD Jackpot distribute SOST itself; they are not backing mechanisms. See [docs/GOLD_MODEL_DISCARDED.md](docs/GOLD_MODEL_DISCARDED.md). Open source under the **MIT License**.
 
 The Foundation's manual operations during Phase 1 are transitional by design, not permanent — progressive decentralization toward full automation is a constitutional commitment, not a discretionary goal.
 
@@ -258,21 +258,19 @@ SOST does not support smart contracts. Instead, purpose-built transaction types 
 | 0 | IMPLEMENTED | BOND_LOCK (0x10) + ESCROW_LOCK (0x11) — consensus types, activate at height 5000 |
 | 0 | IMPLEMENTED | PoPC Model A (bond+custody) — 5 RPC commands, registry, rewards, slash |
 | 0 | IMPLEMENTED | PoPC Model B (escrow) — 4 RPC commands, immediate rewards |
-| 1 | Q2-Q3 2026 | Live custody verification via Etherscan + first PoPC participants |
-| 2 | Q4 2027-Q1 2028 | Native metal tokens (XAUT-SOST, PAXG-SOST, SLVR-SOST) |
-| 3 | Q2 2028 | Fully native PoPC — zero Ethereum dependency |
+| — | DISCARDED | Gold custody verification, native metal tokens (XAUT-SOST, PAXG-SOST, SLVR-SOST) and the earlier PoPC gold roadmap were abandoned. They are not in force and carry no commitment. PoPC is paused / legacy |
 
 Active output types at height 5000: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BURN` (0x20) is reserved but **not planned for activation** — SOST supply is immutable by construction.
 
 **PoPC RPC commands (10 total):** `popc_register`, `popc_status`, `popc_check`, `popc_release`, `popc_slash`, `escrow_register`, `escrow_status`, `escrow_verify`, `escrow_complete`, `getsostprice`. Dynamic rewards adjusted by Pool Utilization Ratio (PUR). Anti-whale tiers above 10 oz. Step-by-step guide: `website/sost-popc.html`.
 
-**SOST Reference Price:** Calculated as `(gold committed in PoPC × gold price) ÷ total SOST supply`. Foundation commitment: 0.6 XAUT + 0.6 PAXG = 1.2 oz. Gold prices fetched live from CoinGecko (XAUT + PAXG average). This is NOT a market price — it will be replaced by exchange data when SOST is listed on a CEX/DEX.
+**Gold reference (informational only):** the website shows 1 SOST ≡ 0.8886707657 mg of gold, valued at the live gold price. It is not a market price, not backing, not a guarantee, not a redemption or exchange right and not an economic commitment, and it is not part of SOST tokenomics. **There is no foundation commitment to contribute gold, XAUT or PAXG** (the earlier 0.6 XAUT + 0.6 PAXG commitment is withdrawn; see [docs/GOLD_MODEL_DISCARDED.md](docs/GOLD_MODEL_DISCARDED.md)).
 
 ## Explorer (v4.2)
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC with authentication.
 
-Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT equalizer profiles (E7-H35), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
+Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Vault / PoPC Pool SOST balances (historical addresses, no gold), emission curve chart, chain timing panel, block detail with cASERT equalizer profiles (E7-H35), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
 
 ## Security Status
 

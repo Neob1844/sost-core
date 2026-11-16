@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](../../../docs/GOLD_MODEL_DISCARDED.md).
+
 # Deploy AtomicSwapHTLCv2 — owner action (gas)
 
 The v2 HTLC (weird-ERC20-safe: USDT no-return, PAXG fee-on-transfer balance-delta + slippage) is LAB

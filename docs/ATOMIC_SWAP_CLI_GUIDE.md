@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](GOLD_MODEL_DISCARDED.md).
+
 # Atomic Swap — CLI usage guide (founder / private)
 
 For SOST ↔ EVM (ETH/BNB/USDT/USDC/PAXG/XAUT) cross-chain atomic swaps via `sost-cli`, once the

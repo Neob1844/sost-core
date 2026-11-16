@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](GOLD_MODEL_DISCARDED.md).
+
 # Atomic Swap — V14 activation + miner/user disclosure (branch `feature/v14-atomic-swap-evm-disclosure`)
 
 **CTO decision (executed on branch, NOT merged/deployed/announced):** activate the Atomic Swap

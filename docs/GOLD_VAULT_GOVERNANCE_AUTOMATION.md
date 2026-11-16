@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](GOLD_MODEL_DISCARDED.md).
+
 # Gold Vault Governance — Audit & Automation (DRAFT, mainnet OFF)
 
 Status: **DRAFT / SIMULATOR ONLY.** This documents the existing G1–G5 code, adds a

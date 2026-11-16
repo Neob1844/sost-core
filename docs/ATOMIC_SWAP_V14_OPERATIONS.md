@@ -1,3 +1,5 @@
+> **DISCARDED MODEL — HISTORICAL RECORD ONLY.** Gold-reserve, XAUT/PAXG, gold-custody and metal-token content in this document describes abandoned plans. SOST has no gold backing, no committed reserves and no obligation to acquire, hold or contribute gold, XAUT or PAXG. See [GOLD_MODEL_DISCARDED.md](GOLD_MODEL_DISCARDED.md).
+
 # Atomic Swap V14 — Operations runbook (founder-only, GO mainnet at block 15,000)
 
 CTO decision: **GO** at block 15,000, EVM-only, gate stays `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT =
