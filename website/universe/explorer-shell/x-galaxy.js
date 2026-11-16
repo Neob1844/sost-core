@@ -332,7 +332,7 @@
       if (o.k !== 'graze') return; var p = (now - o.t0) / o.dur; if (p <= 0 || p >= 1) return;
       var fade = Math.sin(Math.PI * p), hx = o.x + (o.x1 - o.x) * p, hy = o.y + (o.y1 - o.y) * p, dx = o.x1 - o.x, dy = o.y1 - o.y, m = Math.sqrt(dx * dx + dy * dy) || 1;
       [[0, 1], [-.06, .55]].forEach(function (t) {   // at the head, and a weaker wake behind it
-        var cx = hx + dx * t[0], cy = hy + dy * t[0], L = 22, k = .14 * fade * t[1], sh = 3.2 * fade * t[1], n = Math.ceil(2 * L * dpr), sx = Math.round((cx - L) * dpr), sy = Math.round((cy - L) * dpr);
+        var cx = hx + dx * t[0], cy = hy + dy * t[0], L = o.L || 22, k = (o.km || .14) * fade * t[1], sh = (o.sh || 3.2) * fade * t[1], n = Math.ceil(2 * L * dpr), sx = Math.round((cx - L) * dpr), sy = Math.round((cy - L) * dpr);
         // the patch REPLACES the frame with a feathered mask (orig·(1−m) + lensed·m): never drawn on top, so the semi-transparent
         // background is not doubled and no disc outline can appear
         if (!lensCv) { lensCv = d.createElement('canvas'); lensCv2 = d.createElement('canvas'); }
@@ -349,8 +349,8 @@
         c.globalCompositeOperation = 'destination-out'; c.fillStyle = mg; c.fillRect(sx, sy, n, n);
         c.globalCompositeOperation = 'source-over'; c.drawImage(lensCv2, sx, sy); c.restore();
       });
-      var tl = 46, tx = hx - dx / m * tl, ty = hy - dy / m * tl, g = c.createLinearGradient(hx, hy, tx, ty);
-      g.addColorStop(0, 'rgba(255,236,210,' + (.75 * fade).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,236,210,0)');
+      var tl = o.tail || 46, tx = hx - dx / m * tl, ty = hy - dy / m * tl, g = c.createLinearGradient(hx, hy, tx, ty);
+      g.addColorStop(0, 'rgba(' + (o.rgb || '255,236,210') + ',' + (.75 * fade).toFixed(3) + ')'); g.addColorStop(1, 'rgba(' + (o.rgb || '255,236,210') + ',0)');
       c.strokeStyle = g; c.lineWidth = 1.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy); c.lineTo(tx, ty); c.stroke(); c.lineCap = 'butt'; c.lineWidth = 1;
     });
   }
@@ -694,51 +694,210 @@
   var nav = root.navigator || {}, LOWEND = !!((nav.hardwareConcurrency && nav.hardwareConcurrency <= 2) || (nav.deviceMemory && nav.deviceMemory <= 2) || (nav.connection && nav.connection.saveData));
   function fxAllowed() { return FX.mode === 'on' || (FX.mode === 'auto' && !RM && !LOWEND && !FX.slow); }
   function fxWhy() { return FX.mode === 'off' ? 'off' : FX.mode === 'on' ? (RM ? 'on (reduced motion: flashes only)' : 'on') : RM ? 'auto: off (reduced motion)' : LOWEND ? 'auto: off (low-end device)' : FX.slow ? 'auto: off (page below 24 fps)' : 'auto: on'; }
-  function fxLabel() { fxB.textContent = 'FX: ' + FX.mode.toUpperCase() + (FX.mode === 'auto' && !fxAllowed() ? ' · off' : ''); fxB.title = 'Decorative effects (comets, shooting stars, meteor grazes), not data — ' + fxWhy() + '. Click: AUTO → ON → OFF.'; fxB.setAttribute('aria-label', 'Decorative effects: ' + fxWhy()); fxB.setAttribute('data-fx-state', fxAllowed() ? 'on' : 'off'); }
+  function fxLabel() { fxB.textContent = 'FX: ' + FX.mode.toUpperCase() + (FX.mode === 'auto' && !fxAllowed() ? ' · off' : ''); fxB.title = 'Decorative effects (' + FXC.length + ' kinds: meteors, comets, transients, satellites…), not data — ' + fxWhy() + '. Click: AUTO → ON → OFF.'; fxB.setAttribute('aria-label', 'Decorative effects: ' + fxWhy()); fxB.setAttribute('data-fx-state', fxAllowed() ? 'on' : 'off'); }
   function fxSize() { if (fxCv.width !== cv.width || fxCv.height !== cv.height) { fxCv.width = cv.width; fxCv.height = cv.height; } }
   function fxClear() { FX.items = []; fxc.setTransform(1, 0, 0, 1, 0, 0); fxc.clearRect(0, 0, fxCv.width, fxCv.height); }
   function fxSchedule() {
     clearTimeout(FX.timer); FX.timer = 0; if (!fxAllowed()) { fxClear(); return; }
-    var big = fsOn(); FX.timer = setTimeout(fxSpawn, (big ? 5000 : 9000) + Math.random() * (big ? 9000 : 14000));
+    var big = fsOn(); FX.timer = setTimeout(fxSpawn, (big ? 4000 : 7000) + Math.random() * (big ? 8000 : 11000));
   }
-  function fxNew() {
-    var now = performance.now(), r = Math.random();
-    if (RM || r < .2) {   // faint cross glint, only OUTSIDE the galaxy disc (never where a star could be)
-      for (var tr = 0; tr < 12; tr++) { var fx0 = Math.random() * W, fy0 = Math.random() * H, ex = (fx0 - W / 2 - st.ox) / (R * st.z * 1.08), ey = (fy0 - H / 2 - st.oy) / (R * TILT * st.z * 1.08);
-        if (ex * ex + ey * ey > 1) return { k: 'flash', x: fx0, y: fy0, t0: now, dur: 1200 }; }
-      return { k: 'flash', x: -99, y: -99, t0: now, dur: 1 };
-    }
-    if (r >= .62 && r < .8) {   // meteor graze across an outer arm (see lens()); drawn on the galaxy canvas, above the stars
-      var a0 = Math.random() * Math.PI * 2, sw = (.5 + Math.random() * .45) * (Math.random() < .5 ? 1 : -1), rr0 = 1.12, rr1 = .78 + Math.random() * .18;
-      var pt = function (ang, rad) { return [W / 2 + st.ox + Math.cos(ang) * rad * R * st.z, H / 2 + st.oy + Math.sin(ang) * rad * R * TILT * st.z]; };
-      var s0 = pt(a0, rr0), s1 = pt(a0 + sw, rr1);
-      return { k: 'graze', x: s0[0], y: s0[1], x1: s1[0] + (s1[0] - s0[0]) * .25, y1: s1[1] + (s1[1] - s0[1]) * .25, t0: now, dur: 1700 + Math.random() * 900 };
-    }
-    if (r < .75) {   // shooting star: a short fast streak through the upper band
-      var left = Math.random() < .5, a = (left ? .42 : Math.PI - .42) + (Math.random() - .5) * .35, sp = (W + H) * (.0007 + Math.random() * .0004);
-      return { k: 'shoot', x: left ? Math.random() * W * .45 : W * .55 + Math.random() * W * .45, y: Math.random() * H * .3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, t0: now, dur: 650 + Math.random() * 500, len: 55 + Math.random() * 55 };
-    }
-    var dur = 4500 + Math.random() * 2500, dir = Math.random() < .5 ? 1 : -1, top = Math.random() < .5;   // comet: slow, along the top or bottom edge band
-    return { k: 'comet', x: dir > 0 ? -60 : W + 60, y: top ? H * (.05 + Math.random() * .12) : H * (.83 + Math.random() * .12), vx: dir * (W + 120) / dur, vy: (Math.random() - .5) * .006, t0: now, dur: dur, len: 70 + Math.random() * 50 };
+  // ---- catalogue: 50 decorative effects in 11 classes. Every one is drawn on the FX canvas BEHIND the stars, except the meteor
+  // grazes (lens(), on the galaxy canvas). Rules kept from the first FX layer: anything dot-like (glints, novae, pulsars, binaries,
+  // lensing, accretion) is placed only OUTSIDE the galaxy disc, so it can never be read as a block; streaks may cross the disc.
+  // Picked at random (weighted), never one of the last 8 again; with reduced motion only the static, non-moving class (glints).
+  var fr = function (a, b) { return a + Math.random() * (b - a); };
+  var rgba = function (rgb, a) { return 'rgba(' + rgb + ',' + Math.max(0, Math.min(1, a)).toFixed(3) + ')'; };
+  function outPt(m) {   // a random point outside the disc (margin m in px from the canvas edge)
+    m = m || 14;
+    for (var tr = 0; tr < 24; tr++) { var x = fr(m, W - m), y = fr(m, H - m), ex = (x - W / 2 - st.ox) / (R * st.z * 1.1), ey = (y - H / 2 - st.oy) / (R * TILT * st.z * 1.1); if (ex * ex + ey * ey > 1) return [x, y]; }
+    return [Math.random() < .5 ? m + 10 : W - m - 10, fr(m, H * .2)];
   }
-  function fxSpawn() {
+  function streakAt(c, hx, hy, ux, uy, len, rgb, a, w) {
+    var g = c.createLinearGradient(hx, hy, hx - ux * len, hy - uy * len); g.addColorStop(0, rgba(rgb, a)); g.addColorStop(1, rgba(rgb, 0));
+    c.strokeStyle = g; c.lineWidth = w; c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy); c.lineTo(hx - ux * len, hy - uy * len); c.stroke();
+  }
+  function glowAt(c, x, y, r, rgb, a) { if (r <= 0 || a <= 0) return; var g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba(rgb, a)); g.addColorStop(1, rgba(rgb, 0)); c.fillStyle = g; c.fillRect(x - r, y - r, 2 * r, 2 * r); }
+  function spikes(c, x, y, len, rgb, a, rot) { c.strokeStyle = rgba(rgb, a); c.lineWidth = .8; c.beginPath(); for (var i = 0; i < 4; i++) { var t = rot + i * Math.PI / 2; c.moveTo(x, y); c.lineTo(x + Math.cos(t) * len, y + Math.sin(t) * len); } c.stroke(); }
+  function ringAt(c, x, y, r, rgb, a, w, ry) { if (r <= 0 || a <= 0) return; c.strokeStyle = rgba(rgb, a); c.lineWidth = w || 1; c.beginPath(); c.ellipse(x, y, r, r * (ry || 1), 0, 0, Math.PI * 2); c.stroke(); }
+  // a straight mover: from (x, y) with velocity (vx, vy) px/ms
+  function mover(o) { o.at = function (dt) { return [o.x + o.vx * dt, o.y + o.vy * dt]; }; var m = Math.sqrt(o.vx * o.vx + o.vy * o.vy) || 1; o.ux = o.vx / m; o.uy = o.vy / m; return o; }
+  function topStreak(spMin, spMax, ang) {   // start in the upper band, heading down-left or down-right
+    var left = Math.random() < .5, a = (left ? .42 : Math.PI - .42) + (Math.random() - .5) * (ang || .35), sp = (W + H) * fr(spMin, spMax);
+    return { x: left ? fr(0, W * .45) : fr(W * .55, W), y: fr(0, H * .3), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp };
+  }
+  function edgeCross(dur) {   // a slow crossing along the top or bottom band
+    var dir = Math.random() < .5 ? 1 : -1, top = Math.random() < .5;
+    return { x: dir > 0 ? -60 : W + 60, y: top ? H * fr(.05, .17) : H * fr(.83, .95), vx: dir * (W + 120) / dur, vy: (Math.random() - .5) * .006 };
+  }
+  // ---- class A: shooting stars (8)
+  function shooting(id, rgb, sp0, sp1, len0, len1, w, a, extra) {
+    return { id: id, cls: 'shooting star', w: 3, make: function (now) {
+      var o = mover(Object.assign(topStreak(sp0, sp1, extra && extra.steep ? .1 : .35), { t0: now, dur: fr(550, 1100), len: fr(len0, len1) }));
+      if (extra && extra.steep) { o.vx *= .35; o.vy = Math.abs(o.vy) * .8; o.y = fr(0, H * .15); mover(o); }
+      o.draw = function (c, p, f, dt) { var h = o.at(dt); streakAt(c, h[0], h[1], o.ux, o.uy, o.len, rgb, a * f, w);
+        if (extra && extra.twin) streakAt(c, h[0] + o.uy * 6, h[1] - o.ux * 6, o.ux, o.uy, o.len * .7, rgb, a * .6 * f, w * .8);
+        if (extra && extra.burst && p > .78) { var q = (p - .78) / .22; glowAt(c, h[0], h[1], 4 + 10 * q, rgb, .5 * (1 - q)); spikes(c, h[0], h[1], 5 + 6 * q, rgb, .4 * (1 - q), .4); } };
+      return o; } };
+  }
+  // ---- class B: comets (6)
+  function comet(id, rgb, dur0, dur1, len, w, opt) {
+    opt = opt || {};
+    return { id: id, cls: 'comet', w: 2, make: function (now) {
+      var dur = fr(dur0, dur1), o = mover(Object.assign(edgeCross(dur), { t0: now, dur: dur }));
+      o.draw = function (c, p, f, dt) { var h = o.at(dt), a = .5 * f;
+        streakAt(c, h[0], h[1], o.ux, o.uy, len, rgb, a, w);
+        if (opt.dust) { var cu = o.uy + .35, cl = Math.sqrt(o.ux * o.ux + cu * cu); streakAt(c, h[0], h[1], o.ux / cl, cu / cl, len * .75, opt.dust, a * .55, w * 1.6); }
+        if (opt.frag) for (var i = 1; i <= 3; i++) glowAt(c, h[0] - o.ux * i * 7 * p, h[1] - o.uy * i * 7 * p + i * p * 2, 3, rgb, a * .7);
+        glowAt(c, h[0], h[1], opt.coma || 6, opt.head || '225,240,255', .6 * f); };
+      return o; } };
+  }
+  // ---- class C: meteor grazes with gravitational-lens wake (5): handled by lens() on the galaxy canvas
+  function graze(id, L, km, sh, tail, rgb, dur0, dur1, twin) {
+    return { id: id, cls: 'meteor graze', w: 2.4, make: function (now) {
+      var mk = function (off, delay) {
+        var a0 = Math.random() * Math.PI * 2, sw = fr(.5, .95) * (Math.random() < .5 ? 1 : -1), r1 = fr(.78, .96);
+        var pt = function (ang, rad) { return [W / 2 + st.ox + Math.cos(ang) * rad * R * st.z, H / 2 + st.oy + Math.sin(ang) * rad * R * TILT * st.z]; };
+        var s0 = pt(a0, 1.12), s1 = pt(a0 + sw, r1);
+        return { id: id, k: 'graze', x: s0[0], y: s0[1] + off, x1: s1[0] + (s1[0] - s0[0]) * .25, y1: s1[1] + (s1[1] - s0[1]) * .25 + off, t0: now + (delay || 0), dur: fr(dur0, dur1), L: L, km: km, sh: sh, tail: tail, rgb: rgb };
+      };
+      if (!twin) return mk(0);
+      var a = mk(0), b = Object.assign({}, a, { y: a.y + 14, y1: a.y1 + 14, t0: a.t0 + 260, L: L * .7 }); return [a, b]; } };
+  }
+  // ---- class D: meteor showers and fireballs (4)
+  function shower(id, n, rgb, spread, bolide) {
+    return { id: id, cls: 'meteor shower', w: 1.4, make: function (now) {
+      var rx = fr(W * .1, W * .9), ry = fr(-20, H * .08), base = Math.atan2(H / 2 - ry, W / 2 - rx), list = [];
+      for (var i = 0; i < n; i++) { var a = base + (Math.random() - .5) * spread, sp = (W + H) * fr(.0006, .001), o = mover({ x: rx + Math.cos(a) * fr(10, 60), y: ry + Math.sin(a) * fr(10, 60), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, t0: now + i * fr(120, 420), dur: fr(500, 950), len: fr(40, 90) });
+        (function (o) { o.draw = function (c, p, f, dt) { var h = o.at(dt); streakAt(c, h[0], h[1], o.ux, o.uy, o.len, rgb, .6 * f, 1.1); }; })(o); list.push(o); }
+      if (bolide) { var b = mover({ x: rx, y: ry, vx: Math.cos(base) * (W + H) * .0005, vy: Math.sin(base) * (W + H) * .0005, t0: now, dur: 1800 });
+        b.draw = function (c, p, f, dt) { var h = b.at(dt), fl = p > .7 ? (p - .7) / .3 : 0; streakAt(c, h[0], h[1], b.ux, b.uy, 110, '255,214,160', .7 * f, 2.6); glowAt(c, h[0], h[1], 8 + 14 * fl, '255,236,200', .7 * f);
+          if (fl) for (var j = 0; j < 4; j++) { var t = j * 1.57 + .5; glowAt(c, h[0] + Math.cos(t) * 18 * fl, h[1] + Math.sin(t) * 12 * fl, 2.5, '255,200,140', .6 * (1 - fl)); } };
+        list.push(b); }
+      return list; } };
+  }
+  // ---- class E: glints and flashes outside the disc (6) — the only class used with reduced motion
+  function glint(id, rgb, len, kind) {
+    return { id: id, cls: 'glint', w: 1.6, rm: true, make: function (now) {
+      var q = outPt(), o = { x: q[0], y: q[1], t0: now, dur: kind === 'grb' ? 900 : kind === 'flicker' ? 2600 : 1400, rot: kind === 'diff' ? Math.PI / 4 : 0 };
+      o.draw = function (c, p, f) { var a = f;
+        if (kind === 'flicker') a = f * (.55 + .45 * Math.sin(p * 40) * Math.sin(p * 17));
+        if (kind === 'twin') { spikes(c, o.x, o.y, len, rgb, .38 * a, 0); spikes(c, o.x + 16, o.y + 6, len * .6, rgb, .3 * a, 0); return; }
+        if (kind === 'grb') { glowAt(c, o.x, o.y, 9, rgb, .7 * a); ringAt(c, o.x, o.y, 4 + p * 30, rgb, .35 * (1 - p), .8); return; }
+        spikes(c, o.x, o.y, len, rgb, .4 * a, o.rot); glowAt(c, o.x, o.y, 3, rgb, .5 * a); };
+      return o; } };
+  }
+  // ---- class F: stellar transients outside the disc (5)
+  function transient(id, rgb, dur, kind) {
+    return { id: id, cls: 'stellar transient', w: 1.3, make: function (now) {
+      var q = outPt(30), o = { x: q[0], y: q[1], t0: now, dur: dur };
+      o.draw = function (c, p) { var rise = p < .25 ? p / .25 : 1 - (p - .25) / .75, x = o.x, y = o.y;
+        if (kind === 'nova') { glowAt(c, x, y, 3 + 6 * rise, rgb, .75 * rise); spikes(c, x, y, 4 + 6 * rise, rgb, .35 * rise, 0); }
+        else if (kind === 'super') { glowAt(c, x, y, 4 + 9 * rise, rgb, .85 * rise); ringAt(c, x, y, 5 + p * 34, rgb, .3 * (1 - p), 1.2); ringAt(c, x, y, 3 + p * 22, '255,190,150', .2 * (1 - p), .8); }
+        else if (kind === 'kilo') { glowAt(c, x, y, 3 + 7 * rise, rgb, .7 * rise); ringAt(c, x, y, 3 + p * 18, rgb, .25 * (1 - p), .7, .5); }
+        else if (kind === 'magnetar') { var ph = (p * 5) % 1; glowAt(c, x, y, 3, rgb, .6 * (1 - p)); ringAt(c, x, y, 2 + ph * 16, rgb, .45 * (1 - ph) * (1 - p), .8); }
+        else { var s = .5 + .5 * Math.sin(p * Math.PI * 8); glowAt(c, x, y, 3 + 3 * s, rgb, (.25 + .4 * s) * Math.sin(Math.PI * p)); } };
+      return o; } };
+  }
+  // ---- class G: distant pulsars / beacons outside the disc (3)
+  function beacon(id, rgb, period, beams) {
+    return { id: id, cls: 'distant pulsar', w: 1, make: function (now) {
+      var q = outPt(30), o = { x: q[0], y: q[1], t0: now, dur: fr(3500, 5000) };
+      o.draw = function (c, p, f, dt) { var a = dt / period * Math.PI * 2;
+        glowAt(c, o.x, o.y, 4, rgb, .6 * f);
+        if (period < 120) { glowAt(c, o.x, o.y, 6, rgb, .5 * f * (.5 + .5 * Math.sin(a))); return; }
+        for (var i = 0; i < beams; i++) streakAt(c, o.x + Math.cos(a + i * Math.PI) * 28, o.y + Math.sin(a + i * Math.PI) * 14, -Math.cos(a + i * Math.PI), -Math.sin(a + i * Math.PI) * .5, 28, rgb, .35 * f, 1); };
+      return o; } };
+  }
+  // ---- class H: nebular and atmospheric light (5)
+  function haze(id, rgb, kind) {
+    return { id: id, cls: 'nebula / airglow', w: 1, make: function (now) {
+      var q = kind === 'aurora' ? [fr(W * .2, W * .8), H * .03] : outPt(60), o = { x: q[0], y: q[1], t0: now, dur: fr(6000, 9000), dx: fr(-.004, .004), seed: Math.random() * 6 };
+      o.draw = function (c, p, f, dt) { var x = o.x + o.dx * dt, y = o.y, a = .1 * f;
+        if (kind === 'aurora') { c.lineWidth = 6; for (var i = 0; i < 3; i++) { c.strokeStyle = rgba(rgb, a * (1 - i * .25)); c.beginPath(); for (var k = 0; k <= 20; k++) { var xx = x - 160 + k * 16; c[k ? 'lineTo' : 'moveTo'](xx, y + 10 + i * 7 + Math.sin(k * .6 + o.seed + dt / 900) * 5); } c.stroke(); } c.lineWidth = 1; return; }
+        if (kind === 'zodiacal') { c.translate(x, H); c.rotate(.18); c.scale(.32, 1); glowAt(c, 0, 0, H * .42, rgb, a * .7); return; }   // soft cone of light rising from the lower edge
+        if (kind === 'lane') { c.strokeStyle = rgba(rgb, a * .8); c.lineWidth = 10; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - 50, y - 8); c.quadraticCurveTo(x, y + 10, x + 50, y - 4); c.stroke(); c.lineWidth = 1; return; }
+        for (var j = 0; j < 4; j++) glowAt(c, x + Math.cos(o.seed + j) * 22, y + Math.sin(o.seed + j * 1.7) * 12, 26 - j * 3, rgb, a); };
+      return o; } };
+  }
+  // ---- class I: satellites (3)
+  function satellite(id, kind) {
+    return { id: id, cls: 'satellite', w: 1, make: function (now) {
+      var dur = fr(7000, 10000), o = mover(Object.assign(edgeCross(dur), { t0: now, dur: dur }));
+      o.draw = function (c, p, f, dt) { var h = o.at(dt);
+        if (kind === 'train') { for (var i = 0; i < 7; i++) glowAt(c, h[0] - o.ux * i * 13, h[1] - o.uy * i * 13, 2, '230,235,245', .5 * f); return; }
+        var a = .45 * f; if (kind === 'flare') a *= (p > .4 && p < .6 ? 1 + 3 * Math.sin((p - .4) / .2 * Math.PI) : 1);
+        glowAt(c, h[0], h[1], kind === 'flare' && p > .4 && p < .6 ? 7 : 2.2, '235,240,250', Math.min(.95, a)); };
+      return o; } };
+  }
+  // ---- class J: gravitational phenomena outside the disc (3)
+  function gravity(id, kind) {
+    return { id: id, cls: 'gravitational', w: 1, make: function (now) {
+      var q = outPt(40), o = { x: q[0], y: q[1], t0: now, dur: kind === 'accretion' ? 4200 : 3000 };
+      o.draw = function (c, p, f, dt) { var x = o.x, y = o.y;
+        if (kind === 'einstein') { ringAt(c, x, y, 9, '200,225,255', .4 * f, 1.4); glowAt(c, x, y, 3, '255,240,220', .5 * f); return; }
+        if (kind === 'micro') { var b = Math.exp(-Math.pow((p - .5) / .12, 2)); glowAt(c, x, y, 2 + 6 * b, '230,240,255', .2 + .6 * b); return; }
+        c.save(); c.translate(x, y); c.rotate(-.35); ringAt(c, 0, 0, 13, '255,190,120', .45 * f, 2.2, .32); ringAt(c, 0, 0, 9, '255,230,190', .35 * f * (.7 + .3 * Math.sin(dt / 90)), 1.2, .32); c.fillStyle = rgba('0,0,0', .9 * f); c.beginPath(); c.arc(0, 0, 4, 0, Math.PI * 2); c.fill(); c.restore(); };
+      return o; } };
+  }
+  // ---- class K: binary stars outside the disc (2)
+  function binary(id, kind) {
+    return { id: id, cls: 'binary star', w: 1, make: function (now) {
+      var q = outPt(30), o = { x: q[0], y: q[1], t0: now, dur: 4200 };
+      o.draw = function (c, p, f, dt) { var a = dt / 700;
+        if (kind === 'orbit') { glowAt(c, o.x + Math.cos(a) * 6, o.y + Math.sin(a) * 2.5, 3, '255,225,180', .65 * f); glowAt(c, o.x - Math.cos(a) * 6, o.y - Math.sin(a) * 2.5, 2.4, '180,210,255', .65 * f); return; }
+        var ecl = Math.abs(Math.sin(a)) < .25 ? .35 : 1; glowAt(c, o.x, o.y, 4, '235,235,255', .6 * f * ecl); };
+      return o; } };
+  }
+  var FXC = [
+    shooting('shoot-white', '255,255,255', .0007, .0011, 55, 110, 1.2, .62), shooting('shoot-blue', '190,220,255', .0008, .0012, 60, 100, 1.2, .6),
+    shooting('shoot-gold', '255,226,170', .0007, .001, 50, 90, 1.3, .6), shooting('shoot-long', '240,245,255', .0009, .0013, 120, 170, 1, .5),
+    shooting('shoot-short', '255,255,255', .0006, .0008, 25, 40, 1.6, .75), shooting('shoot-twin', '235,242,255', .0008, .0011, 60, 90, 1.1, .55, { twin: 1 }),
+    shooting('shoot-burst', '255,240,215', .0007, .001, 55, 85, 1.3, .65, { burst: 1 }), shooting('shoot-steep', '225,235,255', .0008, .0011, 50, 80, 1.1, .6, { steep: 1 }),
+    comet('comet-ion', '170,215,255', 4500, 7000, 95, 2.2), comet('comet-dust', '170,215,255', 5500, 8000, 100, 2, { dust: '255,230,190' }),
+    comet('comet-green', '150,255,190', 5000, 7500, 85, 2, { head: '200,255,220' }), comet('comet-great', '200,225,255', 8000, 10000, 170, 2.8, { coma: 9, dust: '255,235,200' }),
+    comet('comet-small', '200,225,255', 3000, 4200, 50, 1.4, { coma: 4 }), comet('comet-split', '185,220,255', 5000, 7000, 80, 2, { frag: 1 }),
+    graze('graze-head', 22, .14, 3.2, 46, '255,236,210', 1700, 2600), graze('graze-deep', 26, .18, 4, 60, '255,228,196', 2000, 2800),
+    graze('graze-fast', 18, .12, 2.6, 70, '255,245,230', 1000, 1400), graze('graze-twin', 20, .13, 3, 44, '255,236,210', 1700, 2400, true),
+    graze('graze-heavy', 30, .22, 5, 52, '255,210,170', 2600, 3400),
+    shower('shower-3', 3, '240,245,255', .5), shower('shower-5', 5, '230,240,255', .7), shower('shower-radiant', 6, '255,250,240', .35), shower('fireball', 2, '255,230,200', .4, true),
+    glint('glint-cross', '210,228,255', 7), glint('glint-diffraction', '235,240,255', 9, 'diff'), glint('glint-twin', '220,230,255', 6, 'twin'),
+    glint('glint-blue', '160,200,255', 8), glint('glint-red-giant', '255,170,140', 5, 'flicker'), glint('gamma-burst', '230,220,255', 0, 'grb'),
+    transient('nova', '255,245,225', 3200, 'nova'), transient('supernova', '255,235,210', 4500, 'super'), transient('kilonova', '255,150,190', 3600, 'kilo'),
+    transient('magnetar-flare', '200,170,255', 2600, 'magnetar'), transient('cepheid', '255,230,170', 5200, 'cepheid'),
+    beacon('pulsar-lighthouse', '190,235,255', 1400, 1), beacon('pulsar-double', '200,225,255', 1800, 2), beacon('pulsar-millisecond', '220,240,255', 60, 0),
+    haze('nebula-cyan', '34,211,238', 'wisp'), haze('nebula-magenta', '232,121,249', 'wisp'), haze('aurora', '80,240,170', 'aurora'),
+    haze('zodiacal-light', '255,235,200', 'zodiacal'), haze('dust-lane', '120,90,160', 'lane'),
+    satellite('satellite', 'plain'), satellite('satellite-flare', 'flare'), satellite('satellite-train', 'train'),
+    gravity('einstein-ring', 'einstein'), gravity('microlensing', 'micro'), gravity('accretion-disc', 'accretion'),
+    binary('binary-orbit', 'orbit'), binary('eclipsing-binary', 'eclipse')
+  ];
+  var fxRecent = [];
+  function fxPick(id) {
+    if (id) for (var j = 0; j < FXC.length; j++) if (FXC[j].id === id) return FXC[j];
+    var pool = FXC.filter(function (e) { return (!RM || e.rm) && fxRecent.indexOf(e.id) < 0; }), tot = 0, i;
+    if (!pool.length) pool = FXC.filter(function (e) { return !RM || e.rm; });
+    for (i = 0; i < pool.length; i++) tot += pool[i].w;
+    var r = Math.random() * tot; for (i = 0; i < pool.length; i++) { r -= pool[i].w; if (r <= 0) break; }
+    var e = pool[Math.min(i, pool.length - 1)]; fxRecent.push(e.id); if (fxRecent.length > 8) fxRecent.shift(); return e;
+  }
+  function fxNew(id) {
+    var e = fxPick(id), out = e.make(performance.now()); out = Array.isArray(out) ? out : [out];
+    out.forEach(function (o) { o.id = e.id; o.cls = e.cls; if (!o.k) o.k = 'fx'; if (RM && o.k !== 'graze') { o.static = true; } });
+    return out;
+  }
+  function fxSpawn(id) {
     FX.timer = 0; if (!fxAllowed()) return;
-    if (visible && !d.hidden && st.mode === 'galaxy' && FX.items.length < 2) { FX.items.push(fxNew()); if (!FX.raf) { FX.prev = 0; FX.raf = requestAnimationFrame(fxFrame); } }
+    if (visible && !d.hidden && st.mode === 'galaxy' && FX.items.length < 6) { FX.items = FX.items.concat(fxNew(typeof id === 'string' ? id : null)); if (!FX.raf) { FX.prev = 0; FX.raf = requestAnimationFrame(fxFrame); } }
     fxSchedule();
   }
   function fxDraw(now) {
     var c = fxc; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, fxCv.width, fxCv.height); c.setTransform(dpr, 0, 0, dpr, 0, 0);
     FX.items = FX.items.filter(function (o) { return now - o.t0 < o.dur; });
     FX.items.forEach(function (o) {
-      var p = (now - o.t0) / o.dur, fade = Math.sin(Math.PI * Math.min(1, Math.max(0, p))), g;
-      if (o.k === 'graze') return;
-      if (o.k === 'flash') { c.strokeStyle = 'rgba(210,228,255,' + (.38 * fade).toFixed(3) + ')'; c.lineWidth = .8; c.beginPath(); c.moveTo(o.x - 7, o.y); c.lineTo(o.x + 7, o.y); c.moveTo(o.x, o.y - 7); c.lineTo(o.x, o.y + 7); c.stroke(); return; }
-      var dt = now - o.t0, hx = o.x + o.vx * dt, hy = o.y + o.vy * dt, m = Math.sqrt(o.vx * o.vx + o.vy * o.vy) || 1, tx = hx - o.vx / m * o.len, ty = hy - o.vy / m * o.len;
-      g = c.createLinearGradient(hx, hy, tx, ty);
-      var rgb = o.k === 'comet' ? '170,215,255' : '255,255,255', a = (o.k === 'comet' ? .5 : .62) * fade;
-      g.addColorStop(0, 'rgba(' + rgb + ',' + a.toFixed(3) + ')'); g.addColorStop(1, 'rgba(' + rgb + ',0)');
-      c.strokeStyle = g; c.lineWidth = o.k === 'comet' ? 2.2 : 1.2; c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy); c.lineTo(tx, ty); c.stroke();
-      if (o.k === 'comet') { var gh = c.createRadialGradient(hx, hy, 0, hx, hy, 6); gh.addColorStop(0, 'rgba(225,240,255,' + (.6 * fade).toFixed(3) + ')'); gh.addColorStop(1, 'rgba(225,240,255,0)'); c.fillStyle = gh; c.fillRect(hx - 6, hy - 6, 12, 12); }
+      if (o.k === 'graze' || !o.draw) return;
+      var dt = now - o.t0; if (dt < 0) return;
+      var p = Math.min(1, dt / o.dur), fade = Math.sin(Math.PI * p);
+      c.save(); try { o.draw(c, p, fade, o.static ? 0 : dt); } catch (e) { o.dur = 0; } c.restore();
     });
   }
   function fxFrame(now) {
@@ -758,7 +917,7 @@
   fxLabel(); fxSchedule();
 
   U.explorerGalaxy = { state: st, model: M, setWindow: setWk, select: function (a) { select(a, true); }, pickBlock: pickBlock, render: render, zoom: zoomBy, ambiguous: ambiguous,
-    fx: function () { return { mode: FX.mode, allowed: fxAllowed(), why: fxWhy(), alive: FX.items.length, slow: FX.slow, spawn: fxSpawn, items: FX.items.map(function (o) { return { k: o.k, x: o.x, y: o.y, x1: o.x1, y1: o.y1, t0: o.t0, dur: o.dur }; }) }; },
+    fx: function () { return { mode: FX.mode, allowed: fxAllowed(), why: fxWhy(), alive: FX.items.length, slow: FX.slow, spawn: fxSpawn, catalog: FXC.map(function (e) { return e.id + ':' + e.cls; }), items: FX.items.map(function (o) { return { id: o.id, k: o.k, x: o.x, y: o.y, x1: o.x1, y1: o.y1, t0: o.t0, dur: o.dur }; }) }; },
     fullscreen: function () { return fsOn() ? (host.classList.contains('xs-imm') ? 'immersive' : 'native') : 'off'; },
     points: function () { return P.map(function (p) { var q = xy(p); return [p[4], +q[0].toFixed(2), +q[1].toFixed(2), p[3]]; }); } };   // read-only, for tests: [height, x, y, age bucket] in canvas CSS px
 })(window);

@@ -271,7 +271,7 @@
   }
   // ---------- 8. Galaxy Mining Observatory (4J §2): x-galaxy.js loads when the panel is about to be seen ----------
   var obs = $('xsObs'), galLoaded = false;
-  function loadGalaxy() { if (galLoaded || !obs) return; galLoaded = true; var s = d.createElement('script'); s.src = 'universe/explorer-shell/x-galaxy.js?v=gxab-20261116'; d.body.appendChild(s); }
+  function loadGalaxy() { if (galLoaded || !obs) return; galLoaded = true; var s = d.createElement('script'); s.src = 'universe/explorer-shell/x-galaxy.js?v=gxfx50-20261116'; d.body.appendChild(s); }
   if (obs) {
     if (location.hash === '#galaxy') setTimeout(function () { openGalaxy(); }, 60);
     // ?galaxy=1206|genesis|24|72|144|288: a direct link to the Galaxy view (owner order 15-Nov-2026)
