@@ -1,5 +1,5 @@
 {
-  "alpha_mode": "limited-public-alpha",
+  "alpha_mode": "retired",
   "status": "e2e-encrypted",
   "trustless": false,
   "sepolia": {
@@ -16,7 +16,7 @@
     "total_locked_xaut": "0.55 oz"
   },
   "positions": {
-    "active": 1,
+    "active": 0,
     "first_position_id": "8afed8fcd27553a7",
     "first_position_owner": "sost1a8eae8f80fedd8d86187db628a0d81e0367f76de",
     "first_position_model": "B-escrow",
@@ -42,6 +42,6 @@
     "solidity": 19,
     "total": 467
   },
-  "notice": "Limited public alpha — E2E encrypted deal channels with blind relay, prekeys, offline delivery. 467 tests, 0 failures.",
+  "notice": "RETIRED: historical Sepolia test (mock tokens). SOSTEscrow test contract RETIRED - DO NOT USE. Public atomic swaps are not currently authorized.",
   "updated_at": "2026-04-23"
 }

@@ -1,0 +1,77 @@
+/* SOST type system — V30000 identity (owner order, 5 Nov 2026). Loaded last on every public page.
+   Space Grotesk 500/600/700 · titles, section headings, main navigation, buttons, card titles, calls to action
+   Inter (variable, axis instanced to 400–700 — the weights the site uses) · paragraphs, descriptions, forms, complementary text
+   IBM Plex Mono 400/500/600 · hashes, identifiers, technical values, metrics, small technical labels, code
+   The SOST wordmark next to the emblem (.wm, --f-wordmark, Goldman 700) and the other identity wordmarks are NOT changed here.
+   All faces are SIL OFL 1.1, self-hosted (website/fonts/, licences alongside), latin subset, font-display:swap. */
+@font-face{font-family:'Inter';src:url('../../fonts/inter-latin-wght400-700.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Space Grotesk';src:url('../../fonts/spacegrotesk-500-700-latin.woff2') format('woff2');font-weight:300 700;font-style:normal;font-display:swap}
+@font-face{font-family:'IBM Plex Mono';src:url('../../fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2');font-weight:100 450;font-style:normal;font-display:swap}
+@font-face{font-family:'IBM Plex Mono';src:url('../../fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2');font-weight:451 550;font-style:normal;font-display:swap}
+@font-face{font-family:'IBM Plex Mono';src:url('../../fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2');font-weight:551 900;font-style:normal;font-display:swap}
+/* The older pages name 'JetBrains Mono' / 'Fira Code' inline (130+ places, technical text). Both resolve to IBM Plex Mono — same 0.6 em
+   advance, so tables, terminals and aligned values keep their geometry. */
+@font-face{font-family:'JetBrains Mono';src:url('../../fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2');font-weight:100 450;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('../../fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2');font-weight:451 550;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('../../fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2');font-weight:551 900;font-display:swap}
+@font-face{font-family:'Fira Code';src:url('../../fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2');font-weight:100 450;font-display:swap}
+@font-face{font-family:'Fira Code';src:url('../../fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2');font-weight:451 550;font-display:swap}
+@font-face{font-family:'Fira Code';src:url('../../fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2');font-weight:551 900;font-display:swap}
+
+/* global variables (html:not(#_t) outranks the :root / html.u-skin declarations of the older sheets) */
+html:not(#_t){
+  --f-head:'Space Grotesk','Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-ui:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --f-body:var(--f-ui);
+  --f-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+  --f-display:var(--f-head);
+  --t-h1:-.03em; --t-h2:-.02em; --t-h3:-.01em;
+}
+
+/* body text: Inter. The Explorer's terminal-style interface (#xsHead) keeps its mono body. */
+body:not(#_t):not(:has(#xsHead)){font-family:var(--f-ui);font-feature-settings:'cv11','ss01';-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+html.u-skin body:not(#_t):not(:has(#xsHead)) :where(p,li,dd,blockquote,figcaption,label,summary,.lede,.desc,.sub,.note):not([class*="mono"]):not(.mono){font-family:var(--f-ui)}
+html.u-skin body:not(#_t) :where(main,.container,section,article) :where(p,li):not([class]){font-size:max(14.5px,1em);line-height:1.62}
+:where(input,select,textarea):not([class*="mono"]):not(.mono){font-family:var(--f-ui)}
+
+/* technical text: IBM Plex Mono */
+:where(code,kbd,samp,pre,tt,var,.mono,.addr,.hash,.txid,.hex,.num,.kv,.pv,.st,[class*="mono"]):not(#_t){font-family:var(--f-mono)!important}
+html.u-skin :where(table):not(#_t){font-family:var(--f-mono)}
+html.u-skin :where(table) :where(th):not(#_t){font-family:var(--f-head);font-weight:600;letter-spacing:.01em}
+
+/* headings: Space Grotesk (h1/h2 700 · h3 600 · h4–h6 600) */
+:where(h1,h2,h3,h4,h5,h6):not(.mono):not([class*="mono"]):not(#_t):not(#_u){font-family:var(--f-head)!important;text-transform:none}
+:where(h1):not(.mono):not([class*="mono"]):not(#_t):not(#_u){font-weight:700!important;letter-spacing:var(--t-h1)!important;line-height:1.04}
+:where(h2):not(.mono):not([class*="mono"]):not(#_t):not(#_u){font-weight:700!important;letter-spacing:var(--t-h2)!important;line-height:1.12}
+:where(h3):not(.mono):not([class*="mono"]):not(#_t):not(#_u){font-weight:600!important;letter-spacing:var(--t-h3)!important;line-height:1.25}
+:where(h4,h5,h6):not(.mono):not([class*="mono"]):not(#_t):not(#_u){font-weight:600!important;letter-spacing:0!important}
+/* small mono directory labels that happen to be headings stay technical (as before) */
+.dir h3:not(#_t):not(#_u):not(#_v),.sx .step h3 i:not(#_t):not(#_u):not(#_v){font-family:var(--f-mono)!important;font-weight:600!important}
+:where(h1,h2,h3,h4) :where(code,kbd,samp,.mono,.addr,.hash):not(#_t){font-family:var(--f-mono)!important;letter-spacing:0!important}
+/* Home hero headline: same size, multicolour gradient untouched; face Goldman → Space Grotesk. Tracking and leading follow the
+   approved reference, the Technology hero «Work that converges.» (−0.03 em, 1.04); the eyebrow likewise (0.32 em, 600) */
+.hero h1#h1:not(#_):not(#__):not(#_t){font-family:var(--f-head)!important;font-weight:700!important;letter-spacing:var(--t-h1)!important;line-height:1.04!important}
+.hero .eyebrow:not(#_t):not(#_u){letter-spacing:.32em!important;font-weight:600!important}
+.hero .lede:not(#_t){font-family:var(--f-ui);font-weight:400;letter-spacing:0}
+
+/* main navigation: Space Grotesk, moderate tracking (no more .1–.12 em) */
+nav.u-nav .nv-b:not(#_t):not(#_u),nav.u-nav .nv-go:not(#_t):not(#_u){font-family:var(--f-head)!important;font-weight:600!important;letter-spacing:.06em!important}
+nav.u-nav .nv-m a:not(#_t):not(#_u){font-family:var(--f-head)!important;font-weight:500!important;letter-spacing:.005em!important;text-transform:none}
+nav.u-nav .tools .btn:not(#_t):not(#_u){font-family:var(--f-head)!important;font-weight:600!important;letter-spacing:.01em!important}
+
+/* buttons and calls to action: Space Grotesk 600, sentence case as written (no forced capitals) */
+.btn:not(.small):not(#_t):not(#_u),.ctas a:not(#_t):not(#_u){font-family:var(--f-head)!important;font-weight:600!important;letter-spacing:.005em!important;text-transform:none!important}
+
+/* cards */
+:where(.hc,.card,.cards>a,.tile) :where(h3,h4,.t,.title):not(#_t){font-family:var(--f-head)!important}
+:where(.hc,.card,.tile) :where(p):not([class*="mono"]):not(#_t){font-family:var(--f-ui)}
+
+/* the identity wordmarks keep Goldman (explicit, in case a rule above reaches them) */
+:where(.wm,.wm-sost,.wm-gold,.brand-sost,#splash-title,.spl-line):not(#_t):not(#_u):not(#_v){font-family:var(--f-wordmark,'SOST Wordmark'),sans-serif!important}
+/* older pages: plain <button> controls (they were the system mono face) */
+html.u-skin body:not(#_t):not(:has(#xsHead)) button:not([class*="mono"]):not(.mono):not(.nv-b):not(.menu-btn):not(.st){font-family:var(--f-head);font-weight:600;letter-spacing:.01em}
+/* section heroes: their 15ch limit was sized on Goldman's wide "0"; Space Grotesk is narrower, so the same box in em keeps the
+   original line breaks ("Work that converges." on one line at 1440) */
+.sx-copy h1:not(#_t):not(#_u){max-width:12em}
+/* main navigation on desktop: Space Grotesk needs a touch more size and contrast than Goldman at 12 px */
+@media (min-width:981px){nav.u-nav .nv-b:not(#_t):not(#_u){font-size:13px!important;color:#cfd6e1}nav.u-nav .nv-s.cur .nv-b:not(#_t):not(#_u),nav.u-nav .nv-b:hover:not(#_t):not(#_u){color:#fff}}

@@ -4,10 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SOST DEX</title>
-<meta name="description" content="SOST DEX V2 — native cross-chain swap & trade dashboard (mainnet pre-activation preview, activates #30,000, controlled developer access; no real prices, orders, or liquidity).">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<meta name="description" content="SOST DEX V2 — native cross-chain swap & trade dashboard (PREVIEW — SOST-layer DEX NOT ACTIVE, deferred / fail-closed on mainnet; controlled developer access; no real prices, orders, or liquidity).">
 <style>
   /* ---- SOST DEX identity (pinned): black ground, red primary, gold accents ---- */
   :root{
@@ -238,6 +235,12 @@
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
 <!-- Canonical SOST global navigation (identical mechanism to every other page).
@@ -246,7 +249,7 @@
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
-      <img src="sost-logo.png?v=rs20261112g" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
     </a>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
@@ -256,10 +259,12 @@
     <div class="nav-links"></div>
   </div>
 </nav>
+<!-- SECURITY NOTICE H-01: retired HTLC atomic swap contracts (docs/security/ADVISORY_2026-10-30_HTLCv2.md) -->
+<div style="padding:0 12px;position:relative;z-index:5"><div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;max-width:1100px;margin:14px auto 0;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div></div>
 <div class="wrap">
 
   <div style="margin:0 0 14px;padding:11px 15px;border-radius:10px;border:1px solid #f0a92b;background:rgba(240,169,43,.10);color:#f0a92b;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.3px;text-align:center">
-    SOST-layer DEX &mdash; activates at block #30,000 (automatic by height) but is admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled &mdash; no public trading. No real prices, orders, liquidity or executable quotes. Not an offer, solicitation or invitation to trade. Public launch pending CEX price, security audit and regulatory review.
+    SOST-layer DEX is NOT ACTIVE (deferred / fail-closed on mainnet, see protocol-status.json) and admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled &mdash; no public trading. No real prices, orders, liquidity or executable quotes. Not an offer, solicitation or invitation to trade. Public launch pending CEX price, security audit and regulatory review.
   </div>
   <div style="margin:-6px 0 14px;font-size:12px;color:var(--txt-3);text-align:center">Looking for the encrypted OTC deal-channel console (signed offers, deal market, positions)? <a href="sost-dex-otc.html" style="color:var(--gold)">Open the OTC console &rarr;</a></div>
 
@@ -276,7 +281,7 @@
       </div>
     </div>
     <span class="top-spacer"></span>
-    <span class="badge test" id="modeBadge" title="V30000 deployed on mainnet; protocol activates automatically at block #30,000. Controlled developer access; public trading disabled.">MAINNET · PRE-ACTIVATION #30,000</span>
+    <span class="badge test" id="modeBadge" title="SOST-layer DEX NOT ACTIVE on mainnet (deferred / fail-closed, protocol-status.json). Controlled developer access; public trading disabled.">PREVIEW · NOT ACTIVE</span>
     <a class="btn-wallet" href="sost-dex-dashboard.html" style="text-decoration:none"><span class="dot"></span><span>Open Dashboard</span></a>
   </header>
 
@@ -291,7 +296,7 @@
       <div class="panel" style="padding:20px">
         <div class="section-title" style="padding:0 0 10px">How it works</div>
         <div style="display:flex;gap:13px;align-items:flex-start;margin-bottom:16px">
-          <span class="pill ok" style="flex:none;margin-top:1px">Live &middot; #16,000</span>
+          <span class="pill demo" style="flex:none;margin-top:1px;color:#f87171;border-color:#f87171">RETIRED</span>
           <div style="font-size:13px;color:var(--txt-2);line-height:1.6"><b style="color:var(--txt)">Atomic-swap HTLC settlement.</b> Each trade locks both legs in Hash-Time-Locked Contracts. The protocol is designed so that a party cannot successfully claim one leg without revealing the information required to claim the other; if settlement does not complete within the timelocks, the refund paths become available &mdash; so no counterparty can take one side and leave the other stranded. The SOST-side HTLC primitive has been live on-chain since block <b style="color:var(--txt)">#16,000</b>.</div>
         </div>
         <div style="display:flex;gap:13px;align-items:flex-start">
@@ -302,12 +307,12 @@
 
       <div class="panel" style="padding:20px">
         <div class="section-title" style="padding:0 0 10px">Current status</div>
-        <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">SOST-layer DEX</span><span class="v warn">activates #30,000</span></div>
-        <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">Activation</span><span class="v">automatic by block height</span></div>
+        <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">SOST-layer DEX</span><span class="v warn">NOT ACTIVE</span></div>
+        <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">Activation</span><span class="v">deferred / fail-closed on mainnet</span></div>
         <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">Consensus gate</span><span class="v warn">S14 RESTRICTED DEVELOPER MODE</span></div>
         <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">Public access</span><span class="v warn">disabled</span></div>
         <div class="qrow" style="padding:8px 0"><span class="k">Public trading</span><span class="v warn">none</span></div>
-        <p class="mkt-note" style="margin-top:14px">The SOST-layer DEX (atomic-swap settlement + signed-offer orderbook) <b style="color:var(--txt-2)">activates at block #30,000</b>, but even after activation it stays <b style="color:var(--txt-2)">admin-gated at consensus</b> under S14 RESTRICTED DEVELOPER MODE with public access disabled. There is no public trading today. No real prices, orders, liquidity or executable quotes are shown or implied. Not an offer, solicitation or invitation to trade.</p>
+        <p class="mkt-note" style="margin-top:14px">The SOST-layer DEX (atomic-swap settlement + signed-offer orderbook) is <b style="color:var(--txt-2)">NOT ACTIVE</b> (deferred / fail-closed on mainnet) and stays <b style="color:var(--txt-2)">admin-gated at consensus</b> under S14 RESTRICTED DEVELOPER MODE with public access disabled. There is no public trading today. No real prices, orders, liquidity or executable quotes are shown or implied. Not an offer, solicitation or invitation to trade.</p>
       </div>
     </div>
 
@@ -317,7 +322,7 @@
       <p style="max-width:620px;margin:0 auto 20px;color:var(--txt-2);font-size:14px;line-height:1.65">Trading, placing signed offers and RFQ are <b style="color:var(--txt)">operational actions</b> &mdash; they run in the authenticated dashboard and are enforced by the consensus admin gate (S14). Public trading is disabled.</p>
       <a class="cta" href="sost-dex-dashboard.html" style="display:inline-block;width:auto;padding:16px 42px;text-decoration:none;margin-top:0">OPEN DASHBOARD</a>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;max-width:760px;margin:26px auto 2px;text-align:left">
-        <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Swap</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Native SOST &#8644; BTC / EVM atomic swap against a real counterparty quote.</div></div>
+        <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Swap</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Native SOST &#8644; BTC / EVM atomic swap &mdash; RETIRED after security finding H-01; not authorized.</div></div>
         <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Trade</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Market and signed limit orders filled against firm counterparty quotes.</div></div>
         <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Orders</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Active signed offers and order history, matched bilaterally off-chain.</div></div>
         <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Activity</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Atomic-swap lifecycle tracked as real two-chain state, never instant.</div></div>
@@ -326,7 +331,7 @@
     </div>
   </section>
 
-  <p class="lab-note" style="margin-top:34px; color:var(--txt-4)">SOST DEX V2 — the SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE); public access disabled — no public trading. No real prices, orders, liquidity, or executable quotes are shown or implied. Not an offer or solicitation.</p>
+  <p class="lab-note" style="margin-top:34px; color:var(--txt-4)">SOST DEX V2 — the SOST-layer DEX is NOT ACTIVE (deferred / fail-closed on mainnet, see protocol-status.json) and admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE); public access disabled — no public trading. No real prices, orders, liquidity, or executable quotes are shown or implied. Not an offer or solicitation.</p>
 </div>
 
 <style id="dex-hero-fx">
@@ -365,5 +370,9 @@
 @media(prefers-reduced-motion:reduce){.top .brand h1,.top .brand .sub,.top .brand .logo,.top .brand .logo svg{animation:none}}
 </style>
 <script src="sost-search.js?v=v553"></script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='ecosystem'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body>
 </html>

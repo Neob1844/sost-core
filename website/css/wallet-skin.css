@@ -1,0 +1,37 @@
+/* SOST wallet — visual layer (owner order 13-Nov-2026 «Adaptar las secciones Wallet al lenguaje visual de la nueva web»).
+ * CSS only: no wallet logic, no element hidden that the wallet needs. Loaded by sost-wallet.html and wallet.html after the
+ * shared site header (u-legacy-skin). Every rule is scoped to html.u-skin, so if the shared header cannot load, the page keeps
+ * its previous look (except the HIDE NAV fix at the end, which is the fallback for that case). */
+
+/* 1. the page's own «nav{min-height:134px}» must not stretch the shared header (it doubled its height and the developer
+ *    note slid under it, covering the logo on phones) */
+html.u-skin nav.u-nav { min-height: 0 !important; }
+
+/* 2. black, quiet surfaces like the new home: panels and cards as dark glass with a hairline border */
+html.u-skin body { background: #000; }
+html.u-skin .sidebar { background: #030304; border-right: 1px solid rgba(255,255,255,.07); }
+html.u-skin .main-content .card,
+html.u-skin .feature-card {
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+  border: 1px solid rgba(255,255,255,.08); border-radius: 14px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 18px 40px -28px rgba(0,0,0,.9);
+}
+html.u-skin .main-content .card:hover,
+html.u-skin .feature-card:hover { border-color: rgba(255,255,255,.16); }
+
+/* 3. headings (owner 14-Nov-2026): «SOST» white #FFFFFF, «Wallet» official red #FB010D, flat — no gradient */
+html.u-skin .hero h1,
+html.u-skin #view-welcome h2 { color: #FFFFFF; letter-spacing: -.01em; }
+html.u-skin .hero h1 span,
+html.u-skin #view-welcome h2 .accent {
+  color: #FB010D; background: none; -webkit-background-clip: border-box; background-clip: border-box; -webkit-text-fill-color: #FB010D;
+}
+
+/* 4. primary actions: same rounded pill as the site header buttons (colour unchanged: SOST red) */
+html.u-skin .cta-btn,
+html.u-skin .main-content .btn-primary { border-radius: 999px; }
+
+/* 5. HIDE NAV (pages where the old top menu is still shown, e.g. if the shared header did not load): the retired
+ *    Atomic Swap / «Swap retired» tile folds away with the rest of the bar — no remnant */
+body.nav-collapsed nav a.atomix-btn,
+body.nav-collapsed nav .atomix-btn { display: none !important; }

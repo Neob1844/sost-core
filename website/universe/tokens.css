@@ -1,0 +1,41 @@
+/* SOST Universe design tokens v0 (Phase 2). Source of truth for colour values:
+   website/index.html :root, website/css/atomix-btn.css (spectrum), website/control-room/cr.css,
+   website/css/sost-wordmark.css. Do not invent colours: add a token here first, citing its source. */
+@font-face{font-family:'SOST Wordmark';src:url('../fonts/goldman-700-latin.woff2') format('woff2');font-weight:700;font-style:normal;font-display:block}
+:root{
+  /* surfaces (index.html) */
+  --bg:#000000; --bg-panel:#050505; --bg-card:#0a0a0a; --bg-hover:#111111;
+  --line-1:#1a1a1a; --line-2:#2a2a2a; --line-3:#3a3a3a;
+  /* text (index.html) */
+  --tx-1:#e2e8f0; --tx-2:#94a3b8; --tx-3:#64748b; --tx-4:#475569;
+  /* SOST red (index.html) */
+  --red:#fb010d; --red-bright:#ff2d3b; --red-dim:#8b1a22; --red-glow:#fb010d33;
+  /* official spectrum (css/atomix-btn.css, in order) */
+  --spec-violet:#8b5cf6; --spec-magenta:#e879f9; --spec-blue:#3b82f6; --spec-cyan:#22d3ee;
+  --spec-lime:#a3e635; --spec-yellow:#facc15; --spec-orange:#fb923c;
+  --spectrum:linear-gradient(90deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c,#8b5cf6);
+  /* other official accents */
+  --green:#4ade80; --green-term:#39ff14; --cyan:#22d3ee; --gold:#ffd700; --gold-card:#d4af37;
+  --amber:#fbbf24; --btc-orange:#f7931a; --violet-cr:#a78bfa; --hist:#a3906a;
+  /* functional states (never decorative) */
+  --st-live:#39ff14; --st-window:#22d3ee; --st-hist:#a3906a; --st-sim:#e879f9;
+  --st-warn:#fbbf24; --st-err:#fb010d; --st-retired:#fb923c;
+  /* type */
+  --f-wordmark:'SOST Wordmark',sans-serif;
+  --f-ui:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --f-mono:ui-monospace,'JetBrains Mono','SFMono-Regular',Menlo,Consolas,monospace;
+  --fs-0:12px; --fs-1:14px; --fs-2:16px; --fs-3:20px; --fs-4:28px; --fs-5:clamp(34px,5.2vw,68px);
+  --r-1:8px; --r-2:14px; --r-3:22px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+:root{
+  /* motion */
+  --dur-1:120ms; --dur-2:240ms; --dur-3:600ms; --dur-intro:4200ms;
+  /* quality tiers (particle budgets; chosen by measured frame time, never by screen size) */
+  --q-high:160000; --q-balanced:70000; --q-lite:22000;
+  /* layout */
+  --gutter:max(16px,3vw); --maxw:1180px; --nav-h:64px;
+  /* elevation */
+  --z-scene:0; --z-content:5; --z-nav:20; --z-bar:30; --z-tip:40; --z-modal:90;
+}
+@media (prefers-reduced-motion:reduce){:root{--dur-1:0ms;--dur-2:0ms;--dur-3:0ms;--dur-intro:0ms}}

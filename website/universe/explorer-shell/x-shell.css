@@ -1,0 +1,353 @@
+/* SOST Explorer shell (DIRECTIVAS 4F/4G). Presentation only: the Explorer engine (searches, data, RPC, calculations, charts)
+ * is untouched. Content containers keep their width and padding (1400 px / 24 px) so every canvas is drawn at the same size.
+ * Loaded after universe/core/u-legacy-skin.css (shared header tokens, eye + SOST wordmark, menus, Ctrl/Cmd+K palette). */
+html.xs{--xs-bg:#000;--xs-panel:#06070a;--xs-panel2:#0a0c11;--xs-line:#ffffff14;--xs-line2:#ffffff24;--xs-tx:#e6edf3;--xs-tx2:#9aa6b4;--xs-tx3:#5f6b7a;
+  --xs-head:170px;scroll-padding-top:calc(var(--xs-head) + 12px);background:#000}
+html.xs body{background:#000;padding-top:0}
+/* subtle live background: one fixed layer, transform/opacity only, very low contrast */
+html.xs body::before{background:radial-gradient(42vmax 30vmax at 18% 12%,#3b82f60d,#0000 70%),radial-gradient(38vmax 28vmax at 82% 30%,#e879f90a,#0000 70%),
+  radial-gradient(46vmax 32vmax at 50% 92%,#22d3ee09,#0000 70%);background-size:auto;animation:xsdrift 48s ease-in-out infinite alternate;will-change:transform}
+html.xs body::after{background:linear-gradient(#ffffff03 1px,#0000 1px) 0 0/100% 3px;opacity:.6}
+@keyframes xsdrift{to{transform:translate3d(-2.5%,1.5%,0) scale(1.04)}}
+
+/* ---------- header (owner P0, 5 Nov 2026): the SAME floating glass HUD as Home (u-legacy-skin.css / u-brand.css: height, margins,
+ * glass, multicolour top line, sweep, hover, active state, tools), rendered by the shared u-nav.js?v=rs20261112g into a real <nav class="u-nav hud">.
+ * The only Explorer-specific parts: it sits in a sticky column instead of position:fixed, and the brand reads [EYE] SOST EXPLORER
+ * (both words Goldman, u-nav.js?v=rs20261112g .wm-pair). The Explorer sections are a second HUD row in the same format. ---------- */
+html.xs .xs-head{position:sticky;top:0;z-index:95;padding:0 0 6px;background:linear-gradient(#000000f0,#000000d9 75%,#0000);pointer-events:none}
+html.xs .xs-head>*{pointer-events:auto}
+html.xs .xs-head .u-nav.hud{position:relative;inset:auto;margin:10px max(10px,1.6vw) 0;z-index:3}
+
+/* ---------- Explorer section nav ---------- */
+html.xs .xs-sub{position:relative;margin:6px max(10px,1.6vw) 0;padding:0 12px;height:46px;display:flex;align-items:center;gap:10px;border:1px solid #ffffff1c;border-radius:14px;
+  background:linear-gradient(180deg,#0c0f16e6,#05060ae0);-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);box-shadow:0 10px 30px #0008}
+html.xs .xs-sub:before{content:"";position:absolute;left:14px;right:14px;top:-1px;height:1px;opacity:.55;background:var(--spec-soft);pointer-events:none}
+html.xs .xs-tabs{display:flex;gap:2px;list-style:none;margin:0;padding:0;overflow-x:auto;scrollbar-width:none;flex:1 1 auto;min-width:0;-webkit-mask:linear-gradient(90deg,#000 92%,#0000)}
+html.xs .xs-tabs::-webkit-scrollbar{display:none}
+html.xs .xs-tabs>li{flex:0 0 auto}   /* mobile fix (was in prod): the items never shrink into each other; the row scrolls */
+html.xs .xs-tabs a,html.xs .xs-tabs button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;white-space:nowrap;
+  font:600 13px var(--f-head);letter-spacing:.06em;color:#cfd6e1;transition:color .18s,background .18s,box-shadow .18s}
+html.xs .xs-tabs a:hover,html.xs .xs-tabs button:hover{color:#fff;background:#ffffff0b}
+html.xs .xs-tabs a:focus-visible,html.xs .xs-tabs button:focus-visible,html.xs .xs-q input:focus-visible,html.xs .xs-ctx a:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+html.xs .xs-tabs a,html.xs .xs-tabs button{position:relative}
+html.xs .xs-tabs a[aria-current="true"]{color:#fff;background:#ffffff0d}
+html.xs .xs-tabs a[aria-current="true"]:after{content:"";position:absolute;left:12px;right:12px;bottom:3px;height:2px;border-radius:2px;background:var(--spec-soft)}
+html.xs .xs-tabs .xs-adv{color:#6f7a89;border:1px dashed #ffffff22}
+html.xs .xs-tabs .xs-adv[aria-current="true"]{box-shadow:inset 0 -2px 0 #a78bfa}
+html.xs .xs-q{flex:0 1 320px;min-width:150px;display:flex;align-items:center;height:32px;border:1px solid var(--xs-line2);border-radius:9px;background:#050608;overflow:hidden;transition:border-color .18s,box-shadow .18s}
+html.xs .xs-q:focus-within{border-color:#22d3ee88;box-shadow:0 0 0 3px #22d3ee14}
+html.xs .xs-q input{all:unset;flex:1;min-width:0;padding:0 10px;font:12px var(--f-mono);color:#fff}
+html.xs .xs-q input::placeholder{color:var(--xs-tx3)}
+html.xs .xs-q button{all:unset;cursor:pointer;padding:0 11px;height:100%;font:700 10.5px var(--f-mono);letter-spacing:.14em;color:#9aa6b4;border-left:1px solid var(--xs-line)}
+html.xs .xs-q button:hover{color:#fff;background:#ffffff0a}
+/* Help/Docs menu */
+html.xs .xs-menu{position:relative}
+html.xs .xs-menu-p{position:fixed;z-index:96;min-width:260px;max-height:70vh;overflow:auto;padding:8px;background:#07080cf7;border:1px solid #ffffff1f;border-radius:12px;box-shadow:0 24px 70px #000e;animation:menuin .16s var(--ease)}
+html.xs .xs-menu-p[hidden]{display:none}
+html.xs .xs-menu-p h4{margin:6px 8px 4px;font:600 10px var(--f-mono);letter-spacing:.22em;color:var(--xs-tx3);text-transform:uppercase}
+html.xs .xs-menu-p a{display:block;padding:7px 10px;border-radius:8px;color:var(--xs-tx);font:13px var(--f-ui);text-decoration:none}
+html.xs .xs-menu-p a:hover,html.xs .xs-menu-p a:focus-visible{background:#ffffff0f;box-shadow:inset 2px 0 0 var(--cyan);text-shadow:none;outline:none}
+/* contextual sub-anchors of the current section */
+html.xs .xs-ctx{margin:0 max(10px,1.6vw);padding:0 14px;height:30px;overflow:hidden;display:flex;gap:4px;align-items:center}
+html.xs .xs-ctx.on{height:30px} /* height reserved from the first paint: switching sections never shifts the page (CLS) */
+html.xs .xs-ctx a{font:11px var(--f-mono);color:var(--xs-tx3);padding:3px 9px;border-radius:6px;white-space:nowrap;text-decoration:none}
+html.xs .xs-ctx a:hover{color:#fff;background:#ffffff0a;text-shadow:none}
+html.xs .xs-ctx:before{content:"↳";color:#ffffff30;font:12px var(--f-mono);margin-right:4px}
+
+/* ---------- compact network-status strip (mirrors the engine's own figures: 0 extra requests) ---------- */
+html.xs .xs-strip{max-width:1400px;margin:14px auto 0;padding:0 24px}
+html.xs .xs-strip-in{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;border:1px solid var(--xs-line);border-radius:12px;background:linear-gradient(180deg,#07090d,#040507);overflow:hidden;position:relative}
+html.xs .xs-strip-in:after{content:"";position:absolute;left:0;bottom:0;height:1px;width:22%;background:linear-gradient(90deg,#0000,#22d3ee99,#0000);animation:xsscan 7s linear infinite;pointer-events:none}
+@keyframes xsscan{from{transform:translateX(-100%)}to{transform:translateX(560%)}}
+html.xs .xs-m{flex:1 1 130px;min-width:0;padding:9px 14px;border-right:1px solid var(--xs-line)}
+html.xs .xs-m:last-child{border-right:0}
+html.xs .xs-m .k{display:block;font:600 9.5px var(--f-mono);letter-spacing:.2em;color:var(--xs-tx3);text-transform:uppercase;white-space:nowrap}
+html.xs .xs-m .v{display:block;margin-top:3px;font:700 14.5px var(--code);color:var(--xs-tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;transition:color .6s,text-shadow .6s}
+html.xs .xs-m .v.tick{color:#fff;text-shadow:0 0 12px #22d3ee88}
+html.xs .xs-m.xs-st .v{display:flex;align-items:center;gap:7px}
+html.xs .xs-dot{width:7px;height:7px;border-radius:50%;background:#5f6b7a;flex:none}
+html.xs .xs-dot.live{background:#39ff14;box-shadow:0 0 8px #39ff1499;animation:stblink 2.4s ease-in-out infinite}
+html.xs .xs-dot.wait{background:#fbbf24}
+html.xs .xs-dot.off{background:#fb010d}
+
+/* ---------- notices: one compact group, content unchanged ---------- */
+html.xs .xs-notices{max-width:1400px;margin:10px auto 0;padding:0 24px}
+html.xs .xs-notices>details{border:1px solid var(--xs-line);border-radius:12px;background:#05060899}
+html.xs .xs-notices>details>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 14px;font:600 11px var(--f-mono);letter-spacing:.14em;color:var(--xs-tx2);text-transform:uppercase}
+html.xs .xs-notices>details>summary::-webkit-details-marker{display:none}
+html.xs .xs-notices>details>summary:before{content:"▸";color:var(--xs-tx3);transition:transform .2s}
+html.xs .xs-notices>details[open]>summary:before{transform:rotate(90deg)}
+html.xs .xs-notices>details>summary:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:10px}
+html.xs .xs-notices .xs-chip{font:600 10px var(--f-mono);letter-spacing:.06em;text-transform:none;color:var(--xs-tx3);border:1px solid var(--xs-line2);border-radius:999px;padding:2px 8px}
+html.xs .xs-notices .xs-nbody{padding:0 0 8px}
+html.xs .xs-notices .xs-nbody>*{max-width:none!important;padding-left:12px!important;padding-right:12px!important}
+
+/* ---------- panels: premium surfaces, same geometry ---------- */
+html.xs .dash-card{border-radius:12px;background:linear-gradient(180deg,#0a0c11,#050608);transition:border-color .2s,box-shadow .25s,transform .2s var(--ease)}
+html.xs .dash-card:hover{transform:translateY(-1px);box-shadow:0 10px 28px #000a,0 0 0 1px #ffffff12}
+html.xs .dash-card:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+html.xs .dash-val.xs-tick{animation:xsval .9s var(--ease)}
+@keyframes xsval{0%{filter:brightness(1.7) drop-shadow(0 0 6px currentColor)}100%{filter:none}}
+html.xs .sec-title{color:var(--xs-tx3)}
+html.xs .sec-title b{color:#eef3f8!important;text-shadow:none!important;letter-spacing:.16em}
+html.xs .section>.sec-head{position:relative;padding-bottom:6px}
+html.xs .section>.sec-head:after{content:"";position:absolute;left:2px;bottom:0;width:56px;height:2px;border-radius:2px;background:var(--spec-soft);opacity:.7}
+html.xs .search-box{border-radius:12px;border-color:#ffffff1f;background:#050608}
+html.xs .search-box:focus-within{border-color:#22d3ee88;box-shadow:0 0 0 3px #22d3ee12}
+html.xs .search-pre{color:#22d3ee;background:#07090d}
+html.xs .search-box button{background:#0b0e13;color:#cfd8e3}
+html.xs .search-box button:hover{background:#14202a;color:#fff}
+html.xs .config{opacity:.85}
+html.xs a:hover{text-shadow:none}
+html.xs [id]{scroll-margin-top:calc(var(--xs-head) + 12px)}
+html.xs .xs-foot{max-width:1400px;margin:30px auto 0;padding:24px 24px 70px;border-top:1px solid var(--xs-line);display:grid;gap:18px}
+html.xs .xs-foot .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;font:11px var(--f-mono);color:var(--xs-tx3)}
+html.xs .xs-foot .dir a{color:var(--xs-tx2)}
+
+/* ---------- version 2: integrated live console (Control Room renderer, scoped styles in xcr.css) ---------- */
+html.xs .xs-console{max-width:1400px;margin:16px auto 0;padding:0 24px}
+html.xs .xs-console .xs-ch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+html.xs .xs-console .xs-ch h2{margin:0;font:700 12px var(--f-mono);letter-spacing:.24em;color:#eef3f8;text-transform:uppercase}
+html.xs .xs-console .xs-ch .note{font:11.5px var(--f-ui);color:var(--xs-tx3)}
+html.xs .xs-console .xs-ch .sp{flex:1}
+
+@media (max-width:760px){
+  html.xs .xs-sub{height:auto;flex-wrap:wrap;padding:6px 8px 8px;gap:6px}
+  html.xs .xs-q{flex:1 1 100%;order:-1}
+  html.xs .xs-tabs{flex:1 1 100%}
+  html.xs .xs-ctx{display:none}
+  html.xs .xs-strip,html.xs .xs-notices,html.xs .xs-console,html.xs .xs-foot{padding:0 12px}
+  html.xs #sost-v16-notice-mount{padding:0 12px!important}html.xs #sost-v16-notice-mount .sost-v17{margin:0}   /* V17 banner aligned with the cards */
+  html.xs .xs-m{flex:1 1 33%;padding:7px 10px}
+  html.xs .xs-m:nth-child(3n){border-right:0}
+  html.xs .xs-m .v{font-size:13px}}
+@media (prefers-reduced-motion:reduce){html.xs body::before,html.xs .xs-strip-in:after,html.xs .xs-dot.live,html.xs .dash-val.xs-tick{animation:none}
+  html.xs .dash-card,html.xs .dash-card:hover{transform:none;transition:none}}
+html.xs #xsRpc{max-width:none;padding:12px 14px;margin:0 0 24px;border:1px solid var(--xs-line);border-radius:12px;background:#05060899}
+html.xs .xs-notices .xs-chips{display:flex;flex-wrap:wrap;gap:6px}
+html.xs .xs-notices .xs-chip{white-space:nowrap}
+@media (max-width:760px){html.xs .xs-notices .xs-chips{display:none}html.xs .xs-m.xs-st .v{font-size:12px}}
+html.xs .xs-m.xs-st{flex:1.35 1 150px}
+
+/* ---------- 4J §2: Galaxy Mining Observatory (x-galaxy.js) ---------- */
+html.xs .xs-obs{max-width:1352px;width:calc(100% - 48px);box-sizing:border-box;margin:18px auto 22px;padding:14px 16px 12px;border:1px solid var(--xs-line);border-radius:14px;background:radial-gradient(120% 90% at 50% 0%,#0b0d1699,#0000 70%),linear-gradient(180deg,#06070b,#030405);position:relative;overflow:hidden}
+html.xs .xs-obs:before{content:"";position:absolute;left:16px;right:16px;top:0;height:1px;background:var(--spec-soft);opacity:.45}
+html.xs .xs-obs-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+html.xs .xs-obs-h h2{margin:0 6px 0 0;font:700 12px var(--f-mono);letter-spacing:.24em;color:#eef3f8;text-transform:uppercase}
+html.xs .xs-obs-h .sp{flex:1}
+html.xs .xs-obs-modes,html.xs .xs-obs-wsel{display:inline-flex;border:1px solid var(--xs-line2);border-radius:9px;overflow:hidden;background:#050608}
+html.xs .xs-obs-modes button,html.xs .xs-obs-wsel button{all:unset;cursor:pointer;padding:6px 11px;font:700 10.5px var(--f-mono);letter-spacing:.14em;color:#8c97a6;transition:color .18s,background .18s,box-shadow .18s}
+html.xs .xs-obs-wsel button{letter-spacing:.04em;padding:6px 9px}
+html.xs .xs-obs-modes button+button,html.xs .xs-obs-wsel button+button{border-left:1px solid var(--xs-line)}
+html.xs .xs-obs-modes button:hover,html.xs .xs-obs-wsel button:hover{color:#fff;background:#ffffff0b}
+html.xs .xs-obs-modes button[aria-selected="true"]{color:#fff;background:#ffffff10;box-shadow:inset 0 -2px 0 #e879f9}
+html.xs .xs-obs-wsel button[aria-pressed="true"]{color:#fff;background:#22d3ee1a;box-shadow:inset 0 -2px 0 #22d3ee}
+html.xs .xs-obs-modes button:focus-visible,html.xs .xs-obs-wsel button:focus-visible,html.xs .xs-obs button:focus-visible,html.xs .xs-obs a:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+html.xs .xs-obs-f input{all:unset;box-sizing:border-box;width:210px;height:30px;padding:0 10px;border:1px solid var(--xs-line2);border-radius:9px;background:#050608;font:12px var(--f-mono);color:#fff}
+html.xs .xs-obs-f input:focus{border-color:#22d3ee88;box-shadow:0 0 0 3px #22d3ee14}
+html.xs .xs-obs-body{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start}
+html.xs .xs-obs-view{min-width:0}
+html.xs .xs-obs-cv{position:relative}
+html.xs .xs-obs-cv canvas{display:block;width:100%;border-radius:10px;background:radial-gradient(60% 60% at 50% 50%,#0a0c18,#000 75%)}
+html.xs #xsMos{background:#000;width:auto}
+html.xs .xs-obs-tip{position:absolute;z-index:3;pointer-events:none;padding:6px 9px;border-radius:8px;background:#07080cf2;border:1px solid #ffffff22;font:11px/1.5 var(--f-mono);color:#e6edf3;white-space:nowrap;box-shadow:0 10px 30px #000c}
+html.xs .xs-obs-legend,html.xs .xs-obs-note{margin:8px 2px 0;font:12px/1.55 var(--f-ui);color:var(--xs-tx2)}
+html.xs .xs-obs-legend b{color:#e6edf3}
+html.xs .xs-obs-bars{width:100%;height:auto;font:11px var(--f-mono)}
+html.xs .xs-obs-bars text{fill:#c9d2dc}
+html.xs .xs-obs-bars text.v{fill:#9aa6b4}
+html.xs .xs-obs-bars text.dim{fill:#5f6b7a}
+html.xs .xs-obs-bars g.bar:hover rect{filter:brightness(1.3)}
+html.xs .xs-obs-tw{overflow:auto;max-height:520px;border:1px solid var(--xs-line);border-radius:10px}
+html.xs .xs-obs-tbl{width:100%;border-collapse:collapse;font:12px var(--f-mono);font-variant-numeric:tabular-nums}
+html.xs .xs-obs-tbl th{position:sticky;top:0;background:#0a0c11;z-index:1;text-align:right;border-bottom:1px solid var(--xs-line2)}
+html.xs .xs-obs-tbl th:first-child,html.xs .xs-obs-tbl td:first-child{text-align:left}
+html.xs .xs-obs-tbl th button{all:unset;cursor:pointer;display:block;padding:8px 10px;font:700 10px var(--f-mono);letter-spacing:.1em;color:#9aa6b4;text-transform:uppercase;white-space:nowrap}
+html.xs .xs-obs-tbl th button:hover{color:#fff}
+html.xs .xs-obs-tbl td{padding:6px 10px;text-align:right;border-bottom:1px solid #ffffff0a;color:#c9d2dc;white-space:nowrap}
+html.xs .xs-obs-tbl tr:hover td{background:#ffffff06}
+html.xs .xs-obs-tbl tr.on td{background:#22d3ee10}
+html.xs .xs-obs-tbl a,html.xs .xs-obs-det a{color:#7dd3fc;text-decoration:none}
+html.xs .xs-obs-tbl a:hover,html.xs .xs-obs-det a:hover{color:#fff;text-decoration:underline}
+html.xs .xs-obs button.xs-a{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:7px;color:#e6edf3;font:12px var(--f-mono)}
+html.xs .xs-obs button.xs-a:hover{color:#fff;text-decoration:underline}
+html.xs .xs-obs .xs-a i,html.xs .xs-obs-addr i{display:inline-block;width:9px;height:9px;border-radius:2px;flex:none}
+html.xs .xs-obs-det{border:1px solid var(--xs-line);border-radius:12px;background:#05060899;padding:12px 14px;font:12.5px/1.5 var(--f-ui);color:#c9d2dc;min-height:200px}
+html.xs .xs-obs-det p{margin:0 0 8px}
+html.xs .xs-obs-k{font:600 10px var(--f-mono)!important;letter-spacing:.2em;text-transform:uppercase;color:var(--xs-tx3);margin:10px 0 4px!important;display:flex;gap:8px;align-items:center}
+html.xs .xs-obs-k:first-child{margin-top:0!important}
+html.xs .xs-obs-addr{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+html.xs .xs-obs-addr code{font:12px/1.45 var(--f-mono);color:#fff;word-break:break-all;flex:1 1 200px}
+html.xs .xs-obs-wins{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:4px;margin:6px 0 4px}
+html.xs .xs-obs-wins .xs-cons{display:block;margin:2px auto 0;width:max-content;font-size:7.5px}
+html.xs .xs-obs-wins div{border:1px solid var(--xs-line);border-radius:8px;padding:5px 4px;text-align:center;background:#000}
+html.xs .xs-obs-wins div.on{border-color:#22d3ee77;box-shadow:0 0 12px #22d3ee1a}
+html.xs .xs-obs-wins span{display:block;font:9px var(--f-mono);letter-spacing:.06em;color:var(--xs-tx3);white-space:nowrap}
+html.xs .xs-obs-wins b{display:block;font:700 14px var(--f-mono);color:#fff}
+html.xs .xs-obs-wins small{font:10px var(--f-mono);color:#9aa6b4}
+html.xs .xs-obs-hs{font:12px var(--f-mono);display:flex;flex-wrap:wrap;gap:4px 10px}
+html.xs .xs-obs-links{display:grid;gap:4px;margin-top:10px!important}
+html.xs .xs-obs-top{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px}
+html.xs .xs-obs-top li{display:flex;justify-content:space-between;gap:8px;font:12px var(--f-mono);color:#9aa6b4}
+html.xs .xs-obs-cav{margin:12px 2px 0;padding-top:10px;border-top:1px solid var(--xs-line);font:11.5px/1.55 var(--f-ui);color:var(--xs-tx3)}
+html.xs .xs-obs-cav b{color:#c9d2dc}
+html.xs .xs-obs .dim{color:var(--xs-tx3)}
+html.xs .xs-obs.loading .xs-obs-cv canvas{animation:xsobsl 1.6s ease-in-out infinite}
+@keyframes xsobsl{50%{opacity:.6}}
+@media (max-width:980px){html.xs .xs-obs-body{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){html.xs .xs-obs{padding:12px 10px;width:calc(100% - 24px)}html.xs .xs-obs-f,html.xs .xs-obs-f input{width:100%}html.xs .xs-obs-h .sp{display:none}
+  html.xs .xs-obs-modes{flex:1 1 100%}html.xs .xs-obs-modes button{flex:1;text-align:center;padding:7px 4px}html.xs .xs-obs-wsel{flex:1 1 100%}html.xs .xs-obs-wsel button{flex:1;text-align:center;padding:6px 3px;letter-spacing:0}html.xs .xs-obs-wsel [data-win=genesis]{white-space:nowrap;flex:1.35}}
+@media (prefers-reduced-motion:reduce){html.xs .xs-obs.loading .xs-obs-cv canvas{animation:none}}
+html.xs #detailPanel{overflow-x:auto;max-width:100%}
+
+/* CLS guard: the blocks that x-shell.js regroups (notices, own-node RPC row) stay out of the flow until they are moved, so the
+   dashboard never jumps when the end-of-body script runs on this long page. */
+html.xs:not(.xs-ready) .ex-topstack,html.xs:not(.xs-ready) #sost-v16-notice-mount,
+html.xs:not(.xs-ready) body>div:has(#discordSoon),html.xs:not(.xs-ready) body>div:has(#devNoteBody){display:none}
+
+/* DIRECTIVA FINAL §A: one search field (header) drives the engine's own search and inspector; the engine rows stay in the DOM */
+html.xs body>.search{display:none}
+html.xs .xs-q{flex-basis:340px}
+@media (min-width:761px) and (max-width:1199px){html.xs .xs-sub{height:auto;flex-wrap:wrap;padding:5px 10px 7px;row-gap:4px}html.xs .xs-tabs{flex:1 1 100%;-webkit-mask:none;flex-wrap:wrap;overflow:visible}html.xs .xs-q{flex:1 1 0}}
+@media (min-width:1200px) and (max-width:1599px){html.xs .xs-tabs a,html.xs .xs-tabs button{padding:0 9px;letter-spacing:.04em}html.xs .xs-q{flex-basis:290px}}
+/* HIDE NAV / SHOW NAV: only the menus; on desktop the space is kept (no layout shift), on phones the tab row folds */
+html.xs .xs-navt{all:unset;cursor:pointer;flex:0 0 auto;height:30px;padding:0 11px;border:1px solid var(--xs-line2);border-radius:8px;font:700 10px var(--f-mono);letter-spacing:.14em;color:#9aa6b4;white-space:nowrap}
+html.xs .xs-navt:hover{color:#fff;border-color:#ffffff40}
+html.xs .xs-navt:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+/* owner P0: HIDE NAV hides ALL navigation (header, brand, global menu, tools, search, FIND / INSPECT, Ctrl K, sections, menus) with
+ * no reserved space. Only the small floating SHOW NAV remains. In-content searches and inspectors are not navigation and stay. */
+html.xs-navoff .xs-head,html.xs-navoff #xsHelp,html.xs-navoff .kpal{display:none!important}
+html.xs-navoff{--xs-head:0px}
+/* owner P0 14-Nov-2026: one state (html.xs-navoff) for the whole top area. Everything above the FIND row goes with no reserved
+ * height (display:none, not visibility): notices group, V17 and any other top banner, and every other block x-shell.js marks
+ * .xs-top (body children placed before #xsFind). Only the network-status strip (statistics) and FIND / INSPECT stay. The strip
+ * starts below the floating SHOW NAV so the button never covers a figure. SHOW NAV removes the class: every block comes back as
+ * it was (the V17 banner keeps its folded / open state, it is only hidden). Security notices inside their sections are untouched. */
+html.xs-navoff .xs-notices,html.xs-navoff #sost-v16-notice-mount,html.xs-navoff body>.sost-v17,html.xs-navoff .xs-top{display:none!important}
+html.xs-navoff .xs-strip{margin-top:calc(54px + env(safe-area-inset-top,0px))}
+/* the header search is navigation and goes; the engine's own in-content search and inspector rows (hidden while the header drives
+ * them) come back, so searching stays possible with the navigation hidden */
+html.xs-navoff body>.search{display:block}
+html.xs .xs-navshow{display:none}
+html.xs-navoff .xs-navshow{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;position:fixed;z-index:120;top:max(10px,env(safe-area-inset-top));right:max(10px,1.6vw);height:34px;padding:0 13px;cursor:pointer;
+  border:1px solid #ffffff2e;border-radius:10px;background:#07080ce6;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 8px 24px #000a;font:700 10.5px var(--f-mono);letter-spacing:.14em;color:#cfd6e1}
+html.xs-navoff .xs-navshow:hover{color:#fff;border-color:#22d3ee88}
+html.xs-navoff .xs-navshow:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+@media (max-width:760px){html.xs .xs-navt{order:-1}html.xs .xs-q{flex:1 1 0}}
+/* advanced settings (own node RPC + MY MINER), collapsed in the footer */
+html.xs .xs-advcfg{max-width:1400px;margin:30px auto 0;padding:0 24px;font:12px/1.6 var(--f-mono);color:var(--xs-tx3)}
+html.xs .xs-advcfg summary{cursor:pointer;font:600 11px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:#9aa6b4;padding:10px 0}
+html.xs .xs-advcfg .xs-advnote{margin:6px 0 10px;color:#e0a96d}
+html.xs .xs-advcfg .config{margin:0;padding:12px 0 0;max-width:none}
+/* the dashboard is now above the fold: reserve the first-row tile height the engine reaches once its figures load (CLS) */
+@media (min-width:981px){html.xs #dashboard>.dash-card{min-height:154px}}
+@media (min-width:981px){html.xs .xs-strip{min-height:53px;box-sizing:border-box}html.xs .xs-notices{min-height:37px;box-sizing:border-box}}
+/* ---- Mining Observatory 2.0 (owner, 4 Nov 2026): radar, zoom, address inspector ---- */
+html.xs .xs-obs-radar{margin:0 0 12px;padding:10px 12px;border:1px solid var(--xs-line);border-radius:12px;background:#05060899}
+html.xs .xs-obs-radar:empty{display:none}
+html.xs .xs-rad-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:0 0 8px;font:600 10px var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:#cbd5e1}
+html.xs .xs-rad-h span{letter-spacing:.04em;text-transform:none;color:var(--xs-tx3);font-weight:400}
+html.xs .xs-rad-alert{margin:0 0 10px;padding:8px 12px;border:1px solid #f59e0b66;border-left:3px solid #f59e0b;border-radius:8px;background:#f59e0b10;font:12.5px/1.5 var(--f-ui);color:#fde68a}
+html.xs .xs-rad-alert b{color:#fff}
+html.xs .xs-src-row{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+html.xs .xs-src{display:inline-block;padding:3px 9px;border-radius:999px;font:11.5px/1.5 var(--f-ui);border:1px solid #ffffff22;background:#ffffff08;color:#cbd5e1;max-width:100%;overflow-wrap:anywhere}
+html.xs .xs-src b{color:#fff;letter-spacing:.04em}
+html.xs .xs-src.snap{border-color:#38bdf866}
+html.xs .xs-src.node{border-color:#a78bfa66}
+html.xs .xs-src.node.other{border-color:#f59e0b;background:#f59e0b14}
+html.xs .xs-rad-g{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+html.xs .xs-rad-g>div[data-wk]{cursor:pointer;transition:border-color .18s,background .18s}
+html.xs .xs-rad-g>div[data-wk]:hover{border-color:#22d3ee55;background:#04090c}
+html.xs .xs-rad-g>div[data-wk]:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+html.xs .xs-rad-g>div.xs-gen{border-style:dashed;border-color:#22d3ee44}
+html.xs .xs-rad-g>div.xs-gen b{color:#7dd3fc}
+html.xs .xs-rad-g>div.xs-gen.busy{border-style:solid;border-color:#22d3ee88}
+html.xs .xs-rad-g>div.xs-gen.busy b{animation:xsGenPulse 1.2s ease-in-out infinite}
+@keyframes xsGenPulse{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){html.xs .xs-rad-g>div.xs-gen.busy b{animation:none}}
+html.xs .xs-cons{display:inline-block;margin-left:5px;padding:0 5px;border:1px solid #22d3ee66;border-radius:5px;font:700 8.5px/1.55 var(--f-mono);letter-spacing:.12em;font-style:normal;color:#67e8f9;background:#22d3ee12;vertical-align:1px;white-space:nowrap}
+html.xs .xs-gen-err{color:#fbbf24}
+html.xs .xs-obs-f .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+html.xs .xs-rad-g>div{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:1px solid var(--xs-line);border-radius:9px;background:#000;font:11px/1.35 var(--f-mono);color:#9aa6b4}
+html.xs .xs-rad-g>div.on{border-color:#22d3ee77;box-shadow:0 0 14px #22d3ee14}
+html.xs .xs-rad-g>div.hi b{color:#fbbf24}
+html.xs .xs-rad-g b{font:700 17px var(--f-mono);color:#fff}
+html.xs .xs-rad-g i.bar{display:block;height:4px;border-radius:2px;background:#ffffff14;margin:3px 0;overflow:hidden}
+html.xs .xs-rad-g i.bar i{display:block;height:100%}
+html.xs .xs-rad-n{margin:8px 2px 0;font:11.5px/1.5 var(--f-ui);color:var(--xs-tx3)}
+html.xs .xs-obs-zoom{position:absolute;top:8px;left:8px;z-index:2;display:flex;gap:4px;align-items:center}
+html.xs .xs-obs-zoom button{all:unset;cursor:pointer;min-width:26px;height:26px;padding:0 8px;box-sizing:border-box;text-align:center;border:1px solid var(--xs-line2);border-radius:7px;background:#050608d9;font:700 12px/26px var(--f-mono);color:#cbd5e1}
+html.xs .xs-obs-zoom button:hover{color:#fff;border-color:#22d3ee88}
+html.xs .xs-obs-zoom button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+html.xs .xs-obs-zoom span{font:11px var(--f-mono);color:var(--xs-tx3);padding-left:4px}
+html.xs .xs-obs-links{display:flex;flex-direction:column;gap:6px}
+html.xs .xs-obs-links a[data-insp]{display:block;padding:8px 10px;border:1px solid #22d3ee55;border-radius:9px;background:#22d3ee0d;color:#e0f7ff!important;text-decoration:none!important}
+html.xs .xs-obs-links a[data-insp]:hover{background:#22d3ee1c}
+html.xs .xs-insp{margin:14px 0 4px;padding:12px 16px 14px;border:1px solid #22d3ee44;border-radius:12px;background:#04060acc;scroll-margin-top:84px}
+html.xs .xs-insp-h{display:flex;align-items:center;gap:6px;margin:0 0 6px;font:600 10.5px var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:#93a1b5}
+html.xs .xs-insp-h b{color:#fff;letter-spacing:.04em}
+html.xs .xs-insp-h .sp{flex:1}
+html.xs .xs-insp-x{all:unset;cursor:pointer;font:600 10.5px var(--f-mono);letter-spacing:.1em;padding:4px 10px;border:1px solid var(--xs-line2);border-radius:7px;color:#cbd5e1}
+html.xs .xs-insp-x:hover{color:#fff}
+html.xs .xs-insp .uai{font-family:var(--f-ui)}
+html.xs .xs-insp .xs-obs-wins{max-width:640px}
+@media (max-width:1100px){html.xs .xs-rad-g{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){html.xs .xs-rad-g{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){html.xs .xs-insp{padding:10px}html.xs .xs-insp .uai .kv{grid-template-columns:1fr}html.xs .xs-insp .uai .kv>span:nth-child(odd){margin-top:6px}}
+
+/* ---- Galaxy P0 (owner, 5 Nov 2026): overlap chooser, selected-block record, actions ---- */
+html.xs .xs-obs-cv canvas:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+html.xs .xs-obs-ch{position:absolute;z-index:4;width:240px;max-height:300px;overflow:auto;padding:6px;border:1px solid #ffffff2a;border-radius:10px;background:#07080cf7;box-shadow:0 16px 40px #000d;font:11.5px/1.4 var(--f-mono);color:#cbd5e1}
+html.xs .xs-obs-ch p{margin:2px 4px 6px;color:var(--xs-tx3);font-size:10.5px;letter-spacing:.06em}
+html.xs .xs-obs-ch button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:6px;align-items:center;width:100%;padding:7px 8px;border-radius:7px;min-height:34px}
+html.xs .xs-obs-ch button:hover,html.xs .xs-obs-ch button:focus-visible{background:#ffffff12;color:#fff;outline:none}
+html.xs .xs-obs-ch button i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+html.xs .xs-obs-ch button span{color:var(--xs-tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.xs .xs-obs-ch button.z{justify-content:center;margin-top:4px;border:1px dashed #ffffff26;color:#9aa6b4}
+html.xs .xs-obs-blk{margin:0 0 10px;padding:0 0 10px;border-bottom:1px solid var(--xs-line)}
+html.xs .xs-obs-kv{width:100%;border-collapse:collapse;font:11.5px/1.45 var(--f-mono)}
+html.xs .xs-obs-kv th{font:600 10px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--xs-tx3);text-align:left;padding:3px 8px 3px 0;vertical-align:top;white-space:nowrap;width:1%}
+html.xs .xs-obs-kv td{padding:3px 0;color:#dbe3ec;word-break:break-all}
+html.xs .xs-obs-kv code.hash{font-size:10.5px;color:#e6edf3}
+html.xs .xs-obs-act{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+html.xs .xs-obs-act .b{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border:1px solid var(--xs-line2);border-radius:8px;font:600 10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:#cfe8ff!important;text-decoration:none!important}
+html.xs .xs-obs-act .b:hover{border-color:#22d3ee88;color:#fff!important}
+html.xs .xs-obs-act .b:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+html.xs .xs-obs-act .b[disabled]{opacity:.45;cursor:default}
+html.xs .xs-obs-act .b.ok{border-color:#22c55e99;color:#bbf7d0!important}
+@media (pointer:coarse){html.xs .xs-obs-act .b{min-height:40px}}
+
+/* ---------- Galaxy: full screen / immersive + decorative FX layer (15-Nov-2026) ----------
+   The background moves from the galaxy canvas to its container so a separate FX canvas sits BEHIND the galaxy canvas:
+   stars, rings, labels and markers are always drawn on top of any comet or shooting star (never confusable with data). */
+html.xs #xsObs-galaxy .xs-obs-cv{border-radius:10px;overflow:hidden;background:radial-gradient(60% 60% at 50% 50%,#0a0c18,#000 75%)}
+html.xs #xsObs-galaxy .xs-obs-cv canvas#xsGal{background:transparent;position:relative;z-index:1}
+html.xs #xsObs-galaxy .xs-obs-cv canvas.xs-fx{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;background:none;border-radius:0;animation:none}
+html.xs .xs-obs-zoom{flex-wrap:wrap;max-width:calc(100% - 16px)}
+html.xs .xs-obs-zoom [data-panel]{display:none}
+html.xs .xs-obs.xs-fs .xs-obs-zoom [data-panel]{display:inline-block}
+html.xs .xs-obs-zoom [aria-pressed="true"]{color:#fff;border-color:#22d3ee99}
+html.xs .xs-obs.xs-fs{position:fixed;inset:0;z-index:2147483000;margin:0;max-width:none;width:100%;height:100%;box-sizing:border-box;
+  overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;background:#020308;padding:10px 14px 18px;border-radius:0;border:0}
+html.xs .xs-obs.xs-fs{display:flex;flex-direction:column}
+/* full screen: the galaxy comes first; decentralization and Genesis cards, inspector and caveats follow one scroll below
+   (Genesis also stays one click away in the window selector) */
+html.xs .xs-obs.xs-fs .xs-obs-body{order:1}
+html.xs .xs-obs.xs-fs .xs-obs-radar{order:2;margin-top:12px}
+html.xs .xs-obs.xs-fs .xs-insp,html.xs .xs-obs.xs-fs .xs-obs-cav{order:3}
+html.xs .xs-obs.xs-fs .xs-obs-det{position:sticky;top:0;max-height:calc(100vh - 80px);overflow:auto}
+html.xs .xs-obs.xs-fs.xs-fs-np .xs-obs-body{grid-template-columns:minmax(0,1fr)}
+html.xs .xs-obs.xs-fs.xs-fs-np .xs-obs-det{display:none}
+html.xs .xs-obs.xs-fs #xsObs-galaxy .xs-obs-legend{display:none}
+html.xs.xs-fs-lock,html.xs.xs-fs-lock body{overflow:hidden}
+/* narrow screens: no title; the producer panel is a sheet over the galaxy: bottom sheet in portrait, side sheet in landscape */
+@media (max-width:980px){
+  html.xs .xs-obs.xs-fs{padding:6px 6px 14px}
+  html.xs .xs-obs.xs-fs .xs-obs-h{margin:0 0 6px;gap:6px}
+  html.xs .xs-obs.xs-fs #xsObsH{display:none}
+  html.xs .xs-obs.xs-fs .xs-obs-det{position:fixed;left:6px;right:6px;bottom:6px;top:auto;width:auto;max-height:46vh;z-index:5;background:#050608f0;box-shadow:0 -10px 30px #000c}
+}
+@media (max-width:980px) and (orientation:landscape){
+  html.xs .xs-obs.xs-fs .xs-obs-det{left:auto;top:6px;bottom:6px;right:6px;width:min(320px,42vw);max-height:none}
+  html.xs .xs-obs.xs-fs .xs-obs-f{display:none}
+}

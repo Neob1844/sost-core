@@ -1,0 +1,8 @@
+/* SOST Universe scene module: cats-eye (metadata and card: core/u-scenes.js). Loaded on demand by core/u-core.js. */
+SOSTU.sceneLib.register("cats-eye", {
+ "p": " if(kind<=.92){ vec3 q; float an=a_s.y*6.2832; if(kind<.45){ float k=floor(a_s.x*9.); float r=1.0+k*.17+(a_s.z-.5)*.03; q=vec3(r*cos(an),r*sin(an),0.)*(1.+.02*sin(an*11.+k)); col=mix(u_col[0],u_col[1],k/9.)*1.05; alpha=.07*(1.-k/10.); sz=1.; } else if(kind<.85){ float e=step(.5,fract(a_s.x*2.)); float ang=e>.5?.5:-.5; float a=.95,b=.42; vec2 v=vec2(a*cos(an),b*sin(an))*(1.+(a_s.z-.5)*.06); v=vec2(v.x*cos(ang)-v.y*sin(ang),v.x*sin(ang)+v.y*cos(ang)); q=vec3(v,(a_s.z-.5)*.1); col=e>.5?mix(u_col[3],u_col[4],.5+.5*sin(an*2.)):mix(u_col[4],u_col[2],.5+.5*cos(an*2.)); col*=1.15; alpha=.22; sz=1.; } else if(kind<.88){ q=.06*vec3(sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*cos(a_s.y*6.2832),2.*a_s.z-1.,sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*sin(a_s.y*6.2832)); col=u_col[3]; alpha=.45; sz=1.; } else { float sd=a_s.x<.5?1.:-1.; q=vec3(sd*1.05*cos(.9),sd*1.05*sin(.9),0.)+.06*vec3(sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*cos(a_s.y*6.2832),2.*a_s.z-1.,sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*sin(a_s.y*6.2832)); col=u_col[6]; alpha=.35; sz=1.; } q*=1.+.02*sin(u_t*.2); p=rotX(rotY(q,-u_yaw*.6),-u_tilt); }",
+ "l": " { float k=mod(cid,4.); float an=u*6.2832; float ang=k<.5?.5:k<1.5?-.5:k<2.5?.15:-.15; float a=k<1.5?.95:.62, b=k<1.5?.42:.3; vec2 v=vec2(a*cos(an),b*sin(an)); v=vec2(v.x*cos(ang)-v.y*sin(ang),v.x*sin(ang)+v.y*cos(ang)); p=rotX(rotY(vec3(v,0.),-u_yaw*.6),-u_tilt); col=mix(u_col[3],u_col[4],k/4.)*.8; }",
+ "la": 1.0,
+ "rc": "vec3(0.)",
+ "rad": 0
+});

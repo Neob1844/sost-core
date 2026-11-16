@@ -1,0 +1,66 @@
+/* SOST Universe — brand layer, revised for the DIRECTIVA CONVERGENCE EYE (3 nov 2026, supersedes AJUSTE 1 where they differ).
+ * Rule now: red (#fb010d, index.html :root) is the DNA of the eye and of the official Σ only. The interface (header, buttons,
+ * palette) is black + dark glass with the full official spectrum of css/atomix-btn.css as subtle borders and reflections.
+ * No permanent red border around the header. SOST wordmark: Goldman 700 ('SOST Wordmark'), white, −0.09em, never recoloured.
+ * Σ in the header: the official emblem image (media/sost-sigma-emblem-flat-512.png?v=sl20261113), unmodified. */
+:root{--hud-glass:#06070bcc;--hud-h:66px;--spec-soft:linear-gradient(90deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c)}
+body{background:#000}
+
+/* ---------- global header (dark glass HUD) ---------- */
+.u-nav.hud{top:10px;left:max(10px,1.6vw);right:max(10px,1.6vw);height:var(--hud-h);padding:0 10px 0 12px;gap:12px;border-radius:16px;
+  background:radial-gradient(380px 110px at var(--mx,20%) -40%,#ffffff12,#0000 70%),linear-gradient(180deg,#0b0d14b3,var(--hud-glass));
+  border:1px solid #ffffff14;box-shadow:0 12px 40px #000c,inset 0 1px 0 #ffffff10;-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);isolation:isolate}
+.u-nav.hud:before{content:"";position:absolute;left:18px;right:18px;top:-1px;height:1px;pointer-events:none;opacity:.55;background:linear-gradient(90deg,#0000,#8b5cf6 12%,#e879f9 26%,#3b82f6 40%,#22d3ee 54%,#a3e635 68%,#facc15 80%,#fb923c 90%,#0000)}
+.u-nav.hud:after{content:"";position:absolute;left:0;bottom:-1px;width:16%;height:1px;pointer-events:none;will-change:transform;background:linear-gradient(90deg,#0000,#22d3ee 40%,#e879f9 60%,#0000);animation:hudsweep 9s linear infinite}
+@keyframes hudsweep{0%{transform:translateX(0);opacity:0}12%{opacity:.7}88%{opacity:.7}100%{transform:translateX(520%);opacity:0}}
+.u-nav.hud .brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#fff;flex:none;padding:4px 6px 4px 2px;border-radius:10px;text-shadow:none}
+/* header emblem: the owner's eye (static PNG = favicon / exchange set) + transparent canvas overlay for the Chromatic Sigma Glow (core/u-emblem.js?v=rs20261112g) */
+.u-nav.hud .brand .eyemark{position:relative;width:56px;height:56px;flex:none;border-radius:50%;animation:eyeglow 6.5s ease-in-out infinite}
+.u-nav.hud .brand .eyemark .sig,.u-nav.hud .brand .eyemark canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;display:block}
+.u-nav.hud .brand .eyemark canvas{pointer-events:none}   /* Chromatic Sigma Glow layer (core/u-emblem.js?v=rs20261112g) */
+@keyframes eyeglow{0%,100%{filter:drop-shadow(0 0 3px #fb010d55)}50%{filter:drop-shadow(0 0 8px #fb010d8c)}}
+.u-nav.hud .brand .wm{font-size:31px;line-height:1;color:#fff}   /* +14.8 % (DIRECTIVA 4D §2) */
+.u-nav.hud .brand .sect{font:600 10.5px/1 var(--f-mono);letter-spacing:.3em;color:var(--tx-2);padding:4px 0 4px 10px;border-left:1px solid #ffffff1f;text-transform:uppercase}
+.u-nav.hud .brand:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.u-nav.hud .brand:hover .eyemark{filter:drop-shadow(0 0 10px #fb010d99)}
+.u-nav.hud .nv{gap:0}
+.u-nav.hud .nv-b{position:relative;padding:9px 13px;border-radius:10px;font:600 12px var(--f-mono);letter-spacing:.16em;color:#aab4c3;transition:color .2s,background .2s,text-shadow .2s}
+.u-nav.hud .nv-b:hover,.u-nav.hud .nv-b[aria-expanded="true"]{color:#fff;background:#ffffff0d;text-shadow:-1px 0 #22d3ee88,1px 0 #e879f988}
+.u-nav.hud .nv-s.cur .nv-b{color:#fff;box-shadow:none;background:#ffffff08}
+.u-nav.hud .nv-s.cur .nv-b:after{content:"";position:absolute;left:12px;right:12px;bottom:3px;height:2px;border-radius:2px;background:var(--spec-soft)}
+.u-nav.hud .nv-m{top:calc(100% + 12px);background:#07080cf2;border:1px solid #ffffff1a;border-radius:12px;box-shadow:0 24px 70px #000e;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);animation:menuin .18s var(--ease)}
+.u-nav.hud .nv-m a:hover,.u-nav.hud .nv-m a:focus-visible{background:#ffffff0f;box-shadow:inset 2px 0 0 var(--cyan)}
+@keyframes menuin{from{opacity:0;transform:translateY(-6px)}}
+.u-nav.hud .tools .btn{border-radius:10px}
+.u-nav.hud .tools .btn.wallet{border-color:#facc1566;background:#0b0a04}
+.u-nav.hud .tools .btn.wallet:before{content:"◈";color:#facc15;font-size:12px}
+.u-nav.hud .tools .btn.wallet:hover{border-color:#facc15;box-shadow:0 0 14px #facc1533}
+.u-nav.hud .tools .btn.on{box-shadow:0 0 0 1px #22d3ee88,0 0 14px #22d3ee33}
+.u-nav.hud .kbtn{background:#0008}
+.u-nav.hud .kbtn kbd{color:#fff}
+@media (max-width:980px){.u-nav.hud.open .nv{top:calc(100% + 8px);left:0;right:0;background:#07080cf7;border:1px solid #ffffff1a}}
+@media (max-width:520px){.u-nav.hud{height:56px;padding:0 6px 0 8px;gap:8px}.u-nav.hud .brand .wm{font-size:26px}.u-nav.hud .brand .eyemark{width:44px;height:44px}.u-nav.hud .brand .sect{display:none}}
+/* ---------- buttons: official spectrum accents (primary keeps the animated spectral border of universe.css) ---------- */
+.btn{border-radius:12px}
+.btn.primary{position:relative;overflow:hidden;box-shadow:0 0 22px #8b5cf622,0 0 22px #22d3ee14}
+.btn.primary:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,#0000 30%,#ffffff26 48%,#22d3ee26 52%,#0000 70%);transform:translateX(-120%);transition:transform .7s var(--ease)}
+.btn.primary:hover{box-shadow:0 0 26px #e879f933,0 0 26px #22d3ee26}
+.btn.primary:hover:after{transform:translateX(120%)}
+.btn.ghost{background:#07080ccc;border-color:#ffffff2a}
+.btn.ghost:hover{border-color:#22d3ee99;box-shadow:0 0 16px #22d3ee22}
+/* ---------- command palette (dark glass console, spectral hairline) ---------- */
+.kpal{width:min(720px,calc(100vw - 24px));border:1px solid #ffffff1f;border-radius:16px;background:linear-gradient(#0b0d14f5,#050608f8);box-shadow:0 40px 120px #000,0 0 50px #8b5cf61a;overflow:hidden}
+.kpal .kpal-top{position:relative;display:flex;align-items:center;gap:10px;padding:12px 14px 0;font:600 10.5px var(--f-mono);letter-spacing:.3em;color:var(--tx-2)}
+.kpal .kpal-top:before{content:"";position:absolute;left:-1px;right:-1px;top:0;height:2px;background:var(--spec-soft)}
+.kpal[open]{animation:kpalin .22s var(--ease)}
+@keyframes kpalin{from{opacity:0;transform:translateY(-10px) scale(.98)}}
+.kpal::backdrop{background:#000c;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+.kpal .kpal-top .sig{width:24px;height:24px;border-radius:50%}
+.kpal .kpal-top .wm{font-size:18px;letter-spacing:-.09em;color:#fff}
+.kpal .kpal-top .live{margin-left:auto;color:var(--tx-3);letter-spacing:.12em}
+.kpal input{font:16px var(--f-mono)}
+.kpal li a .kind{font:700 9.5px var(--f-mono);letter-spacing:.14em;color:var(--cyan);border:1px solid #22d3ee66;border-radius:4px;padding:0 5px;margin-left:0;max-width:none;flex:none}
+.u-bar{border-top:1px solid #ffffff12}
+@media (prefers-reduced-motion:reduce){.u-nav.hud .brand .eyemark,.u-nav.hud:after,.u-nav.hud .nv-m,.kpal[open]{animation:none}.btn.primary:after{display:none}}
+/* 981–1260 px: the full header (5 sections + Wallet, Explorer, Search) did not fit and the Search button was clipped: tighter spacing, no shortcut hint */
+@media (min-width:981px) and (max-width:1260px){.u-nav.hud .nv-b:not(#_){padding:8px 7px;letter-spacing:.05em!important;font-size:12px}.u-nav.hud .kbtn kbd{display:none}.u-nav.hud .tools{gap:6px}.u-nav.hud .tools .btn{padding-left:11px;padding-right:11px}}

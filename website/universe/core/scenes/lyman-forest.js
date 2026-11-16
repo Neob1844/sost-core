@@ -1,0 +1,8 @@
+/* SOST Universe scene module: lyman-forest (metadata and card: core/u-scenes.js). Loaded on demand by core/u-core.js. */
+SOSTU.sceneLib.register("lyman-forest", {
+ "p": " if(kind<=.92){ vec3 q; float sc=u_t*.03; if(kind<.30){ float k=floor(a_s.x*44.); float xk=fract(fract(sin(k*12.9898)*43758.5)+sc)*6.-3.; float sz0=.12+.25*fract(k*.618); q=vec3(xk,.35,0.)+vec3(.15,.9,.9)*sz0*pow(fract(a_s.w*13.),.4)*vec3(sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*cos(a_s.y*6.2832),2.*a_s.z-1.,sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*sin(a_s.y*6.2832)); col=mix(u_col[2],u_col[0],fract(k*.37))*1.05; alpha=.10; sz=1.; } else if(kind<.75){ float x=(a_s.x-.5)*6.4; float ab=0.; for(int i=0;i<44;i++){ float k=float(i); float xk=fract(fract(sin(k*12.9898)*43758.5)+sc)*6.-3.; ab=max(ab,exp(-pow((x-xk)/(.012+.02*fract(k*.618)),2.))); } q=vec3(x,-1.25+(a_s.y-.5)*.32,0.); col=mix(u_col[0],u_col[6],(x+3.2)/6.4)*1.1; col=mix(col,u_col[1],exp(-pow((x+2.95)/.05,2.))); alpha=.30*(1.-.97*ab); sz=.9; } else if(kind<.80){ q=vec3(-3.2,.35,0.)+.08*pow(a_s.x,.6)*vec3(sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*cos(a_s.y*6.2832),2.*a_s.z-1.,sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*sin(a_s.y*6.2832)); col=u_col[5]; alpha=.45; sz=1.; } else { float x=(a_s.x-.5)*6.4; q=vec3(x,.35+(a_s.y-.5)*.02,(a_s.z-.5)*.02); col=mix(u_col[5],u_col[3],(x+3.2)/6.4); alpha=.18; sz=.8; } p=rotX(rotY(q,-u_yaw*.5+.25),-u_tilt+.05); }",
+ "l": " { float k=mod(cid,44.); float xk=fract(fract(sin(k*12.9898)*43758.5)+u_t*.03)*6.-3.; p=rotX(rotY(vec3(xk,mix(-1.41,-1.09,u),0.),-u_yaw*.5+.25),-u_tilt+.05); col=u_col[0]*.0+vec3(0.); }",
+ "la": 0.7,
+ "rc": "vec3(0.)",
+ "rad": 0
+});

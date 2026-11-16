@@ -1,0 +1,26 @@
+/* Display typeface on non-technical headings (owner decision, 4 Nov 2026).
+   The SOST wordmark face (Goldman Bold, SIL OFL 1.1, self-hosted) is used for page titles, section titles, card titles, the
+   main navigation and the call-to-action buttons. Body text stays in the UI face, and everything technical (addresses, hashes,
+   commands, numbers, mono labels) stays in the mono face. The header logo keeps its own tighter wordmark spacing (.wm);
+   headings use the standard face with neutral spacing, so the logo remains the only "adjusted" setting. */
+@font-face{font-family:'SOST Wordmark';src:url('../../fonts/goldman-700-latin.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+:root{--f-display:'SOST Wordmark',var(--f-ui,system-ui),sans-serif}
+
+/* titles */
+:where(h1,h2):not(.mono):not([class*="mono"]){font-family:var(--f-display)!important;font-weight:700!important;letter-spacing:-.01em!important}
+:where(h3):not(.mono):not([class*="mono"]){font-family:var(--f-display)!important;font-weight:700!important;letter-spacing:0!important}
+/* small uppercase mono labels that happen to be h3 (directory headers) stay technical */
+.dir h3:not(#_),.sx .step h3 i:not(#_){font-family:var(--f-mono,ui-monospace,monospace)!important;font-weight:600!important;letter-spacing:.22em!important}
+/* code inside a heading keeps the mono face */
+:where(h1,h2,h3) :where(code,kbd,samp,.mono,.addr,.hash){font-family:var(--f-mono,ui-monospace,monospace)!important;letter-spacing:0!important}
+
+/* main navigation and call-to-action buttons */
+.u-nav .nv-b,.u-nav .nv-m a{font-family:var(--f-display)!important;font-weight:700!important;letter-spacing:.1em!important}
+.btn:not(.small){font-family:var(--f-display)!important;font-weight:700!important;letter-spacing:.02em!important}
+
+/* Home hero headline and lede (owner, 4 Nov 2026, typographic comparison qa-typo-hero: A system UI · B Space Grotesk · C Goldman → B).
+   The large multi-line headline reads better in Space Grotesk 700 (SIL OFL 1.1, self-hosted); Goldman stays for identity
+   (logo, SOST EXPLORER / SOST WALLET) and short titles, mono for technical data. */
+@font-face{font-family:'Space Grotesk';src:url('../../fonts/spacegrotesk-500-700-latin.woff2') format('woff2');font-weight:300 700;font-style:normal;font-display:swap}
+.hero h1#h1:not(#_){font-family:'Space Grotesk',var(--f-ui,system-ui),sans-serif!important;font-weight:700!important;line-height:.98!important;letter-spacing:-.035em!important}
+.hero .lede:not(#_){font-family:'Space Grotesk',var(--f-ui,system-ui),sans-serif;font-weight:400;letter-spacing:0}

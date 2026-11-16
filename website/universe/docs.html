@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Documentation — SOST (Convergence Universe preview)</title>
+<meta name="description" content="Every SOST document in one library: specifications, whitepaper, tokenomics, roadmap, security, FAQ, help, transactions, genesis, governance and license.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="assets/brand/sost-eye.ico?v=sl20261113" sizes="16x16 32x32 48x48 64x64">
+<link rel="apple-touch-icon" href="assets/brand/sost-eye-180.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<link rel="preload" href="../fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="core/u-display.css">
+<link rel="stylesheet" href="core/u-section.css">
+<link rel="stylesheet" href="core/u-audio.css?v=gm-20261104">
+<style>.sx{--acc:#60a5fa;--acc2:#67e8f9}.sx-hero{min-height:min(56vh,520px)}
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.shelf h3{font:600 12px var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--tx-3);margin:0 0 8px}
+.shelf ul{list-style:none;margin:0;padding:0;border:1px solid var(--line-2);border-radius:var(--r-2);background:#050505e6}
+.shelf li a{display:flex;justify-content:space-between;gap:10px;padding:11px 14px;border-top:1px solid var(--line-1);color:#e2e8f0;text-decoration:none;font-size:14px}
+.shelf li:first-child a{border-top:0}.shelf li a:hover{background:#ffffff08;color:#fff}
+.shelf .tag{font:600 10px/1.8 var(--f-mono);letter-spacing:.06em;color:var(--acc);white-space:nowrap}</style>
+<link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
+</head>
+<body class="sx">
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<header class="sx-hero" aria-labelledby="h1">
+  <canvas id="cv" aria-hidden="true"></canvas>
+  <div class="sx-copy">
+    <p class="eyebrow">SOST · Documentation</p>
+    <h1 id="h1">The library, <em>in one place.</em></h1>
+    <p class="lede">Specifications, papers and guides of SOST. Every document keeps its address and its full content; pages marked "new header" now carry the shared SOST header and directory, with their previous menu kept at the end of the page.</p>
+  </div>
+  <p class="sx-legend">Library · lines of text settling into columns</p>
+</header>
+<main id="main" style="min-height:100vh"><section class="sec" aria-label="Documents"><div class="lib" id="lib"></div></section></main>
+<footer class="site" aria-label="Site directory"><div class="dir" id="dir"></div><p class="fine">SOST · Section: Documentation.</p></footer>
+<div class="u-bar"><span>SOST · Documentation library</span></div>
+<script src="core/u-ui.js?v=ns20261113"></script>
+<script src="core/u-nav.js?v=in20261113a"></script>
+<script src="core/u-section.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i);}, E=SOSTU.section.esc;
+try{SOSTU.nav.render($('nav'),'technology');SOSTU.nav.directory($('dir'));}catch(e){}
+var NEW={'../sost-protocol-spec.html':1,'../casert-spec.html':1,'../sost-tokenomics.html':1,'../sost-roadmap.html':1,'../sost-security.html':1,'../sost-faq.html':1,'../sost-help.html':1,'../sost-e2e.html':1,'../protocol-registry.html':1,'../sost-transactions.html':1,'../sost-genesis.html':1,'../sost-why-no-pools.html':1,'../sost-license.html':1,'../sost-foundation.html':1};
+var SHELVES=[
+ ['Specifications',[['ConvergenceX & cASERT spec','../casert-spec.html'],['Protocol spec (Layer 1)','../sost-protocol-spec.html'],['Protocol registry','../protocol-registry.html'],['Transactions','../sost-transactions.html'],['E2E protocol (research)','../sost-e2e.html']]],
+ ['Papers',[['Whitepaper','../sost-whitepaper.html'],['Technology','../sost-technology.html'],['Tokenomics','../sost-tokenomics.html'],['Roadmap','../sost-roadmap.html'],['Genesis','../sost-genesis.html']]],
+ ['Security & governance',[['Security','../sost-security.html'],['Governance (foundation)','../sost-foundation.html'],['Governance balances','../sost-foundation-balances.html'],['License','../sost-license.html']]],
+ ['Mining guides',[['Quick Start','../sost-quickstart.html'],['Getting Started (full setup)','../sost-getting-started.html'],['Mine SOST','../sost-mine.html'],['Why no pools','../sost-why-no-pools.html'],['Miner troubleshooter','../sost-miner-troubleshooter.html']]],
+ ['Help',[['FAQ','../sost-faq.html'],['Help','../sost-help.html'],['News & updates','../news.html'],['Contact','../sost-contact.html']]]];
+$('lib').innerHTML=SHELVES.map(function(s){return '<div class="shelf"><h3>'+E(s[0])+'</h3><ul>'+s[1].map(function(d){return '<li><a href="'+E(d[1])+'"><span>'+E(d[0])+'</span>'+'</a></li>';}).join('')+'</ul></div>';}).join('');
+// ---- Library: lines of "text" settling into columns
+var L=[];
+SOSTU.section.scene($('cv'),function(c,w,h,t,dt){
+  if(!L.length){ var cols=w<560?2:4; for(var i=0;i<(w<560?50:120);i++){ var col=i%cols; L.push({x:w*(.5+.48*(col+.5)/cols)-(w<560?w*.45:0),y:Math.random()*h,len:20+Math.random()*90,ty:40+((i/cols)|0)*14,v:0}); } }
+  c.fillStyle='#000'; c.fillRect(0,0,w,h);
+  L.forEach(function(l,i){ l.y+=(l.ty-l.y)*Math.min(1,dt*1.5); var a=.18+.5*Math.max(0,Math.sin(t*.6+i*.37)); c.fillStyle='rgba(96,165,250,'+(a*.6).toFixed(3)+')'; c.fillRect(l.x,l.y,l.len,2);
+    if(l.ty>h-20){ l.ty=40+Math.random()*40; } if(Math.abs(l.y-l.ty)<.5&&Math.random()<.002) l.ty+=14*4; });
+});
+})();
+</script>
+<script src="core/u-audio.js?v=gm-20261104" data-autoplay defer></script>
+<script src="core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Install SOST — the SOST app for desktop and mobile</title>
+<meta name="description" content="Install the SOST app on Windows, macOS, Linux, Android, iPhone or iPad. It opens the SOST Explorer in its own window with the SOST icon. No installer file, nothing to update by hand.">
+<link rel="canonical" href="https://sostcore.com/universe/install.html">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<meta name="theme-color" content="#05070a">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="16x16 32x32 48x48 64x64">
+<link rel="icon" type="image/png" href="/favicon-96x96.png?v=sl20261113" sizes="96x96">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=sl20261113">
+<meta name="apple-mobile-web-app-title" content="SOST">
+<meta property="og:title" content="Install SOST">
+<meta property="og:description" content="The SOST app for desktop and mobile: its own window and icon, always up to date.">
+<meta property="og:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
+<script>try{if(localStorage.getItem('sost_xs_nav')==='off')document.documentElement.classList.add('ue-navoff')}catch(e){}</script>
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<style>
+body{background:#000;color:var(--tx-1)}
+main{position:relative;z-index:var(--z-content);max-width:1080px;margin:0 auto;padding:96px var(--gutter) 80px}
+.ins-hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:40px;align-items:center;padding:44px 44px 40px;border-radius:24px;
+  background:radial-gradient(120% 140% at 85% 0%,#1a1030 0%,#07070a 55%) padding-box,linear-gradient(120deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c) border-box;border:1px solid transparent;overflow:hidden}
+.ins-eyebrow{font:600 12px var(--f-mono);letter-spacing:.24em;text-transform:uppercase;color:var(--tx-2);display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.ins-eyebrow:after{content:"";width:56px;height:2px;background:var(--spectrum)}
+.ins-hero h1{font:700 clamp(36px,5vw,60px)/1.02 var(--f-ui);letter-spacing:-.03em;margin:0 0 14px;color:#fff}
+.ins-lead{font-size:17px;line-height:1.55;color:var(--tx-1);max-width:46ch;margin:0 0 26px}
+.ins-cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.ins-btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:10px;padding:15px 26px;border-radius:999px;font:700 16px var(--f-ui);color:#0a0a0a;
+  background:linear-gradient(180deg,#ffe58a,#f5b81c);box-shadow:0 0 0 1px #ffd76a inset,0 10px 30px -8px #f5b81c99;transition:transform .15s,box-shadow .15s,opacity .15s}
+.ins-btn:hover{transform:translateY(-1px);box-shadow:0 0 0 1px #ffe9a3 inset,0 14px 36px -8px #f5b81ccc}
+.ins-btn:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.ins-btn[aria-disabled="true"]{cursor:default;opacity:.45;transform:none;box-shadow:0 0 0 1px #ffd76a66 inset}
+.ins-btn svg{width:20px;height:20px}
+.ins-ghost{color:var(--tx-1);font:600 14px var(--f-ui);text-decoration:none;border-bottom:1px solid var(--line-3);padding-bottom:2px}
+.ins-ghost:hover{color:#fff;border-color:#fff}
+.ins-status{margin:18px 0 0;min-height:1.5em;font-size:14px;line-height:1.5;color:var(--tx-2)}
+.ins-status b{color:#fff}.ins-status.ok{color:var(--green)}.ins-status.ok b{color:var(--green)}
+.ins-art{position:relative;display:grid;place-items:center;min-height:300px}
+.ins-art:before{content:"";position:absolute;width:78%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#f5b81c33 0%,#8b5cf622 45%,transparent 70%);filter:blur(8px)}
+.ins-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px}
+.ins-icon{width:min(260px,62vw);height:auto;filter:drop-shadow(0 18px 40px #0009)}
+.ins-name{font:600 15px var(--f-ui);color:#fff;letter-spacing:.01em;padding:5px 14px;border-radius:999px;background:#ffffff10;border:1px solid #ffffff1f}
+.ins-sec{margin:56px 0 0}
+.ins-sec h2{font:700 clamp(22px,2.6vw,30px)/1.15 var(--f-ui);letter-spacing:-.02em;margin:0 0 6px;color:#fff}
+.ins-sec>p.sub{color:var(--tx-2);margin:0 0 20px;max-width:70ch;line-height:1.55}
+.ins-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.ins-tabs button{all:unset;box-sizing:border-box;cursor:pointer;padding:9px 16px;border-radius:999px;border:1px solid var(--line-3);font:600 14px var(--f-ui);color:var(--tx-2)}
+.ins-tabs button[aria-selected="true"]{color:#fff;border-color:transparent;background:linear-gradient(#111,#111) padding-box,var(--spectrum) border-box;border:1px solid transparent}
+.ins-tabs button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.ins-panel{background:#060608;border:1px solid var(--line-2);border-radius:18px;padding:22px 24px}
+.ins-panel[hidden]{display:none}
+.ins-panel h3{font:700 17px var(--f-ui);margin:0 0 12px;color:#fff}
+.ins-steps{counter-reset:s;list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.ins-steps li{counter-increment:s;position:relative;padding:2px 0 2px 44px;line-height:1.55;color:var(--tx-1)}
+.ins-steps li:before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 14px var(--f-mono);color:#0a0a0a;background:linear-gradient(180deg,#ffe58a,#f5b81c)}
+.ins-steps kbd,.ins-k{font:600 13px var(--f-mono);background:#ffffff12;border:1px solid #ffffff26;border-radius:6px;padding:1px 7px;color:#fff;white-space:nowrap}
+.ins-fine{color:var(--tx-2);font-size:13.5px;line-height:1.55;margin:14px 0 0}
+.ins-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.ins-card{background:#060608;border:1px solid var(--line-2);border-radius:16px;padding:18px}
+.ins-card svg{width:26px;height:26px;margin:0 0 10px}
+.ins-card h3{font:700 15.5px var(--f-ui);margin:0 0 6px;color:#fff}
+.ins-card p{margin:0;color:var(--tx-2);font-size:14px;line-height:1.55}
+.ins-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:900px){.ins-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){main{padding-top:84px}.ins-hero{grid-template-columns:1fr;padding:28px 22px 26px;gap:8px}.ins-art{order:-1;min-height:0}.ins-icon{width:min(190px,52vw)}.ins-two{grid-template-columns:1fr}}
+@media (max-width:480px){.ins-grid{grid-template-columns:1fr}.ins-btn{width:100%;justify-content:center}.ins-panel{padding:18px 16px}}
+@media (prefers-reduced-motion:reduce){.ins-btn{transition:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<main id="main">
+  <section class="ins-hero" aria-labelledby="insH">
+    <div>
+      <p class="ins-eyebrow">The SOST app</p>
+      <h1 id="insH">Install SOST</h1>
+      <p class="ins-lead">The SOST Explorer in its own window, with the SOST icon on your desktop, taskbar, Start menu or home screen. One click, no installer file, always up to date.</p>
+      <div class="ins-cta">
+        <button type="button" class="ins-btn" id="insBtn" aria-disabled="true" aria-describedby="insStatus">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          <span id="insBtnTxt">Install SOST</span></button>
+        <a class="ins-ghost" href="#how">Step-by-step for your device</a>
+      </div>
+      <p class="ins-status" id="insStatus" role="status" aria-live="polite">Checking whether this browser can install SOST…</p>
+    </div>
+    <div class="ins-art" aria-hidden="true">
+      <div class="ins-tile"><img class="ins-icon" src="/android-chrome-512x512.png?v=sl20261113" width="512" height="512" alt=""><span class="ins-name">SOST</span></div>
+    </div>
+  </section>
+
+  <section class="ins-sec" id="how" aria-labelledby="howH">
+    <h2 id="howH">How to install on your device</h2>
+    <p class="sub">We picked your device automatically. Choose another one if you are installing somewhere else.</p>
+    <div class="ins-tabs" role="tablist" aria-label="Device">
+      <button type="button" role="tab" id="t-desk" aria-controls="p-desk" aria-selected="true">Windows · macOS · Linux</button>
+      <button type="button" role="tab" id="t-and" aria-controls="p-and" aria-selected="false" tabindex="-1">Android</button>
+      <button type="button" role="tab" id="t-ios" aria-controls="p-ios" aria-selected="false" tabindex="-1">iPhone · iPad</button>
+      <button type="button" role="tab" id="t-oth" aria-controls="p-oth" aria-selected="false" tabindex="-1">Other browsers</button>
+    </div>
+    <div class="ins-panel" role="tabpanel" id="p-desk" aria-labelledby="t-desk">
+      <div class="ins-two">
+        <div><h3>Microsoft Edge</h3><ol class="ins-steps">
+          <li>Press <b>Install SOST</b> above, or open the menu <span class="ins-k">⋯</span> → <b>Apps</b> → <b>Install SOST</b>.</li>
+          <li>Confirm with <b>Install</b>.</li>
+          <li>SOST opens the Explorer in its own window. Pin it to the taskbar or Start menu if you like.</li></ol></div>
+        <div><h3>Google Chrome</h3><ol class="ins-steps">
+          <li>Press <b>Install SOST</b> above, or the install icon at the right of the address bar.</li>
+          <li>No icon? Menu <span class="ins-k">⋮</span> → <b>Cast, save and share</b> → <b>Install page as app</b>.</li>
+          <li>Confirm with <b>Install</b>. SOST appears with your other apps.</li></ol></div>
+      </div>
+      <p class="ins-fine">Safari on macOS (Sonoma or later): <b>File</b> → <b>Add to Dock</b>.</p>
+    </div>
+    <div class="ins-panel" role="tabpanel" id="p-and" aria-labelledby="t-and" hidden>
+      <div class="ins-two">
+        <div><h3>Chrome</h3><ol class="ins-steps">
+          <li>Press <b>Install SOST</b> above, or the menu <span class="ins-k">⋮</span> → <b>Add to Home screen</b>.</li>
+          <li>Choose <b>Install</b> and confirm.</li>
+          <li>The SOST icon appears on your home screen and in the app drawer.</li></ol></div>
+        <div><h3>Samsung Internet</h3><ol class="ins-steps">
+          <li>Open the menu <span class="ins-k">≡</span> → <b>Add page to</b>.</li>
+          <li>Choose <b>Home screen</b>.</li>
+          <li>Tap <b>Add</b>.</li></ol></div>
+      </div>
+    </div>
+    <div class="ins-panel" role="tabpanel" id="p-ios" aria-labelledby="t-ios" hidden>
+      <h3>Safari on iPhone or iPad</h3><ol class="ins-steps">
+        <li>Tap <b>Share</b> <span class="ins-k" aria-label="the square with an arrow pointing up"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px" aria-hidden="true"><path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg></span> at the bottom (iPhone) or top (iPad) of Safari.</li>
+        <li>Scroll down and choose <b>Add to Home Screen</b>.</li>
+        <li>Keep the name <b>SOST</b> and tap <b>Add</b>.</li></ol>
+      <p class="ins-fine">Apple does not let websites show an install button, so these three taps are the only way. In Chrome or Edge on iOS 16.4 or later, the same <b>Share</b> → <b>Add to Home Screen</b> works.</p>
+    </div>
+    <div class="ins-panel" role="tabpanel" id="p-oth" aria-labelledby="t-oth" hidden>
+      <h3>Firefox and other browsers</h3>
+      <p class="ins-fine" style="margin-top:0">Firefox on Android: menu <span class="ins-k">⋮</span> → <b>Install</b> (or <b>Add to Home screen</b>). Firefox on a computer cannot install web apps: open <b>sostcore.com/install</b> in Edge or Chrome. You can also simply bookmark sostcore.com: the site and the app are the same.</p>
+    </div>
+  </section>
+
+  <section class="ins-sec" aria-labelledby="whyH">
+    <h2 id="whyH">What you get</h2>
+    <p class="sub">The app is sostcore.com in its own window. Nothing more is installed on your device.</p>
+    <div class="ins-grid">
+      <div class="ins-card"><svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8"/></svg><h3>Its own window</h3><p>The SOST icon on your desktop, taskbar, Start menu or home screen. No tabs, no address bar.</p></div>
+      <div class="ins-card"><svg viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg><h3>Always up to date</h3><p>Every update to the site reaches the app at once. There is nothing to download or update by hand.</p></div>
+      <div class="ins-card"><svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg><h3>No installer file</h3><p>No .exe, no .apk, no extension. Your browser installs it, and you can remove it at any time.</p></div>
+      <div class="ins-card"><svg viewBox="0 0 24 24" fill="none" stroke="#e879f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="16" cy="13.5" r="1.2"/></svg><h3>Your wallet stays put</h3><p>The app never reads, moves or copies wallet data. Your keys stay in the browser where you created them.</p></div>
+    </div>
+  </section>
+
+  <section class="ins-sec" aria-labelledby="rmH">
+    <h2 id="rmH">Remove the app</h2>
+    <p class="sub">Windows, macOS, Linux: open SOST → menu <span class="ins-k">⋯</span> → <b>Uninstall SOST</b>. If the browser also offers to clear site data, leave it unticked to keep your settings. Android: press and hold the icon → <b>Uninstall</b>. iPhone and iPad: press and hold the icon → <b>Remove App</b>. Removing the app never deletes a wallet.</p>
+  </section>
+</main>
+<script src="core/u-nav.js?v=in20261113b"></script>
+<script src="core/u-install.js?v=in20261113b"></script>
+</body>
+</html>

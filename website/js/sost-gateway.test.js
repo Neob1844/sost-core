@@ -128,7 +128,7 @@ t('Escrow.createSpec validates and stays a spec (no funds, no script)', function
 t('Swap exposes pairs + console link, no integration', function () {
   assert.ok(G.Swap.PAIRS.indexOf('SOST/ETH') !== -1);
   assert.strictEqual(typeof G.Swap.consoleUrl(), 'string');
-  assert.ok(/V15/.test(G.Swap.note()));
+  assert.ok(/H-01/.test(G.Swap.note()) && /not currently authorized/.test(G.Swap.note()));
 });
 t('PopcBond is one native SOST bond, gold is only a boost', function () {
   var rec = G.PopcBond.recommendation();

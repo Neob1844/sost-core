@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ecosystem — SOST (Convergence Universe preview)</title>
+<meta name="description" content="The SOST ecosystem with real states: wallet, DTD, Jackpot, app, research projects, retired and blocked modules, community and governance.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="assets/brand/sost-eye.ico?v=sl20261113" sizes="16x16 32x32 48x48 64x64">
+<link rel="apple-touch-icon" href="assets/brand/sost-eye-180.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<link rel="preload" href="../fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="core/u-display.css">
+<link rel="stylesheet" href="core/u-section.css">
+<link rel="stylesheet" href="core/u-audio.css?v=gm-20261104">
+<style>.sx{--acc:#34d399;--acc2:#22d3ee}
+.eco{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.eco a{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid var(--line-2);border-radius:var(--r-2);background:#050505e6;color:#e2e8f0;text-decoration:none}
+.eco a:hover{border-color:var(--acc)} .eco small{color:var(--tx-2);font-size:13px;line-height:1.5} .eco .bd{display:flex;gap:6px;flex-wrap:wrap}
+.grp{margin:22px 0 8px;font:600 12px var(--f-mono);letter-spacing:.2em;color:var(--tx-3);text-transform:uppercase}</style>
+<link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
+</head>
+<body class="sx">
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<header class="sx-hero" aria-labelledby="h1">
+  <canvas id="cv" aria-hidden="true"></canvas>
+  <div class="sx-copy">
+    <p class="eyebrow">SOST · Ecosystem</p>
+    <h1 id="h1">What runs, <em>what does not.</em></h1>
+    <p class="lede">Every module around the SOST chain with its real state: what is active on mainnet today, what is research, what is blocked until its controls pass, and what is retired. Nothing here is a promise of activation.</p>
+    <div class="acts"><a class="btn primary" href="../sost-wallet.html">Wallet</a><a class="btn" href="proto-c-orbit.html">DTD &amp; Jackpot</a><a class="btn" href="install.html">SOST app</a></div>
+  </div>
+  <p class="sx-legend">Module orbits · inner ring active, then research, blocked / not active, and retired on the faint outer ring · the same states as the list below</p>
+</header>
+<main id="main">
+<section class="sec" aria-labelledby="hNow">
+  <p class="eyebrow">Every block</p><h2 id="hNow">DTD and Jackpot, right now</h2>
+  <div class="stats">
+    <div class="stat"><div class="k">DTD next block</div><div class="n" id="vDtd">—</div><div class="s" id="sDtd"></div></div>
+    <div class="stat"><div class="k">Jackpot next draw</div><div class="n" id="vJp">—</div><div class="s" id="sJp"></div></div>
+    <div class="stat"><div class="k">Supply issued</div><div class="n" id="vSup">—</div><div class="s" id="sSup"></div></div>
+    <div class="stat"><div class="k">Release</div><div class="n" id="vRel">—</div><div class="s" id="sRel"></div></div>
+  </div>
+</section>
+<section class="sec" aria-labelledby="hMods">
+  <p class="eyebrow">Modules</p><h2 id="hMods">Modules and their real status</h2>
+  <div class="notice-h01" role="note">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span>Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div>
+  <p class="note">No bridge is active. wSOST is research only.</p>
+  <div id="mods"></div>
+</section>
+<section class="sec" aria-labelledby="hAll">
+  <p class="eyebrow">All ecosystem pages</p><h2 id="hAll">Community, governance and references</h2>
+  <ul class="links" id="links"></ul>
+</section>
+</main>
+<footer class="site" aria-label="Site directory"><div class="dir" id="dir"></div><p class="fine">SOST · Section: Ecosystem.</p></footer>
+<div class="u-bar"><span id="uStatus"><span class="st loading">LOADING</span></span></div>
+<div class="u-offline" id="uOffline"></div>
+<script src="../control-room/state.js"></script>
+<script src="../control-room/adapter.js"></script>
+<script src="core/u-data.js"></script>
+<script src="core/u-ui.js?v=ns20261113"></script>
+<script src="core/u-nav.js?v=in20261113a"></script>
+<script src="core/u-eco.js"></script>
+<script src="core/u-section.js"></script>
+<script>
+(function(){
+var UI=SOSTU.ui, N=SOSTU.nav, $=function(i){return document.getElementById(i);}, L=SOSTU.eco.LIST;
+try{N.render($('nav'),'ecosystem');N.directory($('dir'));}catch(e){}
+var ORDER=['active','research','blocked','retired'], NAME={active:'Active on mainnet',research:'Research',blocked:'Blocked / not active',retired:'Historical · retired'};
+$('mods').innerHTML=ORDER.map(function(k){ var g=L.filter(function(m){return (m[4]==='NOT ACTIVE'?'blocked':m[1])===k;}); if(!g.length) return '';
+  return '<p class="grp">'+NAME[k]+' · '+g.length+'</p><div class="eco">'+g.map(function(m){return '<a href="'+UI.esc(m[3]).replace(/^#dtd$/,'proto-c-orbit.html').replace(/^#research$/,'home.html#research')+'"><span class="bd">'+N.badge(m[1])+(m[4]?'<span class="ms blocked">'+UI.esc(m[4])+'</span>':'')+'</span><b>'+UI.esc(m[0])+'</b><small>'+UI.esc(m[2])+'</small></a>';}).join('')+'</div>'; }).join('');
+SOSTU.section.links($('links'),'ecosystem',{skip:['ecosystem.html'],
+ '../sost-wsost-gold-vault.html':{status:'research',label:'RESEARCH · NOT ACTIVE',desc:'Research roadmap; no bridge is active.'},
+ '../sost-dex.html':{desc:'Retired under H-01. Do not use.'},'../sost-otc.html':{desc:'Swap paths disabled under H-01.'}});
+function lab(s,txt){ if(s.status==='live') return UI.pv('observed',txt||null); return UI.pv('historical',(s.status==='fixture'?'FIXTURE · NOT LIVE':String(s.status).toUpperCase()+' · NOT LIVE')+(txt?' · '+txt:'')); }
+SOSTU.data.subscribe(function(s){ UI.bindStatus(s); if(!s.state) return; var a=s.state.active;
+  $('vJp').textContent='#'+UI.num(a.jackpot.nextHeight.value); $('sJp').innerHTML=UI.pv('projected','SCHEDULED BY RULE')+' in '+UI.num(a.jackpot.blocksRemaining.value)+' blocks · eligible '+UI.num(a.jackpot.eligible.value)+' '+lab(s);
+  $('vDtd').textContent=UI.num(a.dtd.eligibleNext.value)+' eligible'; $('sDtd').innerHTML=lab(s)+' for #'+UI.num(a.dtd.nextHeight.value)+' · payout '+UI.num(a.dtd.payout.value,4)+' SOST';
+  $('vSup').textContent=UI.num(a.supply.total.value,0); $('sSup').innerHTML=lab(s)+' SOST issued (getsupplyinfo), cap ≈ 4,669,201'; });
+fetch('../protocol-status.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(p){ $('vRel').textContent=p.release_tag; $('sRel').innerHTML='activation #'+UI.num(p.activation_height)+' · public trading '+(p.public_trading?'enabled':'disabled')+' '+UI.pv('verified','protocol-status.json'); }).catch(function(){ $('sRel').innerHTML=UI.pv('unavailable','protocol-status.json unreachable'); });
+// ---- Module orbits: one body per module on the ring of its state
+var COL={active:'#34d399',research:'#a78bfa',blocked:'#f87171',retired:'#64748b'};
+SOSTU.section.scene($('cv'),function(c,w,h,t){
+  c.fillStyle='#000'; c.fillRect(0,0,w,h);
+  var cx=w*(w<560?.5:.72), cy=h*(w<560?.3:.46), S=Math.min(w*(w<560?.48:.3),h*.42);
+  var g=c.createRadialGradient(cx,cy,0,cx,cy,S*.22); g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(.25,'rgba(251,1,13,.6)'); g.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=g; c.beginPath(); c.arc(cx,cy,S*.22,0,7); c.fill();
+  ORDER.forEach(function(k,ri){ var R=S*(.38+ri*.2), g=L.filter(function(m){return (m[4]==='NOT ACTIVE'?'blocked':m[1])===k;});
+    c.strokeStyle=k==='retired'?'rgba(100,116,139,.18)':COL[k]+'40'; c.setLineDash(k==='blocked'?[4,6]:k==='retired'?[1,6]:[]); c.lineWidth=1; c.beginPath(); c.ellipse(cx,cy,R,R*.42,-.18,0,7); c.stroke(); c.setLineDash([]);
+    g.forEach(function(m,i){ var a=t*(.12-ri*.025)+i*6.2832/g.length, x=cx+R*Math.cos(a)*Math.cos(-.18)-R*.42*Math.sin(a)*Math.sin(-.18), y=cy+R*Math.cos(a)*Math.sin(-.18)+R*.42*Math.sin(a)*Math.cos(-.18), z=Math.sin(a);
+      var r=(k==='active'?5:4)*(1+.25*z); c.fillStyle=COL[k]; c.globalAlpha=k==='retired'?.45:.9; c.shadowColor=COL[k]; c.shadowBlur=k==='active'?14:6;
+      c.beginPath(); c.arc(x,y,r,0,7); c.fill(); if(k==='blocked'){ c.strokeStyle=COL[k]; c.beginPath(); c.arc(x,y,r+3,0,7); c.stroke(); } c.shadowBlur=0;
+      if(w>900&&z>.2){ c.globalAlpha=.75; c.fillStyle='#e2e8f0'; c.font='11px ui-monospace,monospace'; c.fillText(m[0],x+9,y+4); } c.globalAlpha=1; }); });
+});
+})();
+</script>
+<script src="core/u-audio.js?v=gm-20261104" data-autoplay defer></script>
+<script src="core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
+</body>
+</html>

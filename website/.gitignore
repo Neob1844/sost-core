@@ -1,0 +1,15 @@
+# Generated on the production server (see deploy/web-sync/EXCLUDE.txt)
+/bootstrap-chain.json
+/chain-stall.json
+/api/address_earnings.json
+/api/block_series.json
+/api/block_series_genesis.json
+/api/control_room.json
+/api/dtd_history_acc.json
+/api/node_participation.json
+/api/explorer_version.json
+/api/positions_live.json
+/media/music/
+/sost-tokenization-dashboard.html
+/dex-crypto-test.html
+*.bak

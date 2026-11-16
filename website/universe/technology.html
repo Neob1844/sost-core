@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Technology — SOST (Convergence Universe preview)</title>
+<meta name="description" content="SOST technology: ConvergenceX mathematical convergence, memory-hard work, lightweight validation and integer-only consensus, with the specifications.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="assets/brand/sost-eye.ico?v=sl20261113" sizes="16x16 32x32 48x48 64x64">
+<link rel="apple-touch-icon" href="assets/brand/sost-eye-180.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<link rel="preload" href="../fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="core/u-display.css">
+<link rel="stylesheet" href="core/u-section.css">
+<link rel="stylesheet" href="core/u-audio.css?v=gm-20261104">
+<style>.sx{--acc:#e879f9;--acc2:#8b5cf6}
+.stack{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.stack li{display:grid;grid-template-columns:90px 1fr;gap:14px;align-items:center;padding:12px 16px;border:1px solid var(--line-2);border-radius:10px;background:#050505e6}
+.stack li b{font:600 11px var(--f-mono);letter-spacing:.12em;color:var(--acc)} .stack li span{color:#e2e8f0;font-size:14px} .stack li small{display:block;color:var(--tx-3);font-size:12.5px;margin-top:2px}</style>
+<link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
+</head>
+<body class="sx">
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<header class="sx-hero" aria-labelledby="h1">
+  <canvas id="cv" aria-hidden="true"></canvas>
+  <div class="sx-copy">
+    <p class="eyebrow">SOST · Technology</p>
+    <h1 id="h1">Work that <em>converges.</em></h1>
+    <p class="lede">ConvergenceX replaces brute-force hashing with verifiable convergence: each attempt solves a linear system by deterministic gradient descent, mixed with memory-hard reads, and proves that the solution lies in a stable basin. Consensus is integer-only and deterministic on every node.</p>
+    <div class="acts"><a class="btn primary" href="../casert-spec.html">ConvergenceX &amp; cASERT spec</a><a class="btn" href="../sost-whitepaper.html">Whitepaper</a><a class="btn" href="docs.html">Documentation library</a></div>
+  </div>
+  <p class="sx-legend">Convergence field · points descend the gradient of a landscape into stable basins (an illustration of gradient descent, not a mining computation)</p>
+</header>
+<main id="main">
+<section class="sec" aria-labelledby="hP">
+  <p class="eyebrow">Four ideas</p><h2 id="hP">Convergence, memory, validation, consensus</h2>
+  <div class="pillars">
+    <div class="pillar"><h3>Mathematical convergence</h3><blockquote>Instead of brute-force hash collision, ConvergenceX requires miners to produce verifiable convergence certificates using Transcript V2. Each attempt solves a tip-bound linear system via deterministic gradient descent, mixed with memory-hard scratchpad reads, and proves the solution lies in a stable convergence basin.</blockquote></div>
+    <div class="pillar"><h3>Memory</h3><blockquote>Mining is memory-hard (ASIC resistant), but verification is lightweight (anyone can run a node). The miner must build and hold the full 4 GB dataset and 4 GB scratchpad in memory to solve the ConvergenceX puzzle.</blockquote></div>
+    <div class="pillar"><h3>Validation</h3><blockquote>The node only verifies the compact Transcript V2 proof — SHA256 hashes and merkle checks, no dataset required.</blockquote></div>
+    <div class="pillar"><h3>Consensus</h3><blockquote>Integer-only arithmetic · Zero floating point · Deterministic across all nodes</blockquote></div>
+  </div>
+  <p class="src" style="margin-top:12px">All four quotes: <a href="../sost-technology.html">sost-technology.html</a> (verbatim).</p>
+</section>
+<section class="sec" aria-labelledby="hS">
+  <p class="eyebrow">The consensus stack</p><h2 id="hS">Five layers, vertically integrated</h2>
+  <ol class="stack">
+    <li><b>LAYER 01</b><span>ConvergenceX PoW<small>Gradient-descent work + stability basin proof</small></span></li>
+    <li><b>LAYER 02</b><span>cASERT bitsQ<small>Per-block difficulty Q16.16 adjustment</small></span></li>
+    <li><b>LAYER 03</b><span>cASERT Equalizer<small>Structural correction · Adaptive mode control</small></span></li>
+    <li><b>LAYER 04</b><span>SOSTCompact<small>Q16.16 difficulty encoding (nBits)</small></span></li>
+    <li><b>LAYER 05</b><span>MTP Validation<small>Median Time Past timestamp discipline</small></span></li>
+  </ol>
+  <p class="src" style="margin-top:12px">Layer names and descriptions as in the "Architecture Pipeline" of <a href="../sost-technology.html">sost-technology.html</a>.</p>
+</section>
+<section class="sec" aria-labelledby="hAll">
+  <p class="eyebrow">All technology pages</p><h2 id="hAll">Specifications and documents</h2>
+  <ul class="links" id="links"></ul>
+</section>
+</main>
+<footer class="site" aria-label="Site directory"><div class="dir" id="dir"></div><p class="fine">SOST · Section: Technology.</p></footer>
+<div class="u-bar"><span>SOST · Technology · quotes are verbatim from the linked pages</span></div>
+<script src="core/u-ui.js?v=ns20261113"></script>
+<script src="core/u-nav.js?v=in20261113a"></script>
+<script src="core/u-section.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i);};
+try{SOSTU.nav.render($('nav'),'technology');SOSTU.nav.directory($('dir'));}catch(e){}
+SOSTU.section.links($('links'),'technology',{skip:['technology.html'],
+ '../sost-technology.html':{desc:'The full technology page.'},
+ '../casert-spec.html':{desc:'ConvergenceX, cASERT, Equalizer and bitsQ, specified.'},
+ '../sost-protocol-spec.html':{desc:'Layer 1 protocol and consensus rules.'},
+ '../sost-whitepaper.html':{desc:'The whitepaper.'},
+ '../sost-tokenomics.html':{desc:'Supply and emission.'},
+ '../sost-roadmap.html':{desc:'The plan.'},
+ '../sost-security.html':{desc:'Audits and advisories.'},
+ '../protocol-registry.html':{desc:'Protocol registry.'},
+ '../sost-e2e.html':{desc:'Encrypted coordination (research).'},
+ '../sost-faq.html':{desc:'Questions and answers.'},
+ '../sost-help.html':{desc:'Support.'},
+ 'docs.html':{desc:'Every document in one library, in the new design.'}});
+// ---- Convergence field: gradient descent on a sum of Gaussian wells, contour bands, trails
+var W=[], P=[], bg=null;
+function f(x,y){ var v=0; for(var i=0;i<W.length;i++){ var dx=x-W[i][0], dy=y-W[i][1]; v-=W[i][2]*Math.exp(-(dx*dx+dy*dy)/W[i][3]); } return v; }
+function lay(w,h){ W=[[w*.70,h*.42,1,w*w*.010],[w*.86,h*.68,.8,w*w*.006],[w*.55,h*.74,.7,w*w*.005],[w*.92,h*.24,.6,w*w*.004],[w*.40,h*.30,.5,w*w*.004]];
+  bg=document.createElement('canvas'); bg.width=Math.ceil(w/4); bg.height=Math.ceil(h/4); var g=bg.getContext('2d'), im=g.createImageData(bg.width,bg.height), d=im.data;
+  for(var y=0;y<bg.height;y++) for(var x=0;x<bg.width;x++){ var v=-f(x*4,y*4), band=(v*14)%1, line=band<.08?1:0, j=(y*bg.width+x)*4;
+    d[j]=139+100*v; d[j+1]=92; d[j+2]=246; d[j+3]=(line*70+v*28)|0; }
+  g.putImageData(im,0,0); P=[]; for(var i=0;i<(w<560?140:320);i++) P.push(spawn(w,h)); }
+function spawn(w,h){ return {x:Math.random()*w,y:Math.random()*h,t:[],life:0}; }
+SOSTU.section.scene($('cv'),function(c,w,h,t,dt){
+  if(!bg) lay(w,h); c.fillStyle='#000'; c.fillRect(0,0,w,h); c.imageSmoothingEnabled=true; c.drawImage(bg,0,0,w,h);
+  var e=1.5;
+  P.forEach(function(p,i){ var gx=(f(p.x+e,p.y)-f(p.x-e,p.y))/(2*e), gy=(f(p.x,p.y+e)-f(p.x,p.y-e))/(2*e), k=w*w*.00025;
+    p.x-=gx*k*dt*60; p.y-=gy*k*dt*60; p.t.push(p.x,p.y); if(p.t.length>48) p.t.splice(0,2); p.life+=dt;
+    var sp=Math.hypot(gx,gy); if((sp<1e-5&&p.life>2)||p.life>9) { P[i]=spawn(w,h); return; }
+    c.strokeStyle='rgba(232,121,249,.35)'; c.lineWidth=1; c.beginPath(); for(var q=0;q<p.t.length;q+=2){ if(q) c.lineTo(p.t[q],p.t[q+1]); else c.moveTo(p.t[q],p.t[q+1]); } c.stroke();
+    c.fillStyle=sp<2e-4?'#ffffff':'#e879f9'; c.fillRect(p.x-1,p.y-1,2,2); });
+  W.forEach(function(q,i){ var r=8+3*Math.sin(t*1.6+i); var g=c.createRadialGradient(q[0],q[1],0,q[0],q[1],r*4); g.addColorStop(0,'rgba(255,255,255,.7)'); g.addColorStop(.3,'rgba(139,92,246,.35)'); g.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=g; c.beginPath(); c.arc(q[0],q[1],r*4,0,7); c.fill(); });
+},{resize:function(){ bg=null; }});
+})();
+</script>
+<script src="core/u-audio.js?v=gm-20261104" data-autoplay defer></script>
+<script src="core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
+</body>
+</html>

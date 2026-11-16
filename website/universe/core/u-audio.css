@@ -1,0 +1,81 @@
+/* SOST Universe — EPIC SOUNDTRACK 20 player (4C-3). Discreet: one pill above the bottom bar, a panel that opens upward.
+   Tokens from tokens.css (falls back to literal official values when a page does not load tokens.css). */
+.ua{--ua-bg:#050505;--ua-line:var(--line-2,#2a2a2a);--ua-tx:var(--tx-1,#e2e8f0);--ua-tx2:var(--tx-2,#94a3b8);--ua-tx3:var(--tx-3,#64748b);--ua-acc:var(--cyan,#22d3ee);
+  position:fixed;left:max(12px,var(--gutter,16px));bottom:calc(48px + env(safe-area-inset-bottom,0px));z-index:31;font:13px/1.4 var(--f-ui,system-ui,sans-serif);color:var(--ua-tx)}
+.ua button{font:inherit;color:inherit}
+.ua-fab{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px 0 11px;border-radius:999px;background:#000c;border:1px solid var(--ua-line);cursor:pointer;position:relative;overflow:hidden;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:border-color .2s}
+.ua-fab svg{width:16px;height:16px;flex:none}
+.ua-fab-t{font:600 11px var(--f-mono,monospace);letter-spacing:.12em;text-transform:uppercase;color:var(--ua-tx2)}
+.ua-fab:hover,.ua.open .ua-fab{border-color:var(--line-3,#3a3a3a)}
+.ua-fab:focus-visible,.ua button:focus-visible,.ua input:focus-visible,.ua a:focus-visible,.ua summary:focus-visible{outline:2px solid var(--ua-acc);outline-offset:2px}
+.ua[data-state="on"] .ua-fab-t{color:#fff}
+/* energy hairline: spectrum underline whose width breathes with the music (no bars, no equaliser) */
+.ua-meter{position:absolute;left:12px;right:12px;bottom:4px;height:2px;border-radius:2px;background:var(--spectrum,linear-gradient(90deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c));
+  transform-origin:left;transform:scaleX(calc(.08 + var(--e,0) * .92));opacity:0;transition:opacity .4s}
+.ua[data-state="on"] .ua-meter{opacity:.85}
+.ua-panel{position:absolute;left:0;bottom:44px;width:min(360px,calc(100vw - 24px));max-height:min(72vh,620px);overflow:auto;overscroll-behavior:contain;padding:12px 14px 12px;
+  background:var(--ua-bg);opacity:1;border:1px solid var(--ua-line);border-radius:var(--r-2,14px);box-shadow:0 24px 70px #000d;isolation:isolate}
+.ua-panel[hidden]{display:none}
+.ua-h{display:flex;align-items:center;justify-content:space-between;margin:-2px -4px 6px 0}
+.ua-k{font:600 10.5px var(--f-mono,monospace);letter-spacing:.28em;color:var(--ua-tx3)}
+.ua-ib{display:inline-grid;place-items:center;min-width:36px;height:36px;padding:0 6px;border-radius:10px;background:none;border:1px solid transparent;cursor:pointer;color:var(--ua-tx2);position:relative}
+.ua-ib svg{width:18px;height:18px}
+.ua-ib:hover{color:#fff;background:#ffffff0d}
+.ua-ib[aria-pressed="true"],.ua-rep.on{color:var(--ua-acc)}
+.ua-play{min-width:44px;height:44px;border-radius:999px;border-color:var(--line-3,#3a3a3a);color:#fff}
+.ua-play svg{width:20px;height:20px}
+.ua-rep-t{position:absolute;right:1px;bottom:1px;font:700 8px var(--f-mono,monospace);font-style:normal;letter-spacing:.02em}
+.ua-now{display:grid;gap:2px;margin:2px 0 8px}
+.ua-title{font:600 15px/1.3 var(--f-ui,system-ui);color:#fff}
+.ua-artist{color:var(--ua-tx2);font-size:12.5px}
+.ua-credit{color:var(--ua-tx3);font:11px/1.45 var(--f-mono,monospace)}
+.ua-credit a,.ua-cr{color:var(--ua-acc)}
+.ua-sug{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:0 0 8px;padding:8px 10px;border-radius:10px;background:#ffffff08;border:1px dashed var(--ua-line);font-size:12px;color:var(--ua-tx2)}
+.ua-sug[hidden]{display:none}
+.ua-sug b{color:var(--ua-tx)}
+.ua-sugb,.ua-sd{background:none;border:1px solid var(--line-3,#3a3a3a);border-radius:999px;padding:3px 10px;cursor:pointer;font-size:12px !important;color:#fff !important}
+.ua-prog{height:2px;background:#ffffff14;border-radius:2px;overflow:hidden;margin:0 0 8px}
+.ua-prog i{display:block;height:100%;background:var(--spectrum,#22d3ee);transform-origin:left;transform:scaleX(0);transition:transform .5s linear}
+.ua-ctl{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
+.ua-vol{flex:1 1 90px;min-width:80px;accent-color:var(--ua-acc);height:28px;margin-left:4px}
+.ua.busy .ua-play{animation:ua-busy 1.1s ease-in-out infinite}
+@keyframes ua-busy{50%{border-color:var(--ua-acc)}}
+.ua-msg{min-height:0;font-size:12px;color:var(--st-warn,#fbbf24);margin:4px 0 0}
+.ua-msg:empty{display:none}
+.ua-lib{margin:8px 0 0;border-top:1px solid var(--line-1,#1a1a1a);padding-top:6px}
+.ua-lib>summary{display:flex;gap:8px;align-items:center;cursor:pointer;list-style:none;padding:6px 2px;color:var(--ua-tx2);font:600 12px var(--f-mono,monospace);letter-spacing:.06em}
+.ua-lib>summary::-webkit-details-marker{display:none}
+.ua-lib>summary svg{width:15px;height:15px}
+.ua-list{list-style:none;margin:2px 0 0;padding:0;display:grid;gap:1px}
+.ua-cat{font:600 10px var(--f-mono,monospace);letter-spacing:.22em;text-transform:uppercase;color:var(--ua-tx3);padding:8px 6px 3px}
+.ua-empty{color:var(--ua-tx3);font-size:12px;padding:6px}
+.ua-tr{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:22px 1fr;column-gap:6px;padding:6px 6px;border-radius:8px;cursor:pointer}
+.ua-tr:hover{background:#ffffff0d}
+.ua-tr:focus-visible{outline:2px solid var(--ua-acc);outline-offset:-2px}
+.ua-tr[aria-current="true"]{background:#ffffff10;box-shadow:inset 2px 0 0 var(--ua-acc)}
+.ua-n{grid-row:span 2;font:11px var(--f-mono,monospace);color:var(--ua-tx3);padding-top:2px;text-align:right}
+.ua-tt{font-size:13px;color:var(--ua-tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ua-ta{font-size:11px;color:var(--ua-tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ua-react{display:flex;gap:8px;align-items:center;margin:10px 0 4px;font-size:12px;color:var(--ua-tx2);cursor:pointer}
+.ua-react input{accent-color:var(--ua-acc)}
+.ua-cr{display:inline-block;font:11px var(--f-mono,monospace);margin-top:4px}
+/* 4I: style selector + NEW badge */
+.ua-styles{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 6px}
+.ua-st{background:none;border:1px solid var(--line-2,#2a2a2a);border-radius:999px;padding:3px 9px;cursor:pointer;font:600 11px var(--f-mono,monospace) !important;letter-spacing:.04em;color:var(--ua-tx2) !important}
+.ua-st i{font-style:normal;color:var(--ua-tx3);font-weight:400;margin-left:2px}
+.ua-st:hover{color:#fff !important;border-color:var(--line-3,#3a3a3a)}
+.ua-st[aria-pressed="true"]{color:#fff !important;border-color:var(--ua-acc);background:#22d3ee14}
+.ua-st[hidden]{display:none}
+.ua-new{font:700 9px var(--f-mono,monospace);font-style:normal;letter-spacing:.08em;color:#000;background:var(--spectrum,#22d3ee);border-radius:4px;padding:0 4px;vertical-align:1px}
+@media (max-width:560px){
+  .ua{left:10px;bottom:calc(44px + env(safe-area-inset-bottom,0px))}
+  .ua-fab{height:34px;padding:0 11px 0 9px}
+  .ua-panel{width:calc(100vw - 20px);max-height:68vh}
+}
+@media (prefers-reduced-motion:reduce){.ua-meter,.ua-prog i{transition:none}.ua.busy .ua-play{animation:none}}
+@media print{.ua{display:none}}
+.ua[data-state="armed"] .ua-fab-t{color:var(--ua-tx2)}.ua[data-state="armed"] .ua-fab svg{opacity:.75}
+/* data-dock="low" (owner order 4 Nov 2026, global player): pages without the Universe bottom bar — the Explorer and the legacy
+   pages — keep the pill at the bottom-left corner where the old NES chiptune button was, above the page's own layers */
+.ua.ua-low{bottom:calc(12px + env(safe-area-inset-bottom,0px));left:calc(12px + env(safe-area-inset-left,0px));z-index:9990}

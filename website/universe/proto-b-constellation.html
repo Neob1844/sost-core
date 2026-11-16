@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SOST — Blockchain Constellation (prototype B)</title>
+<meta name="description" content="Prototype B: real SOST blocks as a constellation, the existing Network Mosaic and an accessible table, from the collector snapshots.">
+<link rel="preload" href="../fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<style>
+body{min-height:100svh}
+#sky{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#sky:active{cursor:grabbing}
+#sky:focus-visible{outline:2px solid var(--cyan);outline-offset:-4px}
+body:not(.m-constellation) #sky{display:none}
+.head{position:relative;z-index:var(--z-content);padding:84px max(16px,3vw) 0;max-width:520px;pointer-events:none}
+.head>*{pointer-events:auto}
+.kick{font:600 12px var(--f-mono);letter-spacing:.35em;color:var(--tx-3)}
+.head h1{font:700 clamp(26px,3.2vw,42px)/1.05 var(--f-ui);letter-spacing:-.02em;margin:8px 0 10px}
+.head p{color:var(--tx-2);font-size:15px;line-height:1.5;margin:0 0 12px}
+.modes{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line-2);border-radius:999px;background:#050505cc;margin:4px 0 10px}
+.modes button{all:unset;cursor:pointer;padding:7px 14px;border-radius:999px;font:600 12px var(--f-mono);letter-spacing:.12em;color:var(--tx-2)}
+.modes button[aria-selected="true"]{background:#ffffff14;color:#fff;box-shadow:inset 0 0 0 1px #ffffff33}
+.modes button:focus-visible{outline:2px solid var(--cyan)}
+.search{display:flex;gap:6px;margin-top:4px;max-width:360px}
+.search input{flex:1;min-width:0;background:#050505;border:1px solid var(--line-3);border-radius:999px;color:#fff;padding:10px 14px;font:14px var(--f-mono)}
+.rot{display:flex;gap:6px;margin-top:10px}
+body:not(.m-constellation) .rot{display:none}
+.side{position:fixed;right:max(16px,3vw);top:84px;z-index:var(--z-content);width:min(360px,calc(100vw - 32px));padding:16px;max-height:calc(100svh - 190px);overflow:auto}
+.side h2{margin:0 0 8px;font:600 11px var(--f-mono);letter-spacing:.3em;color:var(--tx-3);display:flex;gap:8px;align-items:center}
+.side .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.side .nav2{display:flex;gap:6px;margin-top:10px}
+body:not(.m-constellation) .side{display:none}
+.spec{position:fixed;left:max(16px,3vw);right:max(16px,3vw);bottom:58px;z-index:var(--z-content);padding:10px 12px}
+body:not(.m-constellation) .spec{position:relative;left:auto;right:auto;bottom:auto;margin:16px max(16px,3vw)}
+.spec .barline{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:1px}
+.spec .barline i{display:block}
+.spec .legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font:11px var(--f-mono);color:var(--tx-2)}
+.spec .legend button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.spec .legend button[aria-pressed="true"]{color:#fff;text-decoration:underline}
+.spec .legend button:focus-visible{outline:2px solid var(--cyan)}
+.spec .conc{display:flex;gap:16px;flex-wrap:wrap;align-items:baseline;margin-top:8px;font:12px var(--f-mono);color:var(--tx-2)}
+.spec .conc b{color:#fff;font-size:14px}
+.spec details{margin-top:6px} .spec summary{cursor:pointer;font:11px var(--f-mono);color:var(--tx-3)}
+.pane{position:relative;z-index:var(--z-content);margin:14px max(16px,3vw) 80px;display:none}
+body.m-mosaic #paneMosaic, body.m-table #paneTable{display:block}
+#paneTable .panel{padding:10px;overflow:auto;max-height:calc(100svh - 330px)}
+table{width:100%;border-collapse:collapse;font:12px var(--f-mono)}
+caption{text-align:left;color:var(--tx-2);padding:4px 8px 10px;font:12px var(--f-mono)}
+th,td{padding:5px 8px;border-bottom:1px solid #ffffff10;text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:#050505;color:var(--tx-2);font-weight:600}
+td a{color:var(--cyan)}
+tr.new td{animation:rownew 2s var(--ease)}
+@keyframes rownew{from{background:#fb010d33}}
+/* Network Mosaic (js/network-mosaic.js, unchanged) reads the explorer's CSS variables; scoped here.
+   Values from sost-explorer.html :root, except --text3 raised to the --tx-3 token for contrast and --code mapped to the system mono stack (no remote font). */
+#paneMosaic{--bg2:#0a0a0a;--bg3:#0f0f0f;--bg4:#161616;--border:#1a1a1a;--text:#c8c8c8;--text2:#94a3b8;--text3:#64748b;--red:#fb010d;--green:#4ade80;--green-dim:rgba(74,222,128,.12);--cyan:#67e8f9;--purple:#c084fc;--orange:#fb923c;--code:var(--f-mono)}
+.tip{position:fixed;z-index:var(--z-tip);pointer-events:none;padding:8px 10px;font:12px/1.45 var(--f-mono);background:#000e;border:1px solid var(--line-3);border-radius:8px;display:none}
+@media (max-width:820px){.side{top:auto;bottom:150px;left:16px;right:16px;width:auto;max-height:44svh;display:none}.side.show{display:block}.head p{display:none}.spec .legend{display:none}body.m-constellation .spec details{display:none}}
+</style>
+<link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
+</head>
+<body class="m-constellation">
+<a class="skip" href="#modeTable">Skip to the accessible table</a>
+<canvas id="sky" tabindex="0" aria-label="Constellation of the latest blocks. Arrow keys rotate within limits, Enter selects the newest block, comma and period step between blocks. The table mode lists every value."></canvas>
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<header class="head">
+  <div class="kick">EXPLORER · BLOCKCHAIN CONSTELLATION</div>
+  <h1>Every star is a real block.</h1>
+  <p>The newest block sits at the red core, older blocks spiral outward. Colour and shape show the producer address, size shows the time since the previous block.</p>
+  <div class="modes" role="tablist" aria-label="View">
+    <button role="tab" id="modeConst" aria-selected="true" aria-controls="sky" data-m="constellation">CONSTELLATION</button>
+    <button role="tab" id="modeMosaic" aria-selected="false" aria-controls="paneMosaic" data-m="mosaic">MOSAIC</button>
+    <button role="tab" id="modeTable" aria-selected="false" aria-controls="paneTable" data-m="table">TABLE</button>
+  </div>
+  <form class="search" id="find" role="search"><label class="sr" for="q">Find a height</label><input id="q" inputmode="numeric" autocomplete="off" placeholder="height, e.g. 33500"><button class="btn small" type="submit">Find</button></form>
+  <div class="rot" role="group" aria-label="Rotate (limited)"><button class="btn small" type="button" id="rotL" aria-label="Rotate left">⟲</button><button class="btn small" type="button" id="rotR" aria-label="Rotate right">⟳</button><button class="btn small" type="button" id="rotReset">reset view</button></div>
+</header>
+<aside class="side panel" id="side" aria-live="polite" aria-label="Selected block">
+  <h2>BLOCK <span id="sideTag"></span></h2>
+  <div id="detail"><p class="def">Select a star, use the search, or press Enter on the constellation.</p></div>
+  <div class="nav2"><button class="btn small" id="prev" type="button">← older</button><button class="btn small" id="next" type="button">newer →</button><button class="btn small" id="close" type="button">close</button></div>
+</aside>
+<section class="spec panel" id="concentration" aria-label="Producer concentration">
+  <div class="barline" id="barline" aria-hidden="true"></div>
+  <div class="legend" id="legend"></div>
+  <div class="conc" id="conc"><span class="skeleton" style="width:260px"></span></div>
+  <details><summary>How these metrics are defined · all producers by address</summary><p class="def" id="concDef"></p><div style="max-height:220px;overflow:auto"><table id="concTbl"></table></div></details>
+</section>
+<section class="pane" id="paneMosaic" role="tabpanel" aria-labelledby="modeMosaic">
+  <div id="networkMosaicCard"></div>
+  <p class="def">This is the existing Explorer <b>Network Mosaic</b> (<code>js/network-mosaic.js</code>, unchanged): its own 288-block buffer, refreshed by the same single data loop as this page (it re-renders when the shared stat cells change; no extra timer, no RPC).</p>
+  <span id="dMinersSub" hidden></span><span id="dMempool" hidden></span><input id="searchIn" hidden aria-hidden="true">
+</section>
+<section class="pane" id="paneTable" role="tabpanel" aria-labelledby="modeTable">
+  <div class="panel"><table><caption id="tblCap">loading…</caption><thead><tr><th scope="col">height</th><th scope="col">time (UTC)</th><th scope="col">interval</th><th scope="col">Equalizer</th><th scope="col">bitsQ</th><th scope="col">producer address</th><th scope="col">copy</th></tr></thead><tbody id="tbody"></tbody></table></div>
+</section>
+<div class="u-offline" id="uOffline"></div>
+<div class="tip" id="tip"></div>
+<div class="u-bar"><span id="uStatus"><span class="st loading">LOADING</span></span>
+  <span class="sp"><button class="btn small" id="replayBtn" type="button" title="Replays the assembly of the current tip block. It is not a new block.">◎ replay tip assembly</button>
+  <span class="qual" role="group" aria-label="Visual quality"><button data-q="balanced">3D</button><button data-q="lite">LITE</button><button data-q="off">2D</button></span><span class="fps" id="fps" aria-hidden="true"></span></span></div>
+
+<script src="../control-room/state.js"></script>
+<script src="../control-room/adapter.js"></script>
+<script src="core/u-data.js"></script>
+<script src="core/u-ui.js?v=ns20261113"></script>
+<script src="core/u-nav.js?v=in20261113a"></script>
+<script>SOSTU.nav.render(document.getElementById('nav'),'blockchain','Constellation');</script>
+<script>
+(function(){
+'use strict';
+var UI=SOSTU.ui, RM=UI.RM, $=function(id){return document.getElementById(id);};
+var cv=$('sky'), cx=cv.getContext('2d'), tip=$('tip');
+var Qs=new URLSearchParams(location.search);
+var tier=Qs.get('q')||(UI.hasGL2()?'balanced':'off');   // without a 3D-capable device the default is the flat 2D map
+var PAL=['#22d3ee','#e879f9','#a3e635','#facc15','#fb923c','#8b5cf6','#3b82f6','#4ade80'], SHAPES=['circle','square','triangle','diamond','ring','cross','hex','bar'];
+var S=null, rows=[], stars=[], byH={}, sel=-1, hov=-1, filt=null, prodOf={};
+var YAW0=.4, PITCH0=1.08, yaw=YAW0, pitch=PITCH0, YAWLIM=.9, drag=null, W=0,H=0,dpr=1, raf=0, proj=[], dust=[], assemble=null, mode='constellation', mosaicLoaded=false, t0=performance.now();
+var perf=window.__perf={frames:0,ms:[],tier:tier};
+function clampYaw(v){return Math.max(YAW0-YAWLIM,Math.min(YAW0+YAWLIM,v));}
+function resize(){dpr=Math.min(devicePixelRatio||1,tier==='balanced'?1.5:1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);kick();}
+function layout(){ // spiral: newest at the core, oldest at the rim; deterministic per height
+  var n=rows.length; var prev=byH; byH={};
+  stars=rows.map(function(r,i){var k=n>1?(n-1-i)/(n-1):0;var j1=Math.abs(Math.sin(r.h*78.233)*43758.5453)%1,j2=Math.abs(Math.sin(r.h*12.9898)*43758.5453)%1;
+    var rad=.08+Math.pow(k,.7)*1.0+j1*.035*(.3+k), ang=k*Math.PI*2*3.2+j2*.09, p=prodOf[r.miner]||{color:'#64748b',shape:'bar',pct:0};
+    var s={r:r,i:i,tx:Math.cos(ang)*rad,tz:Math.sin(ang)*rad,ty:j1*j2*.10*(1-k*.5),p:p,s:r.dt==null?2:1.3+Math.min(4.2,Math.log2(1+r.dt/120))};
+    var o=prev[r.h]; if(o&&!RM){s.x=o.x;s.y=o.y;s.z=o.z;}else{s.x=s.tx;s.y=s.ty;s.z=s.tz;} byH[r.h]=s; return s;});
+  if(!dust.length){var nd=tier==='balanced'?2500:tier==='lite'?700:0,sd=7;for(var i=0;i<nd;i++){var R=function(){sd=(sd*16807)%2147483647;return sd/2147483647;};var kk=R(),arm=R()<.5?0:Math.PI,a=kk*Math.PI*2*3.2+arm+(R()-.5)*.9,rr=.05+Math.pow(kk,.7)*1.25+(R()-.5)*.18;dust.push({x:Math.cos(a)*rr,z:Math.sin(a)*rr,y:(R()-.5)*.14*(1.2-kk),c:R()});}}
+}
+function P(x,y,z){var flat=tier==='off';var yw=flat?0:yaw,pt=flat?1.45:pitch;var c=Math.cos(yw),s=Math.sin(yw);var X=c*x+s*z,Z=-s*x+c*z;var cp=Math.cos(pt),sp=Math.sin(pt);var Y=cp*y-sp*Z;Z=sp*y+cp*Z;var f=Math.min(W,H)*(W<700?.48:.38);var d=flat?1:2.8/(2.8-Z*.9);
+  var ox=W>900?W*.52:W*.5, oy=H*(W<700?.5:.52);return [ox+X*f*d,oy+Y*f*d,d,Z];}
+function shape(c,k,x,y,s){s=Math.max(.3,s);c.beginPath();switch(k){
+  case 'square':c.rect(x-s,y-s,2*s,2*s);break;
+  case 'triangle':c.moveTo(x,y-s*1.2);c.lineTo(x+s*1.1,y+s*.8);c.lineTo(x-s*1.1,y+s*.8);c.closePath();break;
+  case 'diamond':c.moveTo(x,y-s*1.3);c.lineTo(x+s,y);c.lineTo(x,y+s*1.3);c.lineTo(x-s,y);c.closePath();break;
+  case 'ring':c.arc(x,y,s,0,7);c.moveTo(x+s*.45,y);c.arc(x,y,s*.45,0,7,true);break;
+  case 'cross':c.rect(x-s,y-s*.35,2*s,s*.7);c.rect(x-s*.35,y-s,s*.7,2*s);break;
+  case 'hex':for(var i=0;i<6;i++){var a=i/6*Math.PI*2;i?c.lineTo(x+Math.cos(a)*s,y+Math.sin(a)*s):c.moveTo(x+Math.cos(a)*s,y+Math.sin(a)*s);}c.closePath();break;
+  case 'bar':c.rect(x-s*.5,y-s*.5,s,s);break;
+  default:c.arc(x,y,s,0,7);}}
+function draw(now){raf=0; if(mode!=='constellation'||!stars.length) return; var t1=performance.now(); perf.frames++;
+  var moving=false; stars.forEach(function(s){var dx=s.tx-s.x,dz=s.tz-s.z,dy=s.ty-s.y;if(Math.abs(dx)+Math.abs(dz)+Math.abs(dy)>1e-4){s.x+=dx*.08;s.z+=dz*.08;s.y+=dy*.08;moving=true;}else{s.x=s.tx;s.z=s.tz;s.y=s.ty;}});
+  cx.clearRect(0,0,W,H);
+  var c0=P(0,0,0),g=cx.createRadialGradient(c0[0],c0[1],0,c0[0],c0[1],Math.min(W,H)*.12);g.addColorStop(0,'#fb010d66');g.addColorStop(.35,'#fb010d18');g.addColorStop(1,'#0000');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  if(tier!=='off'){cx.globalCompositeOperation='lighter';dust.forEach(function(d){var q=P(d.x,d.y,d.z);cx.fillStyle=d.c<.45?'#3b82f655':d.c<.75?'#8b5cf655':d.c<.93?'#e879f944':'#ffffff66';var z=(d.c<.93?1.3:1.8)*q[2];cx.fillRect(q[0],q[1],z,z);});cx.globalCompositeOperation='source-over';}
+  proj=stars.map(function(s){var q=P(s.x,s.y,s.z);return [q[0],q[1],q[2],q[3],s.i];});
+  cx.lineWidth=1;cx.strokeStyle='#ffffff14';cx.beginPath();for(var i=1;i<proj.length;i++){cx.moveTo(proj[i-1][0],proj[i-1][1]);cx.lineTo(proj[i][0],proj[i][1]);}cx.stroke();
+  // selected block: its connections (chain neighbours bright, same producer faint)
+  if(sel>=0){var me=proj[sel],sm=stars[sel].r.miner;cx.strokeStyle=stars[sel].p.color+'30';cx.beginPath();for(var j=Math.max(0,sel-120);j<Math.min(proj.length,sel+120);j++)if(j!==sel&&stars[j].r.miner===sm){cx.moveTo(me[0],me[1]);cx.lineTo(proj[j][0],proj[j][1]);}cx.stroke();
+    cx.strokeStyle='#fff';cx.lineWidth=2;cx.beginPath();if(sel>0){cx.moveTo(proj[sel-1][0],proj[sel-1][1]);cx.lineTo(me[0],me[1]);}if(sel<proj.length-1)cx.lineTo(proj[sel+1][0],proj[sel+1][1]);cx.stroke();cx.lineWidth=1;}
+  var order=proj.slice().sort(function(a,b){return a[3]-b[3];});
+  cx.globalCompositeOperation=tier==='off'?'source-over':'lighter';
+  order.forEach(function(q){var s=stars[q[4]],dim=filt&&s.r.miner!==filt;var sz=s.s*q[2]*(W<700?.65:.8);cx.globalAlpha=dim?.12:.92;
+    if(assemble&&s.r.h===assemble.h){var a=Math.min(1,(now-assemble.at)/1400);if(a<1){cx.globalAlpha=a;sz*=a;}}
+    if(tier==='balanced'&&!dim){cx.fillStyle=s.p.color+'1c';shape(cx,'circle',q[0],q[1],sz*2.2);cx.fill();}
+    cx.fillStyle=s.p.color;shape(cx,s.p.shape,q[0],q[1],sz);cx.fill();});
+  cx.globalAlpha=1;cx.globalCompositeOperation='source-over';
+  // new-block assembly: eight fragments converge on the new star, then a red ring expands from the core
+  if(assemble){var a=(now-assemble.at)/1400, s=byH[assemble.h];
+    if(a>=1.6||!s){assemble=null;} else if(s){var q=P(s.x,s.y,s.z);
+      if(a<1){for(var f=0;f<8;f++){var ang=f/8*Math.PI*2+a*2,r=(1-a)*90;cx.fillStyle=PAL[f%PAL.length];cx.globalAlpha=.9*(1-a*.5);shape(cx,'diamond',q[0]+Math.cos(ang)*r,q[1]+Math.sin(ang)*r,3.5);cx.fill();}cx.globalAlpha=1;}
+      var rr=Math.max(0,a-.6)*Math.min(W,H)*.35;if(rr>0){cx.strokeStyle='rgba(251,1,13,'+Math.max(0,1-(a-.6))+')';cx.lineWidth=2;cx.beginPath();cx.arc(c0[0],c0[1],rr,0,7);cx.stroke();cx.lineWidth=1;}
+      moving=true;}}
+  [hov,sel].forEach(function(k,j){if(k<0||!proj[k])return;var q=proj[k];cx.strokeStyle=j?'#fff':'#ffffffaa';cx.lineWidth=1.5;cx.beginPath();cx.arc(q[0],q[1],Math.max(2,10+stars[k].s*q[2]),0,7);cx.stroke();});
+  var ms=performance.now()-t1; if(perf.frames>3){perf.ms.push(ms);if(perf.ms.length>600)perf.ms.shift();}
+  $('fps').textContent=ms.toFixed(1)+' ms/frame · '+stars.length+' blocks · '+(tier==='off'?'2D':tier);
+  // ambient auto-rotation: one slow sweep (≤ 14 s) at ≤ 30 fps, then the scene is idle (0 frames) until the user acts
+  var idleRot=false; if(!RM&&tier!=='off'&&!drag&&!document.hidden&&autoRot){ if(now-t0>14000){autoRot=false;} else {yaw+=autoDir*.0004*33;if(Math.abs(yaw-YAW0)>YAWLIM){autoDir=-autoDir;yaw=clampYaw(yaw);}idleRot=true;} }
+  if(document.hidden)return;
+  if(moving)kick(); else if(idleRot)setTimeout(kick,33);
+}
+var autoRot=true, autoDir=1;
+function kick(){if(!raf&&mode==='constellation')raf=requestAnimationFrame(draw);}
+function pick(x,y){var b=-1,bd=196;for(var i=0;i<proj.length;i++){var dx=proj[i][0]-x,dy=proj[i][1]-y,d=dx*dx+dy*dy;if(d<bd){bd=d;b=i;}}return b;}
+function isJackpotH(h){return h>=25290&&(h-25290)%288===0;}
+function select(i,focusPanel){sel=i;var side=$('side');
+  if(i<0||!stars[i]){sel=-1;side.classList.remove('show');$('detail').innerHTML='<p class="def">Select a star, use the search, or press Enter on the constellation.</p>';$('sideTag').innerHTML='';kick();return;}
+  var r=stars[i].r,p=stars[i].p,isTip=r.h===S.state.meta.height,hash=isTip?S.tipHash:(r.hash||null);side.classList.add('show');
+  var kind=S.status==='live'?'observed':'historical';
+  $('sideTag').innerHTML=UI.pv(kind,S.status==='live'?null:S.status==='fixture'?'FIXTURE':S.status.toUpperCase());
+  $('detail').innerHTML='<dl class="kv"><dt>height</dt><dd>#'+UI.num(r.h)+(isTip?' (tip)':'')+'</dd><dt>time</dt><dd>'+UI.utc(r.t)+'</dd><dt>interval</dt><dd>'+(r.dt==null?'— (first in window)':UI.dur(r.dt))+'</dd><dt>Equalizer</dt><dd>'+UI.profile(r.prof)+(r.mode&&r.mode!==UI.profile(r.prof)?' (declared '+UI.esc(r.mode)+')':'')+'</dd><dt>bitsQ</dt><dd>'+r.bq+' ('+(r.bq/65536).toFixed(4)+')</dd>'+
+    '<dt>producer</dt><dd style="color:'+p.color+'">'+UI.esc(r.miner)+'</dd><dt>producer share</dt><dd>'+(p.pct||0).toFixed(1)+' % of last '+UI.num(S.concentration.w1200.window)+'</dd>'+
+    '<dt>hash</dt><dd>'+(hash?UI.esc(hash):UI.pv('unavailable','NOT IN SNAPSHOT')+'<br><span class="def">The collector publishes the tip hash only. The Explorer resolves it.</span>')+'</dd>'+
+    '<dt>DTD</dt><dd>'+(r.h>=25000?'draw block (every block since #25,000)':'—')+(isJackpotH(r.h)?'<br><b style="color:var(--gold)">DTD Jackpot height</b> · <a href="proto-c-orbit.html#h'+r.h+'">open in 288 Orbit</a>':'')+'</dd></dl>'+
+    '<div class="acts"><button class="copy" type="button" id="cpH">copy height</button>'+(hash?'<button class="copy" type="button" id="cpX">copy hash</button>':'')+'<a class="btn small" href="'+UI.explorerBlock(r.h)+'">open in Explorer →</a></div>';
+  $('cpH').onclick=function(){UI.copy(this,String(r.h));}; if(hash)$('cpX').onclick=function(){UI.copy(this,hash);};
+  if(focusPanel)$('cpH').focus();
+  kick();}
+cv.addEventListener('pointerdown',function(e){autoRot=false;drag={x:e.clientX,y:e.clientY,yaw:yaw,pitch:pitch,moved:0};cv.setPointerCapture(e.pointerId);});
+cv.addEventListener('pointermove',function(e){if(drag){var dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved=Math.max(drag.moved,Math.abs(dx)+Math.abs(dy));if(tier!=='off'){yaw=clampYaw(drag.yaw+dx*.006);pitch=Math.max(.55,Math.min(1.4,drag.pitch+dy*.004));}kick();return;}
+  var k=pick(e.clientX,e.clientY);if(k!==hov){hov=k;kick();}if(k<0){tip.style.display='none';return;}var r=stars[k].r;tip.innerHTML='<b>#'+UI.num(r.h)+'</b> · '+UI.dur(r.dt)+' · '+UI.profile(r.prof)+'<br>'+UI.esc(UI.short(r.miner));tip.style.display='block';tip.style.left=Math.min(e.clientX+14,innerWidth-220)+'px';tip.style.top=(e.clientY+14)+'px';});
+cv.addEventListener('pointerup',function(e){var m=drag&&drag.moved;drag=null;if(m<5)select(pick(e.clientX,e.clientY));});
+cv.addEventListener('pointerleave',function(){tip.style.display='none';hov=-1;kick();});
+cv.addEventListener('keydown',function(e){var k=e.key;
+  if(k==='ArrowLeft'||k==='ArrowRight'){autoRot=false;yaw=clampYaw(yaw+(k==='ArrowLeft'?-.12:.12));kick();e.preventDefault();}
+  else if(k==='ArrowUp'||k==='ArrowDown'){autoRot=false;pitch=Math.max(.55,Math.min(1.4,pitch+(k==='ArrowUp'?-.08:.08)));kick();e.preventDefault();}
+  else if(k==='Enter'){select(sel>=0?sel:stars.length-1);}
+  else if(k===','){if(sel>0)select(sel-1);} else if(k==='.'){if(sel>=0&&sel<stars.length-1)select(sel+1);}
+  else if(k==='Escape'){select(-1);}});
+$('rotL').onclick=function(){autoRot=false;yaw=clampYaw(yaw-.25);kick();};
+$('rotR').onclick=function(){autoRot=false;yaw=clampYaw(yaw+.25);kick();};
+$('rotReset').onclick=function(){yaw=YAW0;pitch=PITCH0;kick();};
+$('prev').onclick=function(){if(sel>0)select(sel-1);};
+$('next').onclick=function(){if(sel>=0&&sel<stars.length-1)select(sel+1);};
+$('close').onclick=function(){select(-1);cv.focus();};
+$('find').onsubmit=function(e){e.preventDefault();var h=parseInt($('q').value.replace(/\D/g,''),10);var i=stars.findIndex(function(s){return s.r.h===h;});
+  if(i<0){if(mode!=='constellation')setMode('constellation');$('side').classList.add('show');$('detail').innerHTML='<p class="def" style="color:var(--st-warn)">#'+(isNaN(h)?'?':UI.num(h))+' is not in the loaded window (#'+UI.num(rows[0].h)+'–#'+UI.num(rows[rows.length-1].h)+').</p>'+(isNaN(h)?'':'<a class="btn small" href="'+UI.explorerBlock(h)+'">open #'+UI.num(h)+' in the Explorer →</a>');return;}
+  if(mode==='table'){var tr=document.querySelector('tr[data-h="'+h+'"]');if(tr){tr.scrollIntoView({block:'center'});tr.querySelector('a').focus();}return;}
+  if(mode!=='constellation')setMode('constellation');select(i,true);};
+// ---- modes ----
+function setMode(m){mode=m;document.body.className=document.body.className.replace(/\bm-\w+/g,'').trim()+' m-'+m;
+  document.querySelectorAll('.modes button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.m===m);b.tabIndex=b.dataset.m===m?0:-1;});
+  if(m==='mosaic'&&!mosaicLoaded){mosaicLoaded=true;feedMosaic();var sc=document.createElement('script');sc.src='../js/network-mosaic.js';document.body.appendChild(sc);}
+  try{history.replaceState(null,'','#'+m);}catch(e){}
+  kick();}
+document.querySelectorAll('.modes button').forEach(function(b){b.onclick=function(){setMode(b.dataset.m);};
+  b.onkeydown=function(e){if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;var all=[].slice.call(document.querySelectorAll('.modes button')),i=all.indexOf(b);var n=all[(i+(e.key==='ArrowRight'?1:all.length-1))%all.length];n.focus();setMode(n.dataset.m);};});
+// MOSAIC: hand the shared snapshot to the unchanged network-mosaic.js (its documented inputs), never window.rpc
+window.doSearch=function(){var v=$('searchIn').value;if(v)location.href=UI.explorerBlock(v);};
+function feedMosaic(){ if(!S||!S.state)return;
+  window._diffHistory=rows.slice(-288).map(function(r){return {h:r.h,d:r.bq,t:r.t,miner:r.miner,p:r.prof,pm:r.mode||null};});
+  $('dMinersSub').textContent=S.concentration.w288.producers+' producers · #'+S.state.meta.height;
+  $('dMempool').textContent=String(S.state.active.chain.mempool.value||0);}
+// ---- table ----
+function table(fresh){var h='',n=rows.length;for(var i=n-1;i>=0;i--){var r=rows[i];h+='<tr data-h="'+r.h+'"'+(fresh&&i===n-1?' class="new"':'')+'><td><a href="'+UI.explorerBlock(r.h)+'">#'+r.h+'</a></td><td>'+UI.utc(r.t).replace(' UTC','')+'</td><td>'+(r.dt==null?'—':r.dt+' s')+'</td><td>'+UI.profile(r.prof)+'</td><td>'+r.bq+'</td><td>'+UI.esc(r.miner)+'</td><td><button class="copy" type="button" data-cp="'+r.h+'" aria-label="copy height '+r.h+'">copy</button></td></tr>';}
+  $('tbody').innerHTML=h;
+  $('tblCap').innerHTML=UI.num(n)+' blocks #'+UI.num(rows[0].h)+'–#'+UI.num(rows[n-1].h)+' · '+UI.pv(S.status==='live'?'observed':'historical',S.status==='live'?null:S.status.toUpperCase())+' · source: api/block_series.json + api/control_room.json deltaBlocks (collector)';}
+$('tbody').addEventListener('click',function(e){var b=e.target.closest('[data-cp]');if(b)UI.copy(b,b.dataset.cp);});
+// ---- producer spectrum + concentration ----
+function svgShape(k,c){var m={square:'<rect x="-4" y="-4" width="8" height="8"/>',triangle:'<path d="M0-5L5 4H-5z"/>',diamond:'<path d="M0-5L4 0L0 5L-4 0z"/>',ring:'<circle r="4" fill="none" stroke="'+c+'" stroke-width="2"/>',cross:'<path d="M-5-1.5h10v3h-10zM-1.5-5h3v10h-3z"/>',hex:'<path d="M5 0L2.5 4.3H-2.5L-5 0L-2.5-4.3H2.5z"/>',bar:'<rect x="-2.5" y="-2.5" width="5" height="5"/>'};return '<g fill="'+c+'">'+(m[k]||'<circle r="4"/>')+'</g>';}
+function spectrum(){var c=S.concentration.w1200,c2=S.concentration.w288,bl='',lg='',others=0,on=0;
+  c.list.forEach(function(p,i){if(i<8){bl+='<i style="background:'+PAL[i]+';flex:'+p.n+'"></i>';lg+='<button type="button" data-m="'+p.addr+'" aria-pressed="'+(filt===p.addr)+'"><svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true">'+svgShape(SHAPES[i],PAL[i])+'</svg>'+UI.esc(UI.short(p.addr))+' '+p.pct.toFixed(1)+' %</button>';}else{others+=p.n;on++;}});
+  if(others){bl+='<i style="background:#64748b;flex:'+others+'"></i>';lg+='<span>▪ '+on+' other addresses '+(100*others/c.window).toFixed(1)+' % (grey squares)</span>';}
+  $('barline').innerHTML=bl;$('legend').innerHTML=lg;
+  $('conc').innerHTML='<span>last '+UI.num(c.window)+' blocks (#'+UI.num(c.from)+'–#'+UI.num(c.to)+'): top 2 addresses <b>'+c.top2.toFixed(1)+' %</b> · top 1 <b>'+c.top1.toFixed(1)+' %</b> · <b>'+c.producers+'</b> addresses</span><span>last 288: top 2 <b>'+c2.top2.toFixed(1)+' %</b> · <b>'+c2.producers+'</b> addresses</span>'+UI.pv(S.status==='live'?'observed':'historical',S.status==='live'?'COMPUTED · LIVE WINDOW':'COMPUTED · '+S.status.toUpperCase());
+  $('conc').innerHTML+='<span>HHI <b>'+UI.num(c.hhi)+'</b> / 10,000 · Nakamoto coefficient <b>'+c.nakamoto+'</b> (last '+UI.num(c.window)+') · last 288: HHI <b>'+UI.num(c2.hhi)+'</b>, Nakamoto <b>'+c2.nakamoto+'</b></span>';
+  var tb='';c.list.forEach(function(p,i){tb+='<tr><td>'+(i+1)+'</td><td>'+UI.esc(p.addr)+'</td><td>'+p.n+'</td><td>'+p.pct.toFixed(2)+' %</td></tr>';});
+  $('concTbl').innerHTML='<caption>Producers by address, blocks #'+UI.num(c.from)+'–#'+UI.num(c.to)+' ('+UI.num(c.window)+' blocks, '+UI.utc(c.fromT)+' → '+UI.utc(c.toT)+')</caption><thead><tr><th scope="col">rank</th><th scope="col">address</th><th scope="col">blocks</th><th scope="col">share</th></tr></thead><tbody>'+tb+'</tbody>';
+  $('concDef').innerHTML='<b>Producer share</b> = blocks whose coinbase pays a given <code>miner_address</code> ÷ blocks in the window, computed in this page from the collector block series (the same rows the Control Room uses). <b>Top 2</b> = sum of the two largest shares. Addresses are not identities: one operator may use several addresses, so the share of the largest <i>operators</i> is at least this figure. The metric describes block production only, not node count or ownership. <b>HHI</b> (Herfindahl–Hirschman index) = Σ share² with shares in %, from near 0 (many equal producers) to 10,000 (one producer). <b>Nakamoto coefficient</b> = the smallest number of addresses that together produced more than 50 % of the blocks in the window. Limits: both are computed per address, not per operator; a short window moves quickly; they measure who produced blocks, not hashrate, intent or security. They are not evidence of an attack, and a lower value is not a claim of sufficient decentralisation.';
+  document.querySelectorAll('#legend [data-m]').forEach(function(el){el.onclick=function(){filt=filt===el.dataset.m?null:el.dataset.m;document.querySelectorAll('#legend button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.m===filt);});kick();};});}
+document.querySelectorAll('.qual button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.q===tier);b.onclick=function(){tier=b.dataset.q;perf.tier=tier;document.querySelectorAll('.qual button').forEach(function(x){x.setAttribute('aria-pressed',x===b);});dust=[];layout();resize();};});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)kick();});
+addEventListener('resize',resize);
+// ---- data: one shared loop ----
+SOSTU.data.subscribe(function(s){
+  UI.bindStatus(s); if(!s.state)return; S=s;
+  var selH=sel>=0&&stars[sel]?stars[sel].r.h:null;
+  rows=s.rows.slice(-1200); prodOf={};
+  s.concentration.w1200.list.forEach(function(p,i){prodOf[p.addr]={color:i<8?PAL[i]:'#64748b',shape:SHAPES[Math.min(i,7)],pct:p.pct};});
+  layout(); spectrum(); table(s.newBlocks.length>0); if(mosaicLoaded)feedMosaic();
+  if(selH!=null){var i=stars.findIndex(function(x){return x.r.h===selH;});select(i);}
+  if(s.newBlocks.length){assemble={h:s.newBlocks[s.newBlocks.length-1],at:performance.now()};UI.live((s.replay?'Replay of block ':'New block ')+assemble.h+(s.replay?', not a new block':' observed'));}
+  resize();
+  if(!draw.once){draw.once=1;var hm=(location.hash||'').slice(1);if(/^(mosaic|table)$/.test(hm))setMode(hm);}
+});
+$('replayBtn').onclick=function(){SOSTU.data.replayTip();};
+})();
+</script>
+</body>
+</html>

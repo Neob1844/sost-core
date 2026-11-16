@@ -1,0 +1,43 @@
+SOST V17 - NODE OPERATOR CHECKLIST (block #40,000)
+Preparation version, 14 November 2026. Status: TESTING - no V17 release published yet.
+Guide: https://sostcore.com/sost-v17-upgrade.html
+
+Never share your recovery phrase, private keys or passwords. Nobody from SOST will ask for them.
+
+NOW (before the release)
+[ ] Node height equals the Explorer height (getinfo "blocks"), profile "mainnet", connections > 0
+[ ] SHA-256 of my current sost-node written down; it matches V30000 FINAL (sost-v30000-history.html)
+[ ] Architecture checked (uname -m = x86_64); OS noted; Windows users: WSL2
+[ ] Start command / systemd unit saved to a file (paths, --rpc-user, --rpc-pass-file, --chain, --profile)
+[ ] RPC password passed with --rpc-pass-file, never on the command line
+[ ] Wallet files and keys backed up offline; chain data location noted
+[ ] I know which processes run here (pgrep -a sost-)
+
+WHEN THE RELEASE IS PUBLISHED (before #39,900)
+[ ] V17 tag, binaries and SHA256SUMS taken ONLY from sostcore.com and github.com/Neob1844/sost-core/releases
+[ ] sha256sum of sost-node / sost-cli matches SHA256SUMS exactly (not the V30000 hashes)
+[ ] If built from source: same tag, tests pass, and the hash matches - otherwise use the official binaries
+
+DURING THE WINDOW #39,900 - #39,999
+[ ] Backup done
+[ ] Node stopped cleanly; pgrep -a sost-node prints nothing
+[ ] Only the executable replaced; chain data and configuration kept (no resync, no chain deletion)
+[ ] Node started with the same command
+[ ] sha256sum of the running binary file matches the release
+[ ] connections > 0 (getinfo / getpeerinfo)
+[ ] height rising and equal to the Explorer
+[ ] getbestblockhash equals the Explorer tip hash
+
+BEFORE #40,000
+[ ] V17 node installed and verified, synced, with peers
+[ ] No serious errors in the log
+[ ] My tip hash equals the Explorer tip hash
+
+AT AND AFTER #40,000 (do not restart exactly at #40,000)
+[ ] Hash of block #40,000 equals the Explorer
+[ ] Height keeps rising; peers connected
+[ ] New blocks show the V17 reward split (getblock: v17_reward)
+[ ] No rejected-block, fork or reorganization warnings
+[ ] Problem? Stop mining, do not send transactions, report height + tip hash + build checksum
+
+Do not go back to V16 / V30000 after activation on your own: that requires a coordinated network plan.

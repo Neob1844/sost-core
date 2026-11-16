@@ -1,0 +1,17 @@
+# wSOST emblem (owner P0 «unificación» §6, 5 Nov 2026): the official SOST eye with the iris glyph Σ replaced by WΣ. Masters and method: audits/sost-universe/unify-p0/wsost/ (not in the site). Separate path from the SOST eye (universe/assets/brand/sost-eye-*) on purpose: the two can never be swapped by a file name.
+83658c4ccfa1c5be9165c6851a264668fde81fd452e10293a5ac0e4572a36158  wsost-eye-1024.png
+caa39c6ec54d957840ce88a2cceaa5b037e7f02ae97efc512b9ac22115e8adbd  wsost-eye-128.png
+1c97323542927652a5ae6c94af442daef4ce417c6fde9f8d4dcf9f3fcecf7692  wsost-eye-16.png
+1ba33a671b6e1e8d4b67279361d9922728fd6ee5b6cc0ab42a8ae9e1cfcbee23  wsost-eye-180.png
+21cfd96b70efde05cca7077077c49fec00e5989c8a0089208457a2227c322d34  wsost-eye-192.png
+a534237225345c20ef07fa93aff7bdd25d8524ea1893a5782d31f4a52cebb221  wsost-eye-256.png
+76f02e99679f1e0b72c8c650a8733cad4a16ffa742662689fb20df5dedb874da  wsost-eye-32.png
+0ea6295b1d2be86883fa1fad99461563875c427f62bdb72d88672d51f296bcac  wsost-eye-48.png
+6bc6930021adde6b978e736341408d69ef34ffe9c2d44c454aa28f7ae39f47fc  wsost-eye-512.png
+273e4b22cc3a0f32cd3a485c9cf482e551b37b482a660a1d4a53ce9416da109d  wsost-eye-64.png
+673e78e198aa58c4375d6ccc80527a5e3b93649c75dbd90ae7f7dbcf9641e434  wsost-eye-96.png
+93c5ab447daf9b533b1bcafc1d77c4d363c349219b60589304812fb4b75fde5e  wsost-eye-small-16.png
+98773f19842452d49e103db2fff7e79f107d8bd3e9b9a5766c4beb0326249474  wsost-eye-small-32.png
+f719a2f6518419203fb1816ec1246faa1349eeee3ca4044004478ebcc03ca811  wsost-eye-small-48.png
+8ec83e312d80b866205e9c55a154c474c08ed30926a4aa8e5b564b82d7a1493e  wsost-eye-small-64.png
+7831e06aee5379f6f7ee42165216c70599238d5edac1d0a9bebcdd076210d473  wsost-eye.ico

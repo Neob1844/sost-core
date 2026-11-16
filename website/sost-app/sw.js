@@ -1,75 +1,11 @@
-// SOST — Sovereign Stock Token — Service Worker v84
-const CACHE_NAME = 'sost-app-v85';   // rs20261112g: brand identity (Gold Sigma) cache refresh
-const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png?v=rs20261112g',
-  './icon-512.png?v=rs20261112g'
-];
-
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(STATIC_ASSETS)));
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-  ));
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-
-  // ALWAYS network-first for dynamic endpoints (never cache these)
-  if (url.pathname.endsWith('/rpc') ||
-      url.pathname.includes('/rpc/') ||
-      url.pathname.includes('/api/') ||
-      url.pathname.includes('node-status') ||
-      e.request.method === 'POST' ||
-      url.pathname.includes('sost-explorer') ||
-      url.pathname.includes('sost-wallet') ||
-      url.search.includes('nocache')) {
-    e.respondWith(
-      fetch(e.request).catch(() =>
-        caches.match(e.request).then(r => r || new Response('Offline', {status: 503}))
-      )
-    );
-    return;
-  }
-
-  // NETWORK-FIRST for the app shell HTML. The old cache-first rule served a
-  // stale index.html to installed PWAs forever, so a deploy never reached them
-  // (different data vs the browser tab, DTD stuck at an old value). Now the app
-  // always loads the latest HTML when online and falls back to cache offline.
-  if (e.request.mode === 'navigate' ||
-      url.pathname.endsWith('/') ||
-      url.pathname.endsWith('/index.html')) {
-    e.respondWith(
-      fetch(e.request).then(resp => {
-        if (resp && resp.ok) {
-          const cl = resp.clone();
-          caches.open(CACHE_NAME).then(c => c.put(e.request, cl));
-        }
-        return resp;
-      }).catch(() =>
-        caches.match(e.request).then(r => r || caches.match('./index.html'))
-          .then(r => r || new Response('Offline', {status: 503}))
-      )
-    );
-    return;
-  }
-
-  // Cache-first for truly static assets (icons, manifest).
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
-      if (resp.ok) {
-        const cl = resp.clone();
-        caches.open(CACHE_NAME).then(c => c.put(e.request, cl));
-      }
-      return resp;
-    }).catch(() => new Response('Offline', {status: 503})))
-  );
+// SOST app — Service Worker v90: RETIREMENT (14-Nov-2026, one Explorer). The /sost-app/ interface is retired; /sost-app/ answers
+// 301 to /sost-explorer.html. This worker removes the old app caches (names sost-app-*, nothing else: IndexedDB, localStorage,
+// wallets and keys are never touched by a service worker), unregisters itself and opens the canonical Explorer in its windows.
+self.addEventListener('install', function () { self.skipWaiting(); });
+self.addEventListener('activate', function (e) {
+  e.waitUntil(caches.keys()
+    .then(function (k) { return Promise.all(k.filter(function (n) { return n.indexOf('sost-app-') === 0; }).map(function (n) { return caches.delete(n); })); })
+    .then(function () { return self.registration.unregister(); })
+    .then(function () { return self.clients.matchAll({ type: 'window' }); })
+    .then(function (cs) { cs.forEach(function (c) { try { c.navigate('/sost-explorer.html'); } catch (x) {} }); }));
 });

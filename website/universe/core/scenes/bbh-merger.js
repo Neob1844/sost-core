@@ -1,0 +1,8 @@
+/* SOST Universe scene module: bbh-merger (metadata and card: core/u-scenes.js). Loaded on demand by core/u-core.js. */
+SOSTU.sceneLib.register("bbh-merger", {
+ "p": " if(kind<=.92){ float T=fract(u_t/12.); float ins=pow(T/.78,3.); float sep=1.1*pow(max(1.-T/.8,0.),.25); float om=1.5/pow(max(sep,.12),1.5); float ph=u_t*.0+(1.-pow(max(1.-T/.8,0.),.625))*55.; vec3 q; float mrg=smoothstep(.78,.82,T); if(kind<.30){ vec3 d=vec3(sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*cos(a_s.y*6.2832),2.*a_s.z-1.,sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*sin(a_s.y*6.2832)); float k=step(.5,a_s.x); vec3 C=vec3(cos(ph+k*3.1416),0.,sin(ph+k*3.1416))*sep*(1.-mrg); float R=mix(.22,.38,mrg); q=C+d*R; float vv=dot(normalize(rotY(rotX(q,u_tilt),u_yaw)-rotY(rotX(C,u_tilt),u_yaw)),vec3(0.,0.,1.)); col=u_col[int(mod(k*3.+2.,7.))]*1.2; alpha=.25*smoothstep(-.1,.4,vv); sz=.9; } else { float r=.5+3.3*a_s.x; float th=a_s.y*6.2832; float ret=u_t*.0; float tr=T-r*.06; float lph=2.*(1.-pow(max(1.-tr/.8,0.),.625))*55.; float amp=tr<.8?pow(max(1.-max(tr,0.)/.8,0.),-.25)*.06:.25*exp(-(tr-.8)*25.); float h=amp*cos(2.*th-lph)*step(0.,tr); q=vec3(r*cos(th),h*3.,r*sin(th)); col=mix(u_col[1],u_col[3],.5+.5*cos(2.*th-lph))*1.05; alpha=(.05+.35*min(abs(h)*4.,1.))*(1.-r/4.); sz=.9; } p=q; }",
+ "l": " { float T=fract(u_t/12.); float r=.5+3.3*u; float th=(mod(cid,64.)+j1)/64.*6.2832; float tr=T-r*.06; float lph=2.*(1.-pow(max(1.-tr/.8,0.),.625))*55.; float amp=tr<.8?pow(max(1.-max(tr,0.)/.8,0.),-.25)*.06:.25*exp(-(tr-.8)*25.); float h=amp*cos(2.*th-lph)*step(0.,tr); p=vec3(r*cos(th),h*3.,r*sin(th)); col=u_col[1]*(1.-u)*.5; }",
+ "la": 0.9,
+ "rc": "vec3(0.)",
+ "rad": 0
+});

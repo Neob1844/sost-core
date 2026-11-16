@@ -1,392 +1,150 @@
-// SOST V30000 — #30,000 network upgrade advance notice — site-wide collapsible banner
+// SOST V17 — network upgrade at block #40,000 — site-wide compact banner (14-Nov-2026).
 //
-// One source of truth for the miner / node-operator advance notice about the
-// DTD Jackpot V2 activation at block #30,000. Included on every page.
+// Replaces the V30000 (#30,000) operator notice. The full V30000 text is kept, unchanged, at
+// sost-v30000-history.html and in News & Updates › Historical Network Upgrades.
+// The file name is kept so every page that already loads it (60 pages) gets the new banner.
 //
-// Placement:
-//   - if the page contains <div id="sost-v16-notice-mount"></div> the banner is
-//     rendered inside that element (used by the explorer, which wants it above
-//     the community-channels banner);
-//   - otherwise it is inserted at the top of <body>, just below the developer
-//     note strip when that strip is present.
+// Placement: inside <div id="sost-v16-notice-mount"></div> when the page has one (Explorer),
+// otherwise at the top of <body> (below the developer note strip when present).
+// Collapsed by default on every load (state never persisted): Legacy red Σ (Brand Kit /brand/legacy), title, block #40,000,
+// status and blocks left. Details opens the full text (changes, CRITICAL chain-split warning, links); a second click folds it.
+// 14-Nov-2026 owner P0: compact collapsed head; the long live sentence moved inside the panel.
 //
-// Collapsed by default. To edit the wording, change NOTICE_HTML below.
+// STATUS must reflect reality: PROPOSED | TESTING | RELEASE READY | ACTIVATION SCHEDULED | ACTIVE.
+// It is TESTING while no approved V17 release exists. Change it only together with the release.
 
 (function () {
   'use strict';
-
   if (window.__sostV16NoticeInjected) return;
   window.__sostV16NoticeInjected = true;
 
-  var CSS = `
-.sost-v16{--v16-gold:#fbbf24;--v16-mag:#e879f9;--v16-cyan:#22d3ee;--v16-green:#4ade80;
-  position:relative;z-index:auto;max-width:1400px;margin:10px auto;padding:2px;border-radius:12px;
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
-  background:linear-gradient(115deg,#fbbf24,#e879f9 28%,#22d3ee 52%,#4ade80 74%,#fbbf24);
-  background-size:300% 300%;animation:sost-v16-flow 9s linear infinite;
-  box-shadow:0 0 22px rgba(232,121,249,.30),0 0 46px rgba(34,211,238,.16);}
-@keyframes sost-v16-flow{0%{background-position:0% 50%}100%{background-position:300% 50%}}
-.sost-v16-inner{background:linear-gradient(150deg,#120a1d 0%,#0a0f1c 55%,#140f06 100%);border-radius:10px;overflow:hidden}
-.sost-v16-head{display:flex;align-items:center;gap:13px;width:100%;padding:13px 16px;
-  background:transparent;border:0;color:#e8e8e8;font-family:inherit;text-align:left;cursor:pointer}
-.sost-v16-head:hover{background:rgba(232,121,249,.06)}
-.sost-v16-head:focus-visible{outline:1px dashed var(--v16-mag);outline-offset:-3px}
-.sost-v16-icon{font-size:24px;line-height:1;flex:0 0 auto;filter:drop-shadow(0 0 10px rgba(251,191,36,.65));
-  animation:sost-v16-bob 2.6s ease-in-out infinite}
-@keyframes sost-v16-bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-3px) rotate(3deg)}}
-.sost-v16-titles{flex:1 1 auto;min-width:0}
-.sost-v16-title{display:block;font-size:15px;font-weight:900;letter-spacing:.4px;
-  background:linear-gradient(90deg,#fbbf24,#e879f9 45%,#22d3ee);background-size:220% 100%;
-  -webkit-background-clip:text;background-clip:text;color:transparent;animation:sost-v16-flow 7s linear infinite}
-.sost-v16-sub{display:block;font-size:11px;color:#a9b6c7;letter-spacing:.3px;margin-top:3px;line-height:1.5}
-.sost-v16-sub b{color:var(--v16-green)}
-.sost-v16-chip{flex:0 0 auto;padding:5px 11px;border-radius:6px;font-size:10.5px;font-weight:900;letter-spacing:1.1px;
-  color:#0a0a0a;background:linear-gradient(90deg,#fbbf24,#f59e0b);box-shadow:0 0 14px rgba(251,191,36,.45);white-space:nowrap}
-.sost-v16-cta{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:6px;
-  border:1px solid var(--v16-mag);background:rgba(232,121,249,.10);color:#f5d0fe;
-  font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
-.sost-v16-head[aria-expanded="false"] .sost-v16-cta{animation:sost-v16-pulse 2.4s ease-in-out infinite}
-@keyframes sost-v16-pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,121,249,.45)}50%{box-shadow:0 0 0 5px rgba(232,121,249,0)}}
-.sost-v16-chev{display:inline-block;transition:transform .18s ease}
-.sost-v16-head[aria-expanded="true"] .sost-v16-chev{transform:rotate(180deg)}
-.sost-v16-body{padding:4px 18px 18px;border-top:1px dashed rgba(232,121,249,.35);
-  font-size:12.5px;line-height:1.7;color:#dfe6ee;max-height:72vh;overflow-y:auto}
-.sost-v16-body p{margin:.5em 0}
-.sost-v16-body b{color:#fff}
-.sost-v16-alert{margin:12px 0 0;padding:11px 14px;border-radius:8px;border:1px solid rgba(74,222,128,.6);
-  background:linear-gradient(135deg,rgba(74,222,128,.13),rgba(34,211,238,.07));color:#d9ffe8;font-size:12.5px;line-height:1.65}
-.sost-v16-alert .k{color:var(--v16-green);font-weight:900;letter-spacing:.6px}
-.sost-v16-nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin:13px 0 0}
-.sost-v16-num{background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.32);border-radius:8px;padding:9px 11px}
-.sost-v16-num .n{display:block;font-size:17px;font-weight:900;color:var(--v16-cyan);letter-spacing:.5px}
-.sost-v16-num .l{display:block;font-size:10px;color:#9fb6c4;letter-spacing:.5px;margin-top:2px;line-height:1.45}
-.sost-v16-h{margin:18px 0 6px;font-size:11px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;color:var(--v16-gold)}
-.sost-v16-h.mag{color:var(--v16-mag)}
-.sost-v16-h.cy{color:var(--v16-cyan)}
-.sost-v16-rule{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:10px 0 0}
-.sost-v16-rule div{border-radius:8px;padding:11px 13px;font-size:12px;line-height:1.6}
-.sost-v16-rule .gate{background:rgba(232,121,249,.08);border:1px solid rgba(232,121,249,.45)}
-.sost-v16-rule .gate b{color:var(--v16-mag)}
-.sost-v16-rule .weight{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.45)}
-.sost-v16-rule .weight b{color:var(--v16-gold)}
-.sost-v16-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:10px 0 0}
-.sost-v16-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.10);border-radius:8px;padding:12px 14px}
-.sost-v16-card h4{margin:0 0 7px;font-size:12px;font-weight:900;letter-spacing:.8px;color:#fff;text-transform:uppercase}
-.sost-v16-card.miner{border-color:rgba(251,191,36,.45)}
-.sost-v16-card.miner h4{color:var(--v16-gold)}
-.sost-v16-card.node{border-color:rgba(34,211,238,.45)}
-.sost-v16-card.node h4{color:var(--v16-cyan)}
-.sost-v16-body ol,.sost-v16-body ul{margin:.4em 0 .2em 1.25em;padding:0}
-.sost-v16-body li{margin:.3em 0;font-size:12px;line-height:1.6}
-.sost-v16-code{margin:10px 0 0;padding:10px 13px;border-radius:8px;background:#07090e;border:1px solid rgba(255,255,255,.10);
-  color:#bfe9ff;font-size:11.5px;line-height:1.65;white-space:pre;overflow-x:auto}
-.sost-v16-blink{margin:12px 0 0;padding:12px 14px;border-radius:8px;border:2px solid #fb010d;
-  background:linear-gradient(135deg,rgba(251,1,13,.20),rgba(251,1,13,.06));color:#ffe3e3;
-  font-size:13px;line-height:1.7;animation:sost-v16-blink 1.1s steps(1,end) infinite}
-.sost-v16-blink b{color:#fff}
-.sost-v16-blink .hdr{display:block;color:#ff3b3b;font-weight:900;letter-spacing:1.3px;text-transform:uppercase;font-size:12px;margin-bottom:5px}
-.sost-v16-blink .win{color:#ff6b6b;font-weight:900}
-@keyframes sost-v16-blink{
-  0%,49%{border-color:#fb010d;box-shadow:0 0 20px rgba(251,1,13,.55);background:linear-gradient(135deg,rgba(251,1,13,.24),rgba(251,1,13,.08))}
-  50%,100%{border-color:rgba(251,1,13,.35);box-shadow:0 0 0 rgba(251,1,13,0);background:linear-gradient(135deg,rgba(251,1,13,.07),rgba(251,1,13,.02))}}
-.sost-v16-redchip{flex:0 0 auto;padding:5px 11px;border-radius:6px;font-size:10.5px;font-weight:900;letter-spacing:1px;
-  color:#fff;background:#fb010d;border:1px solid #ff6b6b;white-space:nowrap;
-  animation:sost-v16-chipblink 1.1s steps(1,end) infinite}
-@keyframes sost-v16-chipblink{0%,49%{opacity:1;box-shadow:0 0 16px rgba(251,1,13,.75)}50%,100%{opacity:.32;box-shadow:0 0 0 rgba(251,1,13,0)}}
-/* Narrow screens: the chip is white-space:nowrap at ~368px, wider than a
-   phone, and flex:0 0 auto stops it shrinking - it widened every page that
-   carries the notice. Let it wrap instead. */
-@media (max-width:768px){
-  .sost-v16-head{flex-wrap:wrap;gap:9px;padding:12px 13px}
-  .sost-v16-redchip,.sost-v16-chip,.sost-v16-cta{flex:0 1 auto;max-width:100%;white-space:normal;
-    font-size:9.5px;letter-spacing:.6px;line-height:1.35}
-  .sost-v16-titles{flex:1 1 100%}
-}
-@media (prefers-reduced-motion:reduce){
-  .sost-v16-blink,.sost-v16-redchip,.sost-v16-icon,.sost-v16-title,.sost-v16{animation:none !important}
-  .sost-v16-blink{border-color:#fb010d;box-shadow:0 0 16px rgba(251,1,13,.45)}
-  .sost-v16-redchip{opacity:1}
-}
-.sost-v16-warn{margin:13px 0 0;padding:11px 14px;border-radius:8px;border:1px solid rgba(251,1,13,.65);
-  background:linear-gradient(135deg,rgba(251,1,13,.12),rgba(251,1,13,.04));color:#ffdede;font-size:12px;line-height:1.65}
-.sost-v16-warn b{color:#ff6b6b}
-.sost-v16-links{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0 0}
-.sost-v16-links a{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;
-  background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.45);color:#a5f3fc;text-decoration:none;
-  font-size:11px;font-weight:700;letter-spacing:.4px}
-.sost-v16-links a:hover{background:rgba(34,211,238,.18)}
-.sost-v16-foot{margin:14px 0 0;padding-top:10px;border-top:1px dashed rgba(255,255,255,.12);
-  font-size:10.5px;line-height:1.6;color:#8b98a8}
-@media (max-width:760px){
-  .sost-v16{margin:8px auto}
-  .sost-v16-head{flex-wrap:wrap;gap:9px;padding:11px 12px}
-  .sost-v16-titles{flex-basis:100%;order:3}
-  .sost-v16-title{font-size:13.5px}
-  .sost-v16-chip{font-size:9.5px;padding:4px 9px}
-  .sost-v16-body{padding:4px 12px 15px;font-size:12px}
-}`;
+  var V17_HEIGHT = 40000;
+  var WINDOW_START = 39900;
+  var STATUS = 'TESTING';
+  var STATUS_NOTE = 'Candidate under final testing. No V17 release has been published. Do not install unofficial builds.';
+  var LINK_NEW = 'sost-v17.html';
+  var LINK_GUIDE = 'sost-v17-upgrade.html';
+  var LINK_REL = 'sost-v17-upgrade.html#release';
 
-  var NOTICE_HTML = `
-<div class="sost-v16" role="region" aria-label="SOST V30000 #30,000 network upgrade notice">
- <div class="sost-v16-inner">
-  <button type="button" class="sost-v16-head" aria-expanded="false" aria-controls="sostV16Body" title="Open the V30000 #30,000 network upgrade notice">
-    <span class="sost-v16-icon" aria-hidden="true">&#9889;</span>
-    <span class="sost-v16-titles">
-      <span class="sost-v16-title">SOST V30000 &mdash; #30,000 network upgrade &middot; Miner &amp; Node Operator Notice</span>
-      <span class="sost-v16-sub"><b>V30000 IS ACTIVE since block #30,000.</b> Optional <b>node-only</b> hardening update available (v30000-final.1, no consensus change). Miner and CLI unchanged. <b>DTD Jackpot V2 active &middot; NODE_BIND open</b> (first bind #30,194, first heartbeat #30,196). Still on an older binary? Update to V30000 FINAL now.</span>
-    </span>
-    <span class="sost-v16-chip">ACTIVE SINCE #30,000</span>
-    <span class="sost-v16-redchip" style="background:linear-gradient(90deg,#16a34a,#15803d);border-color:#39ff14">&#10004; V30000 ACTIVE &mdash; OPTIONAL NODE HARDENING UPDATE (node-only, no consensus change)</span>
-    <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Operator guide</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
-  </button>
+  var CSS = '' +
+'.sost-v17{max-width:1400px;margin:10px auto;border:1px solid rgba(251,1,13,.55);border-radius:12px;background:#07070a;' +
+'  color:#e8e8ec;font:13px/1.55 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;box-shadow:0 0 0 1px rgba(212,175,55,.10) inset}' +
+'.sost-v17 *{box-sizing:border-box}' +
+'.sost-v17-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%;padding:11px 14px;background:transparent;border:0;' +
+'  color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:12px}' +
+'.sost-v17-head:hover{background:rgba(255,255,255,.03)}' +
+'.sost-v17-head:focus-visible{outline:2px solid #d4af37;outline-offset:-2px}' +
+'.sost-v17-sig{flex:0 0 auto;width:30px;height:30px;display:block}' +
+'.sost-v17-t{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}' +
+'.sost-v17-title{font-weight:800;letter-spacing:.3px;color:#fff;font-size:13.5px;white-space:nowrap}' +
+'.sost-v17-left{color:#a9b1bf;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}' +
+'.sost-v17-left b{color:#fff}' +
+'.sost-v17-title em{font-style:normal;color:#d4af37}' +
+'.sost-v17-live{color:#c9ced8;font-variant-numeric:tabular-nums}' +
+'.sost-v17-live b{color:#fff}' +
+'.sost-v17-chip{flex:0 0 auto;padding:3px 9px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:1px;' +
+'  border:1px solid #d4af37;color:#f6d77a;background:rgba(212,175,55,.10);white-space:nowrap}' +
+'.sost-v17-chip.active{border-color:#39ff14;color:#39ff14;background:rgba(57,255,20,.08)}' +
+'.sost-v17-more{flex:0 0 auto;font-size:11px;font-weight:700;color:#cfd3da;white-space:nowrap}' +
+'.sost-v17-more i{display:inline-block;font-style:normal;transition:transform .15s}' +
+'.sost-v17-head[aria-expanded="true"] .sost-v17-more i{transform:rotate(180deg)}' +
+'.sost-v17-body{padding:2px 16px 16px;border-top:1px solid rgba(255,255,255,.08);max-height:70vh;overflow-y:auto}' +
+'.sost-v17-body p{margin:.6em 0}' +
+'.sost-v17-crit{margin:12px 0;padding:11px 13px;border-radius:8px;border:2px solid #fb010d;background:rgba(251,1,13,.09);color:#ffe1e1}' +
+'.sost-v17-crit .h{display:block;color:#ff4d55;font-weight:900;letter-spacing:.8px;font-size:12px;margin-bottom:4px}' +
+'.sost-v17-crit b{color:#fff}' +
+'.sost-v17-now{margin:12px 0;padding:10px 13px;border-radius:8px;border:1px solid rgba(57,255,20,.45);background:rgba(57,255,20,.05);color:#d9f7dc}' +
+'.sost-v17-now b{color:#39ff14}' +
+'.sost-v17-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}' +
+'.sost-v17-links a{display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;border:1px solid rgba(212,175,55,.6);' +
+'  color:#f6d77a;text-decoration:none;font-size:12px;font-weight:700;background:rgba(212,175,55,.06)}' +
+'.sost-v17-links a:hover{background:rgba(212,175,55,.16)}' +
+'.sost-v17-foot{margin-top:10px;font-size:11px;color:#8a92a0}' +
+'@media (max-width:640px){.sost-v17{margin:8px}.sost-v17-head{padding:9px 11px;gap:9px;flex-wrap:nowrap}.sost-v17-title{font-size:12.5px}' +
+'  .sost-v17-chip{font-size:9.5px;padding:2px 7px}.sost-v17-left{font-size:11.5px}' +
+'  .sost-v17-body{padding:2px 12px 14px;font-size:12.5px}}';
 
-  <div class="sost-v16-body" id="sostV16Body" hidden>
+  var HTML = '' +
+'<div class="sost-v17" role="region" aria-label="SOST V17 network upgrade at block 40,000">' +
+' <button type="button" class="sost-v17-head" aria-expanded="false" aria-controls="sostV17Body">' +
+'  <img class="sost-v17-sig" src="/brand/legacy/sost-legacy-logo-512.png" alt="" width="30" height="30" decoding="async">' +
+'  <span class="sost-v17-t"><span class="sost-v17-title">SOST V17 &middot; <em>BLOCK #40,000</em></span>' +
+'   <span class="sost-v17-chip" data-v17-status>' + STATUS + '</span>' +
+'   <span class="sost-v17-left" data-v17-left>&hellip; blocks left</span></span>' +
+'  <span class="sost-v17-more">Details <i>&#9662;</i></span>' +
+' </button>' +
+' <div class="sost-v17-body" id="sostV17Body" hidden>' +
+'  <p class="sost-v17-live" data-v17-live>SOST V17 &mdash; network upgrade &middot; block #40,000</p>' +
+'  <p>SOST is preparing a coordinated network upgrade targeting block <b>#40,000</b>. Proposed improvements include revised mining and DTD rewards, ' +
+'  new coinbase maturity rules, stronger reorganization safeguards, improved P2P synchronization and enhanced node and wallet security.</p>' +
+'  <p>Node operators and miners must prepare compatible, verified software before activation. The release remains subject to final testing and approval.</p>' +
+'  <p style="color:#a9b1bf">Status: <b style="color:#f6d77a">' + STATUS + '</b> &mdash; ' + STATUS_NOTE + '</p>' +
+'  <div class="sost-v17-crit"><span class="h">&#9888; CRITICAL &mdash; COORDINATED NETWORK UPGRADE REQUIRED</span>' +
+'   All miners and validating node operators must install and verify the approved V17 release before block #40,000. ' +
+'   The recommended coordinated restart window is blocks <b>#39,900&ndash;#39,999</b>. Failure to update may cause a <b>chain split</b>: ' +
+'   incompatible nodes could follow different blockchain histories, reject blocks, and report divergent balances or confirmations. ' +
+'   <b>Do not continue mining with an incompatible release after activation.</b></div>' +
+'  <div class="sost-v17-now"><b>Today (until #40,000):</b> the network runs the V30000 rules and <b>V30000 FINAL</b> is the valid build. ' +
+'   No action is needed now. Its binaries and checksums stay published on the ' +
+'   <a href="sost-v30000-history.html" style="color:#39ff14;font-weight:700">V30000 page</a>.</div>' +
+'  <div class="sost-v17-links">' +
+'   <a href="' + LINK_NEW + '">What&rsquo;s changing</a>' +
+'   <a href="' + LINK_GUIDE + '">Operator Upgrade Guide</a>' +
+'   <a href="' + LINK_REL + '">Release &amp; Checksums</a>' +
+'   <a href="news.html#historical-network-upgrades">Historical Network Upgrades</a>' +
+'  </div>' +
+'  <div class="sost-v17-foot">The 100-block window is counted in blocks, not hours: its duration depends on the real block rate. ' +
+'   Dates shown are estimates from the measured block rate, not commitments.</div>' +
+' </div>' +
+'</div>';
 
-    <div style="margin:0 0 14px;padding:16px 18px;border:3px solid #39ff14;border-radius:10px;background:linear-gradient(135deg,rgba(57,255,20,.14),rgba(57,255,20,.04));box-shadow:0 0 22px rgba(57,255,20,.35);text-align:center;line-height:1.6">
-      <div style="font:900 18px/1.3 ui-monospace,monospace;color:#39ff14;letter-spacing:.6px">&#10004; V30000 IS ACTIVE SINCE BLOCK #30,000</div>
-      <div style="font-size:14.5px;color:#fff;margin-top:8px">Nodes and miners running <b>V30000 FINAL</b> are on the correct chain &mdash; <b>no action required</b>.<br>
-      <b style="color:#ffd166">Optional, recommended for node operators:</b> the <b>v30000-final.1 node hardening update</b> &mdash; <b>sost-node only</b>,
-      <b>no consensus change</b>, miner and CLI <b>unchanged</b> (miners do not recompile).</div>
-      <div style="font-size:13px;color:#ffb3b3;margin-top:8px"><b>Still running an older binary</b> (v16.x, v30000, v30000-rc1, emergency builds)?
-      Update to V30000 FINAL <b>now</b> &mdash; the first NODE_BIND is on chain since #30,194, and only V30000 FINAL follows the V30000 rules.</div>
-    </div>
-    <div class="sost-v16-blink">
-      <span class="hdr">&#9888; What to do &mdash; for every miner and node operator</span>
-      <b>V30000 is active.</b> The valid consensus build is <b>V30000 FINAL</b>
-      (<a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700">releases/tag/v30000-final</a>).
-      Node operators may additionally install the optional <b>node-only hardening</b>
-      (<a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final.1" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700">releases/tag/v30000-final.1</a>):
-      it makes chain replay fail-closed on a damaged chain file, stops instead of serving partial state if a failed reorg
-      cannot be restored, and never writes the chain file while a reorg is in progress. <b>It does not change block rules,
-      rewards (50% miner / 50% DTD), supply or NODE_BIND.</b> Earlier v30000 / RC / emergency builds remain <b>superseded</b>.
-      <div class="sost-v16-code">VALID SHA256 &mdash; V30000
-sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd   (V30000 FINAL)
-sost-node    7ca5ea630a50f45d70cedd073c1bbb239abd69ac6f2e30c316236121c601b736   (v30000-final.1 hardened, optional)
-sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75   (same in both)
-sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b   (same in both)
-
-sha256sum sost-node sost-miner sost-cli     # node must match ONE of the two node lines</div>
-      <div style="margin:12px 0 4px;font:800 13px ui-monospace,monospace;color:#ffd166;letter-spacing:.4px">&#9654; NOT YET ON V30000 FINAL? &mdash; 4 SIMPLE STEPS (do them now)</div>
-      <div class="sost-v16-code"># 1. GET THE NEW BINARIES  (A: recompile  -or-  B: download)
-#    (node operators wanting the optional hardening: use tag/release v30000-final.1 instead of v30000-final)
-#    A) recompile (Ubuntu/Debian/WSL2):
-sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
-git clone https://github.com/Neob1844/sost-core.git sost-final &amp;&amp; cd sost-final
-git checkout v30000-final
-cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
-cd build
-#    B) or download the official binaries:
-#    for f in sost-node sost-miner sost-cli SHA256SUMS; do wget -q https://github.com/Neob1844/sost-core/releases/download/v30000-final/$f; done; chmod +x sost-*
-
-# 2. VERIFY  (must match exactly)
-sha256sum sost-node sost-miner sost-cli
-#   ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd  sost-node
-#   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75  sost-miner
-#   09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b  sost-cli
-
-# 3. RESTART THE NODE on the new sost-node   (now)
-#    systemd:  sudo systemctl stop sost-node
-#              sudo install -m 0755 sost-node /path/to/your/sost-node
-#              sudo systemctl start sost-node
-#    by hand:  stop the old node (Ctrl+C) and start the NEW ./sost-node with your usual flags
-
-# 4. RESTART THE MINER on the new sost-miner   (now)
-#    stop the old miner (Ctrl+C), then start the NEW one with your usual flags, e.g.:
-./sost-miner --wallet ~/sost-keys/my-wallet.json --mining-key-label "my-mining-key" \\
-  --genesis genesis_block.json --rpc 127.0.0.1:18232 --rpc-user &lt;user&gt; --rpc-pass-file ~/.sost/rpc.pass \\
-  --blocks 999999 --max-nonce 500000 --profile mainnet --realtime --threads &lt;N&gt;
-#    (--realtime is mandatory. Your chain data is kept: no resync.)</div>
-      <div style="font-size:11.5px;color:#9fb6c4;margin:4px 0 0">Hash different after recompiling? Use option B (official binaries). <b>Never run a binary whose SHA256 does not match.</b> Full guide with every case: <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</div>
-      <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V30000 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify all three binaries &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Jackpot V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">GitHub release (FINAL)</a></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">On any older version, <b>including earlier V30000 / RC / emergency downloads</b>? Swap node, miner and cli to the FINAL SECURITY BUILD and verify each SHA256.</div></div>
-    </div>
-
-    <div style="margin:12px 0;padding:12px 14px;border:1px solid rgba(34,211,238,.5);border-radius:8px;background:rgba(34,211,238,.05);font-size:12.5px;line-height:1.65;color:#cfd8e3">
-      <div style="font-weight:800;color:#22d3ee;letter-spacing:.4px;margin-bottom:6px">NODE_BIND &mdash; IMPORTANT AFTER ACTIVATION</div>
-      If you operate a node and want DTD Jackpot eligibility:
-      <ol style="margin:6px 0 6px 18px">
-        <li>Register your <b>NODE_BIND</b> after activation (#30,000) with the FINAL build:<br><code>sost-cli --wallet &lt;wallet.json&gt; --mining-key-label &lt;label&gt; createnodebind 1 --node-key-file ~/.sost/node.key</code></li>
-        <li>Verify that the registered owner/address is <b>your</b> intended mining address.</li>
-        <li>Verify that subsequent heartbeats are associated with that node.</li>
-        <li>If the registered owner is not yours, stop relying on Jackpot eligibility and report it to the SOST developers.</li>
-      </ol>
-      <div style="margin:8px 0;padding:8px 11px;border:2px solid #39ff14;border-radius:7px;background:rgba(57,255,20,.07)"><b style="color:#39ff14">&#10004; NODE_BIND IS OPEN &mdash; GO-AHEAD GIVEN (11 OCT 2026).</b> The first two-signature NODE_BIND confirmed in block <b>#30,194</b>, its first automatic NODE_HEARTBEAT in <b>#30,196</b>, and the chain has kept building on both. Miners on <b>V30000 FINAL</b> can register now: create the bind with the command above, broadcast it, and run your node with <code>--node-key-file</code> so it emits its own heartbeat once per 288-block epoch. Eligibility for each draw is decided by consensus &mdash; check it with <code>checkhistoricaljackpoteligibility</code>.</div>
-      <b>New ownership protection, active from #30,000:</b> a NODE_BIND must be signed by <b>both</b> your mining key and
-      your <b>node key</b>, so only the holder of a node key can bind it, and a bind cannot be copied to another miner.
-      NODE_BIND affects <b>Jackpot eligibility only</b>. It does <b>NOT</b> give access to your wallet, does <b>NOT</b> allow
-      another party to spend your SOST, and can <b>NOT</b> create or burn SOST.
-    </div>
-    <div style="margin:12px 0;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.04);font-size:12.5px;line-height:1.7;color:#cfd8e3">
-      <div style="font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:6px">V30000 SAFETY STATUS (MAINNET)</div>
-      <b>Native Assets:</b> DEFERRED / FAIL-CLOSED on mainnet.<br>
-      <b>SACS V2:</b> DEFERRED on mainnet for compatibility.<br>
-      <b>Current monetary consensus:</b> 50% Miner / 50% DTD.<br>
-      <b>SOST native burn:</b> NONE &mdash; not supported, not planned. SOST has no burn mechanism.
-    </div>
-
-    <div class="sost-v16-alert">
-      <span class="k">WHAT #30,000 ACTIVATES ON MAINNET.</span><br>
-      <b>DTD Jackpot V2</b> (the DTD jackpot draw that rewards real Proof-of-Work plus verified node participation)
-      activates by block height at #30,000. <b>The native-asset / tokenization / DEX layer does NOT activate on mainnet</b>
-      &mdash; it is <b>deferred and fail-closed</b> in the V30000 FINAL SECURITY BUILD: asset transactions and asset outputs are
-      rejected by consensus. Technical availability does not constitute regulatory authorization. Normal DTD and
-      ordinary SOST transfers are unaffected.
-    </div>
-
-    <div class="sost-v16-nums">
-      <div class="sost-v16-num"><span class="n">V30000</span><span class="l"><b>FINAL SECURITY BUILD</b> &mdash; swap node, miner and cli</span></div>
-      <div class="sost-v16-num"><span class="n">#30,000</span><span class="l">V30000 activates automatically by block height</span></div>
-      <div class="sost-v16-num"><span class="n">#30,186</span><span class="l">First DTD Jackpot V2 draw</span></div>
-      <div class="sost-v16-num"><span class="n">ALL THREE</span><span class="l">node, miner &amp; cli all changed &mdash; verify each SHA-256</span></div>
-      <div class="sost-v16-num"><span class="n">DEFERRED</span><span class="l">native assets / tokenization / DEX &mdash; fail-closed on mainnet</span></div>
-      <div class="sost-v16-num"><span class="n">288</span><span class="l">Jackpot cadence &amp; heartbeat epoch (unchanged)</span></div>
-    </div>
-
-    <div class="sost-v16-h mag">The core Jackpot rule</div>
-    <div class="sost-v16-rule">
-      <div class="gate"><b>NODE PARTICIPATION &rarr; ELIGIBILITY.</b><br>A node does not give you Jackpot tickets. It lets you enter the eligibility set. Running 10 nodes gives exactly the same weight as running 1.</div>
-      <div class="weight"><b>PROOF-OF-WORK &rarr; WEIGHT.</b><br>1 valid SbPoW block in the previous 2,016 blocks = 1 unit of weight. Splitting your work across many addresses does not create extra weight &mdash; 100 blocks is weight 100 either way.</div>
-    </div>
-
-    <div class="sost-v16-h">Jackpot eligibility from block #30,000 (ALL four required)</div>
-    <ol>
-      <li>A valid <b>SbPoW mining identity</b> (the signed mining key in your blocks).</li>
-      <li>At least <b>3 valid mined blocks</b> in the previous <b>2,016 blocks</b> (~14 days).</li>
-      <li>A <b>NODE_BIND</b>: your node key cryptographically authorised by your mining key, on-chain. No registry, no whitelist, no approval.</li>
-      <li>Verified node participation through periodic signed <b>NODE_HEARTBEAT</b> messages (~every 288 blocks, referencing recent chain state).
-          <b style="color:#39ff14">For the FIRST draw at #30,186 this requirement is 0/0</b> &mdash; NODE_BIND only becomes available at #30,000, so no epoch has completed yet and nobody can be excluded for lacking heartbeat history. The requirement then ramps 1/1 &rarr; 2/2 &rarr; 3/3 and settles at the permanent 3-of-4 from #31,338. That ramp is the same rule counting completed epochs, <b>not</b> a second fork.</li>
-    </ol>
-    <p>Then: <b>Jackpot weight = number of valid SbPoW blocks you mined in the previous 2,016 blocks.</b> A miner with 10 eligible blocks has twice the probability of one with 5 &mdash; not a guaranteed win. DTD Jackpot V2 has <b>no cooldown and no anti-dominance</b> on purpose: ~20% of eligible work should mean ~20% of the probability. With no eligible participants the prize <b>rolls over</b> (up to the 500 SOST cap) &mdash; no fallback winner is invented.</p>
-
-    <div class="sost-v16-h cy">What you actually have to do</div>
-    <div class="sost-v16-cols">
-      <div class="sost-v16-card miner">
-        <h4>&#9935; If you mine</h4>
-        <ol>
-          <li>Get the <b>V30000 FINAL SECURITY BUILD</b> at <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener">releases/tag/v30000-final</a> (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>). <b>Do not use earlier v30000 / v30000-rc1 / emergency binaries.</b> Compiling is optional; a downloaded binary whose <b>SHA256 matches</b> is equally valid. If you do build it, use <code>-B build</code>: the published hashes only reproduce from a build directory with that name.</li>
-          <li>Verify the version and the official <b>SHA256 of all three binaries</b>.</li>
-          <li><b>Swap all three:</b> stop <code>sost-node</code>, install the V30000 node, miner and cli, restart. <b>All three changed in V30000 &mdash; none are byte-identical to v16.2.x.</b> Step-by-step, with commands for systemd / manual / WSL: <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">OPERATOR UPGRADE GUIDE</a>.</li>
-          <li>Keep mining normally &mdash; V30000 activates by itself at #30,000. No command, no config switch, no restart exactly at the activation height.</li>
-          <li>Register your <b>NODE_BIND</b> once V2 is active.</li>
-          <li>Check your eligibility and PoW weight in the Explorer.</li>
-        </ol>
-      </div>
-      <div class="sost-v16-card node">
-        <h4>&#9881; If you run a node</h4>
-        <ol>
-          <li>The V30000 upgrade is <b>mandatory for validating nodes</b>: below #30,000 it follows current rules, from #30,000 it follows V30000 rules.</li>
-          <li>Install the <b>V30000</b> node binary &mdash; it also lets a fresh node <b>full-sync from genesis</b>.</li>
-          <li>Nodes still on pre-V30000 consensus software after #30,000 <b>may diverge from the V30000 chain</b> &mdash; update before then.</li>
-          <li>Create/configure your <b>node identity</b> and keep the node running.</li>
-          <li>Maintain the signed <b>heartbeats</b> (the guide will cover automatic maintenance).</li>
-          <li>Only needed for the Jackpot &mdash; normal DTD requires none of this.</li>
-        </ol>
-      </div>
-    </div>
-
-    <div class="sost-v16-h">First-Jackpot bootstrap &mdash; the heartbeat ramp is NOT a second activation</div>
-    <p><b>#30,000 is the only activation.</b> It happens once, automatically, by block height &mdash; the ramp below is that one rule counting completed epochs, not a further fork and not a second update. NODE_BIND only becomes available once V2 activates, so there is no completed heartbeat epoch for the first draw. The requirement ramps deterministically from the number of completed V2 epochs:</p>
-    <div class="sost-v16-code">#30,186   NODE_BIND required   heartbeats 0/0
-#30,474   NODE_BIND required   heartbeats 1/1
-#30,762   NODE_BIND required   heartbeats 2/2
-#31,050   NODE_BIND required   heartbeats 3/3
-#31,338+  NODE_BIND required   heartbeats 3 of the previous 4</div>
-
-    <div class="sost-v16-h">Native assets, tokenization &amp; DEX &mdash; DEFERRED / FAIL-CLOSED on mainnet</div>
-    <p><b>#30,000 does NOT activate the native-asset layer on mainnet.</b> In the V30000 FINAL SECURITY BUILD the asset layer
-    (asset genesis / issue / transfer / burn, the tokenization modalities and the SOST-layer DEX) is <b>deferred and fail-closed</b>:
-    asset transactions and asset outputs are rejected by consensus, exactly as before #30,000. Enabling it would require a future,
-    separately audited and coordinated height-gated release. Technical availability is not regulatory authorization.</p>
-
-    <div class="sost-v16-h">What does NOT change</div>
-    <ul>
-      <li>Normal DTD: <b>payout logic, every-block cadence, uniform selection and seed</b> &mdash; untouched. Its <b>eligibility</b> does change (288-block window, conditional cooldown, conditional anti-dominance).</li>
-      <li>The 50% miner / 50% DTD emission structure.</li>
-      <li>The DTD Jackpot cadence of 288 blocks.</li>
-      <li>The Jackpot funding source: the existing historical reserve. <b>No new emission is created.</b></li>
-      <li>Ordinary SOST transfers and balances &mdash; unaffected by the admin-gated asset layer.</li>
-    </ul>
-
-    <div class="sost-v16-warn">
-      <b>&#9888; Operational notice.</b> <b style="color:#39ff14">The V30000 FINAL SECURITY BUILD is released</b> &mdash; <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700">releases/tag/v30000-final</a> &mdash; with the step-by-step <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>. Earlier v30000 / v30000-rc1 / emergency builds are <b>superseded</b>. Verify each binary with <code>sha256sum -c SHA256SUMS</code> before running anything, and swap all three. <b>Do not update from unofficial binaries or unverified sources.</b> SOST is experimental MIT-licensed software provided without warranty; mining, node operation and any market activity are at the participant's own risk.
-    </div>
-
-    <div class="sost-v16-links">
-      <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">&#8997; Source (MIT)</a>
-      <a href="/sost-explorer.html">&#9639; Explorer</a>
-      <a href="https://bitcointalk.org/index.php?topic=5579432" target="_blank" rel="noopener">&#8383; BitcoinTalk &mdash; official upgrade thread</a>
-      <a href="https://t.me/SOSTProtocolOfficial" target="_blank" rel="noopener">&#9992; Telegram</a>
-      <a href="mailto:sost@sostcore.com">&#9993; sost@sostcore.com</a>
-    </div>
-
-    <div class="sost-v16-foot">Sovereign Stock Token &middot; ConvergenceX native L1 Proof-of-Work &middot; Open source (MIT). Use the official BitcoinTalk thread as the primary reference for the #30,000 network upgrade. &mdash; Neob</div>
-  </div>
- </div>
-</div>`;
+  function fmt(n) { return Number(n).toLocaleString('en-US'); }
+  function live(el, le) {
+    function paint(h) {
+      if (!(h > 0)) return;
+      var left = V17_HEIGHT - h, w = WINDOW_START - h, txt;
+      if (left > 0) {
+        var days = Math.round(left * 600 / 86400);
+        txt = 'Current height <b>' + fmt(h) + '</b> &middot; <b>' + fmt(left) + '</b> blocks to #40,000 ' +
+              '(&asymp; ' + days + ' days at the 10-minute target)' +
+              (w > 0 ? ' &middot; upgrade window opens at #39,900' : ' &middot; <b style="color:#ff4d55">upgrade window open</b>');
+      } else {
+        txt = 'Current height <b>' + fmt(h) + '</b> &middot; block #40,000 reached &middot; check the status before acting';
+      }
+      el.innerHTML = txt;
+      le.innerHTML = left > 0 ? '<b>' + fmt(left) + '</b> blocks left' : '#40,000 reached';
+    }
+    function get() {
+      try {
+        fetch('/api/control_room.json', { cache: 'no-store' }).then(function (r) { return r.json(); })
+          .then(function (d) { paint(+d.height); }).catch(function () {});
+      } catch (e) {}
+    }
+    get(); setInterval(get, 120000);
+  }
 
   function inject() {
-    if (document.querySelector('.sost-v16')) return;
-
-    var style = document.createElement('style');
-    style.setAttribute('data-sost-v16', '1');
-    style.appendChild(document.createTextNode(CSS));
-    document.head.appendChild(style);
-
-    var wrap = document.createElement('div');
-    wrap.innerHTML = NOTICE_HTML;
-    var node = wrap.firstElementChild;
-
+    if (document.querySelector('.sost-v17')) return;
+    var st = document.createElement('style'); st.id = 'sost-v17-css'; st.textContent = CSS; document.head.appendChild(st);
+    var wrap = document.createElement('div'); wrap.innerHTML = HTML; var box = wrap.firstChild;
     var mount = document.getElementById('sost-v16-notice-mount');
-    if (mount) {
-      mount.appendChild(node);
-    } else {
-      // Page flow placement, like the other site banners: right under the sticky logo/nav
-      // header (after the research notice when present) — never above the logos.
-      var research = document.querySelector('body > .reward-research-update');
-      var topNav = document.querySelector('body > nav');
-      var devnote = document.querySelector('.sost-devnote-strip');
-      if (research && research.parentNode) {
-        research.parentNode.insertBefore(node, research.nextSibling);
-      } else if (topNav && topNav.parentNode) {
-        topNav.parentNode.insertBefore(node, topNav.nextSibling);
-      } else if (devnote && devnote.parentNode) {
-        devnote.parentNode.insertBefore(node, devnote.nextSibling);
-      } else if (document.body.firstChild) {
-        document.body.insertBefore(node, document.body.firstChild);
-      } else {
-        document.body.appendChild(node);
-      }
-      // standalone placement needs its own side padding
-      node.style.width = 'calc(100% - 32px)';
-      node.style.marginLeft = 'auto';
-      node.style.marginRight = 'auto';
+    if (mount) mount.appendChild(box);
+    else {
+      // same flow placement as the previous notice: under the research notice, else under the page header, never above the logos
+      var anchor = document.querySelector('body > .reward-research-update') || document.querySelector('body > nav') ||
+                   document.querySelector('.sost-devnote-strip');
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(box, anchor.nextSibling);
+      else document.body.insertBefore(box, document.body.firstChild);
+      box.style.width = 'calc(100% - 32px)'; box.style.marginLeft = 'auto'; box.style.marginRight = 'auto';
     }
-
-    var btn = node.querySelector('.sost-v16-head');
-    var body = node.querySelector('.sost-v16-body');
-    var closed = node.querySelector('.sost-v16-cta-label[data-when="closed"]');
-    var open = node.querySelector('.sost-v16-cta-label[data-when="open"]');
-
-    btn.addEventListener('click', function () {
-      var isOpen = btn.getAttribute('aria-expanded') === 'true';
-      var next = !isOpen;
-      btn.setAttribute('aria-expanded', next ? 'true' : 'false');
-      btn.setAttribute('title', next ? 'Hide the DTD Jackpot V2 advance notice' : 'Open the DTD Jackpot V2 advance notice');
-      if (next) {
-        body.removeAttribute('hidden');
-        if (closed) closed.setAttribute('hidden', '');
-        if (open) open.removeAttribute('hidden');
-      } else {
-        body.setAttribute('hidden', '');
-        if (open) open.setAttribute('hidden', '');
-        if (closed) closed.removeAttribute('hidden');
-      }
+    var head = box.querySelector('.sost-v17-head'), body = box.querySelector('.sost-v17-body');
+    head.addEventListener('click', function () {
+      var open = head.getAttribute('aria-expanded') === 'true';
+      head.setAttribute('aria-expanded', open ? 'false' : 'true'); body.hidden = open;
     });
+    box.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !body.hidden) { body.hidden = true; head.setAttribute('aria-expanded', 'false'); head.focus(); } });
+    if (STATUS === 'ACTIVE') box.querySelector('[data-v17-status]').classList.add('active');
+    live(box.querySelector('[data-v17-live]'), box.querySelector('[data-v17-left]'));
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inject);
-  } else {
-    inject();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject); else inject();
 })();

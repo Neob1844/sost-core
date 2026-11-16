@@ -1,0 +1,77 @@
+{
+ "source": {
+  "branch": "web/swap-retired-notice",
+  "commit": "2c45a182",
+  "file": "website/sost-quickstart.html",
+  "sha256": "4833b703e8d1cfd28509cb85280266cfab8c1d181c23b9555c941d9688575182",
+  "note": "extracted verbatim; not merged into this branch"
+ },
+ "ram": "8 GB RAM required (4 GB dataset + 4 GB scratchpad, shared by all mining threads).",
+ "steps": [
+  {
+   "num": "0",
+   "title": "Get Ubuntu on your computer",
+   "commands": []
+  },
+  {
+   "num": "1",
+   "title": "Install what your computer needs",
+   "commands": [
+    "$ sudo apt update && sudo apt install -y build-essential cmake libssl-dev libsecp256k1-dev git"
+   ]
+  },
+  {
+   "num": "2",
+   "title": "Download SOST and build it",
+   "commands": [
+    "$ git clone https://github.com/Neob1844/sost-core.git",
+    "$ cd sost-core",
+    "$ git fetch --tags",
+    "$ git checkout v30000-final.1",
+    "$ mkdir build && cd build",
+    "$ cmake .. -DCMAKE_BUILD_TYPE=Release",
+    "$ make -j$(nproc)"
+   ]
+  },
+  {
+   "num": "3",
+   "title": "Create your wallet",
+   "commands": [
+    "$ ./sost-cli newwallet",
+    "$ ./sost-cli getnewaddress \"mining\""
+   ]
+  },
+  {
+   "num": "4",
+   "title": "Start the SOST node",
+   "commands": [
+    "$ mkdir -p ~/.sost && umask 077\n$ openssl rand -base64 30 > ~/.sost/rpc.pass\n$ chmod 600 ~/.sost/rpc.pass",
+    "$ ./sost-node --genesis genesis_block.json --connect seed.sostcore.com:19333 \\\n    --rpc-user PICK_A_USERNAME --rpc-pass-file ~/.sost/rpc.pass --profile mainnet --p2p-enc on"
+   ]
+  },
+  {
+   "num": "",
+   "title": "About RPC credentials",
+   "commands": [
+    "$ echo \"USER: $(openssl rand -hex 10)\"\n$ echo \"PASS: $(openssl rand -hex 20)\""
+   ]
+  },
+  {
+   "num": "5",
+   "title": "Start mining",
+   "commands": [
+    "$ cd ~/sost-core/build",
+    "$ ./sost-miner --wallet wallet.json --mining-key-label mining \\\n    --genesis genesis_block.json --chain chain.json \\\n    --rpc 127.0.0.1:18232 \\\n    --rpc-user SAME_USERNAME_AS_STEP_4 \\\n    --rpc-pass-file ~/.sost/rpc.pass \\\n    --blocks 999999 --profile mainnet --threads 4"
+   ]
+  },
+  {
+   "num": "6",
+   "title": "Check your balance and send coins",
+   "commands": [
+    "$ cd ~/sost-core/build",
+    "$ ./sost-cli getbalance --rpc 127.0.0.1:18232 \\\n    --rpc-user YOUR_USER --rpc-pass-file ~/.sost/rpc.pass",
+    "$ ./sost-cli send --to sost1THEIR_ADDRESS --amount 1.5 \\\n    --rpc 127.0.0.1:18232 \\\n    --rpc-user YOUR_USER --rpc-pass-file ~/.sost/rpc.pass"
+   ]
+  }
+ ]
+}

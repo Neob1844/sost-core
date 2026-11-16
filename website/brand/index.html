@@ -3,304 +3,239 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SOST Brand Kit</title>
-<meta name="description" content="Official SOST logo (Gold Sigma / Rainbow Edition), wSOST logo, colours and usage guidelines for exchanges, media and partners.">
-<link rel="icon" href="exchange/sost-icon-64.png?v=rs20261112g" type="image/png">
+<title>Sovereign Stock Token — SOST · Brand Kit</title>
+<meta name="description" content="Official brand kit of Sovereign Stock Token — SOST: the official logo, icons for exchanges and wallets, colours, usage guide and downloadable kit.">
+<meta property="og:title" content="Sovereign Stock Token — SOST · Brand Kit">
+<meta property="og:description" content="Official logo, icons, colours and usage guide of Sovereign Stock Token — SOST.">
+<meta property="og:image" content="https://sostcore.com/brand/icons/social/og-sost-1200x630.png?v=bk32b">
+<meta property="og:url" content="https://sostcore.com/brand/">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="icons/favicon/favicon-32x32.png?v=bk32b" type="image/png">
+<link rel="apple-touch-icon" href="icons/favicon/apple-touch-icon.png?v=bk32b">
 <link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
-<meta property="og:title" content="SOST Brand Kit">
-<meta property="og:description" content="Official SOST and wSOST logos, colours and usage guidelines.">
-<meta property="og:image" content="https://sostcore.com/brand/sost/social/og-sost-1200x630.png?v=rs20261112g">
 <style>
-@font-face{font-family:'Space Grotesk';src:url('../fonts/spacegrotesk-500-700-latin.woff2') format('woff2');font-weight:300 700;font-display:swap}
-@font-face{font-family:'Inter';src:url('../fonts/inter-latin-wght400-700.woff2') format('woff2');font-weight:400 700;font-display:swap}
-:root{--bg:#000;--p1:#07080b;--p2:#0d0f14;--ln:rgba(255,255,255,.09);--ln2:rgba(255,255,255,.16);--t1:#f1f5f9;--t2:#a7b0be;--t3:#6b7383;--red:#fb010d;--cy:#22d3ee;--vi:#a78bfa;--ok:#34d399;--warn:#fbbf24;
---spec:linear-gradient(90deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c)}
-*{box-sizing:border-box}html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--t1);font:15.5px/1.6 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+@font-face{font-family:"Space Grotesk";src:url(../fonts/spacegrotesk-500-700-latin.woff2) format("woff2");font-weight:500 700;font-display:swap}
+@font-face{font-family:Inter;src:url(../fonts/inter-latin-wght400-700.woff2) format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(../fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2");font-weight:500;font-display:swap}
+:root{--bg:#000;--panel:#0b0b0e;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);--tx:#f4f4f6;--mu:#a3a3ad;--dim:#6f6f7a;--gold:#e9a922;--gold2:#fce647}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
 a{color:inherit}
-img{height:auto;max-width:100%}
-.wrap{max-width:1160px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
-.top{position:sticky;top:0;z-index:5;background:rgba(0,0,0,.78);backdrop-filter:blur(12px);border-bottom:1px solid var(--ln)}
-.top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--spec);opacity:.55}
-.top .wrap{display:flex;align-items:center;gap:18px;height:62px}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 19px 'Space Grotesk',sans-serif;letter-spacing:.04em}
+h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;letter-spacing:-.015em;margin:0;line-height:1.15}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+header.top{position:sticky;top:0;z-index:5;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:600 16px "Space Grotesk",sans-serif;white-space:nowrap}
 .brand img{width:34px;height:34px}
-.brand small{font:500 10.5px Inter;letter-spacing:.3em;color:var(--t3);margin-left:6px}
-.top nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
-.top nav a{text-decoration:none;color:var(--t2);font-size:13.5px;padding:7px 11px;border-radius:9px}
-.top nav a:hover{color:#fff;background:rgba(255,255,255,.06)}
-@media(max-width:760px){.top nav a.hm{display:none}.brand small{display:none}}
-h1,h2,h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-.015em;margin:0}
-.hero{position:relative;padding:clamp(54px,9vw,104px) 0 clamp(40px,6vw,64px);overflow:hidden}
-.hero::before{content:"";position:absolute;inset:-30% -10% auto;height:120%;background:radial-gradient(closest-side at 72% 45%,rgba(251,1,13,.22),transparent 70%),radial-gradient(closest-side at 90% 70%,rgba(167,139,250,.12),transparent 70%);pointer-events:none}
-.hero .wrap{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:36px;align-items:center}
-.eyebrow{font:500 11.5px Inter;letter-spacing:.32em;text-transform:uppercase;color:var(--t2);display:flex;align-items:center;gap:12px;margin:0 0 18px}
-.eyebrow::after{content:"";width:48px;height:2px;background:var(--spec);border-radius:2px}
-.hero h1{font-size:clamp(40px,6.4vw,76px);line-height:1.02;font-weight:700}
-.hero h1 em{font-style:normal;background:linear-gradient(90deg,#ff2d3b,#fb010d 40%,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lede{color:var(--t2);font-size:clamp(16px,1.6vw,18px);max-width:560px;margin:20px 0 28px}
-.acts{display:flex;gap:10px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:9px;padding:12px 18px;border-radius:12px;border:1px solid var(--ln2);background:rgba(255,255,255,.03);color:#fff;text-decoration:none;font:600 14.5px Inter;cursor:pointer;transition:.2s}
-.btn:hover{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.07)}
-.btn.pri{background:linear-gradient(135deg,#fb010d,#9b0710);border-color:transparent;box-shadow:0 10px 30px -10px rgba(251,1,13,.7)}
-.btn.pri:hover{filter:brightness(1.12)}
-.btn small{font:500 11.5px Inter;color:rgba(255,255,255,.7)}
-.pair{position:relative;height:clamp(250px,32vw,380px)}
-.pair img{position:absolute;width:62%;filter:drop-shadow(0 0 40px rgba(251,1,13,.35));transition:transform .6s cubic-bezier(.2,.7,.2,1)}
-.pair img:first-child{left:0;top:0;z-index:2}.pair img:last-child{right:0;bottom:0;opacity:.95}
-.pair:hover img:first-child{transform:translate(-4%,-3%)}.pair:hover img:last-child{transform:translate(4%,3%)}
-@media(max-width:820px){.hero .wrap{grid-template-columns:1fr}.pair{max-width:380px;width:100%;margin:6px auto 0}}
-section.sec{padding:clamp(48px,7vw,84px) 0;border-top:1px solid var(--ln)}
-.sec h2{font-size:clamp(28px,3.6vw,42px);line-height:1.1}
-.intro{color:var(--t2);max-width:720px;margin:12px 0 30px}
-.marks{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:860px){.marks{grid-template-columns:1fr}}
-.mark{border:1px solid var(--ln);border-radius:20px;background:linear-gradient(180deg,var(--p2),var(--p1));overflow:hidden}
-.stage{position:relative;aspect-ratio:16/10;display:grid;place-items:center;background:#000;transition:background .3s}
-.stage img{width:min(56%,300px);aspect-ratio:1}
-.stage[data-bg=white]{background:#fff}
-.stage[data-bg=check]{background:conic-gradient(#1c1f26 25%,#2a2e37 0 50%,#1c1f26 0 75%,#2a2e37 0) 0 0/22px 22px}
-.stage[data-bg=red]{background:radial-gradient(circle at 50% 40%,#3a0508,#120102)}
-.bgsw{position:absolute;right:12px;top:12px;display:flex;gap:6px;background:rgba(0,0,0,.55);padding:5px;border-radius:999px;backdrop-filter:blur(6px)}
-.bgsw button{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.35);cursor:pointer;padding:0}
-.bgsw button[aria-pressed=true]{outline:2px solid #fff;outline-offset:2px}
-.status{position:absolute;left:12px;top:12px;font:600 11px Inter;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:999px;border:1px solid}
-.status.live{color:var(--ok);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
-.status.dev{color:var(--warn);border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.08)}
-.mark .body{padding:22px 22px 24px}
-.mark h3{font-size:24px;display:flex;align-items:baseline;gap:10px}
-.mark h3 span{font:500 13px Inter;color:var(--t3)}
-.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:14px 0 18px;font-size:14px}
-.facts dt{color:var(--t3)}.facts dd{margin:0;color:var(--t1)}
-.dl{display:flex;flex-wrap:wrap;gap:7px}
-.dl a{font:500 12.5px 'IBM Plex Mono',ui-monospace,monospace;text-decoration:none;padding:7px 10px;border-radius:9px;border:1px solid var(--ln2);color:var(--t2);transition:.15s}
-.dl a:hover{color:#fff;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.05)}
-.dl a b{color:#fff;font-weight:600}
-.dlh{font:600 11px Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin:16px 0 8px}
-.note{font-size:13px;color:var(--t3);margin:12px 0 0}
-.icons{display:flex;align-items:flex-end;gap:clamp(12px,3vw,28px);flex-wrap:wrap;padding:24px;border:1px solid var(--ln);border-radius:20px;background:var(--p1)}
-.icons figure{margin:0;text-align:center}
-.icons figcaption{font:500 11px 'IBM Plex Mono',monospace;color:var(--t3);margin-top:8px}
-.kit{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:20px;align-items:stretch}.kit>*{min-width:0}
-@media(max-width:860px){.kit{grid-template-columns:1fr}}
-.card{border:1px solid var(--ln);border-radius:20px;padding:24px;background:linear-gradient(180deg,var(--p2),var(--p1))}
-.tree{font:clamp(11px,2.9vw,13px)/1.75 'IBM Plex Mono',ui-monospace,monospace;color:var(--t2);margin:0;white-space:pre;overflow-x:auto}
-.tree b{color:#fff;font-weight:600}
-.sha{font:12px 'IBM Plex Mono',monospace;color:var(--t3);word-break:break-all;margin-top:12px}
-.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.swc{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;border:1px solid var(--ln);border-radius:16px;overflow:hidden;background:var(--p1);cursor:pointer;text-align:left;color:inherit;font:inherit;padding:0}
-.swc i{display:block;height:74px}
-.swc span{display:block;padding:10px 12px 12px;font-size:13px}
-.swc code{display:block;font:12.5px 'IBM Plex Mono',monospace;color:var(--t2);margin-top:2px}
-.swc.wide{grid-column:span 2}
-.rules{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:860px){.rules{grid-template-columns:1fr}}
-.rules ul{margin:10px 0 0;padding:0;list-style:none}
-.rules li{position:relative;padding:8px 0 8px 28px;color:var(--t2);font-size:14.5px;border-bottom:1px dashed var(--ln)}
-.rules li:last-child{border:0}
-.rules li::before{position:absolute;left:0;top:8px;font-weight:700}
-.do li::before{content:"✓";color:var(--ok)}.dont li::before{content:"✕";color:#f87171}
-.rules h3{font-size:19px}
-.alert{display:flex;gap:14px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.06);border-radius:16px;padding:16px 18px;color:var(--t2);font-size:14.5px;margin-top:20px}
-.alert b{color:#fff}
-.links{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.links a{display:block;text-decoration:none;border:1px solid var(--ln);border-radius:16px;padding:18px;background:var(--p1);transition:.2s}
-.links a:hover{border-color:var(--ln2);transform:translateY(-2px)}
-.links b{display:block;font:600 16px 'Space Grotesk'}.links span{color:var(--t3);font-size:13px}
-footer{border-top:1px solid var(--ln);padding:28px 0 40px;color:var(--t3);font-size:13px}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:#111;border:1px solid var(--ln2);padding:10px 16px;border-radius:12px;font-size:13.5px;transition:.25s;pointer-events:none}
-.toast.on{opacity:1;transform:translateX(-50%)}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}html{scroll-behavior:auto}}
-.legacy{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px}.legacy figure{margin:0;display:flex;align-items:center;gap:14px;opacity:.62;filter:grayscale(.35)}.legacy figcaption{display:flex;flex-direction:column;gap:6px;color:var(--t2);font-size:13px}.status.old{position:static;background:rgba(255,255,255,.06);border:1px solid var(--ln2);color:var(--t2)}
+.brand span{color:var(--mu);font-weight:500}
+nav.links{display:flex;gap:22px;font-size:14px;color:var(--mu)}
+nav.links a{text-decoration:none}nav.links a:hover{color:var(--tx)}
+.hero{padding:72px 0 64px;border-bottom:1px solid var(--line)}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center}
+.eyebrow{font:500 12px "IBM Plex Mono",monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 14px}
+.hero h1{font-size:clamp(36px,5.2vw,58px);font-weight:700}
+.hero p.lead{color:var(--mu);font-size:18px;max-width:520px;margin:18px 0 28px}
+.facts{display:flex;gap:28px;margin:0 0 30px;padding:0;list-style:none}
+.facts li{font-size:13px;color:var(--dim)}.facts b{display:block;color:var(--tx);font:600 18px "Space Grotesk",sans-serif}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;border:1px solid var(--line2);text-decoration:none;font-weight:600;font-size:15px;transition:border-color .15s,background .15s}
+.btn:hover{border-color:rgba(255,255,255,.35)}
+.btn.pri{background:linear-gradient(180deg,#f7c64a,#d38401);color:#160d00;border-color:transparent}
+.btn.pri:hover{background:linear-gradient(180deg,#fcd668,#e0920c)}
+.btn small{font:500 12px "IBM Plex Mono",monospace;opacity:.75}
+.stage{background:radial-gradient(closest-side,rgba(233,169,34,.10),transparent 70%);display:flex;justify-content:center}
+.stage img{width:100%;max-width:470px;height:auto}
+section.sec{padding:72px 0;border-bottom:1px solid var(--line)}
+section.sec h2{font-size:clamp(26px,3.4vw,36px);margin-bottom:12px}
+section.sec p.intro{color:var(--mu);max-width:680px;margin:0 0 32px}
+.grid{display:grid;gap:16px}
+.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+.tile{display:flex;flex-direction:column;gap:14px}
+.tile .pv{aspect-ratio:1/1;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.tile .pv img{width:78%;height:auto}
+.pv.dark{background:#000;border:1px solid var(--line)}
+.pv.light{background:#fff}
+.pv.check{background:repeating-conic-gradient(#1b1b20 0 25%,#121216 0 50%) 0 0/22px 22px}
+.tile h3{font-size:17px}.tile p{margin:0;color:var(--mu);font-size:14px}
+.dl{display:flex;flex-wrap:wrap;gap:8px}
+.dl a{font:500 13px "IBM Plex Mono",monospace;padding:6px 11px;border:1px solid var(--line2);border-radius:999px;text-decoration:none;color:var(--tx)}
+.dl a:hover{border-color:var(--gold);color:var(--gold2)}
+.status{display:inline-block;font:500 11px "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.status.cur{background:rgba(233,169,34,.14);color:var(--gold2);border:1px solid rgba(233,169,34,.35)}
+.status.leg{background:rgba(255,255,255,.06);color:var(--mu);border:1px solid var(--line2)}
+.sizes{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;padding:20px;border-radius:12px;background:#000;border:1px solid var(--line)}
+.sizes figure{margin:0;text-align:center;font:500 12px "IBM Plex Mono",monospace;color:var(--dim)}
+.sizes img{display:block;margin:0 auto 8px}
+.sw{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+.sw div{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.sw i{display:block;height:64px}
+.sw b{display:block;font:600 13px Inter,sans-serif;padding:10px 12px 0}
+.sw span{display:block;font:500 12px "IBM Plex Mono",monospace;color:var(--mu);padding:2px 12px 10px}
+.rules ul{margin:10px 0 0;padding-left:18px;color:var(--mu)}.rules li{margin:6px 0}
+.rules h3{font-size:18px}.rules .ok h3{color:#5ee08a}.rules .no h3{color:#ff6a6a}
+.imgcard img{width:100%;height:auto;border-radius:10px;display:block}
+.imgcard figcaption{color:var(--mu);font-size:14px;margin-top:12px}
+.legacy{display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:center}
+.legacy img{width:100%;height:auto;filter:saturate(.92)}
+.legacy h3{font-size:22px;margin:10px 0 8px}.legacy p{color:var(--mu);margin:0 0 16px}
+.kit{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+pre.tree{margin:0;font:500 13px/1.7 "IBM Plex Mono",monospace;color:var(--mu);white-space:pre-wrap}
+pre.tree b{color:var(--tx)}
+.sha{font:500 12px "IBM Plex Mono",monospace;color:var(--dim);word-break:break-all}
+footer{padding:40px 0 56px;color:var(--dim);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer a{color:var(--mu)}
+@media (max-width:980px){.g4{grid-template-columns:repeat(2,1fr)}.sw{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:860px){.hero .wrap,.kit{grid-template-columns:1fr}.hero{padding:40px 0 48px}.stage{order:-1}.stage img{max-width:320px}.g3{grid-template-columns:1fr 1fr}nav.links{display:none}}
+@media (max-width:600px){.brand span{display:none}.wrap{padding:0 16px}.g3,.g2{grid-template-columns:1fr}.sw{grid-template-columns:repeat(2,1fr)}.legacy{grid-template-columns:1fr;gap:18px}.legacy img{max-width:160px}.facts{gap:20px}section.sec{padding:52px 0}.hero p.lead{font-size:16px}}
 </style>
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="brand" href="../index.html"><img src="exchange/sost-icon-64.png?v=rs20261112g" alt="" width="34" height="34">SOST<small>BRAND KIT</small></a>
-  <nav aria-label="Brand kit"><a href="#marks" class="hm">Logos</a><a href="#colours" class="hm">Colours</a><a href="#guidelines">Guidelines</a><a href="downloads/SOST_OFFICIAL_BRAND_KIT.zip">Download</a></nav>
+  <a class="brand" href="https://sostcore.com/"><img src="icons/sost-icon-64.png?v=bk32b" alt="" width="34" height="34">Sovereign Stock Token — SOST <span>Brand Kit</span></a>
+  <nav class="links"><a href="#logo">Logo</a><a href="#icons">Icons</a><a href="#colours">Colours</a><a href="#usage">Usage</a><a href="#legacy">Legacy</a><a href="#download">Download</a></nav>
 </div></header>
 
-<main>
 <section class="hero"><div class="wrap">
   <div>
-    <p class="eyebrow">Official brand kit</p>
-    <h1>Gold at the centre of <em>every colour.</em></h1>
-    <p class="lede">The official SOST logo is the <b>Gold Sigma / Rainbow Edition</b>: a warm gold Σ (≈ 4000 K) inside a multicolour orbit. This is the logo for exchanges, wallets and media. wSOST keeps its own mark: a small w to the left of Σ, in a rainbow energy ring. Logos, icons, colours and usage guidelines for exchanges, media and partners. Free to use when referring to SOST, following the rules below.</p>
-    <div class="acts">
-      <a class="btn pri" href="downloads/SOST_OFFICIAL_BRAND_KIT.zip" download>Download brand kit <small data-zip-size>ZIP</small></a>
-      <a class="btn" href="#marks">Browse logos</a>
-      <a class="btn" href="guidelines/SOST_BRAND_GUIDELINES.pdf">Guidelines (PDF)</a>
+    <p class="eyebrow">Official brand kit · v3.2</p>
+    <h1>Sovereign Stock Token — SOST</h1>
+    <p class="lead">The official logo, icons, colours and usage guide of Sovereign Stock Token — SOST, for exchanges, listings, wallets, media and partners.</p>
+    <ul class="facts"><li><b>Sovereign Stock Token</b>Name</li><li><b>SOST</b>Ticker</li><li><b>8</b>Decimals</li></ul>
+    <div class="btns">
+      <a class="btn pri" href="downloads/SOST_Brand_Kit_v3.2.zip" download>Download brand kit <small>ZIP · 7.9 MB</small></a>
+      <a class="btn" href="guide/SOST_Brand_Guide.pdf">Brand guide <small>PDF</small></a>
     </div>
   </div>
-  <div class="pair" aria-hidden="true">
-    <img src="sost/png/sost-logo-512-transparent.png?v=rs20261112g" alt="" width="512" height="512">
-    <img src="wsost/png/wsost-logo-512-transparent.png?v=rs20261112g" alt="" width="512" height="512">
-  </div>
+  <div class="stage"><img src="primary/sost-logo-1024-transparent.png?v=bk32b" alt="SOST official logo: gold Sigma in its multicolour orbit" width="470" height="470"></div>
 </div></section>
 
-<section class="sec" id="marks"><div class="wrap">
-  <p class="eyebrow">Logos</p><h2>Two marks, one family</h2>
-  <p class="intro">Original artwork, resampled without redrawing. Preview each logo on different backgrounds, then download the size you need. The backgrounds are truly transparent (real alpha, no black matte); the luminous glow is kept.</p>
-  <div class="marks">
-    <article class="mark" id="sost">
-      <div class="stage" data-bg="black">
-        <span class="status live">Live · mainnet</span>
-        <div class="bgsw" role="group" aria-label="SOST preview background"></div>
-        <img src="sost/png/sost-logo-512-transparent.png?v=rs20261112g" alt="SOST official logo, Gold Sigma / Rainbow Edition: gold sigma inside a multicolour orbit" width="512" height="512" loading="lazy">
-      </div>
-      <div class="body">
-        <h3>SOST <span>Official Logo — Gold Sigma / Rainbow Edition</span></h3>
-        <dl class="facts"><dt>Name</dt><dd>SOST</dd><dt>Ticker</dt><dd>SOST</dd><dt>Symbol</dt><dd>Gold Σ (≈ 4000 K) in a multicolour orbit</dd><dt>Network</dt><dd>SOST proof-of-work blockchain · 8 decimals</dd></dl>
-        <div class="dlh">Transparent PNG</div>
-        <div class="dl" data-set="sost" data-kind="transparent"></div>
-        <div class="dlh">Black background PNG</div>
-        <div class="dl" data-set="sost" data-kind="black"></div>
-      </div>
-    </article>
-    <article class="mark" id="wsost">
-      <div class="stage" data-bg="black">
-        <span class="status dev">In development</span>
-        <div class="bgsw" role="group" aria-label="wSOST preview background"></div>
-        <img src="wsost/png/wsost-logo-512-transparent.png?v=rs20261112g" alt="wSOST logo: luminous w sigma inside a rainbow energy ring" width="512" height="512" loading="lazy">
-      </div>
-      <div class="body">
-        <h3>wSOST <span>Wrapped SOST</span></h3>
-        <dl class="facts"><dt>Name</dt><dd>Wrapped SOST</dd><dt>Ticker</dt><dd>wSOST (intended)</dd><dt>Symbol</dt><dd>Small w left of Σ, in a rainbow energy ring</dd><dt>Network</dt><dd>Ethereum, ERC-20 · 18 decimals (planned)</dd></dl>
-        <div class="dlh">Transparent PNG</div>
-        <div class="dl" data-set="wsost" data-kind="transparent"></div>
-        <div class="dlh">Black background PNG</div>
-        <div class="dl" data-set="wsost" data-kind="black"></div>
-      </div>
-    </article>
+<section class="sec" id="logo"><div class="wrap">
+  <p class="eyebrow">Primary official logo</p>
+  <h2>One logo</h2>
+  <p class="intro"><span class="status cur">Current official logo</span>&nbsp; The gold <b>Σ</b> in its multicolour orbit, with no outer ring, is the only logo of Sovereign Stock Token — SOST. Use it for exchanges, listings, wallets, media and partners. PNG with a clean transparent background (no dark edge on light backgrounds); no vector version is provided, because tracing would change the artwork.</p>
+  <div class="grid g3">
+    <div class="card tile"><div class="pv check"><img src="primary/sost-logo-512-transparent.png?v=bk32b" alt="" loading="lazy"></div>
+      <h3>Transparent</h3><p>For any background.</p>
+      <div class="dl"><a href="primary/sost-logo-2048-transparent.png" download>2048 px</a><a href="primary/sost-logo-1024-transparent.png" download>1024 px</a><a href="primary/sost-logo-512-transparent.png" download>512 px</a><a href="primary/sost-logo-256-transparent.png" download>256</a><a href="primary/sost-logo-128-transparent.png" download>128</a><a href="primary/sost-logo-64-transparent.png" download>64</a><a href="primary/sost-logo-32-transparent.png" download>32</a></div></div>
+    <div class="card tile"><div class="pv dark"><img src="primary/sost-logo-512-dark.png?v=bk32b" alt="" loading="lazy"></div>
+      <h3>On dark</h3><p>Same artwork on black (#000000).</p>
+      <div class="dl"><a href="primary/sost-logo-2048-dark.png" download>2048 px</a><a href="primary/sost-logo-1024-dark.png" download>1024 px</a><a href="primary/sost-logo-512-dark.png" download>512 px</a><a href="primary/sost-logo-256-dark.png" download>256</a><a href="primary/sost-logo-128-dark.png" download>128</a><a href="primary/sost-logo-64-dark.png" download>64</a><a href="primary/sost-logo-32-dark.png" download>32</a></div></div>
+    <div class="card tile"><div class="pv light"><img src="primary/sost-logo-512-transparent.png?v=bk32b" alt="" loading="lazy"></div>
+      <h3>On light</h3><p>Use the transparent files: clean edge on white.</p>
+      <div class="dl"><a href="primary/sost-logo-native.png" download>Native resolution · 552 px</a><a href="primary/sost-logo-master-hd.png" download>HD master · 2206 px (upscaled)</a></div></div>
   </div>
-  <div class="alert" role="note"><span aria-hidden="true">⚠</span><div><b>wSOST is not live.</b> Intended relationship: 1 wSOST = 1 native SOST, through a two-way bridge subject to validation (independent audit, a SOST network upgrade and an explicit launch decision). No official wSOST token or contract address exists yet; any token offered as wSOST today is not issued by SOST.</div></div>
-  <p class="note"><b style="color:var(--t2)">Why no SVG?</b> The logos are luminous, photographic illustrations. Tracing them into vector paths would visibly change the artwork, so the PNG files are the canonical versions. The byte-identical originals (1254 px) are in the kit; the 2048 px file is enlarged from them.</p>
+  <p class="intro" style="margin-top:18px"><b>Resolution, stated plainly:</b> the approved artwork carries about 552 px of logo width. The HD master and the 2048 / 1024 px files are ×4 super-resolution upscales of that same artwork — nothing was redrawn, but they are not native high-resolution originals.</p>
 </div></section>
 
-<section class="sec" id="exchange"><div class="wrap">
-  <p class="eyebrow">For exchanges &amp; wallets</p><h2>Ready-made token icons</h2>
-  <p class="intro">Square, transparent, centred on the logo with a small margin, so circular crops never cut it. 1024, 512, 256, 200, 128, 64 and 32 px.</p>
-  <div class="icons" id="iconRow"></div>
-  <div class="dlh" style="margin-top:20px">SOST icons</div><div class="dl" data-icons="sost"></div>
-  <div class="dlh">wSOST icons</div><div class="dl" data-icons="wsost"></div>
-  <div class="dlh">Website &amp; app icons (SOST)</div>
-  <div class="dl"><a href="sost/favicon/favicon.ico?v=rs20261112g" download><b>favicon.ico?v=rs20261112g</b> 16–48</a><a href="sost/favicon/favicon-32x32.png?v=rs20261112g" download><b>favicon</b> 32</a><a href="sost/favicon/favicon-48x48.png?v=rs20261112g" download><b>favicon</b> 48</a><a href="sost/favicon/favicon-96x96.png?v=rs20261112g" download><b>favicon</b> 96</a><a href="sost/favicon/apple-touch-icon.png?v=rs20261112g" download><b>Apple</b> 180</a><a href="sost/favicon/android-chrome-192x192.png?v=rs20261112g" download><b>PWA</b> 192</a><a href="sost/favicon/android-chrome-512x512.png?v=rs20261112g" download><b>PWA</b> 512</a><a href="sost/favicon/android-chrome-maskable-512x512.png?v=rs20261112g" download><b>Maskable</b> 512</a></div>
-  <div class="dlh">Social card</div>
-  <div class="dl"><a href="sost/social/og-sost-1200x630.png?v=rs20261112g" download><b>Open Graph</b> 1200 × 630</a></div>
+<section class="sec" id="icons"><div class="wrap">
+  <p class="eyebrow">For exchanges &amp; wallets</p>
+  <h2>Token icons</h2>
+  <p class="intro">Square, transparent and <b>circle-safe</b>: the whole logo fits inside a round crop, as used by most exchanges and wallets.</p>
+  <div class="grid g2">
+    <div class="card"><div class="sizes">
+      <figure><img src="icons/sost-icon-128.png?v=bk32b" width="128" height="128" alt="">128</figure>
+      <figure><img src="icons/sost-icon-64.png?v=bk32b" width="64" height="64" alt="">64</figure>
+      <figure><img src="icons/sost-icon-32.png?v=bk32b" width="32" height="32" alt="">32</figure>
+      <figure><img src="icons/sost-avatar-512-dark.png?v=bk32b" width="96" height="96" alt="" style="border-radius:50%">avatar</figure>
+    </div>
+    <img src="preview/sost-exchange-circle-crop.png?v=bk32b" alt="Token icon inside a round crop on white and on black at 256, 64 and 32 px" loading="lazy" style="width:100%;height:auto;border-radius:10px;margin-top:16px;display:block"></div>
+    <div class="card tile" style="justify-content:center">
+      <h3>Square token icon · transparent</h3>
+      <div class="dl"><a href="icons/sost-icon-1024.png" download>1024</a><a href="icons/sost-icon-512.png" download>512</a><a href="icons/sost-icon-256.png" download>256</a><a href="icons/sost-icon-200.png" download>200</a><a href="icons/sost-icon-128.png" download>128</a><a href="icons/sost-icon-64.png" download>64</a><a href="icons/sost-icon-32.png" download>32</a></div>
+      <h3>Avatar on dark</h3>
+      <div class="dl"><a href="icons/sost-avatar-1024-dark.png" download>1024</a><a href="icons/sost-avatar-512-dark.png" download>512</a></div>
+      <h3>Favicon &amp; app icons · social card</h3>
+      <div class="dl"><a href="icons/favicon/favicon.ico" download>favicon.ico</a><a href="icons/favicon/apple-touch-icon.png" download>apple-touch</a><a href="icons/favicon/android-chrome-512x512.png" download>android 512</a><a href="icons/favicon/android-chrome-maskable-512x512.png" download>maskable 512</a><a href="icons/social/og-sost-1200x630.png" download>social 1200×630</a></div>
+    </div>
+  </div>
 </div></section>
 
 <section class="sec" id="colours"><div class="wrap">
-  <p class="eyebrow">Colours</p><h2>Measured on the logo</h2>
-  <p class="intro">Median of the saturated pixels of each colour band of the official Gold Sigma / Rainbow Edition artwork, plus the sostcore.com primary red. wSOST keeps the luminous wΣ colours of its own mark. Click a swatch to copy its hex code.</p>
-  <div class="sw" id="sw"></div>
-  <p class="note">Typefaces on sostcore.com: Space Grotesk (headings), Inter (text), IBM Plex Mono (data).</p>
+  <p class="eyebrow">Colours</p>
+  <h2>Measured on the logo</h2>
+  <p class="intro">Median of the saturated pixels of each colour band of the official logo. Typefaces on sostcore.com: Space Grotesk, Inter, IBM Plex Mono.</p>
+  <div class="sw">
+    <div><i style="background:#FAC950"></i><b>Sigma gold</b><span>#FAC950</span></div>
+    <div><i style="background:#FFE475"></i><b>Gold light</b><span>#FFE475</span></div>
+    <div><i style="background:#E1A62E"></i><b>Gold deep</b><span>#E1A62E</span></div>
+    <div><i style="background:#000;box-shadow:inset 0 -1px 0 var(--line)"></i><b>Black</b><span>#000000</span></div>
+    <div><i style="background:#FC1819"></i><b>Orbit red</b><span>#FC1819</span></div>
+    <div><i style="background:#FF7900"></i><b>Orbit orange</b><span>#FF7900</span></div>
+    <div><i style="background:#FFF100"></i><b>Orbit yellow</b><span>#FFF100</span></div>
+    <div><i style="background:#40DF28"></i><b>Orbit green</b><span>#40DF28</span></div>
+    <div><i style="background:#00C1FA"></i><b>Orbit cyan</b><span>#00C1FA</span></div>
+    <div><i style="background:#0067F1"></i><b>Orbit blue</b><span>#0067F1</span></div>
+    <div><i style="background:#8100F5"></i><b>Orbit violet</b><span>#8100F5</span></div>
+    <div><i style="background:#E300C0"></i><b>Orbit magenta</b><span>#E300C0</span></div>
+    <div><i style="background:#FEFAD1"></i><b>Highlight</b><span>#FEFAD1</span></div>
+    <div><i style="background:#FB010D"></i><b>SOST red</b><span>#FB010D</span></div>
+  </div>
 </div></section>
 
-<section class="sec" id="guidelines"><div class="wrap">
-  <p class="eyebrow">Guidelines</p><h2>Using the marks</h2>
-  <p class="intro">The short version. The full guide is in the kit and as <a href="guidelines/SOST_BRAND_GUIDELINES.pdf" style="color:var(--cy)">PDF</a> or <a href="guidelines/SOST_BRAND_GUIDELINES.md" style="color:var(--cy)">Markdown</a>.</p>
-  <div class="rules">
-    <div class="card do"><h3>Do</h3><ul>
-      <li>Scale uniformly. Never change the proportions of the orbit or the Σ.</li>
-      <li>Keep clear space of at least 10 % of the logo width on every side.</li>
-      <li>Prefer black or very dark backgrounds; use the transparent files on light or coloured ones.</li>
-      <li>Use at least 24 px on screen (32 px+ recommended; Σ stays legible at 32 px) and 10 mm in print.</li>
-      <li>Write the names exactly: SOST and wSOST.</li>
-    </ul></div>
-    <div class="card dont"><h3>Don&rsquo;t</h3><ul>
-      <li>Stretch, skew, rotate, recolour (the Σ stays gold), crop the orbit or add effects.</li>
-      <li>Redraw, move or swap the Σ / wΣ symbols, or use one logo for the other asset.</li>
-      <li>Recreate the logos with AI or vector tracing and present them as official.</li>
-      <li>Use a legacy emblem (red eye, rainbow-disc Σ) as the current logo.</li>
-      <li>Present wSOST as live, listed or tradable, or publish a wSOST contract address before an official announcement.</li>
-      <li>Combine the marks with retired elements (gold-backing guarantees, Gold Vault, XAUT, Gold Access Key) or imply endorsement or returns.</li>
-    </ul></div>
+<section class="sec" id="usage"><div class="wrap">
+  <p class="eyebrow">Usage</p>
+  <h2>Using the logo</h2>
+  <p class="intro">Keep clear space of at least 10&nbsp;% of the logo width on every side. Minimum size 24&nbsp;px on screen (32&nbsp;px or more recommended), 10&nbsp;mm in print.</p>
+  <div class="grid g2" style="margin-bottom:16px">
+    <figure class="card imgcard" style="margin:0"><img src="preview/sost-clear-space.png?v=bk32b" alt="Clear space diagram" loading="lazy"><figcaption>Clear space around the visible artwork.</figcaption></figure>
+    <figure class="card imgcard" style="margin:0"><img src="preview/sost-minimum-size.png?v=bk32b" alt="Minimum size on dark and light" loading="lazy"><figcaption>128, 64, 32 and 24 px on dark and light.</figcaption></figure>
+  </div>
+  <div class="grid g2 rules">
+    <div class="card ok"><h3>Correct</h3><ul>
+      <li>Use the files of this kit as supplied, scaled uniformly.</li>
+      <li>Prefer dark backgrounds; on light ones use the transparent files.</li>
+      <li>Use the circle-safe icons where a platform crops to a circle.</li>
+      <li>Write the name as <b>Sovereign Stock Token — SOST</b>, or <b>SOST</b> where only the ticker fits.</li></ul></div>
+    <div class="card no"><h3>Incorrect</h3><ul>
+      <li>Stretching, skewing, rotating or cropping the logo.</li>
+      <li>Recolouring (the Σ is always gold), outlines, shadows or effects.</li>
+      <li>Redrawing, tracing or recreating the logo with generative tools.</li>
+      <li>Presenting the legacy logo, or any other emblem, as the current SOST logo.</li>
+      <li>Any other name or variant of the name.</li></ul></div>
   </div>
 </div></section>
 
 <section class="sec" id="legacy"><div class="wrap">
-  <p class="eyebrow">Legacy</p><h2>Historical emblems</h2>
-  <p class="intro">Until 12 November 2026 SOST used a red eye with a luminous Σ, and wSOST a red eye with WΣ. On 12 November 2026 the rainbow-disc Σ was briefly the SOST logo before the definitive Gold Sigma / Rainbow Edition. They are kept for reference only. <b>Do not use them as the current logo.</b></p>
-  <div class="legacy">
-    <figure><img src="legacy/rainbow-disc/sost-png/sost-logo-256-transparent.png?v=rs20261112g" width="128" height="128" alt="Historical SOST rainbow-disc sigma (superseded)" loading="lazy"><figcaption><span class="status old">Historical · Superseded</span> SOST rainbow-disc Σ</figcaption></figure>
-    <figure><img src="legacy/eye/sost-png/sost-emblem-256-transparent.png" width="128" height="128" alt="Legacy SOST red-eye emblem (superseded)" loading="lazy"><figcaption><span class="status old">Legacy · Superseded</span> SOST red eye</figcaption></figure>
-    <figure><img src="legacy/eye/wsost-png/wsost-emblem-256-transparent.png" width="128" height="128" alt="Legacy wSOST red-eye emblem (superseded)" loading="lazy"><figcaption><span class="status old">Legacy · Superseded</span> wSOST red eye</figcaption></figure>
-  </div>
-</div></section>
-
-<section class="sec" id="kit"><div class="wrap">
-  <p class="eyebrow">Download</p><h2>The complete kit</h2>
-  <div class="kit" style="margin-top:26px">
-    <div class="card"><pre class="tree"><b>SOST_OFFICIAL_BRAND_KIT/</b>
-├─ sost/original/   Gold Sigma / Rainbow Edition original (byte-identical)
-├─ sost/png/        14 files · 2048–32 px · transparent + black
-├─ sost/favicon/    favicon.ico?v=rs20261112g, PNG, Apple, PWA, maskable
-├─ sost/social/     Open Graph 1200 × 630
-├─ sost/svg/        README (why no SVG)
-├─ wsost/original/  original artwork (byte-identical)
-├─ wsost/png/       14 files · 2048–32 px · transparent + black
-├─ wsost/svg/       README (why no SVG)
-├─ exchange/        14 square icons · 1024–32 px
-├─ legacy/rainbow-disc/  rainbow-disc Σ (12 Nov 2026) · HISTORICAL
-├─ legacy/eye/      former red-eye emblems · SUPERSEDED
-├─ guidelines/      SOST_BRAND_GUIDELINES.pdf + .md
-└─ SHA256SUMS.txt</pre></div>
-    <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:14px">
-      <a class="btn pri" href="downloads/SOST_OFFICIAL_BRAND_KIT.zip" download style="justify-content:center">Download ZIP <small data-zip-size></small></a>
-      <a class="btn" href="downloads/SHA256SUMS.txt" style="justify-content:center">SHA-256 checksums</a>
-      <p class="sha" data-zip-sha></p>
+  <p class="eyebrow">Legacy</p>
+  <h2>Historical identity</h2>
+  <div class="card legacy" style="margin-top:24px">
+    <img src="legacy/sost-legacy-logo-512.png?v=bk32b" alt="Legacy SOST logo: red Sigma on black" width="220" height="220" loading="lazy">
+    <div><span class="status leg">Legacy · historical use only</span>
+      <h3>Red Σ</h3>
+      <p>The plain red Σ identified SOST before the current logo. It is provided for historical reference only and is <b>not the current logo</b>: do not use it for listings, wallets or new material.</p>
+      <div class="dl"><a href="legacy/sost-legacy-logo-1024.png" download>1024 px</a><a href="legacy/sost-legacy-logo-512.png" download>512 px</a><a href="legacy/sost-legacy-square-1024.png" download>square 1024</a><a href="legacy/sost-legacy-square-512.png" download>square 512</a></div>
     </div>
   </div>
 </div></section>
 
-<section class="sec"><div class="wrap">
-  <p class="eyebrow">Official sources</p><h2>Learn more</h2>
-  <div class="links" style="margin-top:26px">
-    <a href="../index.html"><b>sostcore.com</b><span>Official website</span></a>
-    <a href="../sost-whitepaper.html"><b>Technical whitepaper</b><span>v4.6 · specification and status</span></a>
-    <a href="https://github.com/Neob1844/sost-core" rel="noopener" target="_blank"><b>GitHub</b><span>github.com/Neob1844/sost-core</span></a>
-    <a href="../sost-wsost-gold-vault.html"><b>wSOST bridge</b><span>Design and road to launch</span></a>
+<section class="sec" id="download"><div class="wrap">
+  <p class="eyebrow">Download</p>
+  <h2>The complete kit</h2>
+  <div class="kit" style="margin-top:24px">
+    <div class="card"><pre class="tree"><b>SOST_Brand_Kit_v3.2/</b>
+  <b>primary/</b>   official logo · native file, HD master, 2048 – 32 px, transparent and on black
+  <b>icons/</b>     circle-safe token icons 1024–32 px, dark avatars, favicon set, social card
+  <b>legacy/</b>    red Σ · historical use only
+  <b>guide/</b>     brand guide · PDF and Markdown
+  <b>preview/</b>   on dark, on light, circle crop, clear space, minimum size
+  README.txt
+  SHA256SUMS.txt</pre></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:16px;justify-content:center">
+      <a class="btn pri" href="downloads/SOST_Brand_Kit_v3.2.zip" download style="align-self:flex-start">Download brand kit <small>ZIP · 7.9 MB</small></a>
+      <div class="dl"><a href="guide/SOST_Brand_Guide.pdf">Brand guide · PDF</a><a href="guide/SOST_Brand_Guide.md">Brand guide · Markdown</a><a href="downloads/SHA256SUMS.txt">SHA256SUMS.txt</a></div>
+      <p class="sha">ZIP SHA-256: 59486eb8a0a062e514b4248dccc158d0c5053bb13bc566145f026e1081ebeb32</p>
+    </div>
   </div>
 </div></section>
-</main>
-<footer><div class="wrap">SOST brand kit v2.1 · 12 November 2026 · The SOST and wSOST logos are the property of the SOST project.</div></footer>
-<div class="toast" role="status" aria-live="polite"></div>
-<script>
-(function(){
-  var S=[2048,1024,512,256,128,64,32], I=[1024,512,256,200,128,64,32];
-  document.querySelectorAll('.dl[data-set]').forEach(function(d){
-    var n=d.dataset.set,k=d.dataset.kind;
-    d.innerHTML=S.map(function(s){return '<a href="'+n+'/png/'+n+'-logo-'+s+'-'+k+'.png?v=rs20261112g" download><b>'+s+'</b> px</a>'}).join('');
-  });
-  document.querySelectorAll('.dl[data-icons]').forEach(function(d){
-    var n=d.dataset.icons;
-    d.innerHTML=I.map(function(s){return '<a href="exchange/'+n+'-icon-'+s+'.png?v=rs20261112g" download><b>'+s+'</b> px</a>'}).join('');
-  });
-  var row=document.getElementById('iconRow');
-  row.innerHTML=[['sost',128],['sost',64],['sost',32],['wsost',128],['wsost',64],['wsost',32]].map(function(x){
-    return '<figure><img src="exchange/'+x[0]+'-icon-'+x[1]+'.png?v=rs20261112g" width="'+x[1]+'" height="'+x[1]+'" alt="'+(x[0]=='sost'?'SOST':'wSOST')+' icon '+x[1]+' px" loading="lazy"><figcaption>'+x[0]+' · '+x[1]+'</figcaption></figure>'}).join('');
-  var BG=[['black','#000'],['check','repeating-conic-gradient(#555 0 25%,#999 0 50%) 0 0/10px 10px'],['white','#fff'],['red','#3a0508']];
-  document.querySelectorAll('.stage').forEach(function(st){
-    var g=st.querySelector('.bgsw');
-    BG.forEach(function(b){var x=document.createElement('button');x.type='button';x.style.background=b[1];x.setAttribute('aria-label','Preview on '+(b[0]=='check'?'transparent':b[0]));x.setAttribute('aria-pressed',b[0]=='black');
-      x.onclick=function(){st.dataset.bg=b[0];g.querySelectorAll('button').forEach(function(y){y.setAttribute('aria-pressed',y===x)})};g.appendChild(x)});
-  });
-  var C=[['SOST Red','#FB010D','Primary'],['Black','#000000','Background'],['Sigma gold','#D38401','SOST Σ body'],['Gold light','#FCE647','SOST Σ light'],['Gold deep','#874902','SOST Σ shade'],['Gold highlight','#FCFCDA','SOST Σ highlight'],['Orbit red','#FC1506','Orbit'],['Orbit orange','#FC7901','Orbit'],['Orbit yellow','#FDF902','Orbit'],['Orbit green','#36EF3E','Orbit'],['Orbit cyan','#00CEFC','Orbit'],['Orbit blue','#0078FC','Orbit'],['Orbit violet','#8001F4','Orbit'],['Orbit magenta','#F202C2','Orbit'],['wΣ core','#FDFBE6','wSOST mark'],['wΣ glow','#F09503','wSOST mark']];
-  var sw=document.getElementById('sw');
-  sw.innerHTML=C.map(function(c){return '<button class="swc" type="button" data-hex="'+c[1]+'"><i style="background:'+c[1]+(c[1]=='#000000'?';box-shadow:inset 0 -1px 0 var(--ln)':'')+'"></i><span>'+c[0]+'<code>'+c[1]+' · '+c[2]+'</code></span></button>'}).join('')+
-    '<button class="swc wide" type="button" data-hex="#8B5CF6 #E879F9 #3B82F6 #22D3EE #A3E635 #FACC15 #FB923C"><i style="background:var(--spec)"></i><span>Spectrum accent<code>#8B5CF6 → #FB923C · accent line</code></span></button>';
-  var t=document.querySelector('.toast'),tm;
-  sw.addEventListener('click',function(e){var b=e.target.closest('.swc');if(!b)return;var h=b.dataset.hex;
-    var done=function(){t.textContent='Copied '+h;t.classList.add('on');clearTimeout(tm);tm=setTimeout(function(){t.classList.remove('on')},1600)};
-    if(navigator.clipboard)navigator.clipboard.writeText(h).then(done,done);else done();});
-  fetch('downloads/SHA256SUMS.txt').then(function(r){return r.ok?r.text():''}).then(function(x){
-    var m=x.match(/^([0-9a-f]{64})\s+\*?SOST_OFFICIAL_BRAND_KIT\.zip\s+(\d+)?/m);if(!m)return;
-    document.querySelector('[data-zip-sha]').textContent='SHA-256 '+m[1];
-  }).catch(function(){});
-  var zs=document.querySelectorAll('[data-zip-size]');
-  fetch('downloads/SOST_OFFICIAL_BRAND_KIT.zip',{method:'HEAD'}).then(function(r){var n=+r.headers.get('content-length');if(n)zs.forEach(function(z){z.textContent=(n/1048576).toFixed(1)+' MB'})}).catch(function(){});
-})();
-</script>
+
+<footer><div class="wrap">
+  <span>Sovereign Stock Token — SOST · Brand Kit v3.2 · 14 November 2026</span>
+  <span><a href="https://sostcore.com/">sostcore.com</a> · <a href="https://github.com/Neob1844/sost-core">github.com/Neob1844/sost-core</a></span>
+</div></footer>
 </body>
 </html>

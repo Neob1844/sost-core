@@ -1,0 +1,8 @@
+/* SOST Universe scene module: sn1987a (metadata and card: core/u-scenes.js). Loaded on demand by core/u-core.js. */
+SOSTU.sceneLib.register("sn1987a", {
+ "p": " if(kind<=.92){ vec3 q; float T=u_t*.1; if(kind<.30){ float an=a_s.x*6.2832; float pe=floor(a_s.x*32.); float pa=(pe+.5)/32.*6.2832; float on=smoothstep(0.,.05,fract(T+pe*.031)-.0)*(1.-smoothstep(.6,1.,fract(T+pe*.031))); float isP=step(abs(an-pa),.06); q=vec3(cos(an),0.,sin(an))*(1.+(a_s.y-.5)*.03)+isP*.03*vec3(sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*cos(a_s.y*6.2832),2.*a_s.z-1.,sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*sin(a_s.y*6.2832)); col=mix(u_col[1],u_col[5],isP*on)*1.1; alpha=(.08+.55*isP*on); sz=.9+.6*isP*on; } else if(kind<.62){ float sd=a_s.x<.5?1.:-1.; float an=a_s.y*6.2832; float rr=1.65+(a_s.z-.5)*.03; q=vec3(rr*cos(an)+sd*.12,sd*1.25,rr*sin(an)); col=mix(u_col[0],u_col[1],.4)*1.1; alpha=.11; sz=.9; } else if(kind<.72){ q=vec3(.12,.22,.12)*pow(a_s.x,.5)*vec3(sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*cos(a_s.y*6.2832),2.*a_s.z-1.,sqrt(1.-(2.*a_s.z-1.)*(2.*a_s.z-1.))*sin(a_s.y*6.2832))*2.; col=mix(u_col[6],u_col[5],a_s.x); alpha=.25; sz=1.; } else { float an=a_s.y*6.2832; float h=a_s.x*2.-1.; float rr=mix(1.,1.65,abs(h)); q=vec3(rr*cos(an)+h*.12,h*1.25,rr*sin(an)); col=u_col[2]*.7; alpha=.018; sz=1.; } p=rotY(rotX(q,.75),u_t*.04+.4); }",
+ "l": " { float k=mod(cid,3.); float an=u*6.2832; vec3 q=k<.5?vec3(cos(an),0.,sin(an)):vec3(1.65*cos(an)+(k<1.5?.12:-.12),k<1.5?1.25:-1.25,1.65*sin(an)); q*=1.+(j1-.5)*.01; p=rotY(rotX(q,.75),u_t*.04+.4); col=(k<.5?u_col[1]:u_col[0])*.5; }",
+ "la": 0.8,
+ "rc": "vec3(0.)",
+ "rad": 0
+});

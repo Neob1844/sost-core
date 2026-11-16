@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST V17 — Operator Upgrade Guide (nodes and miners)</title>
+<meta name="description" content="Step-by-step guide for SOST node operators and miners to prepare for the V17 network upgrade at block #40,000: preparation, binaries, checksums, restart window #39,900–#39,999, checks and recovery.">
+<link rel="canonical" href="https://sostcore.com/sost-v17-upgrade.html">
+<meta property="og:title" content="SOST V17 — Operator Upgrade Guide">
+<meta property="og:description" content="How node operators and miners prepare for the V17 upgrade at block #40,000.">
+<meta property="og:url" content="https://sostcore.com/sost-v17-upgrade.html">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
+<link rel="stylesheet" href="css/v17.css?v=v17a">
+</head>
+<body>
+<main class="v17" id="top">
+
+<p style="margin:6px 0 0"><span class="tag t-test">STATUS: TESTING &mdash; NO RELEASE YET</span> <span class="muted" style="font-size:13px">Preparation guide · 14 November 2026</span></p>
+<h1>SOST V17 &mdash; <em>Operator Upgrade Guide</em></h1>
+<p class="lead">For everyone who runs <code>sost-node</code> or <code>sost-miner</code>. Read it now, prepare now, and install only the <b>approved V17 release</b> when it is published. Plain steps, each one with a check.</p>
+
+<div class="crit"><span class="h">&#9888; CRITICAL &mdash; RISK OF BLOCKCHAIN SPLIT</span>
+All validating nodes and miners must prepare the approved V17 release before block #40,000. Running incompatible software after activation can split the network into competing chains, causing rejected blocks, divergent balances and unreliable confirmations. <b>Recommended coordinated restart window: blocks #39,900&ndash;#39,999.</b> Do not continue mining with an incompatible release after activation.</div>
+
+<div class="note"><b>What you can do today:</b> steps 1 (preparation) and the checklists. <b>What you must not do today:</b> install a V17 build. No V17 release has been published, so there are no official V17 binaries, tag or checksums yet. Anything offered as &ldquo;V17&rdquo; before the official announcement on this page and on GitHub is not official. The valid build today is <b>V30000 FINAL</b> (<a href="sost-v30000-history.html">checksums</a>).</div>
+
+<div class="btns no-print">
+  <a class="btn primary" href="downloads/v17/SOST_V17_Operator_Guide.pdf">Download this guide (PDF)</a>
+  <a class="btn" href="downloads/v17/SOST_V17_Checklist_Nodes.txt">Node checklist</a>
+  <a class="btn" href="downloads/v17/SOST_V17_Checklist_Miners.txt">Miner checklist</a>
+  <a class="btn" href="sost-v17.html">What&rsquo;s changing</a>
+</div>
+
+<nav class="toc no-print" aria-label="Steps">
+  <a href="#timeline">Timeline</a><a href="#s1">1 Prepare</a><a href="#release">2 Get V17</a><a href="#s3">3 Build</a><a href="#s4">4 Verify</a>
+  <a href="#s5">5 Restart node</a><a href="#s6">6 Restart miner</a><a href="#s7">7 NODE_BIND</a><a href="#s8">8 Pre-#40,000 check</a>
+  <a href="#s9">9 Activation</a><a href="#s10">10 Problems</a>
+</nav>
+
+<h2 id="timeline"><small>When</small>Timeline (counted in blocks)</h2>
+<div class="tbl"><table>
+<tr><th>Moment</th><th>What happens</th><th>What you do</th></tr>
+<tr><td>Now &rarr; release</td><td>Final testing of the candidate</td><td>Step 1. Keep running V30000 FINAL.</td></tr>
+<tr><td>Release published (well before #39,900)</td><td>Tag, binaries, SHA-256 and release notes published here and on GitHub</td><td>Steps 2&ndash;4: download or build, verify. Do not restart yet unless the release notes say so.</td></tr>
+<tr><td><b>#39,900 &rarr; #39,999</b></td><td>Coordinated restart window (100 blocks; about 17 hours at the 10-minute target, but it depends on the real block rate)</td><td>Steps 5&ndash;8: restart node, then miner, then check.</td></tr>
+<tr><td>#40,000</td><td>V17 rules activate automatically by height</td><td>Step 9: do <b>not</b> restart exactly now; watch.</td></tr>
+<tr><td>After #40,000</td><td>Verification of consensus</td><td>Step 9 checks; report problems (step 10).</td></tr>
+</table></div>
+<p>Live: <span class="live" id="gH">&hellip;</span></p>
+
+<h2 id="s1"><small>Step 1</small>Preparation (safe to do today)</h2>
+<ol>
+<li><b>Current height and your node&rsquo;s view.</b> Replace the user and password file with yours:
+<pre>curl -s --user "myuser:$(cat ~/.sost/rpc.pass)" -H 'content-type: application/json' \
+  -d '{"jsonrpc":"1.0","id":1,"method":"getinfo","params":[]}' http://127.0.0.1:18232/
+<span class="c"># check: "blocks" = the height on https://sostcore.com/sost-explorer.html, "profile": "mainnet", "connections" &gt; 0</span></pre></li>
+<li><b>Installed version.</b> Write down the SHA-256 of the binaries you run (this identifies the build exactly):
+<pre>sha256sum /path/to/sost-node /path/to/sost-miner /path/to/sost-cli</pre>
+Compare with the V30000 FINAL checksums on the <a href="sost-v30000-history.html">V30000 page</a>.</li>
+<li><b>System and architecture.</b> <code>uname -m</code> (expect <code>x86_64</code>) and <code>cat /etc/os-release</code>. Windows users run SOST inside WSL2.</li>
+<li><b>Save how you start things.</b> Copy your exact start commands (or systemd unit files) to a text file: paths, <code>--rpc-user</code>, <code>--rpc-pass-file</code>, <code>--chain</code>, <code>--profile</code>, miner flags such as <code>--wallet</code>, <code>--mining-key-label</code>, <code>--threads</code>.
+<pre>systemctl cat sost-node sost-miner 2&gt;/dev/null &gt; ~/sost-start-commands.txt   <span class="c"># if you use systemd</span>
+ps -o args= -C sost-node -C sost-miner &gt;&gt; ~/sost-start-commands.txt            <span class="c"># shows how they run now</span></pre>
+<b>Never put a password on the command line</b> (<code>--rpc-pass</code>): anyone on the machine can read it. Use <code>--rpc-pass-file</code>.</li>
+<li><b>Back up.</b> Stop nothing yet. Copy your wallet files and keys to an offline place you control, and note where your chain data lives. A copy of the chain file can be made later with the node stopped (step 5).</li>
+<li><b>Know what to stop.</b> <code>pgrep -a sost-</code> lists the SOST processes on the machine.</li>
+</ol>
+<p class="muted">Nobody from SOST will ever ask for your recovery phrase, private keys or passwords. Do not share them in any channel.</p>
+
+<h2 id="release"><small>Step 2</small>Get V17 &mdash; release and checksums</h2>
+<div class="note"><b>Not published yet.</b> There is no V17 tag and no V17 binary on <a href="https://github.com/Neob1844/sost-core/releases" rel="noopener">GitHub Releases</a>. When the release is approved, this section will list: the tag name, the source commit, download links for <code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, the <code>SHA256SUMS</code> file and the release notes. Until then there is nothing to download.</div>
+<div class="tbl"><table>
+<tr><th>Item</th><th>Value</th></tr>
+<tr><td>Source code</td><td><a href="https://github.com/Neob1844/sost-core" rel="noopener">github.com/Neob1844/sost-core</a></td></tr>
+<tr><td>V17 tag</td><td><i>published with the release</i></td></tr>
+<tr><td>sost-node / sost-miner / sost-cli</td><td><i>published with the release</i></td></tr>
+<tr><td>SHA256SUMS</td><td><i>published with the release</i></td></tr>
+<tr><td>Release notes</td><td><i>published with the release</i></td></tr>
+</table></div>
+
+<h2 id="s3"><small>Step 3</small>Or build from source (Ubuntu, Debian, WSL2)</h2>
+<p><b>Example commands</b>, shown so you can check your build environment now. The definitive version (exact tag, dependencies and flags) is published with the release and replaces this block; the V17 candidate links a pinned version of <code>libsecp256k1</code> that may change the dependency list.</p>
+<pre><span class="c"># EXAMPLE — the tag &lt;V17_TAG&gt; does not exist yet</span>
+sudo apt update &amp;&amp; sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
+git clone https://github.com/Neob1844/sost-core.git sost-v17 &amp;&amp; cd sost-v17
+git checkout &lt;V17_TAG&gt;
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DSOST_DEVNET_FORKS=OFF
+<span class="c"># limit the CPU: on a machine that is also mining or running a node use 1–2 jobs, not all cores</span>
+nice -n 19 cmake --build build --target sost-node sost-miner sost-cli -j2
+(cd build &amp;&amp; ctest --output-on-failure -j2)       <span class="c"># all tests must pass</span>
+ls -l build/sost-node build/sost-miner build/sost-cli</pre>
+<p>Do not use <code>-j$(nproc)</code> on a machine that is mining or serving a node: it can starve them of CPU and memory (each compile job can use over 1 GB of RAM).</p>
+
+<h2 id="s4"><small>Step 4</small>Verify the binaries</h2>
+<pre>sha256sum sost-node sost-miner sost-cli
+<span class="c"># every line must match SHA256SUMS of the approved V17 release exactly</span>
+sha256sum -c SHA256SUMS --ignore-missing      <span class="c"># prints OK for each file</span></pre>
+<ul>
+<li>The V17 checksums are <b>not</b> the V30000 ones. Never reuse old hashes.</li>
+<li>If your own build gives a different hash, do not install it. Check the tag, the compiler and library versions and the flags; or use the official binaries. <b>Never run a binary whose SHA-256 does not match.</b></li>
+</ul>
+
+<h2 id="s5"><small>Step 5</small>Restart the node (during #39,900&ndash;#39,999)</h2>
+<ol class="check">
+<li>Your backup from step 1 is done.</li>
+<li>Stop the node cleanly: <code>sudo systemctl stop sost-node</code>, or press <kbd>Ctrl+C</kbd> once in its terminal and wait.</li>
+<li>Confirm it stopped: <code>pgrep -a sost-node</code> prints nothing.</li>
+<li>Optional: copy the chain file now that the node is stopped.</li>
+<li>Replace only the executable: <code>sudo install -m 0755 sost-node /path/to/your/sost-node</code>.</li>
+<li>Keep your chain data and configuration. <b>Do not delete the blockchain and do not resync</b> unless a published instruction tells you to.</li>
+<li>Start it the same way as before: <code>sudo systemctl start sost-node</code>, or your saved command.</li>
+<li>Confirm the binary: <code>sha256sum /path/to/your/sost-node</code> matches the release.</li>
+<li>Peers: <code>getinfo</code> shows <code>"connections"</code> &gt; 0; <code>getpeerinfo</code> lists them.</li>
+<li>Sync: <code>"blocks"</code> keeps rising and matches the Explorer.</li>
+<li>Canonical chain: <code>getbestblockhash</code> equals the tip hash shown on the Explorer at the same height.</li>
+</ol>
+<p><b>WSL2 / Windows:</b> run the same commands inside the WSL terminal; keep the Windows PC from sleeping during the window. <b>Manual runs:</b> keep the old start command and replace only the file it points to.</p>
+
+<h2 id="s6"><small>Step 6</small>Restart the miner (after the node is confirmed)</h2>
+<ol class="check">
+<li>The upgraded node is synced and has peers (step 5).</li>
+<li>Stop the old miner (<kbd>Ctrl+C</kbd> or <code>systemctl stop</code>); confirm with <code>pgrep -a sost-miner</code>.</li>
+<li>Replace the executable with the verified V17 <code>sost-miner</code>.</li>
+<li>Keep the same mining address, wallet, key label and flags.</li>
+<li>Start it with your saved command (<code>--realtime</code> stays mandatory).</li>
+<li>Check it reaches the node and receives work (no RPC errors in its output).</li>
+<li>Check your next block is accepted (it appears on the Explorer with your address).</li>
+<li>Confirm no old miner is still running anywhere with the same address.</li>
+</ol>
+<p><b>If a miner cannot be upgraded in time, stop it before #40,000.</b> An old miner after activation produces blocks the network rejects and wastes its work.</p>
+
+<h2 id="s7"><small>Step 7</small>NODE_BIND and HEARTBEAT</h2>
+<ul>
+<li><b>No new registration.</b> Existing NODE_BINDs stay valid after V17 and heartbeats continue as today. No key change is required.</li>
+<li>From #40,000 a <b>miner</b> needs, besides the current mining-activity rules, an active NODE_BIND and heartbeats in 3 of the last 4 epochs (288 blocks each) to be eligible for the <b>normal DTD</b>. Today this applies to the Jackpot V2 only. A miner that wants DTD rewards and has no NODE_BIND should register one with the current tools (<code>createnodebind</code>, see the <a href="sost-v30000-history.html">V30000 page</a>) well before #40,000, so its heartbeats count in time.</li>
+<li>New in the V17 CLI: the node key and the mining key can sign the NODE_BIND on different machines (two halves). Optional.</li>
+</ul>
+
+<h2 id="s8"><small>Step 8</small>Check before block #40,000</h2>
+<ul class="check">
+<li>The approved V17 binaries are installed (node, miner, CLI).</li>
+<li>Their SHA-256 match the release.</li>
+<li>The node is synced (height = Explorer) and has peers.</li>
+<li>The node runs the V17 build (by checksum; the release notes give the version string to expect).</li>
+<li>The miner runs the V17 build, gets work and its blocks are accepted.</li>
+<li>The mining address is the right one.</li>
+<li>No serious errors in the node or miner logs.</li>
+<li>Your tip hash equals the Explorer tip hash (no divergent chain).</li>
+</ul>
+<p>Download: <a href="downloads/v17/SOST_V17_Checklist_Nodes.txt">node checklist</a> · <a href="downloads/v17/SOST_V17_Checklist_Miners.txt">miner checklist</a>.</p>
+
+<h2 id="s9"><small>Step 9</small>Activation at #40,000</h2>
+<p>The new rules activate <b>automatically by height</b>. Nothing has to be done at #40,000. <b>Do not restart exactly at #40,000.</b> Watch:</p>
+<ul>
+<li>the hash of block #40,000 on your node equals the Explorer&rsquo;s;</li>
+<li>height keeps rising and blocks propagate; peers stay connected;</li>
+<li>the reward split in new blocks is 80 / 15 / 5 (<code>getblock</code> shows a <code>v17_reward</code> section);</li>
+<li>maturity, DTD and Jackpot behave as described on <a href="sost-v17.html">What&rsquo;s changing</a>;</li>
+<li>no warnings about rejected blocks, forks or reorganizations.</li>
+</ul>
+
+<h2 id="s10"><small>Step 10</small>Problems and safe recovery</h2>
+<div class="tbl"><table>
+<tr><th>Problem</th><th>What to do</th></tr>
+<tr><td>Node does not start</td><td>Read the last lines of its output or <code>journalctl -u sost-node -n 100</code>. Check the path, permissions (<code>chmod 0755</code>) and that no old node still holds the port.</td></tr>
+<tr><td>Missing library / dependency error</td><td>Use the official binary, or install the dependencies listed in the release notes and rebuild.</td></tr>
+<tr><td>Wrong binary</td><td>Stop it. Check <code>sha256sum</code>. Install the verified file.</td></tr>
+<tr><td>RPC not available</td><td>Check <code>--rpc-user</code> / <code>--rpc-pass-file</code> and the port (default 18232); the node may still be loading the chain.</td></tr>
+<tr><td>Node out of sync / no peers</td><td>Wait a few minutes; check the firewall and internet; add seeds to <code>seeds.txt</code> in the data directory. Do not delete the chain.</td></tr>
+<tr><td>Blocks rejected</td><td>Compare your tip hash with the Explorer. Check that node and miner are both V17. Report it with the log lines.</td></tr>
+<tr><td>Miner sends invalid work</td><td>It is probably an old miner or it points to an old node. Stop it, check both checksums.</td></tr>
+<tr><td>Configuration conflicts</td><td>Restore the start command saved in step 1; change one thing at a time.</td></tr>
+<tr><td>Reorganization</td><td>Up to the 500-block cap the node handles it automatically. Wait for more confirmations before acting on recent transactions.</td></tr>
+<tr><td>Possible chain split (your tip differs from the Explorer for several blocks)</td><td>Stop mining. Do not send transactions. Report it in the official channels with your height, tip hash and build checksum, and follow the published instructions.</td></tr>
+</table></div>
+<div class="crit"><span class="h">Do not go back to V16 / V30000 after activation on your own</span>
+Rolling back a hard fork is not like rolling back a web page. After #40,000 an old node follows a different chain. Any return to old software would need a coordinated, tested plan announced for the whole network.</div>
+
+<p class="foot">SOST V17 Operator Upgrade Guide &middot; preparation version, 14 November 2026. It becomes the final guide only when the release section above is filled in from the approved release. Questions: the official community channels listed on <a href="sost-community.html">Community</a>.</p>
+</main>
+<script>
+(function(){var f=function(n){return Number(n).toLocaleString('en-US')};
+function get(){fetch('/api/control_room.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){var h=+d.height;if(!(h>0))return;
+var w=39900-h,l=40000-h;document.getElementById('gH').textContent='height '+f(h)+' · '+(w>0?f(w)+' blocks to the window (#39,900)':'window open')+' · '+(l>0?f(l)+' blocks to #40,000':'#40,000 reached');}).catch(function(){})}
+get();setInterval(get,120000);})();
+</script>
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='mining'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
+</body>
+</html>

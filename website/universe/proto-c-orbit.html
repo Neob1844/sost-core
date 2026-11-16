@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SOST — 288 Orbit, DTD Jackpot (prototype C)</title>
+<meta name="description" content="Prototype C: the DTD Jackpot cycle of 288 blocks as a precise instrument, with confirmed events only and the deterministic selection rule.">
+<link rel="preload" href="../fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<style>
+body{background:#000}
+main{position:relative;z-index:var(--z-content);padding:80px max(16px,3vw) 90px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:24px;max-width:1440px;margin:0 auto}
+.kick{font:600 12px var(--f-mono);letter-spacing:.35em;color:var(--tx-3)}
+h1{font:700 clamp(26px,3vw,40px)/1.05 var(--f-ui);letter-spacing:-.02em;margin:8px 0 8px}
+.lede{color:var(--tx-2);font-size:15px;line-height:1.5;margin:0 0 10px;max-width:62ch}
+.orbitWrap{position:relative;aspect-ratio:1/1;max-height:calc(100svh - 150px);margin:0 auto;width:100%}
+#orbit{width:100%;height:100%;display:block;overflow:visible}
+#orbit:focus-visible{outline:2px solid var(--cyan);outline-offset:4px;border-radius:50%}
+#orbit .g-zoom{transition:transform .9s var(--ease)}
+@media (prefers-reduced-motion:reduce){#orbit .g-zoom{transition:none}}
+.side{display:flex;flex-direction:column;gap:14px}
+.panel{padding:14px 16px}
+.panel h2{margin:0 0 10px;font:600 11px var(--f-mono);letter-spacing:.28em;color:var(--tx-3);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.events{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:4px;list-style:none;margin:0;padding:0}
+.events button{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;padding:5px 4px;border-radius:6px;border:1px solid #ffffff1a;font:10.5px/1.35 var(--f-mono);color:var(--tx-2);text-align:center;background:#050505}
+.events button .a{display:block;color:var(--gold);font-weight:700}
+.events button.roll .a{color:var(--st-retired)}
+.events button.roll{border-style:dashed}
+.events button.cur .a{color:var(--violet-cr)}
+.events button[aria-pressed="true"]{border-color:var(--gold);color:#fff;box-shadow:0 0 0 1px var(--gold) inset}
+.events button:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.readout{min-height:104px}
+/* Phase 4 CLS fix: reserve the rendered heights of the right column (measured at 1440: events 262, next 251) */
+@media (min-width:901px){#events{min-height:262px}#next{min-height:251px}}
+.wbar{display:flex;height:12px;border-radius:6px;overflow:hidden;gap:1px;margin:6px 0}
+.wbar i{display:block}
+.rule{font:12px/1.55 var(--f-mono);color:var(--tx-2);margin:0}
+.rule code{color:var(--tx-1)}
+.explain p{margin:0 0 8px;font-size:14px;line-height:1.55;color:var(--tx-1)}
+.explain p.def{font-size:12px;color:var(--tx-2)}
+details summary{cursor:pointer;font:12px var(--f-mono);color:var(--tx-2)}
+.cites{font:11px/1.6 var(--f-mono);color:var(--tx-2);margin:6px 0 0;padding-left:18px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font:11px var(--f-mono);color:var(--tx-2);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px}
+.loading #orbitRings{opacity:.25}
+table{width:100%;border-collapse:collapse;font:11.5px var(--f-mono)} th,td{padding:4px 6px;border-bottom:1px solid #ffffff10;text-align:left;white-space:nowrap} th{color:var(--tx-2)}
+.tblwrap{max-height:260px;overflow:auto}
+@media (max-width:900px){main{grid-template-columns:minmax(0,1fr)}.orbitWrap{max-height:none}}
+</style>
+<link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
+</head>
+<body class="loading">
+<a class="skip" href="#events">Skip to the confirmed events</a>
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<main id="main">
+<section aria-labelledby="h1">
+  <div class="kick">DTD JACKPOT · THE 288 ORBIT</div>
+  <h1 id="h1">One jackpot every 288 blocks. Computed, not drawn by chance.</h1>
+  <p class="lede">Each mark on the ring is one block of the current 288-block jackpot cycle. The gold mark at the top is the jackpot height. Below, only <b>confirmed</b> results from the chain.</p>
+  <div class="orbitWrap" aria-busy="true" id="orbitWrap">
+    <svg id="orbit" viewBox="-500 -500 1000 1000" role="img" tabindex="0" aria-labelledby="orbitTitle orbitDesc" aria-describedby="orbitOut">
+      <title id="orbitTitle">288 Orbit</title><desc id="orbitDesc">Loading the collector snapshot.</desc>
+      <defs><radialGradient id="coreG"><stop offset="0" stop-color="#000"/><stop offset=".8" stop-color="#000"/><stop offset=".92" stop-color="#fb010d"/><stop offset="1" stop-color="#fb010d00"/></radialGradient></defs>
+      <g class="g-zoom" id="zoom">
+        <circle r="470" fill="none" stroke="#ffffff0d"/>
+        <circle r="300" fill="none" stroke="#ffffff10" stroke-dasharray="2 6"/>
+        <g id="orbitRings"></g>
+        <g id="seedArc"></g>
+        <g id="hand"></g>
+        <g id="waves"></g>
+        <circle r="92" fill="url(#coreG)"/>
+        <g id="center" font-family="ui-monospace,monospace" text-anchor="middle"></g>
+      </g>
+    </svg>
+  </div>
+  <p class="sr" id="orbitOut" aria-live="polite"></p>
+  <div class="legend" aria-hidden="true"><span><i style="background:#22d3ee"></i>mined block (colour = producer, length = interval)</span><span><i style="background:#ffffff26"></i>not yet mined</span><span><i style="background:#ffd700"></i>jackpot height</span><span><i style="background:repeating-linear-gradient(90deg,#fbbf24 0 3px,#0000 3px 5px)"></i>16-block seed window</span><span><i style="background:#fb010d"></i>chain tip</span></div>
+</section>
+<aside class="side">
+  <section class="panel readout" aria-labelledby="hRead"><h2 id="hRead">SELECTED EVENT <span id="readTag"></span></h2><div id="readout"><div class="skeleton" style="height:60px"></div></div></section>
+  <section class="panel" aria-labelledby="hEv"><h2 id="hEv">CONFIRMED JACKPOT EVENTS <span id="evTag"></span></h2>
+    <ul class="events" id="events" aria-label="Jackpot heights, oldest first. Activate one to inspect it on the orbit."><li><span class="skeleton" style="display:block;height:40px"></span></li></ul>
+    <p class="def" id="evNote" style="margin:8px 0 0"></p></section>
+  <section class="panel" aria-labelledby="hNext"><h2 id="hNext">NEXT JACKPOT <span id="nextTag"></span></h2><div id="next"><div class="skeleton" style="height:40px"></div></div></section>
+  <section class="panel explain" aria-labelledby="hHow"><h2 id="hHow">HOW IT WORKS</h2>
+    <p>Since block #25,000 every block splits its reward: half to the miner, half to one earlier miner chosen by the DTD. Separately, every <b>288 blocks</b> (about two days) a <b>DTD Jackpot</b> of 100 SOST (up to 500 SOST with rollover) is paid from the existing protocol jackpot reserve. No new coins are created for it.</p>
+    <p>The winner is <b>not chosen by chance</b>. Every node computes the same result from public chain data: a SHA-256 hash of a fixed label, the hashes of the 16 blocks before the jackpot height, and the height itself. That number, modulo the total weight, picks the winner. From #30,000 the weight of each candidate is the number of blocks it mined in the last 2,016 blocks.</p>
+    <p>To be a candidate since #30,000, an address needs at least 3 blocks in the last 2,016, an active <b>NODE_BIND</b> and heartbeats in 3 of the last 4 completed 288-block epochs. If nobody qualifies, nothing is paid and 100 SOST rolls over to the next jackpot.</p>
+    <p class="def">Because the 16 previous blocks are not known in advance, nobody can know the winner until the block just before the jackpot height exists. Anything shown for a future jackpot is a projection. Taking part costs electricity and hardware; nothing here is a guaranteed gain.</p>
+    <details><summary>Rules verified in the source of v30000-final.1 (59a4e666)</summary>
+      <ul class="cites">
+        <li>Jackpot height: h ≥ 25,290 and (h − 25,290) mod 288 = 0 — <code>include/sost/params.h:1384-1387</code>; cadence 288 — <code>params.h:1329</code></li>
+        <li>Base 100 SOST, cap 500 incl. rollover — <code>params.h:1331-1332</code>; rollover / reserve — <code>include/sost/jackpot.h:53-119</code></li>
+        <li>V2 rules from #30,000; first V2 jackpot #30,186 — <code>params.h:1399-1400, 1415</code></li>
+        <li>V2 eligibility: ≥ 3 blocks in [h−2016, h−1], heartbeats 3 of last 4 epochs — <code>params.h:1429-1432</code>; NODE_BIND — <code>src/jackpot_v2.cpp:22-47, 79-91</code></li>
+        <li>Seed = SHA256("SOST_HIST_JACKPOT" ‖ 16 previous block hashes ‖ h); roll = u64 mod total weight — <code>src/sost-node.cpp:5770-5776</code>, <code>src/jackpot_v2.cpp:111-137</code></li>
+        <li>Normal DTD on every block from #25,000 — <code>include/sost/lottery.h:139</code>; current block hash deliberately excluded — <code>lottery.h:302-306</code></li>
+        <li>Confirmed payout = transaction type JACKPOT at index 1 of the block — <code>include/sost/jackpot_block.h:73-84</code></li>
+      </ul></details>
+  </section>
+  <section class="panel" aria-labelledby="hTbl"><h2 id="hTbl">ALL CONFIRMED EVENTS (TABLE)</h2><div class="tblwrap"><table><caption class="sr">Confirmed DTD Jackpot payouts</caption><thead><tr><th scope="col">height</th><th scope="col">rules</th><th scope="col">winner address</th><th scope="col">amount</th><th scope="col">txid</th></tr></thead><tbody id="tbody"></tbody></table></div></section>
+</aside>
+</main>
+<div class="u-offline" id="uOffline"></div>
+<div class="u-bar"><span id="uStatus"><span class="st loading">LOADING</span></span><span class="sp"><span id="earnProv"></span></span></div>
+
+<script src="../control-room/state.js"></script>
+<script src="../control-room/adapter.js"></script>
+<script src="core/u-data.js"></script>
+<script src="core/u-ui.js?v=ns20261113"></script>
+<script src="core/u-nav.js?v=in20261113a"></script>
+<script>SOSTU.nav.render(document.getElementById('nav'),'dtd','288 Orbit');</script>
+<script>
+(function(){
+'use strict';
+var UI=SOSTU.ui, RM=UI.RM, $=function(id){return document.getElementById(id);};
+var NS='http://www.w3.org/2000/svg', FIRST=25290, CAD=288, V2=30000, PAL=['#22d3ee','#e879f9','#a3e635','#facc15','#fb923c','#8b5cf6','#3b82f6','#4ade80'];
+var S=null, epochEnd=null, events=[], colorOf={}, cursor=null, selected=null, rowByH={};
+function isJ(h){return h>=FIRST&&(h-FIRST)%CAD===0;}
+function nextJ(h){return h<FIRST?FIRST:FIRST+Math.ceil((h-FIRST)/CAD)*CAD;}
+function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+function ang(i){return (-90+(i+1)*(360/CAD))*Math.PI/180;}   // position i=0..287; i=287 (jackpot) at 12 o'clock
+function tickLen(dt){if(dt==null)return 18;return Math.min(70,14+Math.log2(1+dt/60)*9);}
+function render(){
+  var rings=$('orbitRings'); rings.innerHTML=''; $('seedArc').innerHTML=''; $('hand').innerHTML='';
+  var tip=S.state.meta.height, start=epochEnd-CAD+1, frag=document.createDocumentFragment();
+  for(var i=0;i<CAD;i++){var h=start+i,a=ang(i),r=rowByH[h],c=Math.cos(a),s=Math.sin(a),R0=310;
+    if(i===CAD-1){el('line',{x1:c*R0,y1:s*R0,x2:c*(R0+96),y2:s*(R0+96),stroke:'#ffd700','stroke-width':5,'stroke-linecap':'round'},frag);continue;}
+    if(h<=tip&&r){var L=tickLen(r.dt);el('line',{x1:c*R0,y1:s*R0,x2:c*(R0+L),y2:s*(R0+L),stroke:colorOf[r.miner]||'#64748b','stroke-width':2.2,'stroke-linecap':'round','data-h':h},frag);
+      if(r.dt!=null&&r.dt>7200)el('circle',{cx:c*(R0+L+8),cy:s*(R0+L+8),r:3,fill:'none',stroke:'#fb923c'},frag);}
+    else if(h<=tip){el('line',{x1:c*R0,y1:s*R0,x2:c*(R0+14),y2:s*(R0+14),stroke:'#64748b','stroke-width':1.2,'stroke-dasharray':'2 2'},frag);}   // mined, outside the loaded series
+    else el('line',{x1:c*R0,y1:s*R0,x2:c*(R0+10),y2:s*(R0+10),stroke:'#ffffff26','stroke-width':1.2},frag);
+  }
+  rings.appendChild(frag);
+  // seed window: the 16 blocks before the jackpot height (their hashes seed the selection)
+  var a1=ang(CAD-18)+.004,a2=ang(CAD-2)-.004,R=292;
+  el('path',{d:'M'+Math.cos(a1)*R+' '+Math.sin(a1)*R+' A'+R+' '+R+' 0 0 1 '+Math.cos(a2)*R+' '+Math.sin(a2)*R,fill:'none',stroke:'#fbbf24','stroke-width':3,'stroke-dasharray':'4 3'},$('seedArc'));
+  var am=(a1+a2)/2; var t=el('text',{x:Math.cos(am)*262,y:Math.sin(am)*262+4,fill:'#fbbf24','font-size':13,'text-anchor':'middle','font-family':'ui-monospace,monospace'},$('seedArc')); t.textContent='seed ×16';
+  // tip hand (only when the tip is inside this cycle)
+  if(tip>=start&&tip<epochEnd){var ai=ang(tip-start);el('line',{x1:Math.cos(ai)*96,y1:Math.sin(ai)*96,x2:Math.cos(ai)*300,y2:Math.sin(ai)*300,stroke:'#fb010d','stroke-width':2},$('hand'));el('circle',{cx:Math.cos(ai)*300,cy:Math.sin(ai)*300,r:5,fill:'#fb010d'},$('hand'));}
+  center(); describe();
+}
+function center(){var g=$('center');g.innerHTML='';var tip=S.state.meta.height,ev=events.find(function(e){return e.h===epochEnd;});
+  function tx(y,txt,sz,col,w){var t=el('text',{y:y,'font-size':sz,fill:col,'font-weight':w||400},g);t.textContent=txt;}
+  tx(-34,'JACKPOT HEIGHT',12,'#94a3b8');tx(2,'#'+UI.num(epochEnd),30,'#ffd700',700);
+  if(ev){tx(30,ev.roll?'no payout · rollover':UI.num(ev.sat/1e8,0)+' SOST paid',14,ev.roll?'#fb923c':'#4ade80',600);tx(50,'CONFIRMED',11,'#94a3b8');}
+  else if(epochEnd>tip){tx(30,UI.num(epochEnd-tip)+' blocks to go',14,'#e2e8f0',600);tx(50,'≈ '+UI.dur((epochEnd-tip)*600)+' (estimate)',11,'#94a3b8');}
+  else {tx(30,'result not in the index yet',13,'#fbbf24');}}
+function describe(){var tip=S.state.meta.height,start=epochEnd-CAD+1,mined=Math.max(0,Math.min(tip,epochEnd)-start+1),ev=events.find(function(e){return e.h===epochEnd;});
+  $('orbitDesc').textContent='Jackpot cycle #'+start+' to #'+epochEnd+'. '+Math.min(mined,CAD)+' of 288 blocks mined. '+(ev?(ev.roll?'Confirmed: no payout, rollover.':'Confirmed payout of '+(ev.sat/1e8)+' SOST to '+ev.addr+'.'):(epochEnd>tip?(epochEnd-tip)+' blocks remaining.':''))+' Use left and right arrow keys to read individual blocks.';}
+function wave(){if(RM)return;var w=$('waves');var c=el('circle',{r:300,fill:'none',stroke:'#ffd700','stroke-width':3,opacity:.9},w);
+  var t0=performance.now();(function step(now){var k=Math.min(1,(now-t0)/1400);c.setAttribute('r',300+180*k);c.setAttribute('opacity',.9*(1-k));if(k<1)requestAnimationFrame(step);else c.remove();})(t0);}
+function zoomTo(on){var z=$('zoom');if(!on){z.style.transform='';return;}var a=ang(CAD-1);z.style.transformOrigin='0 0';z.style.transform='translate('+(-Math.cos(a)*160)+'px,'+(-Math.sin(a)*160)+'px) scale(1.25)';
+}
+function readout(ev){var tip=S.state.meta.height;
+  if(!ev){var nj=nextJ(tip+1);$('readTag').innerHTML=UI.pv('projected','PENDING');$('readout').innerHTML='<p class="rule">Current cycle ending at <b>#'+UI.num(nj)+'</b>. No result exists before that block is mined.</p>';return;}
+  var v2=ev.h>=V2;
+  $('readTag').innerHTML=ev.roll?UI.pv('historical','INFERRED FROM INDEX'):UI.pv('verified');
+  if(ev.roll){$('readout').innerHTML='<dl class="kv"><dt>height</dt><dd>#'+UI.num(ev.h)+'</dd><dt>result</dt><dd style="color:var(--st-retired)">no jackpot transaction · rollover</dd><dt>rules</dt><dd>V2 (first V2 jackpot)</dd></dl><p class="def">The canonical-block index records no jackpot payout at #'+UI.num(ev.h)+' and 200 SOST at #'+UI.num(ev.h+CAD)+' (= 100 base + 100 rollover), consistent with the rollover rule (jackpot.h:74-82). Typical cause: no candidate met the new V2 conditions yet.</p><div class="acts" style="margin-top:8px"><a class="btn small" href="'+UI.explorerBlock(ev.h)+'">open block in Explorer →</a></div>';return;}
+  $('readout').innerHTML='<dl class="kv"><dt>height</dt><dd>#'+UI.num(ev.h)+'</dd><dt>rules</dt><dd>'+(v2?'V2 (weighted by blocks in last 2,016, NODE_BIND + heartbeats)':'V15 (winner = that block\'s normal DTD winner)')+'</dd><dt>winner</dt><dd>'+UI.esc(ev.addr)+'</dd><dt>amount</dt><dd style="color:var(--gold)">'+UI.num(ev.sat/1e8,2)+' SOST</dd><dt>txid</dt><dd>'+UI.esc(ev.txid)+'</dd></dl>'+
+    '<div class="acts" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="copy" type="button" id="cpH">copy height</button><button class="copy" type="button" id="cpT">copy txid</button><a class="btn small" href="'+UI.explorerBlock(ev.h)+'">open block in Explorer →</a></div>'+
+    '<p class="def" style="margin:8px 0 0">Source: canonical-block index <code>api/address_earnings.json</code> (jackpot transactions, type 0x02). Re-derivable by any node from the 16 block hashes before #'+UI.num(ev.h)+'.</p>';
+  $('cpH').onclick=function(){UI.copy(this,String(ev.h));};$('cpT').onclick=function(){UI.copy(this,ev.txid);};}
+function choose(h,focusIt){epochEnd=h;selected=events.find(function(e){return e.h===h;})||null;cursor=null;
+  document.querySelectorAll('#events button').forEach(function(b){b.setAttribute('aria-pressed',+b.dataset.h===h);});
+  render();readout(selected);if(selected){wave();zoomTo(true);setTimeout(function(){zoomTo(false);},RM?0:1600);}
+  try{history.replaceState(null,'','#h'+h);}catch(e){}
+  UI.live(selected?(selected.roll?'Jackpot '+h+': no payout, rollover':'Jackpot '+h+': '+selected.sat/1e8+' SOST to '+selected.addr):'Current cycle ending at '+h);}
+// keyboard reading of individual positions on the ring
+$('orbit').addEventListener('keydown',function(e){if(!S)return;var start=epochEnd-CAD+1;
+  if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();cursor=cursor==null?Math.min(CAD-1,Math.max(0,S.state.meta.height-start)):Math.max(0,Math.min(CAD-1,cursor+(e.key==='ArrowRight'?1:-1)));
+    var h=start+cursor,r=rowByH[h];var msg='#'+h+(h===epochEnd?' jackpot height':'')+(h>S.state.meta.height?' not mined yet':r?', interval '+UI.dur(r.dt)+', producer '+UI.short(r.miner):', outside the loaded series');$('orbitOut').textContent=msg;
+    var hl=$('hand').querySelector('.cur')||el('circle',{class:'cur',r:9,fill:'none',stroke:'#22d3ee','stroke-width':2},$('hand'));var a=ang(cursor);hl.setAttribute('cx',Math.cos(a)*300);hl.setAttribute('cy',Math.sin(a)*300);}
+});
+function buildEvents(){var list=(S.earnings&&S.earnings.jackpots)||[],tip=S.state.meta.height,byH={};list.forEach(function(j){if(j.h<=tip)byH[j.h]=j;});
+  events=[];for(var h=FIRST;h<=tip;h+=CAD){if(byH[h])events.push({h:h,addr:byH[h].addr,sat:byH[h].sat,txid:byH[h].txid,v:byH[h].v});else if(S.earnings&&S.earnings.tip>=h)events.push({h:h,roll:true});}
+  var ul=$('events'),html='';events.forEach(function(e){html+='<li><button type="button" class="'+(e.roll?'roll':'')+'" data-h="'+e.h+'" aria-pressed="false" aria-label="Jackpot #'+e.h+(e.roll?', no payout, rollover':', '+e.sat/1e8+' SOST')+'">#'+UI.num(e.h)+'<span class="a">'+(e.roll?'rollover':UI.num(e.sat/1e8)+' SOST')+'</span></button></li>';});
+  var nj=nextJ(tip+1);html+='<li><button type="button" class="cur" data-h="'+nj+'" aria-pressed="false" aria-label="Current cycle, jackpot at '+nj+', pending">#'+UI.num(nj)+'<span class="a">pending</span></button></li>';
+  ul.innerHTML=html;ul.querySelectorAll('button').forEach(function(b){b.onclick=function(){choose(+b.dataset.h);};});
+  var paid=events.filter(function(e){return !e.roll;}),sum=paid.reduce(function(a,e){return a+e.sat;},0);
+  $('evTag').innerHTML=S.earnings?UI.pv('verified','INDEXED FROM CHAIN'):UI.pv('unavailable');
+  $('evNote').innerHTML=S.earnings?paid.length+' payouts, '+UI.num(sum/1e8)+' SOST in total, '+(events.length-paid.length)+' rollover. Index tip #'+UI.num(S.earnings.tip)+' (updated '+UI.utc(S.earnings.updated_at)+').':'The confirmed-event index (api/address_earnings.json) is not reachable; no results are shown.';
+  var tb='';events.slice().reverse().forEach(function(e){tb+='<tr><td><a style="color:var(--cyan)" href="'+UI.explorerBlock(e.h)+'">#'+e.h+'</a></td><td>'+(e.h>=V2?'V2':'V15')+'</td><td>'+(e.roll?'— (rollover)':UI.esc(e.addr))+'</td><td>'+(e.roll?'0':UI.num(e.sat/1e8)+' SOST')+'</td><td>'+(e.roll?'—':UI.esc(e.txid.slice(0,16))+'…')+'</td></tr>';});$('tbody').innerHTML=tb;}
+function nextPanel(){var j=S.state.active.jackpot,tip=S.state.meta.height,kind=S.status==='live'?'observed':'historical';var cands=(j.candidateList||[]),el2=cands.filter(function(c){return c.eligible;}),tw=el2.reduce(function(a,c){return a+(c.weight||0);},0);
+  $('nextTag').innerHTML=UI.pv('projected','PENDING · PROJECTION');
+  var bars='';el2.sort(function(a,b){return b.weight-a.weight;}).forEach(function(c,i){bars+='<i title="weight '+c.weight+'" style="background:'+PAL[i%PAL.length]+';flex:'+c.weight+'"></i>';});
+  $('next').innerHTML='<dl class="kv"><dt>jackpot height</dt><dd>#'+UI.num(j.nextHeight.value)+'</dd><dt>blocks remaining</dt><dd>'+UI.num(j.blocksRemaining.value)+' (≈ '+UI.dur(j.etaSeconds.value)+', estimate)</dd><dt>prize if paid</dt><dd>'+UI.num(j.pot.value,0)+' SOST '+UI.pv('projected')+'</dd><dt>reserve</dt><dd>'+UI.num(j.reserve.value,2)+' SOST '+UI.pv(kind)+'</dd><dt>eligible now</dt><dd>'+UI.num(j.eligible.value)+' of '+UI.num(j.candidates.value)+' candidates '+UI.pv('projected')+'</dd></dl>'+
+    (tw?'<div class="wbar" aria-hidden="true">'+bars+'</div><p class="def" style="margin:0">Relative weights of the currently eligible candidates (blocks in the last 2,016). Weight is a share of the draw, not a promise: the 16 seed hashes do not exist yet.</p>':'<p class="def">No candidate is eligible at the moment. If that holds at the jackpot height, 100 SOST rolls over.</p>')+
+    '<p class="def" style="margin:6px 0 0">The node\'s projection uses chain data up to the current tip only, so it can change with every new block. No projected winner is shown.</p>';}
+SOSTU.data.wantEarnings();
+SOSTU.data.subscribe(function(s){
+  UI.bindStatus(s); if(!s.state)return; var first=!S; S=s;
+  rowByH={}; s.rows.forEach(function(r){rowByH[r.h]=r;});
+  colorOf={}; s.concentration.w1200.list.forEach(function(p,i){colorOf[p.addr]=i<PAL.length?PAL[i]:'#64748b';});
+  $('earnProv').innerHTML=s.earnings?'confirmed events: api/address_earnings.json'+(s.mode==='fixture'&&s.earnMeta?' (fixture captured '+s.earnMeta.captured_utc+')':''):'confirmed events: unavailable';
+  buildEvents(); nextPanel();
+  var tip=s.state.meta.height;
+  if(first){var m=/^#h(\d+)$/.exec(location.hash||'');var want=m?+m[1]:nextJ(tip+1);document.body.classList.remove('loading');$('orbitWrap').removeAttribute('aria-busy');choose(isJ(want)?want:nextJ(tip+1));}
+  else { if(epochEnd===nextJ(tip)||epochEnd===nextJ(tip+1)){ if(isJ(tip)&&s.newBlocks.indexOf(tip)>=0){choose(tip);} else {epochEnd=nextJ(tip+1);render();readout(selected);} } }
+});
+})();
+</script>
+</body>
+</html>

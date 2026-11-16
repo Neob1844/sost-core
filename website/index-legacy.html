@@ -1,0 +1,2503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="js/sost-gold-reference.js?v=v532c"></script>
+<style id="sost-global-zoom">html{zoom:1.0}</style>
+<!-- M26 favicon + icon pack -->
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=sl20261113">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<meta name="theme-color" content="#05070a">
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=sl20261113">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST — Native Layer 1 Proof-of-Work Blockchain | sostcore.com</title>
+<meta name="description" content="Native Layer 1 Proof-of-Work blockchain. CPU-friendly mining, ~4.67M max supply, on-chain DTD gold-referenced reserve architecture. Open source (MIT).">
+<meta name="keywords" content="SOST, SOST, sovereign stock token, Layer 1 blockchain, proof of work, CPU mining, memory hard mining, ConvergenceX, proof of personal custody, DTD, DTD Jackpot, sostcore, sostprotocol">
+<meta name="author" content="SOST">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST — Native Layer 1 Proof-of-Work Blockchain">
+<meta property="og:description" content="Native Layer 1 Proof-of-Work blockchain. CPU-friendly mining, ~4.67M max supply, on-chain DTD gold-referenced reserve architecture. Open source (MIT).">
+<meta property="og:url" content="https://sostcore.com/">
+<meta property="og:site_name" content="SOST">
+<meta property="og:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SOST — Native Layer 1 Proof-of-Work Blockchain">
+<meta name="twitter:description" content="Native Layer 1 Proof-of-Work blockchain. CPU-friendly mining, ~4.67M max supply, on-chain DTD gold-referenced reserve architecture. Open source (MIT).">
+<meta name="twitter:image" content="https://sostcore.com/og-sost-logo.png?v=sl20261113">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "SOST",
+  "alternateName": ["Sovereign Stock Token", "SOST", "SOSTCore"],
+  "url": "https://sostcore.com",
+  "description": "Native Layer 1 Proof-of-Work blockchain; CPU-friendly mining with on-chain DTD gold-referenced reserve architecture",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://sostcore.com/sost-explorer.html?search={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "SOST",
+  "url": "https://sostcore.com",
+  "logo": "https://sostcore.com/sost-logo.png?v=sl20261113",
+  "sameAs": [
+    "https://github.com/Neob1844/sost-core"
+  ],
+  "description": "CPU-friendly Native Layer 1 Proof-of-Work blockchain with on-chain DTD gold-referenced reserve architecture"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "SOST",
+  "operatingSystem": "Linux, Windows (WSL), macOS",
+  "applicationCategory": "FinanceApplication",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "description": "ConvergenceX Native Layer 1 Proof-of-Work blockchain. Open source (MIT).",
+  "url": "https://sostcore.com"
+}
+</script>
+<script src="./js/vendor/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-med) var(--bg-deep);
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px),
+      repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.94);
+    border-bottom: 1px solid var(--border-dim);
+    backdrop-filter: blur(16px);
+    padding: 12px 0;
+  }
+  nav .container{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;flex-wrap:wrap;}
+  .nav-logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--text-primary);
+    letter-spacing: 3px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .nav-logo .brand-sost {
+    color: var(--red-primary);font-size:1.76em}
+  /* Collapsible nav (M-toggle): default open. Operator can hide the
+     logos + DEX + nav-links to reclaim vertical space. */
+  .nav-toggle {
+    background: transparent;
+    border: 1px solid var(--border-med);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: all .2s;
+  }
+  .nav-toggle:hover { color: var(--text-primary); border-color: var(--red-primary); }
+  body.nav-collapsed nav { padding: 4px 0; }
+  body.nav-collapsed nav .nav-logo,
+  body.nav-collapsed nav a[href="casert-spec.html"],
+  body.nav-collapsed nav a[href="sost-dex.html"],
+  body.nav-collapsed nav a[href="sost-popc.html"],
+  body.nav-collapsed nav a[href="atomic-swap-console.html"],
+  body.nav-collapsed nav a[onclick="openSv()"],
+  body.nav-collapsed nav a[href="#dtd"],
+  body.nav-collapsed nav .nav-links,
+  body.nav-collapsed nav #vcx-sost,
+  body.nav-collapsed nav .nav-hamburger {
+    display: none !important;
+  }
+  body.nav-collapsed nav .container { justify-content: flex-end; }
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13.2px;
+    font-weight: 400;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .nav-links a:hover {
+    color: var(--text-primary);
+    background: var(--bg-card);
+  }
+  .nav-links a.active {
+
+    color: var(--red-primary);
+    background: var(--red-subtle);
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border-dim);
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 300px;
+    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-label {
+    font-size: 11px;
+    color: var(--red-primary);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-label::before {
+    content: '//';
+    color: var(--text-muted);
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+  .cx-red {
+    color: #fb010d;
+  }
+  .cx-white {
+    color: #ffffff;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 680px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .protocol-badge {
+    margin-top: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border: 1px solid var(--border-med);
+    border-radius: 6px;
+    background: var(--bg-card);
+    font-size: 11px;
+  }
+  .protocol-badge .tag {
+    color: var(--green-primary);
+    font-weight: 600;
+  }
+  .protocol-badge .sep {
+    color: var(--text-muted);
+  }
+  .protocol-badge .val {
+    color: var(--text-secondary);
+  }
+
+  /* ---- BUTTONS ---- */
+  .dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--red-dim);
+    border-radius: 5px;
+    background: linear-gradient(135deg, rgba(251,1,13,0.12), rgba(251,1,13,0.04));
+    color: var(--red-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+  .dl-btn:hover {
+    background: linear-gradient(135deg, rgba(251,1,13,0.22), rgba(251,1,13,0.10));
+    border-color: var(--red-primary);
+    box-shadow: 0 0 16px rgba(251,1,13,0.15);
+    transform: translateY(-1px);
+  }
+  .dl-btn.secondary {
+    border-color: var(--border-med);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+  }
+  .dl-btn.secondary:hover {
+    border-color: var(--border-bright);
+    color: var(--text-primary);
+    box-shadow: none;
+  }
+  .hero-actions {
+    margin-top: 32px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ---- SECTION ---- */
+  .section {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--border-dim);
+  }
+  .section-header {
+    margin-bottom: 40px;
+  }
+  .section-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+  .section-title .accent {
+    color: var(--red-primary);
+  }
+
+  /* ---- STAT GRID ---- */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    padding: 24px 20px;
+    text-align: center;
+    transition: border-color 0.3s, transform 0.2s;
+    cursor: pointer;
+    user-select: none;
+  }
+  .stat-card:hover {
+    border-color: var(--border-med);
+    transform: translateY(-2px);
+  }
+  .stat-card.card-active {
+    border-color: var(--border-bright);
+    transform: translateY(0);
+  }
+  .stat-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+    background: #0d0d0d;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 0 16px;
+    margin-top: 0;
+    opacity: 0;
+  }
+  .stat-panel.panel-open {
+    max-height: 420px;
+    border-color: var(--border-dim);
+    padding: 16px;
+    margin-top: 12px;
+    opacity: 1;
+  }
+  .stat-panel .panel-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .stat-panel .panel-link {
+    display: inline-block;
+    color: var(--cyan-primary);
+    text-decoration: none;
+    font-size: 11px;
+    margin-top: 10px;
+    transition: color 0.2s;
+  }
+  .stat-panel .panel-link:hover { color: var(--red-primary); }
+  .stat-panel canvas { max-height: 150px; }
+  .stat-panel table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+  .stat-panel th { text-align: left; padding: 6px 10px; color: var(--text-muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); font-weight: 400; }
+  .stat-panel td { padding: 6px 10px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .stat-panel tr:last-child td { border-bottom: none; }
+  .stat-panel .spec-line { font-size: 11px; color: var(--text-secondary); line-height: 2; }
+  .stat-panel .spec-line b { color: var(--text-primary); }
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -1px;
+  }
+  .stat-value .unit {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ---- PILLAR CARDS ---- */
+  .pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .pillar-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    padding: 28px 24px;
+    transition: border-color 0.3s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .pillar-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--card-accent, var(--red-primary));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .pillar-card:hover {
+    border-color: var(--border-med);
+    transform: translateY(-2px);
+  }
+  .pillar-card:hover::before { opacity: 1; }
+  .pillar-number {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .pillar-name {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .pillar-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+  .pillar-link {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 11px;
+    color: var(--red-primary);
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .pillar-link:hover {
+    color: var(--red-bright);
+  }
+
+  /* ---- SPEC BLOCK ---- */
+  .spec-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    transition: border-color 0.3s;
+  }
+  .spec-block:hover {
+    border-color: var(--border-med);
+  }
+  .spec-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-dim);
+    background: var(--bg-panel);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .spec-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-icon {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+  }
+  .spec-tag {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border: 1px solid var(--border-dim);
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .spec-tag.consensus { color: var(--green-primary); border-color: var(--green-dim); }
+  .spec-tag.immutable { color: var(--red-primary); border-color: var(--red-glow); }
+  .spec-body {
+    padding: 20px;
+  }
+  .spec-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+
+  /* ---- CODE TABLE ---- */
+  .code-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .code-table tr {
+    border-bottom: 1px solid var(--border-dim);
+    transition: background 0.15s;
+  }
+  .code-table tr:last-child { border-bottom: none; }
+  .code-table tr:hover { background: var(--bg-hover); }
+  .code-table td {
+    padding: 8px 12px;
+    vertical-align: top;
+  }
+  .code-table .key {
+    color: var(--red-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    width: 240px;
+    min-width: 180px;
+  }
+  .code-table .val {
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+  .code-table .val code {
+    color: var(--green-primary);
+    background: rgba(34, 197, 94, 0.08);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    padding: 48px 0;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  footer a {
+    color: var(--red-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ---- ANIMATIONS ---- */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 768px) {
+    .hero { padding: 48px 0 40px; }
+    .section { padding: 40px 0; }
+    .code-table .key { width: auto; min-width: 140px; }
+    .nav-links { display: none; width:100%; } .nav-links.open { display:flex; } .nav-hamburger { display:block; }
+    .hero-actions { flex-direction: column; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* === CANONICAL NAV CSS === */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container{ display: flex; align-items: center; justify-content: space-between; gap: 16px;flex-wrap:wrap;}
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
+  .nav-logo .brand-sost { color: var(--red-primary);font-size:1.76em}
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 13.2px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
+  /* === END NAV CSS === */
+@keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}@keyframes dtdBtnGlow{0%,100%{box-shadow:0 0 14px rgba(57,255,20,.5),0 0 26px rgba(74,222,128,.28)}50%{box-shadow:0 0 30px rgba(57,255,20,1),0 0 60px rgba(74,222,128,.7),0 0 90px rgba(124,255,160,.45)}}
+</style>
+<script src="js/security.js?v=v576"></script>
+<script src="js/nav-toggle.js?v=rs20261112g"></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
+<link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
+</head>
+<body>
+<div class="sost-gold-discarded" role="note" style="position:relative;z-index:50;margin:0;padding:12px 18px;background:#2a1a00;border-bottom:2px solid #f59e0b;color:#ffe2a8;font:600 13.5px/1.6 system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:left">&#9888; DISCARDED MODEL &mdash; HISTORICAL RECORD ONLY. SOST has <b>no gold backing</b>, <b>no committed reserves</b> and <b>no obligation to acquire, hold or contribute gold, XAUT or PAXG</b>. There is no convertibility, redemption right or guarantee linked to gold or to any external asset. <span style="font-weight:400">The current model is Proof of Work + DTD and DTD Jackpot, which distribute SOST itself (V16, active: 50&nbsp;% miner / 50&nbsp;% DTD). The proposed V17 split (80&nbsp;% / 15&nbsp;% / 5&nbsp;%) is not active. Gold-related content below describes abandoned plans and is not in force.</span></div>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- SPLASH — Red Matrix Rain -->
+<div id="sost-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;transition:opacity .5s ease;zoom:1.0">
+  <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1"></canvas>
+  <div id="splash-mask" style="position:absolute;inset:0;z-index:5;pointer-events:none;background:radial-gradient(ellipse 48% 66% at 50% 48%, rgba(0,0,0,.92) 24%, rgba(0,0,0,.66) 50%, rgba(0,0,0,0) 80%)"></div>
+  <img id="splash-logo" src="universe/assets/brand/sost-eye-512.png?v=sl20261113" alt="SOST" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);width:225px;height:225px;opacity:0;transition:opacity 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(251,1,13,0));z-index:10;pointer-events:none">
+  <div id="splash-title" style="position:absolute;top:50%;left:50%;transform:translateX(-50%);font-size:98px;line-height:1;font-weight:700;letter-spacing:5px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap;z-index:10;pointer-events:none;text-align:center"></div>
+  <div id="spl-lines" style="position:absolute;top:69%;left:50%;transform:translateX(-50%);font-size:14px;min-height:84px;text-align:left;width:min(392px,calc(100vw - 16px));background:rgba(0,0,0,.5);border:1px solid rgba(251,1,13,.20);border-radius:10px;padding:12px 16px;box-shadow:0 0 30px rgba(0,0,0,.6);box-sizing:border-box;font-family:'JetBrains Mono',monospace;z-index:10;pointer-events:none"></div>
+  <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
+</div>
+<style>
+.spl-line{font-size:min(16.8px,calc((min(392px,100vw - 16px) - 38px) / 19.8 - .833px));opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #aa0000;width:0;line-height:1.45;letter-spacing:.5px;text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.85);font-family:'JetBrains Mono',monospace}
+.spl-line.go{animation:splType 2.5s steps(35) forwards;opacity:1}
+@keyframes splType{from{width:0}to{width:100%}}
+@keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
+</style>
+<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
+<script src="js/retro-sounds.js?v=v392"></script>
+<script src="js/sost-pwa-install.js?v=v392"></script>
+<script>
+(function(){
+  if(sessionStorage.getItem('splashShown'))return;
+  var sp=document.getElementById('sost-splash');
+  sp.style.display='block';
+
+  // === SHARED AUDIO CONTEXT (reuse to avoid creating hundreds) ===
+  var _ac=null;
+  function getAC(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return _ac;}
+
+  // === MATRIX AMBIENT SOUND (drone + digital noise, full 12s) ===
+  function playMatrixAmbient(duration){
+    var ac=getAC();if(!ac)return;
+    // Low sawtooth drone
+    var drone=ac.createOscillator();var dg=ac.createGain();
+    drone.type='sawtooth';drone.frequency.value=55;
+    dg.gain.setValueAtTime(0,ac.currentTime);
+    dg.gain.linearRampToValueAtTime(0.06,ac.currentTime+2);
+    dg.gain.setValueAtTime(0.06,ac.currentTime+duration-2);
+    dg.gain.linearRampToValueAtTime(0,ac.currentTime+duration);
+    drone.connect(dg);dg.connect(ac.destination);
+    drone.start(ac.currentTime);drone.stop(ac.currentTime+duration);
+    // Digital noise through bandpass
+    var bs=ac.sampleRate*2;var nb=ac.createBuffer(1,bs,ac.sampleRate);
+    var ch=nb.getChannelData(0);for(var i=0;i<bs;i++)ch[i]=Math.random()*2-1;
+    var ns=ac.createBufferSource();ns.buffer=nb;ns.loop=true;
+    var ng=ac.createGain();var nf=ac.createBiquadFilter();
+    nf.type='bandpass';nf.frequency.value=2000;nf.Q.value=3;
+    ng.gain.setValueAtTime(0,ac.currentTime);
+    ng.gain.linearRampToValueAtTime(0.03,ac.currentTime+3);
+    ng.gain.setValueAtTime(0.03,ac.currentTime+duration-2);
+    ng.gain.linearRampToValueAtTime(0,ac.currentTime+duration);
+    ns.connect(nf);nf.connect(ng);ng.connect(ac.destination);
+    ns.start(ac.currentTime);ns.stop(ac.currentTime+duration);
+  }
+
+  // === MATRIX TICK SOUND (30 variations, 5× louder, filtered) ===
+  var MX_FREQS=[80,100,120,150,180,200,250,300,350,400,450,500,600,700,800,1000,1200,1500,1800,2000,2500,3000,120,180,250,400,600,800,1500,2500];
+  var MX_TYPES=['square','sawtooth','square','sawtooth','triangle'];
+  function playMatrixTick(){
+    var ac=getAC();if(!ac)return;
+    var vi=Math.random()*30|0;
+    var o=ac.createOscillator();var g=ac.createGain();var f=ac.createBiquadFilter();
+    o.type=MX_TYPES[vi%5];o.frequency.value=MX_FREQS[vi];
+    f.type='bandpass';f.frequency.value=MX_FREQS[vi]*1.5;f.Q.value=5+Math.random()*10;
+    g.gain.setValueAtTime(0.25,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.08);
+    o.connect(f);f.connect(g);g.connect(ac.destination);
+    o.start(ac.currentTime);o.stop(ac.currentTime+0.08);
+  }
+
+  // === MATRIX RAIN (RED) on canvas ===
+  var canvas=document.getElementById('matrix-canvas');
+  var ctx=canvas.getContext('2d');
+  var W,H,columns,drops,fontSize=18;
+  var chars='\u30A2\u30A4\u30A6\u30A8\u30AA\u30AB\u30AD\u30AF\u30B1\u30B3\u30B5\u30B7\u30B9\u30BB\u30BD\u30BF\u30C1\u30C4\u30C6\u30C80123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$#@&*+=<>{}[]'.split('');
+
+  function initMatrix(){
+    W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;
+    if(W<600)fontSize=13;
+    columns=Math.floor(W/fontSize);
+    drops=[];for(var i=0;i<columns;i++)drops[i]=Math.random()*-50|0;
+  }
+  initMatrix();
+  window.addEventListener('resize',initMatrix);
+
+  var matrixRunning=true;
+  function drawMatrix(){
+    if(!matrixRunning)return;
+    ctx.fillStyle='rgba(0,0,0,0.05)';
+    ctx.fillRect(0,0,W,H);
+    ctx.font=fontSize+'px monospace';
+    for(var i=0;i<drops.length;i++){
+      var ch=chars[Math.random()*chars.length|0];
+      var y=drops[i]*fontSize;
+      ctx.fillStyle='#ffffff';
+      ctx.fillText(ch,i*fontSize,y);
+      if(drops[i]>1){ctx.fillStyle='#fb010d';ctx.fillText(chars[Math.random()*chars.length|0],i*fontSize,(drops[i]-1)*fontSize);}
+      if(drops[i]>3){var br=Math.random();ctx.fillStyle=br>.5?'#cc0000':'#880000';ctx.fillText(chars[Math.random()*chars.length|0],i*fontSize,(drops[i]-2-(Math.random()*2|0))*fontSize);}
+      if(y>H&&Math.random()>.975)drops[i]=0;
+      drops[i]++;
+    }
+    requestAnimationFrame(drawMatrix);
+  }
+  requestAnimationFrame(drawMatrix);
+
+  // Start ambient drone immediately
+  playMatrixAmbient(12);
+
+  // === LOGO EMERGE (3s) ===
+  var logo=document.getElementById('splash-logo');
+  var sigmaRunning=true;
+  setTimeout(function(){logo.style.opacity='0.15';},2200);
+  setTimeout(function(){logo.style.opacity='0.4';logo.style.filter='drop-shadow(0 0 13px rgba(251,1,13,0.3))';},2800);
+  setTimeout(function(){logo.style.opacity='0.7';logo.style.filter='drop-shadow(0 0 25px rgba(251,1,13,0.5))';},3400);
+  setTimeout(function(){logo.style.opacity='1';logo.style.filter='drop-shadow(0 0 38px rgba(251,1,13,0.6)) drop-shadow(0 0 75px rgba(251,1,13,0.3))';logo.style.animation='sostLogoPulse 3.6s ease-in-out infinite';},4000);
+
+  // === TITLE TYPING (5s) ===
+  var titleEl=document.getElementById('splash-title');
+  var titleText=[{t:'SOST',c:'#fb010d'}];
+  var charIdx=0,segIdx=0;
+  function typeTitle(){
+    if(segIdx>=titleText.length)return;
+    var seg=titleText[segIdx];
+    if(charIdx<seg.t.length){
+      var span=document.createElement('span');
+      span.style.color=seg.c;
+      span.style.textShadow='0 0 10px rgba(251,1,13,0.5)';
+      span.textContent=seg.t[charIdx];
+      titleEl.appendChild(span);titleEl.style.opacity='1';
+      playMatrixTick();
+      charIdx++;setTimeout(typeTitle,120);
+    }else{charIdx=0;segIdx++;setTimeout(typeTitle,60);}
+  }
+  setTimeout(typeTitle,5000);
+
+  // === TERMINAL LINES (7.5s) ===
+  var lines=['> Initializing node connection...','> Verifying genesis block...','> Syncing chain data...','> System ready.'];
+  var box=document.getElementById('spl-lines');
+  lines.forEach(function(t){
+    var d=document.createElement('div');d.className='spl-line';
+    d.innerHTML='<span style="color:#aa0000">&gt;</span><span style="color:#cc0000">'+t.slice(1)+'</span>';
+    box.appendChild(d);
+  });
+  var els=box.querySelectorAll('.spl-line');
+  els.forEach(function(el,i){
+    var t0=6500+i*500;
+    setTimeout(function(){el.classList.add('go');},t0);
+    for(var k=0;k<12;k++){setTimeout(playMatrixTick,t0+k*200);}
+  });
+
+  // === AUDIO: unlock context + play epic melody on user interaction ===
+  function _splashSound(){
+    try{getAC();}catch(e){}
+    if(typeof playRandomMelody==='function') playRandomMelody();
+  }
+  sp.addEventListener('click',_splashSound,{once:true});
+  sp.addEventListener('touchstart',_splashSound,{once:true});
+
+  // === TRANSITION (11s fade, 12s remove) ===
+  setTimeout(function(){
+    matrixRunning=false;
+    sigmaRunning=false;
+    sp.style.opacity='0';
+    setTimeout(function(){sp.style.display='none';ctx=null;},600);
+    sessionStorage.setItem('splashShown','1');
+  },12000);
+})();
+</script>
+<nav>
+  <div class="container">
+    <a href="sost-explorer.html" class="nav-logo">
+      <img src="universe/assets/brand/sost-eye-256.png?v=sl20261113" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+    </a>
+    <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
+      <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
+    </a>
+    <a href="#dtd" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:radial-gradient(circle at 50% 35%,#0f2417,#07120b);border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;animation:dtdBtnGlow 2s ease-in-out infinite;overflow:hidden;" title="DTD — Deterministic Token Distribution"><span style="color:#39ff14;font-size:30px;font-weight:900;letter-spacing:1px;text-shadow:0 0 14px rgba(57,255,20,.85)">DTD</span><span style="color:#7CFFA0;font-size:9.5px;font-weight:700;letter-spacing:.4px;text-align:center;margin-top:3px">DETERMINISTIC<br>TOKEN<br>DISTRIBUTION</span></a>
+    <!-- 4th nav icon: open the SOST 2-minute intro video in a modal.
+         Sized to match home's larger 110×110 PoPC DEX (other pages use 72×72). -->
+    <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+    <button class="nav-toggle" id="navToggleBtn" type="button" onclick="toggleNav()" title="Hide / show the top navigation">▲ HIDE NAV</button>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+            <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
+            <a href="index.html" class="active">Home</a>
+      <a href="sost-protocol-spec.html">Layer 1</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Gold model (discarded)</a>
+      <a href="sost-reference.html" style="color:#e3b23c">Gold reference (info only)</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-decentralization.html" style="color:var(--cyan-primary)">Decentralization</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <!-- DEX link replaced by rainbow button next to logo -->
+      <a href="sost-gold-dex.html">Atomic Swap DEX</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
+      <a href="sost-help.html">Help</a>
+      <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
+      <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
+      <a href="universe/install.html" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+    <span id="vcx-sost" style="margin-left:auto;display:inline-flex;align-items:center"></span>
+  </div>
+</nav>
+<details class="reward-research-update" style="margin:10px auto;max-width:1040px;background:rgba(215,255,0,.055);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:8px;padding:8px 14px;color:#e8ffb0">
+  <summary style="cursor:pointer;color:#d7ff00;font:800 12px ui-monospace;letter-spacing:.5px;text-shadow:0 0 8px rgba(215,255,0,.4);list-style:none">&#11042; V17 UPDATE &mdash; 80/15/5 is now in the V17 candidate for #40,000 (not active yet) &middot; earlier research note &middot; click to expand</summary>
+  <div style="margin-top:9px;font-size:12px;line-height:1.7;text-shadow:0 0 6px rgba(215,255,0,.18)">
+    <div style="margin:0 0 8px;padding:7px 10px;border:1px solid #d7ff00;border-radius:6px"><b style="color:#d7ff00">Update (14 Nov 2026):</b> the 80/15/5 split is implemented in the V17 candidate for block #40,000, subject to final testing and an approved release. Current rule: 50% miner / 50% DTD. See <a href="sost-v17.html" style="color:#d7ff00;font-weight:700">What&rsquo;s changing in V17</a>. The note below is the earlier research text, kept for reference.</div>
+    <b>#30,000 builds the foundation. #40,000 is the current target research horizon for the next coordinated upgrade</b> &mdash; <b style="color:#d7ff00">not an activation commitment</b>: nothing is scheduled until code, tests, external audit and a public announcement exist (if not ready, it moves later, e.g. #50,000). Three research pillars:
+    <div style="margin:7px 0 0 4px"><b style="color:#d7ff00">1 &middot; Reward evolution.</b> Most likely research scenario: <b style="color:#d7ff00">80% direct PoW miner reward / 15% normal DTD per block / 5% into the existing DTD Jackpot pool</b>. The 5% is <b>not a direct node payment</b>: it <b>accumulates in the DTD Jackpot pool V30000 already distributes</b>, and when jackpots are paid the existing eligibility framework (including node / NODE_BIND requirements) still applies. <b>No new supply</b> &mdash; all three come from existing block emission.</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">2 &middot; Decentralization.</b> Maximum practical protocol decentralization: peer persistence, independent seeds, address gossip and autonomous peer discovery (foundations already built and tested in the lab), plus more independent nodes, operators, providers, geographies and miners &mdash; no dependency on SOSTcore infrastructure for consensus.</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">3 &middot; Economic infrastructure.</b> Research target: mature the native-asset framework and build the <b>SOST Asset Market</b> (order book, price discovery, atomic settlement) together with deeper Asset Passport integration (economic rights, regulatory classification). The intended initial state is <b style="color:#d7ff00">technically functional but developer-gated</b>, with no public access until external audits, legal/regulatory integration and an explicit public-access decision.</div>
+    <div style="margin-top:7px"><b>Current consensus is unchanged</b> (50% miner / 50% DTD). At #30,000, V30000 adds a <b>restricted</b> native-asset framework &mdash; admin-gated, fail-closed, disabled for the public, no public activation date. Every #40,000 change above is a research candidate and would require a <b>future hard fork</b>.</div>
+    <div style="margin-top:8px"><a href="news.html#decentralization" style="color:#39ff14;font-weight:700;text-decoration:none;border-bottom:1px solid rgba(57,255,20,.5);text-shadow:0 0 6px rgba(57,255,20,.3)">&#8594; More decentralization information here</a></div>
+  </div>
+</details>
+
+
+
+
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">SOST</div>
+    <h1 class="fade-in delay-1">
+      <span style="color:#fb010d">Sovereign Stock Token</span><br>
+      <span style="text-shadow:0 0 20px rgba(100,100,255,0.4),0 0 40px rgba(0,255,100,0.2),0 0 60px rgba(251,1,13,0.3);"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span></span> <span style="color:#fff">Native</span> <span style="color:#fff">L1</span> <span style="color:#fb010d">Blockchain</span><br>
+      <span style="color:#fb010d">Proof</span><span style="color:#fff">-</span><span style="color:#fff">of</span><span style="color:#fff">-</span><span style="color:#fb010d">Work</span>
+    </h1>
+    <p class="hero-sub fade-in delay-2">
+      CPU-friendly Native Layer 1 Proof-of-Work blockchain.
+      Every block splits <b>50% to the miner and 50% to the DTD distribution</b>, which returns
+      that half to active miners by lottery &mdash; enforced by consensus since <b>V15, block
+      #25,000</b>. <span style="opacity:.75">Until #25,000 the other half funded an on-chain Gold
+      Vault and Proof of Personal Custody rewards; those shares are <b>0</b> today, and what they
+      already hold stays on chain and auditable.</span>
+    </p>
+    <p class="fade-in delay-2" style="max-width:760px;margin:16px auto 0;padding:12px 16px;border:1px solid rgba(255,215,0,.35);border-left:3px solid #ffd700;border-radius:8px;background:rgba(255,215,0,.04);font-size:12px;line-height:1.6;color:#cfd8d2;text-align:left">
+      <b style="color:#ffd700">Important:</b> SOST is a native crypto-asset created solely by Proof-of-Work mining. It does <b>not</b> represent shares, equity, debt, dividends, profit participation, voting rights, ownership of a company, ownership of mining assets, or any redemption or legal claim against the Gold Vault or any reserve. SOST currently has <b>no market price and no associated value</b>. Nothing here is investment advice or an offer of securities.
+    </p>
+    <p class="fade-in delay-3" style="font-size:11px;color:#777;letter-spacing:2px;font-family:monospace;margin-top:16px;">SOST &middot; Sovereign Stock Token &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> PoW &middot; Native L1 Blockchain</p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">MAINNET</span>
+      <span class="sep">|</span>
+      <span class="val">No ICO &middot; No Premine &middot; No VCs &middot; No Governance</span>
+    </div>
+
+    <!-- COUNTDOWN TIMERS -->
+    <div class="countdown-section fade-in delay-3" style="margin:32px 0 8px;text-align:center;">
+      <div id="countdown-genesis" style="margin-bottom:24px;">
+        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:4px;text-transform:uppercase;">Genesis Block</div>
+        <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:10px;">March 15, 2026 &mdash; 18:00:00 UTC</div>
+        <div id="genesis-timer" style="font-family:'Courier New',monospace;font-size:clamp(28px,5vw,48px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
+      </div>
+                </div>
+
+    <div class="hero-actions fade-in delay-4">
+      <a href="javascript:void(0)" onclick="openSv()" class="dl-btn"
+         style="border-color:#22d3ee;background:linear-gradient(135deg,rgba(34,211,238,.14),rgba(34,211,238,.04));color:#22d3ee;box-shadow:0 0 12px rgba(34,211,238,.12)"
+         title="Watch SOST videos">
+        &#9654; Watch &middot; videos
+      </a>
+      <a href="sost-explorer.html" class="dl-btn">Open Explorer</a>
+      <a href="sost-mine.html" class="dl-btn">Mine SOST in 10 min</a>
+      <a href="sost-quickstart.html" class="dl-btn secondary">Quick Start</a>
+      <a href="sost-getting-started.html" class="dl-btn secondary">Full Setup</a>
+      <a href="sost-whitepaper.html" class="dl-btn secondary">Read Whitepaper</a>
+    </div>
+
+    <!-- MOBILE APP ANNOUNCEMENT -->
+    <div class="fade-in delay-4" style="margin-top:24px;text-align:center">
+      <div style="display:inline-block;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 28px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan-primary),transparent)"></div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--cyan-primary);margin-bottom:6px">COMING SOON</div>
+        <div style="font-size:14px;color:var(--text-primary);font-weight:500">
+          <span style="font-size:18px;vertical-align:middle;margin-right:6px">&#9883;</span>
+          SOST App for Android
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:6px">
+          Currently under review by the Google Play team.
+          <br>Download will be available on <span style="color:var(--green-primary)">Google Play Store</span> once approved.
+        </div>
+        <a href="universe/install.html" style="display:inline-block;margin-top:10px;font-size:10px;color:var(--cyan-primary);text-decoration:none;letter-spacing:1px;border:1px solid var(--cyan-primary);padding:4px 14px;border-radius:4px;transition:all .2s" onmouseover="this.style.background='var(--cyan-primary)';this.style.color='#000'" onmouseout="this.style.background='none';this.style.color='var(--cyan-primary)'">TRY WEB VERSION &rarr;</a>
+      </div>
+    </div>
+
+    <!-- CHAIN STATUS LIVE -->
+    <div style="margin-top:32px;text-align:center;">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text-muted);margin-bottom:8px;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px rgba(0,255,136,.5);vertical-align:middle;margin-right:6px;animation:pulse 2s ease infinite;"></span>CHAIN STATUS &middot; LIVE
+      </div>
+      <div id="chainLive" style="display:inline-block;background:#0d0d0d;border:1px solid #222;border-radius:6px;padding:12px 28px;font-family:var(--font-mono);font-size:13px;letter-spacing:.5px;">
+        <span style="color:var(--text-muted)">connecting...</span>
+      </div>
+    </div>
+    <script>
+    (function(){
+      var el=document.getElementById('chainLive');
+      var GENESIS_TS=1773597600; // 2026-03-15 18:00:00 UTC
+      function casertProfile(h){
+        var now=Math.floor(Date.now()/1000);
+        var expected=Math.floor((now-GENESIS_TS)/600);
+        var lag=expected-h;
+        // lag>0 = behind schedule → easing; lag<0 = ahead → hardening
+        // Profile = clamp(ahead, 0, H11) — matches real node logic
+        if(lag>36)return {label:'E4',color:'#a78bfa'};
+        if(lag>18)return {label:'E3',color:'#a78bfa'};
+        if(lag>9)return  {label:'E2',color:'#a78bfa'};
+        if(lag>3)return  {label:'E1',color:'#a78bfa'};
+        if(lag>=0)return {label:'B0',color:'#4ade80'};
+        var ahead=-lag;
+        if(ahead<=0)return {label:'B0',color:'#4ade80'};
+        // Direct lag mapping: profile = min(ahead, 11)
+        var profile=Math.min(ahead,11);
+        var colors={
+          1:'#67e8f9',2:'#67e8f9',3:'#67e8f9',4:'#67e8f9',
+          5:'#fbbf24',6:'#fbbf24',7:'#fbbf24',
+          8:'#fb923c',9:'#fb923c',
+          10:'#e63946',11:'#e63946'
+        };
+        return {label:'H'+profile, color:colors[profile]||'#e63946'};
+      }
+      var _lastBlockTime=0;
+      function update(){
+        fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getinfo","params":[],"id":1}'})
+        .then(function(r){return r.json();})
+        .then(function(j){
+          var d=j.result||j;
+          var h=d.blocks||0;
+          var bits=(d.difficulty||765730)/65536.0;
+          var sost=(h+1)*7.85100863;
+          var utxos=d.utxo_count||0;
+          // Use casert_profile from RPC (last mined block)
+          var profileLabel=d.casert_profile||casertProfile(h).label;
+          var pi=d.casert_profile_index;
+          var profileColor='#4ade80';
+          if(pi!==undefined){
+            if(pi<0)profileColor='#a78bfa';
+            else if(pi===0)profileColor='#4ade80';
+            else if(pi<=4)profileColor='#67e8f9';
+            else if(pi<=7)profileColor='#fbbf24';
+            else if(pi<=9)profileColor='#fb923c';
+            else profileColor='#e63946';
+          }
+          // Get block timestamp for "ago" display
+          fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getbestblockhash","params":[],"id":2}'})
+          .then(function(r2){return r2.json();})
+          .then(function(j2){
+            var bh=(j2.result&&typeof j2.result==='string')?j2.result:(j2.result||'');
+            if(bh)return fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getblock","params":["'+bh+'"],"id":3}'});
+            return Promise.resolve(null);
+          })
+          .then(function(r3){return r3?r3.json():null;})
+          .then(function(j3){
+            if(j3&&j3.result)_lastBlockTime=j3.result.time||j3.result.timestamp||0;
+          })
+          .catch(function(){})
+          .finally(function(){
+            var ago='';
+            if(_lastBlockTime>0){
+              var secAgo=Math.floor(Date.now()/1000)-_lastBlockTime;
+              if(secAgo<0)secAgo=0;
+              if(secAgo<60)ago=secAgo+'s ago';
+              else if(secAgo<3600)ago=Math.floor(secAgo/60)+'m '+Math.floor(secAgo%60)+'s ago';
+              else ago=Math.floor(secAgo/3600)+'h '+Math.floor((secAgo%3600)/60)+'m ago';
+            }
+            el.innerHTML='<span style="color:#00ff88;font-weight:600">LAST BLOCK: #'+h.toLocaleString()+'</span>'+
+              (ago?' <span style="color:#fb010d;font-size:11px">('+ago+')</span>':'')+
+              ' <span style="color:#333">&middot;</span> '+
+              '<span style="color:#e2e8f0">DIFFICULTY: '+bits.toFixed(2)+' bits</span>'+
+              ' - <span style="color:'+profileColor+';font-weight:600">'+profileLabel+'</span>'+
+              ' <span style="color:#333">&middot;</span> '+
+              '<span style="color:#ffd700;font-weight:600">TOTAL SUPPLY: '+Math.floor(sost).toLocaleString('en-US')+' SOST</span>'+
+              ' <span style="color:#333">&middot;</span> '+
+              '<span style="color:#c084fc;font-weight:600">UTXOs: '+utxos.toLocaleString()+'</span>';
+          });
+        })
+        .catch(function(){
+          el.innerHTML='<span style="color:#666">Node offline</span>';
+        });
+      }
+      update();
+      setInterval(update,12000);
+    })();
+    </script>
+
+    <!-- PROTOCOL STATUS (section 12) — read from the single-source-of-truth
+         manifest protocol-status.json at runtime so release / activation /
+         status strings here can never contradict the explorer or the manifest. -->
+    <div style="margin-top:14px;text-align:center;">
+      <div id="protocolStatusLive" style="display:inline-block;background:#0d0d0d;border:1px solid #1c1c1c;border-radius:6px;padding:8px 20px;font-family:var(--font-mono);font-size:10px;letter-spacing:.5px;color:#777;">
+        <span style="color:#555">loading protocol status&hellip;</span>
+      </div>
+    </div>
+    <script>
+    // Reads website/protocol-status.json (the canonical manifest) and renders
+    // the release / activation / mode strings. A live getblockcount decides the
+    // PRE-ACTIVATION vs ACTIVE label; nothing here is hardcoded except the
+    // graceful fallback if the manifest cannot be fetched.
+    (function(){
+      var el=document.getElementById('protocolStatusLive');
+      if(!el) return;
+      function chip(label,val,clr){
+        return '<span style="color:#555">'+label+'</span> <span style="color:'+(clr||'#cfd8d2')+';font-weight:600">'+val+'</span>';
+      }
+      fetch('protocol-status.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(m){
+        if(!m){ el.innerHTML='<span style="color:#555">protocol status unavailable</span>'; return; }
+        var act=(m.activation_height!=null)?Number(m.activation_height):null;
+        function render(height){
+          var state='<span style="color:#555">activation state unknown</span>';
+          if(height!=null && act!=null){
+            if(height>=act) state=chip('STATE',(m.release||'V30000')+' ACTIVE','#00ff88');
+            else state=chip('STATE','PRE-ACTIVATION','#67e8f9');
+          }
+          var sep=' <span style="color:#2a2a2a">&middot;</span> ';
+          el.innerHTML=
+            chip('RELEASE',(m.release||'')+(m.release_tag?' ('+m.release_tag+')':''),'#ffd700')+sep+
+            chip('ACTIVATION',act!=null?('#'+act.toLocaleString('en-US')):'—')+sep+
+            state+sep+
+            chip('TOKENIZATION',m.tokenization_status||'—','#c084fc')+sep+
+            chip('PUBLIC TRADING',(m.public_trading===true)?'enabled':'disabled',(m.public_trading===true)?'#00ff88':'#fb923c')+sep+
+            chip('S14',m.S14||'—','#fbbf24')+sep+
+            chip('MODE',m.security_mode||'—','#67e8f9');
+        }
+        // Live height decides PRE vs ACTIVE. If the node is unreachable, still
+        // render the manifest strings with an unknown state (never guess).
+        fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getblockcount","params":[],"id":1}'})
+          .then(function(r){return r.json();})
+          .then(function(j){ var h=(j&&j.result!=null)?Number(j.result):null; render(h); })
+          .catch(function(){ render(null); });
+      }).catch(function(){ el.innerHTML='<span style="color:#555">protocol status unavailable</span>'; });
+    })();
+    </script>
+
+  </div>
+</section>
+
+<!-- ============== FUNDAMENTALS — THE FOUR PILLARS ============== -->
+<style>
+  /* Pulse + left-to-right glow sweep banner. Pure CSS, no JS. */
+  .tterv-banner{
+    position:relative;overflow:hidden;
+    background:linear-gradient(90deg,#1a0a00,#2a1500,#3a1d00,#2a1500,#1a0a00);
+    border:1px solid rgba(251,191,36,.5);border-radius:8px;
+    padding:14px 22px;text-align:center;
+    font-family:'JetBrains Mono','IBM Plex Mono',monospace;
+    font-size:11.5px;letter-spacing:3px;color:#fbbf24;
+    text-transform:uppercase;
+    animation:tterv-pulse 3.6s ease-in-out infinite;
+  }
+  .tterv-banner::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(90deg,
+      transparent 0%,
+      rgba(255,255,255,.04) 35%,
+      rgba(255,210,80,.28) 50%,
+      rgba(255,255,255,.04) 65%,
+      transparent 100%);
+    transform:translateX(-100%);
+    animation:tterv-sweep 5.2s linear infinite;
+  }
+  .tterv-banner > span{position:relative;z-index:2}
+  @keyframes tterv-sweep{
+    0%   {transform:translateX(-100%)}
+    100% {transform:translateX(100%)}
+  }
+  @keyframes tterv-pulse{
+    0%,100% {box-shadow:0 0 16px rgba(251,1,13,.18), 0 0 36px rgba(251,191,36,.10)}
+    50%     {box-shadow:0 0 30px rgba(251,1,13,.34), 0 0 60px rgba(251,191,36,.22)}
+  }
+  .four-pillars-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:18px;margin-top:24px
+  }
+  .four-pillar-card{
+    background:var(--bg-card);
+    border:1px solid var(--border-dim);
+    border-left:4px solid var(--card-accent,#fb010d);
+    border-radius:4px;padding:18px;
+    transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease
+  }
+  .four-pillar-card:hover{
+    transform:translateY(-2px);
+    border-color:var(--card-accent,#fb010d);
+    box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px var(--card-accent,#fb010d) inset
+  }
+  .four-pillar-tag{font-size:11px;letter-spacing:2px;font-family:var(--font-mono);margin-bottom:8px}
+  .four-pillar-headline{font-size:24px;font-weight:700;color:var(--text-primary);margin-bottom:8px}
+  .four-pillar-body{font-size:12.5px;line-height:1.55;color:var(--text-secondary);margin:0}
+
+  /* ============= Headline effects: glow pulse + gradient flow + underline shimmer ============= */
+  .fp-title-wrap{position:relative;text-align:center;padding:8px 0 4px}
+  .fp-title{
+    display:inline-block;position:relative;
+    font-size:clamp(26px,4.6vw,46px);font-weight:700;letter-spacing:.4px;line-height:1.18;
+    color:var(--text-primary);
+    text-shadow:0 0 18px rgba(212,175,55,.10);
+    animation:fp-title-glow 4.2s ease-in-out infinite
+  }
+  @keyframes fp-title-glow{
+    0%,100%{text-shadow:0 0 18px rgba(212,175,55,.10)}
+    50%    {text-shadow:0 0 32px rgba(212,175,55,.28), 0 0 56px rgba(251,191,36,.12)}
+  }
+  /* Animated gold→orange→red→gold gradient flowing across the accent words. */
+  .fp-flow{
+    background:linear-gradient(90deg,
+      #fb010d 0%,
+      #fb923c 22%,
+      #fbbf24 44%,
+      #d4af37 60%,
+      #fb923c 80%,
+      #fb010d 100%);
+    background-size:220% 100%;
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+    animation:fp-flow-shift 9s linear infinite;
+    font-weight:700;
+  }
+  @keyframes fp-flow-shift{
+    0%   {background-position:0% 50%}
+    100% {background-position:220% 50%}
+  }
+  /* Decorative gold line below — width breathes in/out subtly. */
+  .fp-underline{
+    display:block;margin:16px auto 0;height:2px;width:88px;
+    background:linear-gradient(90deg,transparent,rgba(212,175,55,.85),transparent);
+    border-radius:2px;
+    animation:fp-underline-breathe 3.6s ease-in-out infinite
+  }
+  @keyframes fp-underline-breathe{
+    0%,100%{width:88px;opacity:.55;filter:blur(.2px)}
+    50%    {width:200px;opacity:1;filter:blur(0)}
+  }
+  /* Soft radial backdrop behind the title for depth. */
+  .fp-title-wrap::before{
+    content:"";position:absolute;inset:auto 0 -10px 0;height:80px;
+    background:radial-gradient(closest-side, rgba(212,175,55,.10), transparent 70%);
+    pointer-events:none;z-index:0
+  }
+  .fp-title-wrap > *{position:relative;z-index:1}
+  /* Respect users that prefer no motion */
+  @media (prefers-reduced-motion: reduce){
+    .fp-title,.fp-flow,.fp-underline,.tterv-banner,.tterv-banner::before{
+      animation:none !important
+    }
+  }
+</style>
+<section class="section" style="padding-top:30px;padding-bottom:34px">
+  <div class="container">
+    <!-- Animated luminous banner — pulse + left-to-right glow sweep -->
+    <div class="tterv-banner fade-in" style="margin-bottom:30px">
+      <span>⏱ TIME &nbsp;·&nbsp; ⚙ WORK &nbsp;·&nbsp; ◆ SCARCITY &nbsp;·&nbsp; ◈ STORE-OF-VALUE ARCHITECTURE</span>
+    </div>
+
+    <div class="section-header fade-in">
+      <div class="section-id" style="text-align:center">// FUNDAMENTALS &mdash; THE FOUR PILLARS</div>
+      <div class="fp-title-wrap">
+        <h2 class="fp-title">What gives <span style="color:#fb010d">SOST</span> <span class="fp-flow">intrinsic value</span></h2>
+        <span class="fp-underline" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <p class="fade-in delay-1" style="text-align:center;max-width:780px;margin:18px auto 0;font-size:13px;line-height:1.6;color:var(--text-secondary)">
+      Four properties hardcoded at genesis and enforced by the current consensus rules &mdash; any change requires a transparent, network-adopted protocol upgrade.
+      Two enforce credibility (Time, Work). Two enforce value (Scarcity, Store-of-Value Architecture).
+    </p>
+
+    <div class="four-pillars-grid fade-in delay-2">
+
+      <!-- 1. TIME -->
+      <div class="four-pillar-card" style="--card-accent:#fb010d">
+        <div class="four-pillar-tag" style="color:#fb010d">⏱ PILLAR 1 &mdash; TIME</div>
+        <div class="four-pillar-headline">10 min / block</div>
+        <p class="four-pillar-body">
+          Target spacing of <b>600 seconds</b> &rarr; <b>144 blocks/day = F&#8321;&#8322;</b>, the 12th Fibonacci
+          number (12&sup2;). Difficulty self-corrects every block via the <b>cASERT</b> controller &mdash;
+          <code>bits_q</code> (Q16.16) as primary regulator plus the ConvergenceX <b>equalizer</b> overlay
+          (profiles <b>E7&ndash;H35</b>), driven by a 288-block average, bidirectional and integer-only.
+          The schedule is sovereign by design: emission decays by <b>e<sup>&minus;1/4</sup></b> each
+          <b>131,553-block epoch</b> (&asymp; Feigenbaum &alpha;) toward a hard cap of
+          <b>&asymp;4,669,201 SOST</b> (&asymp; Feigenbaum &delta;). No bulk retargets.
+        </p>
+      </div>
+
+      <!-- 2. WORK -->
+      <div class="four-pillar-card" style="--card-accent:#fb923c">
+        <div class="four-pillar-tag" style="color:#fb923c">⚙ PILLAR 2 &mdash; WORK</div>
+        <div class="four-pillar-headline">CPU &middot; 8 GB RAM</div>
+        <p class="four-pillar-body">
+          Native <b>ConvergenceX</b> Proof-of-Work &mdash;
+          <b>not a fork</b> of Bitcoin SHA-256, Monero RandomX, Ethereum Ethash, Equihash, CryptoNight,
+          Scrypt, X11, or any prior algorithm. Memory-hard by construction:
+          <b>4 GB dataset</b> + <b>4 GB scratchpad</b> = 8 GB total per mining thread.
+          Per-block 256-op program changes every block.
+          CPU-friendly by design, ASIC-hostile by construction.
+          Verifier reconstructs sampled rounds in ~0.2 ms with 500 MB of RAM.
+        </p>
+      </div>
+
+      <!-- 3. SCARCITY -->
+      <div class="four-pillar-card" style="--card-accent:#fbbf24">
+        <div class="four-pillar-tag" style="color:#fbbf24">◆ PILLAR 3 &mdash; SCARCITY</div>
+        <div class="four-pillar-headline">4,669,201 SOST</div>
+        <p class="four-pillar-body">
+          Hard cap. The number is the first seven significant digits of <b>Feigenbaum's δ</b>
+          (≈&nbsp;4.6692016&hellip;), the universal constant that governs the period-doubling route
+          to chaos in dynamical systems &mdash; the same kind of system ConvergenceX itself solves.
+          No premine. No ICO. No dev tax. No inflation lever. Forever.
+          Emission decays per epoch with q = e<sup>-1/4</sup> ≈ 0.7788.
+        </p>
+        <p class="four-pillar-body" style="margin-top:10px">
+          Each epoch is exactly <b>2.5029&nbsp;years</b> &mdash; the Feigenbaum&nbsp;α
+          constant. <b>~95%</b> of the supply is mined in the first <b>~12 epochs
+          (~30&nbsp;years)</b>; the remaining tail decays asymptotically across
+          deeper epochs:
+          <span style="color:var(--text-dim)">
+            <br>&middot; ~99% &rarr; ~18 epochs (~45 years)
+            <br>&middot; ~99.9% &rarr; ~28 epochs (~70 years)
+            <br>&middot; ~99.99% &rarr; ~36 epochs (~91 years)
+            <br>&middot; ~99.999% &rarr; ~46 epochs (~115 years)
+          </span>
+          <br>The cap of 4,669,201 SOST is an asymptotic limit by mathematical
+          construction &mdash; it is never strictly hit, only approached forever.
+          That is the point: scarcity guaranteed by mathematics, not by a
+          calendar.
+        </p>
+      </div>
+
+      <!-- 4. STORE OF VALUE -->
+      <div class="four-pillar-card" style="--card-accent:#d4af37;position:relative">
+        <div style="margin:-2px 0 12px;padding:9px 12px;border:1px solid #39ff14;border-radius:6px;background:rgba(57,255,20,.07);color:#7CFFA0;font-size:11.5px;line-height:1.5;font-family:var(--font-mono);letter-spacing:.3px"><b style="color:#39ff14">◈ NO LONGER THE ACTIVE PLAN.</b> At V15 (block #25,000) this store-of-value architecture has been <b>temporarily superseded by the DTD</b> (Deterministic Token Distribution): the 50%/block that would have funded gold is redirected to the DTD, and the reserve already accumulated is returned to participants via the DTD Jackpot. <a href="#dtd" style="color:#39ff14;text-decoration:underline">See DTD &rarr;</a></div>
+        <div class="four-pillar-tag" style="color:#d4af37">◈ PILLAR 4 &mdash; STORE-OF-VALUE ARCHITECTURE <span style="color:#39ff14;font-size:10px;border:1px solid #39ff14;border-radius:10px;padding:1px 7px;margin-left:6px;letter-spacing:.5px">SUPERSEDED</span></div>
+        <div class="four-pillar-headline" style="opacity:.85">Historical: Up to 50% &rarr; Gold <span style="font-size:.6em;color:#f59e0b;letter-spacing:1px">&nbsp;ENDED AT #25,000</span></div>
+        <p class="four-pillar-body">
+          <b style="color:#f59e0b">This was the plan until block #25,000. It is no longer in force:</b> since V15 the
+          non-miner half of every block goes to the DTD distribution, and the two shares below are <b>zero</b>.
+          What follows is the record of the original design.<br><br>
+          <span style="opacity:.75">Up to half of total supply was to be gradually converted into gold-funded reserve value, by consensus, every block:</span>
+          <br><br>
+          <b style="color:#d4af37">25% (until #25,000; 0 since)</b> &mdash; <b>Proof of Personal Custody (PoPC)</b>: contracts collateralised
+          by tokenised gold today, by physically self-custodied gold in the future, with on-chain
+          cryptographic proof and operator privacy preserved.<br><br>
+          <b style="color:#d4af37">25% (until #25,000; 0 since)</b> &mdash; <b>Perpetual Gold Vault</b>: network-funded, one-way purchases of
+          tokenised precious metals (XAUT/PAXG today, broader basket later), accumulated forever in a
+          Heritage Reserve. Observable reserve ratio &mdash; not a peg, not a redemption right.<br><br>
+          <b style="color:var(--text-dim)">No peg. No redemption right. No price floor. No investment return. No legal claim over the reserve.</b>
+        </p>
+      </div>
+
+    </div>
+
+    <p class="fade-in delay-3" style="margin-top:26px;font-size:11.5px;color:var(--text-dim);text-align:center;font-family:var(--font-mono);letter-spacing:1.5px">
+      Hardcoded at genesis &middot; enforced by the current consensus rules &middot; any change needs a network-adopted upgrade
+    </p>
+  </div>
+</section>
+
+<!-- ============== DTD — DETERMINISTIC TOKEN DISTRIBUTION ============== -->
+<section class="section" id="dtd" style="padding-top:14px;padding-bottom:40px;scroll-margin-top:90px">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id" style="text-align:center;color:#39ff14">// DTD &mdash; DETERMINISTIC TOKEN DISTRIBUTION</div>
+      <h2 class="fp-title" style="text-align:center">Value returns to the people who <span style="color:#39ff14">run the network</span></h2>
+    </div>
+
+    <!-- COMMUNIQUÉ -->
+    <div class="fade-in delay-1" style="max-width:940px;margin:8px auto 26px;border:1px solid #39ff14;border-radius:10px;background:rgba(57,255,20,.06);padding:20px 24px">
+      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:#39ff14;margin-bottom:8px">// UPDATED STATEMENT &middot; STORE-OF-VALUE PLAN TEMPORARILY REPLACED</div>
+      <p style="margin:0 0 10px;color:var(--text-primary);font-size:14.5px;line-height:1.6">
+        The original store-of-value plan &mdash; converting up to <b>50% of supply into a gold-funded reserve</b>
+        (Perpetual Gold Vault + PoPC gold custody) &mdash; is <b style="color:#39ff14">no longer the active plan</b>.
+        It has been <b>temporarily superseded by the DTD</b> at V15 (block <b>#25,000</b>).
+      </p>
+      <p style="margin:0;color:var(--text-dim);font-size:13px;line-height:1.6">
+        Why: SOST pursues <b>full decentralization &mdash; no operator, no treasury</b>. A network-funded gold reserve
+        leaned on <b>third-party custodians</b> and tokenized-gold issuers (XAUT/PAXG), adding custody, counterparty and
+        regulatory risk that a sovereign, trustless chain should not carry. Instead of parking 50% of emission in an
+        off-chain reserve, that value is now returned <b>directly, on-chain and supply-neutrally</b> to the participants
+        who secure the network, through the DTD. The gold pages are kept for the historical record; nothing is deleted.
+      </p>
+    </div>
+
+    <p class="fade-in delay-1" style="max-width:860px;margin:0 auto 22px;color:var(--text-dim);font-size:14px;line-height:1.65;text-align:center">
+      The <b style="color:#39ff14">DTD (Deterministic Token Distribution)</b> is a consensus-run, per-draw distribution of
+      the block&rsquo;s value to eligible network participants &mdash; <b>deterministic</b> (the winner is computed by the
+      rules, not chosen by anyone), <b>keyless</b> at SOST layer, and <b>supply-neutral</b> (it moves coins, it never
+      mints them). It runs today and intensified at V15 (#25,000), where the split became 50% miner / 50% DTD.
+    </p>
+
+    <div class="fade-in delay-2" style="max-width:900px;margin:4px auto 22px;border:1px solid rgba(57,255,20,.35);border-left:4px solid #39ff14;border-radius:12px;background:rgba(57,255,20,.05);padding:18px 22px;text-align:left">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#39ff14;font-weight:800;margin-bottom:10px">How the DTD works &middot; deterministic &amp; auditable</div>
+      <p style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px">In plain terms, <b style="color:#eaf6ff">deterministic token distribution</b> means the split is computed from <b>fixed, reproducible rules</b> &mdash; never chosen by anyone.</p>
+      <div style="border-left:3px solid #22d3ee;background:rgba(34,211,238,.06);border-radius:0 8px 8px 0;padding:10px 14px;color:#d6f6ff;font-size:14px;line-height:1.6;margin:10px 0">If two people look at the <b>same blockchain data</b>, they must get <b>exactly the same result</b>.</div>
+      <p style="color:#c9d6e2;font-size:13px;line-height:1.7;margin:0 0 12px">It does <b>not</b> depend on who runs the calculation, which phone or computer, the browser, the internet speed, or any manual decision.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0">
+        <div style="border:1px solid rgba(57,255,20,.4);border-radius:10px;background:rgba(57,255,20,.04);padding:12px 14px">
+          <div style="color:#39ff14;font-weight:800;font-size:12px;margin-bottom:5px">&#10003; Deterministic</div>
+          <div style="color:#c9d6e2;font-size:12.5px;line-height:1.6">Rule: &ldquo;Distribute 100 SOST among every eligible address of the last 288 blocks by this exact formula.&rdquo; If there are <b style="color:#eaf6ff">193</b> eligible and the formula is fixed, <b>every</b> node that computes it gets the same <b style="color:#eaf6ff">193</b> eligible and the same split.</div>
+        </div>
+        <div style="border:1px solid rgba(251,1,13,.4);border-radius:10px;background:rgba(251,1,13,.04);padding:12px 14px">
+          <div style="color:#fb6a6a;font-weight:800;font-size:12px;margin-bottom:5px">&#10007; Not deterministic</div>
+          <div style="color:#c9d6e2;font-size:12.5px;line-height:1.6">Rule: &ldquo;If an RPC call fails, skip that block.&rdquo; A slow phone could skip more blocks than a laptop and read <b style="color:#fb6a6a">111</b> eligible while another reads <b style="color:#eaf6ff">193</b> &mdash; exactly the kind of defect SOST fixed.</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:#39ff14;background:#07120b;border:1px solid rgba(57,255,20,.3);border-radius:8px;padding:10px;margin:12px 0">same blocks + same rules + same state = same result</div>
+      <p style="color:#c9d6e2;font-size:13px;line-height:1.7;margin:0"><b style="color:#22d3ee">Auditable by anyone.</b> Because the outcome is pure consensus data, anyone can re-derive the eligible set and the winner straight from the public chain and confirm it matches &mdash; via the explorer&rsquo;s <code>getlotteryaudit</code> (per jackpot) or by recomputing the eligibility set over the last 288 blocks. You never have to trust a website or a person.</p>
+    </div>
+
+    <!-- DIAGRAM 1 — emission split before / after V15 -->
+    <div class="fade-in delay-2" style="max-width:900px;margin:0 auto 10px">
+      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:1.5px;color:var(--text-muted);text-align:center;margin-bottom:8px">EMISSION SPLIT &mdash; BEFORE vs AT V15</div>
+      <svg viewBox="0 0 900 200" style="width:100%;height:auto;background:#07120b;border:1px solid #17351f;border-radius:10px" role="img" aria-label="Emission split before and after V15: 50% miner unchanged; the 25% Gold Vault and 25% PoPC are redirected to the DTD.">
+        <text x="225" y="26" fill="#8aa" font-family="monospace" font-size="13" text-anchor="middle">BEFORE V15 (&lt; #25,000)</text>
+        <rect x="90" y="44" width="270" height="34" rx="4" fill="#3a1116" stroke="#e63946"/><text x="225" y="66" fill="#ff8a94" font-family="monospace" font-size="12" text-anchor="middle">50% &mdash; Miner (PoW)</text>
+        <rect x="90" y="86" width="135" height="34" rx="4" fill="#332711" stroke="#d4af37"/><text x="157" y="108" fill="#e8c65a" font-family="monospace" font-size="11" text-anchor="middle">25% Gold Vault</text>
+        <rect x="225" y="86" width="135" height="34" rx="4" fill="#332711" stroke="#d4af37"/><text x="292" y="108" fill="#e8c65a" font-family="monospace" font-size="11" text-anchor="middle">25% PoPC</text>
+        <rect x="90" y="128" width="270" height="30" rx="4" fill="#0f2417" stroke="#2b7a3d"/><text x="225" y="148" fill="#7CFFA0" font-family="monospace" font-size="11" text-anchor="middle">DTD draw: 1 of every 3 blocks</text>
+        <text x="450" y="150" fill="#39ff14" font-family="monospace" font-size="30" text-anchor="middle">&#8594;</text>
+        <text x="675" y="26" fill="#8aa" font-family="monospace" font-size="13" text-anchor="middle">AT V15 (&ge; #25,000)</text>
+        <rect x="540" y="44" width="270" height="34" rx="4" fill="#3a1116" stroke="#e63946"/><text x="675" y="66" fill="#ff8a94" font-family="monospace" font-size="12" text-anchor="middle">50% &mdash; Miner (PoW) &middot; unchanged</text>
+        <rect x="540" y="86" width="270" height="34" rx="4" fill="#0f2417" stroke="#39ff14"/><text x="675" y="108" fill="#39ff14" font-family="monospace" font-size="12" text-anchor="middle">50% &mdash; DTD (was Gold Vault + PoPC)</text>
+        <rect x="540" y="128" width="270" height="30" rx="4" fill="#0f2417" stroke="#2b7a3d"/><text x="675" y="148" fill="#7CFFA0" font-family="monospace" font-size="11" text-anchor="middle">DTD draw: EVERY block (3-of-3)</text>
+        <text x="450" y="188" fill="#6b7d76" font-family="monospace" font-size="10.5" text-anchor="middle">Supply-neutral &middot; height-anchored at #25,000 &middot; miner share never changes</text>
+      </svg>
+    </div>
+
+    <!-- TWO DTD MECHANISMS -->
+    <div class="four-pillars-grid fade-in delay-2" style="margin-top:20px">
+      <div class="four-pillar-card" style="--card-accent:#39ff14">
+        <div class="four-pillar-tag" style="color:#39ff14">① DTD &mdash; THE BASE DRAW</div>
+        <div class="four-pillar-headline" style="font-size:22px">1-of-3 &rarr; every block</div>
+        <p class="four-pillar-body">
+          The regular DTD distributes the block&rsquo;s DTD share to an eligible participant, chosen
+          <b>deterministically by the consensus rules</b>. Historically a draw lands on <b>1 of every 3 blocks</b>
+          (it went 2-of-3 at bootstrap #7,100, then 1-of-3 from #12,100).<br><br>
+          At <b>V15 (#25,000)</b> it moves to <b style="color:#39ff14">3-of-3 &mdash; a draw on EVERY block</b>, permanently.
+          Same total value, <b>3&times; more &amp; smaller payouts</b> &mdash; maximum decentralization. Eligibility is
+          gated (recent-producer cooldown, anti-dominance) so payouts spread across many participants.<br><br>
+          <b style="color:#ffd166">At V16 (#30,000) the draw itself does not change</b> &mdash; still every block, still uniform,
+          still never weighted by PoW, same seed, same 50/50 split &mdash; but <b style="color:#ffd166">who qualifies does</b>.
+          See the gates below.
+        </p>
+        <div style="margin-top:12px;border:1px solid #c084fc;border-radius:8px;background:rgba(192,132,252,.06);padding:12px 14px">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#c084fc;margin-bottom:7px">NOT ACTIVE &mdash; DEFERRED / FAIL-CLOSED ON MAINNET (NOT ACTIVATED AT #30,000)</div>
+          <p class="four-pillar-body" style="margin:0;font-size:12.5px">
+            Built for the #30,000 release but <b>NOT ACTIVE</b> on mainnet (deferred / fail-closed, see <code>protocol-status.json</code>): a <b>native-asset layer</b> (asset genesis / issue / transfer / burn, conservation + supply-cap safety, reorg-safe index), <b>four tokenization modalities</b> (Tokenize, Auction, Draw, Project Funding) and a <b>SOST-layer DEX</b>. While <b>RESTRICTED DEVELOPER MODE (S14)</b> is in force, every native-asset operation must carry an admin-authorized input or the network rejects it at consensus, and <b>public access is disabled</b> &mdash; no CLI, RPC or browser bypass. Technical availability is not regulatory authorization; ordinary SOST transfers are unaffected.
+          </p>
+        </div>
+        <div style="margin-top:12px;border:1px solid #2b7a3d;border-radius:8px;background:rgba(57,255,20,.05);padding:12px 14px">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#39ff14;margin-bottom:7px">WHO IS ELIGIBLE TO WIN</div>
+          <p class="four-pillar-body" style="margin:0;font-size:12.5px">
+            The winner is drawn <b>deterministically and uniformly</b> from the set of addresses that pass <b>every</b> gate (any one excludes an address):<br><br>
+            <b style="color:#39ff14">Active signed miner</b> — must be a real SbPoW-signed miner identity (its most recent block at height &ge; <b>#7,100</b>); enforced from #12,100. No signed identity, no eligibility.<br>
+            <b style="color:#39ff14">Active miner (recency)</b> — from #25,000, must have mined <b>&ge;1 block in the last 5,000 blocks</b>. <b style="color:#ffd166">From #30,000 (V16) this tightens to the last 288 blocks</b> (~2 days), at every height including jackpot heights; dormant addresses drop out until they mine again.<br>
+            <b style="color:#39ff14">Recent-producer cooldown</b> — excluded if it produced any of the previous <b>6 blocks</b> (5 before V13) — stops back-to-back wins. Note it keys on <b>having mined</b>, not on having won. <b style="color:#ffd166">From #30,000 it yields when applying it would leave the draw with nobody</b>.<br>
+            <b style="color:#39ff14">Anti-dominance cap</b> — excluded if its share of the last <b>288 blocks is &ge; 10%</b> (from #12,100) — caps concentration. <b style="color:#ffd166">From #30,000 the gate is armed only when the window holds &ge;11 distinct miners</b>: below that it would exclude the very miners keeping the chain alive, so with a single active miner that miner can take 100% of the block (50% miner + 50% DTD).<br>
+            <b style="color:#39ff14">Uniform &amp; keyless</b> — every eligible address has the <b>same probability</b>; the winner is computed from chain state by the rules — never weighted by balance, stake or any payment.<br><br>
+            <span style="color:var(--text-dim);font-size:11.5px">No purchase, deposit, ticket, KYC or fiat requirement. A block&rsquo;s own producer is not excluded from that block&rsquo;s draw.</span>
+          </p>
+        </div>
+      </div>
+      <div class="four-pillar-card" style="--card-accent:#7CFFA0">
+        <div class="four-pillar-tag" style="color:#7CFFA0">② DTD JACKPOT &mdash; THE RESERVE DRAIN</div>
+        <div class="four-pillar-headline" style="font-size:22px">Every 288 blocks (~48h)</div>
+        <p class="four-pillar-body">
+          The DTD Jackpot returns the reserve <b>already accumulated</b> in the Gold Vault + PoPC addresses
+          (~<b>52,000 SOST</b> at V15) back to the miners who run the network &mdash; instead of leaving it locked in an off-chain-referenced vault.<br><br>
+          It fires on a <b>288-block cadence (~48 h)</b>, paying a jackpot of <b>base 100 / cap 500 SOST</b>, first at
+          height <b>#25,290</b>, draining over <b>~3 years</b>. It is <b>supply-neutral</b> (it only moves coins that
+          already exist) and <b>ends when the reserve is empty</b> &mdash; after which only the normal per-block DTD remains.
+        </p>
+        <div style="margin-top:12px;border:1px solid #2b7a3d;border-radius:8px;background:rgba(124,255,160,.05);padding:12px 14px">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#7CFFA0;margin-bottom:7px">WHO IS ELIGIBLE TO WIN &middot; FROM #30,000 (JACKPOT V2)</div>
+          <p class="four-pillar-body" style="margin:0;font-size:12.5px">
+            From block <b>#30,000</b> the Jackpot is an <b style="color:#7CFFA0">independent draw</b> with its own eligibility and its own winner:<br>
+            <b style="color:#7CFFA0">Active node</b> &mdash; the miner identity must have a confirmed <b>NODE_BIND</b> (mining key + node key) and the required <b>heartbeats</b> (none for the first draw, then one per completed 288-block epoch, ramping to 3 of the last 4 epochs).<br>
+            <b style="color:#7CFFA0">Real work</b> &mdash; at least <b>3 SbPoW blocks in the last 2,016</b>; the chance of winning is <b>linear in those blocks</b>.<br>
+            <b style="color:#7CFFA0">No cooldown and no anti-dominance</b> &mdash; those belong to the normal per-block DTD only.<br>
+            <b style="color:#7CFFA0">Must have an eligible winner</b> &mdash; with no eligible address <b>nothing is paid</b> and the pot rolls over to the next draw (cap 500 SOST).<br><br>
+            <span style="color:var(--text-dim)">Historical (#25,290&ndash;#29,898): the jackpot went to the DTD winner of the jackpot block, with a 20,000-block recency window.</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TWO DRAWS IN ONE BLOCK (normal DTD vs Jackpot V2) -->
+    <div class="fade-in delay-2" id="dtd-two-draws" style="max-width:940px;margin:22px auto 8px;border:1px solid #22d3ee;border-radius:10px;background:rgba(34,211,238,.05);padding:18px 22px;scroll-margin-top:90px">
+      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:#22d3ee;margin-bottom:8px">// TWO INDEPENDENT DRAWS &middot; ONE BLOCK</div>
+      <p style="margin:0 0 10px;color:var(--text-primary);font-size:14px;line-height:1.65">
+        The <b>normal DTD</b> runs in <b>every block</b>. The <b>DTD Jackpot V2</b> runs only at jackpot heights (every 288 blocks: #30,186, #30,474, &hellip;).
+        At a jackpot height <b>both draws happen in the same block</b>, and they are <b>independent</b>: different eligible sets, different rules, different winners.
+        One miner can win the normal DTD while another wins the Jackpot; the same miner can also win both if both draws select it.
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0">
+        <div style="border:1px solid #2b7a3d;border-radius:8px;padding:12px 14px;background:rgba(57,255,20,.04)">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.3px;color:#39ff14;margin-bottom:6px">NORMAL DTD &middot; EVERY BLOCK</div>
+          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: miners active in the recent window, minus the recent-producer <b>cooldown</b> (with a fallback when the cooldown would leave nobody) and the <b>anti-dominance</b> rule (applied when enough miners are active). Uniform pick. Pays 50% of the block subsidy.</div>
+        </div>
+        <div style="border:1px solid #7a6a1f;border-radius:8px;padding:12px 14px;background:rgba(255,209,102,.05)">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.3px;color:#ffd166;margin-bottom:6px">JACKPOT V2 &middot; EVERY 288 BLOCKS</div>
+          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: <b>NODE_BIND</b> + required <b>heartbeats</b> + &ge;3 SbPoW blocks in the last 2,016. Pick <b>weighted by PoW blocks</b>. <b>No cooldown, no anti-dominance.</b> Base 100 SOST, rollover up to 500.</div>
+        </div>
+      </div>
+      <p style="margin:0 0 10px;color:var(--text-dim);font-size:12.5px;line-height:1.65">
+        <b style="color:var(--text-primary)">Randomness.</b> Both draws read the same public entropy &mdash; the hashes of the 16 previous blocks and the height &mdash; but each hashes it under its own domain tag
+        (<code>SOST_LOTTERY_V11</code> for the normal DTD, <code>SOST_HIST_JACKPOT</code> for the Jackpot), so each gets its own seed and its own roll. Anyone can recompute both from the chain.
+      </p>
+      <div style="font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-dim);border-top:1px solid #17353f;padding-top:10px">
+        <b style="color:#22d3ee">Example &mdash; block #30,186</b> (first Jackpot V2 draw)<br>
+        Normal DTD: <b style="color:#39ff14">paid</b> to the block&rsquo;s DTD winner (3.9255 SOST).<br>
+        Jackpot V2: 2 PoW candidates, <b>0 eligible</b> (no NODE_BIND yet) &rarr; <b style="color:#f5b301">no winner, 0 SOST paid, +100 SOST rolled over</b> &rarr; next draw <b>#30,474</b> with a <b>200 SOST</b> pot.
+      </div>
+    </div>
+
+    <!-- DIAGRAM 2 — jackpot timeline -->
+    <div class="fade-in delay-3" style="max-width:900px;margin:22px auto 8px">
+      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:1.5px;color:var(--text-muted);text-align:center;margin-bottom:8px">DTD JACKPOT &mdash; CADENCE &amp; DRAIN</div>
+      <svg viewBox="0 0 900 150" style="width:100%;height:auto;background:#07120b;border:1px solid #17351f;border-radius:10px" role="img" aria-label="DTD Jackpot timeline: fires every 288 blocks from #25,290, base 100 cap 500 SOST, draining the ~52k reserve over about three years.">
+        <line x1="60" y1="80" x2="840" y2="80" stroke="#2b7a3d" stroke-width="2"/>
+        <text x="60" y="112" fill="#7CFFA0" font-family="monospace" font-size="10.5" text-anchor="middle">#25,000</text>
+        <text x="60" y="126" fill="#6b7d76" font-family="monospace" font-size="9" text-anchor="middle">V15</text>
+        <circle cx="180" cy="80" r="8" fill="#39ff14"/><text x="180" y="60" fill="#39ff14" font-family="monospace" font-size="10.5" text-anchor="middle">#25,290</text><text x="180" y="112" fill="#8aa" font-family="monospace" font-size="9" text-anchor="middle">first jackpot</text>
+        <circle cx="330" cy="80" r="8" fill="#39ff14"/><circle cx="480" cy="80" r="8" fill="#39ff14"/><circle cx="630" cy="80" r="8" fill="#39ff14"/>
+        <text x="405" y="60" fill="#7CFFA0" font-family="monospace" font-size="10" text-anchor="middle">+288 blocks (~48h) each</text>
+        <circle cx="780" cy="80" r="8" fill="#0f2417" stroke="#39ff14" stroke-dasharray="3 3"/><text x="780" y="60" fill="#8aa" font-family="monospace" font-size="10" text-anchor="middle">~3 years</text><text x="780" y="112" fill="#8aa" font-family="monospace" font-size="9" text-anchor="middle">reserve empty</text>
+        <text x="450" y="142" fill="#6b7d76" font-family="monospace" font-size="10" text-anchor="middle">~52,000 SOST drained to DTD winners &middot; base 100 / cap 500 per jackpot &middot; supply-neutral</text>
+      </svg>
+    </div>
+
+    <!-- INVARIANTS -->
+    <div class="four-pillars-grid fade-in delay-3" style="margin-top:16px">
+      <div class="four-pillar-card" style="--card-accent:#39ff14"><div class="four-pillar-tag" style="color:#39ff14">◈ SUPPLY-NEUTRAL</div><p class="four-pillar-body">The DTD and the Jackpot never mint new SOST. They redistribute value that consensus already assigned. Total supply stays capped at 4,669,201 SOST.</p></div>
+      <div class="four-pillar-card" style="--card-accent:#7CFFA0"><div class="four-pillar-tag" style="color:#7CFFA0">◈ NO OPERATOR</div><p class="four-pillar-body">Winners are computed deterministically from chain state by the published rules. No treasury, no admin key, no discretion &mdash; height-anchored and enforced at #25,000.</p></div>
+      <div class="four-pillar-card" style="--card-accent:#2b7a3d"><div class="four-pillar-tag" style="color:#4ade80">◈ VERIFIABLE &amp; OPEN</div><p class="four-pillar-body">Every draw and jackpot is on-chain and auditable in the explorer. Consensus is open source (MIT). Canonical spec: V15 DTD Jackpot.</p></div>
+    </div>
+
+    <p class="fade-in delay-3" style="margin-top:22px;font-size:11.5px;color:var(--text-dim);text-align:center;font-family:var(--font-mono);letter-spacing:1.2px">
+      Deterministic Token Distribution &middot; active since block #25,000 &middot; supply-neutral &middot; enforced by consensus &middot; any change needs a network-adopted upgrade
+    </p>
+  </div>
+</section>
+
+<!-- ============== AUDIT & VERIFY — verifiable claims + explicit not-claimed list ============== -->
+<section class="section" style="padding-top:8px;padding-bottom:46px">
+  <div class="container">
+    <div class="fade-in" style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:6px;padding:22px 24px;max-width:980px;margin:0 auto">
+      <div style="font-size:11px;letter-spacing:2.5px;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:6px;text-transform:uppercase">// AUDIT &amp; VERIFY</div>
+      <div style="font-size:14px;color:var(--text-primary);font-weight:600;margin-bottom:16px;line-height:1.45">
+        Every property above is checkable from public artefacts.
+        SOST publishes a deliberately short list of <i>claims it makes</i> and a longer list of <i>claims it does not make</i>.
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;font-size:12.5px;line-height:1.65">
+
+        <!-- LEFT: Claims you can check today -->
+        <div>
+          <div style="color:#22c55e;font-weight:700;letter-spacing:1.2px;font-size:11.5px;font-family:var(--font-mono);margin-bottom:10px">&#10003; CLAIMS YOU CAN CHECK TODAY</div>
+          <ul style="margin:0 0 0 18px;padding:0;color:var(--text-secondary)">
+            <li>Open source from genesis &mdash; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" style="color:var(--cyan-primary)">github.com/Neob1844/sost-core</a></li>
+            <li>No premine, no ICO, no dev tax &mdash; reproducible from <code>genesis_block.json</code></li>
+            <li>Consensus constants live in <code>include/sost/params.h</code> &mdash; the hard cap, and the emission split for each height range (<code>50/25/25</code> for blocks 0&ndash;24,999, <code>50/50</code> miner/DTD from #25,000)</li>
+            <li>Observable gold reserve &mdash; <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a></li>
+            <li>SbPoW miner-identity binding &mdash; every block from <code>#7,100</code> carries a Schnorr signature over its PoW commitment</li>
+            <li>V13 anti-dominance DTD gate at <code>#12,100</code> &mdash; addresses with &ge; 10 % share of the previous 288 blocks are excluded from the DTD reward until their rolling share drops below 10 %, and only miners with an SbPoW-signed block (most recent block at height &ge; 7,100) are eligible; logic lives in <code>src/lottery.cpp::compute_lottery_eligibility_set</code> and <code>include/sost/params.h::is_dtd_dominant</code> / <code>is_sbpow_eligible</code></li>
+            <li>Deterministic build &mdash; rebuild from <code>main</code> and the output hash matches the running binary</li>
+            <li>Mainnet operation publicly logged &mdash; every incident in the BCT announcement thread</li>
+          </ul>
+        </div>
+
+        <!-- RIGHT: Not claimed -->
+        <div>
+          <div style="color:#fb010d;font-weight:700;letter-spacing:1.2px;font-size:11.5px;font-family:var(--font-mono);margin-bottom:10px">&#10007; NOT CLAIMED</div>
+          <ul style="margin:0 0 0 18px;padding:0;color:var(--text-secondary)">
+            <li>Post-quantum signature safety &mdash; transaction/account signatures currently use ECDSA over secp256k1 with canonical LOW-S (the BIP-340 Schnorr signature is only the SbPoW block-identity binding, not the spend scheme); PQ migration is under research, not active on mainnet</li>
+            <li>Audited by an external security firm &mdash; not yet; independent reviewers welcome</li>
+            <li>Market price floor &mdash; no peg, no redemption claim against the gold reserve</li>
+            <li>Regulatory clearance in any jurisdiction &mdash; assess locally before participating</li>
+            <li>Listing on any centralised exchange &mdash; pre-market; exchange outreach in progress</li>
+            <li>Network maturity &mdash; chain is young, hashrate is concentrated, decentralisation is in progress</li>
+          </ul>
+        </div>
+
+      </div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border-dim);font-size:11.5px;color:var(--text-dim);font-family:var(--font-mono);letter-spacing:1px">
+        Full breakdown: <a href="sost-whitepaper.html#sec-decentralization" style="color:var(--text-secondary)">Honest Assessment</a> &middot; comparative table: <a href="sost-whitepaper.html#sec-positioning" style="color:var(--text-secondary)">Positioning vs other PoW chains</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KEY STATS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 00 &mdash; MILESTONES &amp; STANDARDS</div>
+      <h2 class="section-title">Milestones &amp; <span class="accent">Standards</span></h2>
+    </div>
+
+    <div class="fade-in delay-1" style="max-width:760px;margin:0 auto;background:var(--bg-card);border:1px solid var(--border-dim);border-left:3px solid var(--red-primary);border-radius:8px;padding:22px 24px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <span style="color:#37d67a;font-size:18px;font-weight:700;">&#10003;</span>
+        <span style="font-weight:700;font-size:16px;color:var(--text-primary);">SLIP-0044 Recognition</span>
+        <span style="font-size:12px;color:var(--text-muted);">June 15, 2026</span>
+      </div>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;margin:0 0 14px;">
+        SOST is officially registered in the BIP-44 / SLIP-0044 global cryptocurrency standard,
+        merged by <strong>SatoshiLabs</strong> (creators of Trezor). SOST now has a reserved coin type in
+        the registry used across the hardware- and software-wallet ecosystem.
+      </p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr><td style="padding:5px 0;color:var(--text-muted);width:42%;">coin_type (decimal)</td><td style="padding:5px 0;color:var(--text-primary);font-family:monospace;">1869902947</td></tr>
+        <tr><td style="padding:5px 0;color:var(--text-muted);">coin_type (hex)</td><td style="padding:5px 0;color:var(--text-primary);font-family:monospace;">0x6F747463</td></tr>
+        <tr><td style="padding:5px 0;color:var(--text-muted);">BIP-44 derivation path</td><td style="padding:5px 0;color:var(--text-primary);font-family:monospace;">m/44'/1869902947'/0'/0/0</td></tr>
+        <tr><td style="padding:5px 0;color:var(--text-muted);">Standards</td><td style="padding:5px 0;color:var(--text-primary);">SLIP-0044 registered (BIP-173/350 address format)</td></tr>
+        <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top;">Reference wallet</td><td style="padding:5px 0;color:var(--text-secondary);">currently BIP-39 (seed = key); full BIP-44 HD derivation planned for a future version with migration tooling</td></tr>
+        <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top;">Reference</td><td style="padding:5px 0;"><a href="https://github.com/satoshilabs/slips/pull/2004" target="_blank" rel="noopener" style="color:var(--red-primary);text-decoration:underline;">satoshilabs/slips&nbsp;#2004</a></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01 &mdash; NETWORK PARAMETERS</div>
+      <h2 class="section-title">Key <span class="accent">Statistics</span></h2>
+    </div>
+
+    <div class="stat-grid fade-in delay-1">
+      <div class="stat-card" onclick="togglePanel('panel-supply',this)">
+        <div class="stat-label">Max Supply</div>
+        <div class="stat-value">~4,669,201<span class="unit">SOST</span></div>
+        <div class="stat-sub">Feigenbaum &delta; &times; 10&sup6;</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-blocktime',this)">
+        <div class="stat-label">Block Time</div>
+        <div class="stat-value">10<span class="unit">min</span></div>
+        <div class="stat-sub">cASERT unified targeting</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-reward',this)">
+        <div class="stat-label">Initial Reward</div>
+        <div class="stat-value">7.8510<span class="unit">SOST</span></div>
+        <div class="stat-sub">Smooth exponential decay</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-split',this)">
+        <div class="stat-label">Coinbase Split</div>
+        <div class="stat-value">50/50</div>
+        <div class="stat-sub">Miner / DTD &middot; since #25,000</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-algo',this)">
+        <div class="stat-label">Algorithm</div>
+        <div class="stat-value" style="font-size:20px;"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span></div>
+        <div class="stat-sub">CPU-mined, 8GB mining / 500MB node</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-genesis',this)">
+        <div class="stat-label">Genesis</div>
+        <div class="stat-value" style="font-size:18px;">2026-03-15</div>
+        <div class="stat-sub">18:00:00 UTC</div>
+      </div>
+      <div class="stat-card" id="goldPriceCard" onclick="togglePanel('panel-gold',this)">
+        <div class="stat-label">Gold Spot (XAUT/PAXG avg)</div>
+        <div class="stat-value" style="font-size:20px;color:#b8860b;" id="goldPriceVal">...</div>
+        <div class="stat-sub" id="goldPriceSub">loading</div>
+      </div>
+      <div class="stat-card" id="sostPriceCard" onclick="togglePanel('panel-sost',this)" style="position:relative;">
+        <div class="stat-label">SOST Price</div>
+        <div class="stat-value" style="font-size:20px;color:var(--red-primary);" id="sostPriceVal">...</div>
+        <div class="stat-sub" id="sostPriceSub">loading</div>
+        <div id="sostCurrBtn" title="Click to change currency" style="position:absolute;bottom:10px;right:12px;width:28px;height:28px;border-radius:4px;border:1px solid #2a2a2a;background:#0a0a0a;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:'Space Grotesk',sans-serif;">$</div>
+      </div>
+    </div>
+
+    <!-- Expandable Panels -->
+    <div class="stat-panel" id="panel-supply">
+      <div class="panel-title">Emission Curve &mdash; Smooth Exponential Decay</div>
+      <canvas id="chartSupply"></canvas>
+    </div>
+    <div class="stat-panel" id="panel-blocktime">
+      <div class="panel-title">Live Block Data</div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Target block spacing is <b style="color:var(--text-primary)">600 seconds (10 minutes)</b>, maintained by the cASERT unified difficulty adjustment system. The bitsQ primary controller handles hashrate changes; the equalizer prevents short-term emission acceleration.</p>
+      <a class="panel-link" href="sost-explorer.html">View live block data on Explorer &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-reward">
+      <div class="panel-title">Reward Decay Schedule</div>
+      <table>
+        <tr><th>Epoch</th><th>Years</th><th>Reward / Block</th><th>Decay</th></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">0</td><td>0 &ndash; 2.5</td><td style="color:var(--text-primary);font-weight:500">7.85100863 SOST</td><td style="color:var(--text-muted)">&mdash;</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">1</td><td>2.5 &ndash; 5</td><td style="color:var(--text-primary);font-weight:500">~6.1145 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">2</td><td>5 &ndash; 7.5</td><td style="color:var(--text-primary);font-weight:500">~4.7613 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">3</td><td>7.5 &ndash; 10</td><td style="color:var(--text-primary);font-weight:500">~3.7084 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">4</td><td>10 &ndash; 12.5</td><td style="color:var(--text-primary);font-weight:500">~2.8882 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">5</td><td>12.5 &ndash; 15</td><td style="color:var(--text-primary);font-weight:500">~2.2492 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+      </table>
+      <p style="font-size:10px;color:var(--text-muted);margin-top:10px;">q = e<sup>-1/4</sup> &asymp; 0.7788 &middot; Epoch = 131,553 blocks (&asymp;2.5 years)</p>
+    </div>
+    <div class="stat-panel" id="panel-split">
+      <div class="panel-title">Emission Split &mdash; 50% miner / 50% DTD since #25,000 <span style="font-size:.75em;color:#f59e0b">(the 50/25/25 below is historical)</span></div>
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+        <canvas id="chartSplit" style="max-width:180px;max-height:180px;"></canvas>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:2;">
+          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fb010d;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">50%</b> Miner</div>
+          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#39ff14;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">50%</b> DTD distribution</div>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.6;">In force since <b>V15, block #25,000</b>.<br>
+          <span style="opacity:.75">Historical, blocks 0&ndash;24,999: 50% Miner &middot; 25% Gold Funding Vault &middot; 25% PoPC Pool. Those two shares are <b>0</b> today &mdash; nothing new flows into them, and what they already hold stays on chain and auditable.</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="stat-panel" id="panel-algo">
+      <div class="panel-title"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> v2.0 &mdash; Proof of Irreversible Convergence</div>
+      <div class="spec-line"><b>4GB</b> memory scratchpad &middot; <b>100,000</b> gradient rounds &middot; <b>32&times;32</b> matrix per block</div>
+      <div class="spec-line"><b>256-op</b> per-block program &middot; <b>8</b> ALU operation types &middot; <b>memory-hard</b>, CPU-friendly design</div>
+      <div class="spec-line" style="margin-top:6px;"><b>4</b> stability perturbation tests &middot; Contraction factor c = 7/10 &middot; CPU L3 cache optimized</div>
+      <a class="panel-link" href="sost-technology.html">Full technical details &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-genesis">
+      <div class="panel-title">Genesis Block</div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Block 0 mined on <b style="color:var(--text-primary)">March 15, 2026 at 18:00:00 UTC</b>. First reward: 7.85100863 SOST, split under the rules in force then (miner / Gold Funding Vault / PoPC Pool). Since #25,000 the split is 50% miner / 50% DTD.</p>
+      <a class="panel-link" href="sost-genesis.html">View genesis block details &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-gold">
+      <div class="panel-title">Gold Price &mdash; Last 24 Hours</div>
+      <canvas id="chartGold"></canvas>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#b8860b;margin-right:4px;vertical-align:middle;"></span>XAUT</span>
+        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#4ade80;margin-right:4px;vertical-align:middle;"></span>PAXG</span>
+        <span id="goldChartStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;"></span>
+      </div>
+      <a class="panel-link" href="sost-markets.html">View all markets &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-sost">
+      <div class="panel-title">SOST Gold Reference vs. Gold &mdash; Monthly, 2019&ndash;2026</div>
+      <canvas id="chartSost"></canvas>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#fb010d;margin-right:4px;vertical-align:middle;"></span>SOST (0.8886707657 mg gold) &nbsp;&nbsp;<span style="display:inline-block;width:8px;height:2px;background:#b8860b;margin-right:4px;vertical-align:middle;"></span>Gold (1 mg)</span>
+        <span id="sostChartStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;"></span>
+      </div>
+      <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.5;border-left:2px solid #ffd700;padding-left:8px;">Gold spot (XAU/USD), month-end close. The SOST line is the gold line &times; the fixed reference weight (0.8886707657&nbsp;mg) &mdash; it moves only with gold, never by decree. Gold reference, <b>not a market price</b>; once SOST is listed, its price evolves on its own, no longer tied to gold.</p>
+      <a class="panel-link" href="sost-markets.html">View all markets &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IS SOST -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 00b &mdash; CODEBASE FOOTPRINT</div>
+      <h2 class="section-title">SOST <span class="accent">vs BTC Core</span></h2>
+    </div>
+
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.7;max-width:820px;margin:0 auto 18px auto;text-align:center">
+      Lines-of-code totals for the SOST stack as of <b>2026-06-21</b>, side by side with the Bitcoin Core reference implementation. LOC is a rough engineering metric &mdash; <b>not</b> a quality, security or decentralisation metric &mdash; but it gives a sense of how much surface area the project covers.
+    </p>
+
+    <div style="overflow-x:auto;margin:0 auto;max-width:880px">
+    <table class="code-table" style="width:100%">
+      <thead>
+        <tr><th>Component</th><th><img src="assets/coins/sost.png?v=sl20261113" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST</th><th><img src="assets/coins/btc.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Bitcoin Core</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="key">SOST &mdash; Blockchain core (C++ / protocol)</td><td class="val">36,740</td><td class="val">~280&ndash;310k</td></tr>
+        <tr><td class="key">SOST &mdash; Consensus &amp; integration tests (C++ / Python)</td><td class="val">37,187</td><td class="val">&mdash;</td></tr>
+        <tr><td class="key">SOST &mdash; Front-end &amp; explorer (HTML + JS + CSS)</td><td class="val">76,283</td><td class="val">&mdash;</td></tr>
+        <tr><td class="key">SOST &mdash; Protocol scripts, tooling &amp; services (Python)</td><td class="val">24,457</td><td class="val">&mdash;</td></tr>
+        <tr><td class="key">Documentation (markdown)</td><td class="val">37,650</td><td class="val">(separate)</td></tr>
+        <tr style="border-top:2px solid var(--red-primary,#fb010d)"><td class="key" style="font-weight:700">Total code (excl. docs)</td><td class="val" style="font-weight:700">174,667</td><td class="val" style="font-weight:700">~280&ndash;310k</td></tr>
+        <tr><td class="key" style="font-weight:700">Total code + docs</td><td class="val" style="font-weight:700">212,317</td><td class="val">&mdash;</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div style="max-width:820px;margin:24px auto 0 auto;font-size:13px;color:var(--text-secondary);line-height:1.75">
+      <p style="margin-bottom:10px"><b style="color:var(--text-primary)">1. The blockchain core alone is 6&ndash;7&times; smaller than Bitcoin Core.</b> Bitcoin Core has 15+ years of P2P hardening, scripting (Script + Taproot), thousands of tests, and dozens of network conditions handled in production. SOST does not, and pretending otherwise would be dishonest.</p>
+      <p style="margin-bottom:10px"><b style="color:var(--text-primary)">2. The comparison is not like-for-like.</b> The SOST total bundles a hand-rolled front-end and block explorer plus protocol tooling and extensive test suites &mdash; domains Bitcoin Core does not contain. The comparable blockchain core is the 36,740-line figure above.</p>
+      <p style="margin-bottom:10px"><b style="color:var(--text-primary)">3. What the numbers do show.</b> SOST is a serious project (~212,317 LOC including documentation) with depth beyond a typical altcoin fork &mdash; the consensus is custom (ConvergenceX + cASERT), the wallet model is in-house, and the front-end and explorer are hand-rolled.</p>
+      <p style="margin-bottom:10px"><b style="color:var(--text-primary)">4. What the numbers do NOT show.</b> Network effect, peer count, security audits, deployed value, decentralisation. Those are independent of LOC and Bitcoin leads on every one of them.</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:14px;border-top:1px dashed var(--border);padding-top:10px">Counts measured 2026-09-14 over the tracked files of the public <code>sost-core</code> repository (<code>git ls-files</code>), excluding vendored code, build trees and bulk data files. Bitcoin Core figure is the upstream <code>bitcoin/bitcoin</code> master snapshot, code + tests, no docs.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01 &mdash; OVERVIEW</div>
+      <h2 class="section-title">What is <span class="accent">SOST</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Protocol Summary</span>
+        </div>
+        <span class="spec-tag immutable">IMMUTABLE BY DESIGN</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          SOST is a Proof-of-Work cryptocurrency. Since <b>V15 (#25,000)</b> each mined block splits
+          <b>50% miner / 50% DTD</b> and no issuance goes to the Gold Funding Vault.
+          <span style="opacity:.75">Until #25,000, 25% of issuance was allocated to that vault by consensus.</span> Conversions to XAUT/PAXG are operational
+          actions executed with public attestations and auditable trails. The reserve is observable
+          on Ethereum mainnet &mdash; not a peg, not a guarantee, but a verifiable commitment.
+        </p>
+        <table class="code-table">
+          <tr><td class="key">Consensus</td><td class="val"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> PoW &mdash; memory-hard, CPU-friendly (reference miner CPU-oriented; protocol does not enforce CPU-only at consensus)</td></tr>
+          <tr><td class="key">Monetary Policy</td><td class="val">Smooth exponential decay (q=e<sup>-&frac14;</sup>), Feigenbaum-derived constants, ~30 years to 95% supply</td></tr>
+          <tr><td class="key">Emission split</td><td class="val"><b>50% miner / 50% DTD</b> since #25,000 (gold and PoPC shares: <b>0</b>)</td></tr>
+          <tr><td class="key">Reserve</td><td class="val" style="opacity:.8">Historical: 25% of every block &rarr; tokenized gold (XAUT, PAXG) on Ethereum, until #25,000. Existing holdings remain; SOST is <b>not</b> backed by gold.</td></tr>
+          <tr><td class="key">PoPC</td><td class="val" style="opacity:.8">Historical: 25% of every block until #25,000. The DTD requires <b>no</b> PoPC bond at any height.</td></tr>
+          <tr><td class="key">Governance</td><td class="val">None. Consensus rules are immutable at genesis.</td></tr>
+          <tr><td class="key">Unit</td><td class="val"><code>1 SOST = 100,000,000 stocks</code></td></tr>
+          <tr><td class="key">Address Format</td><td class="val"><code>sost1</code> + 40 hex chars (20-byte pubkey hash)</td></tr>
+          <tr><td class="key">Signature</td><td class="val">ECDSA secp256k1 with LOW-S enforcement</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THREE PILLARS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 02 &mdash; THREE PILLARS</div>
+      <h2 class="section-title">Protocol <span class="accent">Architecture</span></h2>
+    </div>
+
+    <div class="pillars-grid fade-in delay-1">
+      <div class="pillar-card" style="--card-accent: var(--red-primary);">
+        <div class="pillar-number">PILLAR 01</div>
+        <div class="pillar-name"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> PoW</div>
+        <p class="pillar-desc">
+          Memory-hard proof-of-work requiring 8GB RAM in total (4GB dataset + 4GB scratchpad, shared by all mining threads). Nodes verify blocks in ~0.2ms with only ~500MB RAM.
+          100,000 sequential iterations and tight memory coupling raise the cost of a competitive GPU/ASIC port; no claim is made that one is impossible.
+          cASERT unified targeting with bitsQ primary controller and equalizer profiles (E4&ndash;H12) for
+          progressive hardening under fast-chain conditions.
+        </p>
+        <a href="sost-technology.html" class="pillar-link">Explore Technology &rarr;</a>
+      </div>
+
+      <div class="pillar-card" style="--card-accent: var(--green-primary);">
+        <div class="pillar-number">PILLAR 02</div>
+        <div class="pillar-name">Metals Reserve</div>
+        <p class="pillar-desc">
+          <b style="color:#39ff14">Update — no longer active:</b> at V15 (block #25,000) the Gold Funding Vault / PoPC gold-emission plan has been temporarily replaced by the <a href="#dtd" style="color:#39ff14">DTD</a>; the description below is kept for the historical record. <br><br>
+          <b style="color:#f59e0b">HISTORICAL (until block #25,000):</b> 25% of every block&rsquo;s coinbase was allocated to the Gold Funding Vault address by consensus. <b style="color:#4ade80">Since V15 that share is 0</b> &mdash; the whole non-miner half goes to the DTD distribution. The vault keeps what it already received, on chain and auditable; SOST is <b>not</b> backed by gold and the reserve is not a peg or a redemption right. The Foundation reserves the right to allocate up to 50% of the vault's accumulated SOST exclusively to fund future centralized-exchange (CEX) listings; the remaining SOST funds gold reserves.
+          Accumulated SOST is converted to XAUT/PAXG via TWAP pipeline and deposited into
+          a Heritage Reserve on Ethereum mainnet. Observable reserve ratio &mdash;
+          not a peg.
+        </p>
+        <a href="sost-gold-reserve.html" class="pillar-link">Explore Gold Reserve &rarr;</a>
+      </div>
+
+      <div class="pillar-card" style="--card-accent: var(--cyan-primary);">
+        <div class="pillar-number">PILLAR 03</div>
+        <div class="pillar-name">Proof of Personal Custody (PoPC) <span style="color:#fbbf24;font-size:10px;border:1px solid #fbbf24;border-radius:10px;padding:1px 7px;margin-left:6px;letter-spacing:.5px">PAUSED / LEGACY</span></div>
+        <p class="pillar-desc">
+          PoPC is <strong>paused indefinitely</strong>. Its previous role has been superseded by the current
+          <strong>DTD / DTD Jackpot</strong> architecture, which redistributes the accumulated reserve on-chain.
+          The 25% coinbase allocation now flows to DTD. Kept here as legacy architecture context.
+        </p>
+        <a href="sost-popc.html" class="pillar-link">PoPC (legacy) &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOVEREIGN VALUE STACK -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 02b &mdash; SOVEREIGN VALUE STACK</div>
+      <h2 class="section-title">E2E, SOST DEX, <span class="accent">PoPC Contracts</span></h2>
+    </div>
+
+    <div class="pillars-grid fade-in delay-1">
+      <div class="pillar-card" style="--card-accent: var(--cyan-primary);">
+        <div class="pillar-number">E2E</div>
+        <div class="pillar-name">Encrypted Coordination</div>
+        <p class="pillar-desc">
+          Signed offers, acceptances, cancellations, and settlement notices &mdash;
+          off-chain, replay-resistant, cryptographically authenticated.
+          Not chat: private economic coordination with canonical hashes and deterministic serialization.
+        </p>
+        <a href="sost-technology.html#value-stack" class="pillar-link">Technical Details &rarr;</a>
+      </div>
+
+      <div class="pillar-card" style="--card-accent: var(--green-primary);">
+        <div class="pillar-number">DEX</div>
+        <div class="pillar-name">Gold Settlement Layer</div>
+        <p class="pillar-desc">
+          SOST &harr; XAUT/PAXG and native precious-metal positions.
+          Peer-to-peer, thin-chain/fat-edge architecture with deal state machine,
+          watchers, and settlement daemon. Ethereum as minimal onboarding rail, SOST as sovereign center.
+        </p>
+        <a href="sost-technology.html#value-stack" class="pillar-link">Technical Details &rarr;</a>
+      </div>
+
+      <div class="pillar-card" style="--card-accent: var(--red-primary);">
+        <div class="pillar-number">PoPC</div>
+        <div class="pillar-name">Contract Layer</div>
+        <p class="pillar-desc">
+          <strong style="color:#fbbf24">Paused / legacy.</strong> The PoPC contract layer (<code style="color:var(--green-primary);font-size:11px;">SOSTEscrow.sol</code> base)
+          is retained for reference; PoPC is superseded by the current DTD / DTD Jackpot architecture and is not an active mechanism.
+        </p>
+        <a href="sost-technology.html#value-stack" class="pillar-link">Technical Details &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUICK LINKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 03 &mdash; GET STARTED</div>
+      <h2 class="section-title">Quick <span class="accent">Links</span></h2>
+    </div>
+
+    <div class="pillars-grid fade-in delay-1">
+      <div class="pillar-card">
+        <div class="pillar-number">MINE</div>
+        <div class="pillar-name">Start Mining SOST</div>
+        <p class="pillar-desc">
+          Build from source, create a wallet, connect to the seed node,
+          and mine your first block. CPU only &mdash; no GPU required.
+        </p>
+        <a href="sost-getting-started.html" class="pillar-link">Mining Guide &rarr;</a>
+      </div>
+
+      <div class="pillar-card">
+        <div class="pillar-number">EXPLORE</div>
+        <div class="pillar-name">Block Explorer</div>
+        <p class="pillar-desc">
+          Real-time dashboard with block details, difficulty tracking,
+          emission curve, Gold Funding Vault and PoPC Pool charts, address lookup.
+        </p>
+        <a href="sost-explorer.html" class="pillar-link">Open Explorer &rarr;</a>
+      </div>
+
+      <div class="pillar-card">
+        <div class="pillar-number">READ</div>
+        <div class="pillar-name">Technical Whitepaper</div>
+        <p class="pillar-desc">
+          Full protocol specification: ConvergenceX algorithm,
+          monetary policy, reserve mechanics, PoPC design,
+          security analysis, and consensus rules.
+        </p>
+        <a href="sost-whitepaper.html" class="pillar-link">Read Whitepaper &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SITE INDEX -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 04 &mdash; DIRECTORY</div>
+      <h2 class="section-title">Explore the <span class="accent">Protocol</span></h2>
+    </div>
+    <div class="fade-in delay-1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
+      <!-- PROTOCOL -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--red-primary);margin-bottom:12px;font-weight:600;">PROTOCOL</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-technology.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Technology</a>
+          <a href="sost-tokenomics.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Tokenomics</a>
+          <a href="sost-whitepaper.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Whitepaper</a>
+          <a href="sost-roadmap.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Roadmap</a>
+          <a href="sost-faq.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">FAQ</a>
+        </div>
+      </div>
+      <!-- GOLD RESERVE -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--green-primary);margin-bottom:12px;font-weight:600;">GOLD RESERVE</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-gold-reserve.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--green-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Gold Reserve</a>
+          <a href="sost-metals-reserve.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--green-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Gold model (discarded)</a>
+          <a href="sost-foundation-balances.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--green-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Governance Balances</a>
+        </div>
+      </div>
+      <!-- PROOF OF CUSTODY -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--cyan-primary);margin-bottom:12px;font-weight:600;">PROOF OF CUSTODY</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-popc.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--cyan-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">PoPC Overview</a>
+          <a href="sost-foundation.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--cyan-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Governance Commitments</a>
+        </div>
+      </div>
+      <!-- TOOLS -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px;font-weight:600;">TOOLS</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-explorer.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Explorer</a>
+          <a href="sost-wallet.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Wallet</a>
+          <a href="sost-getting-started.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Getting Started</a>
+          <a href="sost-quickstart.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Quick Start</a>
+        </div>
+      </div>
+      <!-- COMMUNITY -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px;font-weight:600;">COMMUNITY</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-community.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Community</a>
+          <a href="sost-infrastructure.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Infrastructure</a>
+          <a href="sost-security.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Security</a>
+          <a href="sost-contact.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Contact</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN (live)</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">MIT License — fully open source. Free to use, modify, and deploy. <a href="sost-license.html" style="color:var(--cyan-primary,#22d3ee);text-decoration:none;">License details</a></p>
+  </div>
+</footer>
+
+<script>
+/* ── Shared gold price data (one fetch, used by both Gold card and SOST card) ── */
+var _sharedGold={xaut:0,paxg:0,avg:0,ts:''};
+
+(function(){
+  var GOLD_URL='/api/market-history?mode=spot&group=gold_ref';   // CoinGecko XAUT+PAXG via the SOST gateway
+  var valEl=document.getElementById('goldPriceVal');
+  var subEl=document.getElementById('goldPriceSub');
+  function fmt(n){return '$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function fetchGold(){
+    fetch(GOLD_URL).then(function(r){return r.json();}).then(function(d){
+      var xaut=(d['tether-gold']&&d['tether-gold'].usd)||0;
+      var paxg=(d['pax-gold']&&d['pax-gold'].usd)||0;
+      var avg=(xaut&&paxg)?((xaut+paxg)/2):(xaut||paxg);
+      _sharedGold.xaut=xaut;_sharedGold.paxg=paxg;_sharedGold.avg=avg;
+      var now=new Date();
+      var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+      _sharedGold.ts=ts;
+      valEl.textContent=avg>0?fmt(avg):'N/A';
+      subEl.innerHTML='XAUT '+fmt(xaut)+' | PAXG '+fmt(paxg)+' <span style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 4px #4ade80;"></span><span style="font-size:9px;color:#4ade80;letter-spacing:1px;">LIVE</span></span> '+ts;
+      // Update SOST card after gold data arrives
+      if(typeof _updateSostCard==='function') _updateSostCard();
+    }).catch(function(){
+      valEl.textContent='N/A';
+      subEl.textContent='Price unavailable';
+    });
+  }
+  fetchGold();
+  setInterval(fetchGold,60000);
+})();
+</script>
+<script>
+(function(){
+  var CURRENCIES=['usd','eur','gbp','chf','jpy','cny','rub','aed'];
+  var SYMBOLS={usd:'$',eur:'\u20AC',gbp:'\u00A3',chf:'Fr',jpy:'\u00A5',cny:'\u00A5',rub:'\u20BD',aed:'\u062F.\u0625'};
+  var LABELS={usd:'USD',eur:'EUR',gbp:'GBP',chf:'CHF',jpy:'JPY',cny:'CNY',rub:'RUB',aed:'AED'};
+  var curIdx=0;
+  var sostUsd=null;
+
+  var valEl=document.getElementById('sostPriceVal');
+  var subEl=document.getElementById('sostPriceSub');
+  var btnEl=document.getElementById('sostCurrBtn');
+
+  function liveBadge(){return '<span style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;"><span style="width:5px;height:5px;border-radius:50%;background:#ffd700;display:inline-block;box-shadow:0 0 4px #ffd700;"></span><span style="font-size:9px;color:#ffd700;letter-spacing:1px;">GOLD REF</span></span>';}
+
+  function fmtPrice(n,cur){
+    var sym=SYMBOLS[cur]||'$';
+    if(cur==='jpy'||cur==='cny'||cur==='rub') return sym+Math.round(n).toLocaleString();
+    if(n<0.01) return sym+n.toFixed(6);
+    return sym+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:4});
+  }
+
+  // SOST gold reference: 1 SOST = 0.8886707657 mg of gold. Simple, robust, no RPC/supply
+  // dependency — informational reference, NOT a market price. (uses shared gold data)
+  function calcSostFromGold(){
+    var goldAvg=_sharedGold.avg;
+    if(!goldAvg) return;
+    sostUsd = window.SOSTGold.sostFromOz(goldAvg);  // shared source: js/sost-gold-reference.js
+    renderSost();
+  }
+
+  function renderSost(){
+    btnEl.textContent='$';
+    if(sostUsd==null){ valEl.textContent='…'; valEl.style.color='var(--text-dim,#888)'; valEl.style.fontSize='20px'; subEl.innerHTML='loading gold reference…'; return; }
+    valEl.textContent=(sostUsd<0.01?'$'+sostUsd.toFixed(6):'$'+sostUsd.toFixed(4));
+    valEl.style.color='var(--red-primary)';
+    valEl.style.fontSize='20px';
+    subEl.innerHTML='1 SOST = 0.8886707657 mg gold '+liveBadge()+' <span style="font-size:9px;color:#888">· not a market price</span>';
+  }
+
+  // Called by the gold fetch when new data arrives
+  window._updateSostCard=function(){ calcSostFromGold(); };
+
+  btnEl.addEventListener('click',function(e){
+    e.stopPropagation();
+    curIdx=(curIdx+1)%CURRENCIES.length;
+    renderSost();
+  });
+  btnEl.addEventListener('mouseenter',function(){btnEl.style.borderColor='#fb010d';btnEl.style.color='#fb010d';});
+  btnEl.addEventListener('mouseleave',function(){btnEl.style.borderColor='#2a2a2a';btnEl.style.color='#94a3b8';});
+
+  // Initial render (will show loading until gold data arrives)
+  renderSost();
+})();
+</script>
+<script>
+(function(){
+  var GENESIS = new Date('2026-03-15T18:00:00Z').getTime();
+  var genesisEl = document.getElementById('genesis-timer');
+
+  function fmtDown(diff){
+    var d=Math.floor(diff/86400000);
+    var h=Math.floor((diff%86400000)/3600000);
+    var m=Math.floor((diff%3600000)/60000);
+    var s=Math.floor((diff%60000)/1000);
+    return '<span style="color:#fff">'+String(d).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> DAYS </span>'
+      +'<span style="color:#fff">'+String(h).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> HRS </span>'
+      +'<span style="color:#fff">'+String(m).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> MIN </span>'
+      +'<span style="color:#fff">'+String(s).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> SEC</span>';
+  }
+
+  function fmtUp(diff){
+    var d=Math.floor(diff/86400000);
+    var h=Math.floor((diff%86400000)/3600000);
+    var m=Math.floor((diff%3600000)/60000);
+    var s=Math.floor((diff%60000)/1000);
+    return '<span style="color:#4ade80">'+String(d).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> DAYS </span>'
+      +'<span style="color:#4ade80">'+String(h).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> HRS </span>'
+      +'<span style="color:#4ade80">'+String(m).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> MIN </span>'
+      +'<span style="color:#4ade80">'+String(s).padStart(2,'0')+'</span><span style="color:#4ade80;font-size:0.5em"> SEC ago</span>';
+  }
+
+  function tick(){
+    var now=Date.now();
+    var gDiff=GENESIS-now;
+
+    if(gDiff>0){
+      genesisEl.innerHTML = fmtDown(gDiff);
+    } else {
+      genesisEl.innerHTML = fmtUp(-gDiff);
+    }
+  }
+  tick();
+  setInterval(tick,1000);
+})();
+</script>
+<script>
+/* ── Card Panel Toggle ── */
+var _activePanel=null,_activeCard=null;
+var _chartInstances={};
+
+function togglePanel(id,cardEl){
+  if(id==='panel-sost'&&cardEl){
+    var btn=document.getElementById('sostCurrBtn');
+    if(btn&&event&&btn.contains(event.target))return;
+  }
+  var panel=document.getElementById(id);
+  if(!panel)return;
+
+  if(_activePanel&&_activePanel!==panel){
+    _activePanel.classList.remove('panel-open');
+    if(_activeCard)_activeCard.classList.remove('card-active');
+  }
+
+  var opening=!panel.classList.contains('panel-open');
+  if(opening){
+    panel.classList.add('panel-open');
+    cardEl.classList.add('card-active');
+    _activePanel=panel;_activeCard=cardEl;
+    initPanelChart(id);
+  } else {
+    panel.classList.remove('panel-open');
+    cardEl.classList.remove('card-active');
+    _activePanel=null;_activeCard=null;
+  }
+}
+
+function initPanelChart(id){
+  if(id==='panel-supply'&&!_chartInstances.supply){
+    var q=Math.exp(-0.25);
+    var R0=7.85100863,B=131553,labels=[],data=[],cum=0;
+    for(var e=0;e<=12;e++){
+      labels.push('E'+e);
+      var reward=R0*Math.pow(q,e);
+      cum+=reward*B;
+      data.push(Math.round(cum));
+    }
+    var ctx=document.getElementById('chartSupply').getContext('2d');
+    var grad=ctx.createLinearGradient(0,0,0,150);
+    grad.addColorStop(0,'rgba(251,1,13,0.3)');
+    grad.addColorStop(1,'rgba(251,1,13,0)');
+    _chartInstances.supply=new Chart(ctx,{
+      type:'line',
+      data:{labels:labels,datasets:[{label:'Cumulative Supply',data:data,borderColor:'#fb010d',backgroundColor:grad,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#fb010d',borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y.toLocaleString()+' SOST';}}}},scales:{x:{ticks:{color:'#64748b',font:{family:"'JetBrains Mono',monospace",size:10}},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{family:"'JetBrains Mono',monospace",size:10},callback:function(v){return (v/1e6).toFixed(1)+'M';}},grid:{color:'#1a1a1a'}}}}
+    });
+  }
+  if(id==='panel-split'&&!_chartInstances.split){
+    _chartInstances.split=new Chart(document.getElementById('chartSplit').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:['Miner 50%','DTD distribution 50%'],datasets:[{data:[50,50],backgroundColor:['#fb010d','#39ff14'],borderColor:['#0d0d0d','#0d0d0d'],borderWidth:2}]},
+      options:{responsive:true,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.label;}}}}}
+    });
+  }
+  if(id==='panel-gold'&&!_chartInstances.gold){
+    fetchGoldChart();
+  }
+  if(id==='panel-sost'){
+    fetchSostChart();
+  }
+}
+
+/* ── Gold 24h Chart (original Promise.all — simple and reliable) ── */
+var _goldChartTimer=null;
+function fetchGoldChart(){
+  var statusEl=document.getElementById('goldChartStatus');
+  if(statusEl)statusEl.textContent='loading...';
+  Promise.all([
+    // CoinGecko market_chart (days=1) through the SOST gateway: same series, shared cache, {prices:[...]}
+    fetch('/api/market-history?asset=tether-gold&vs=usd&days=1').then(function(r){return r.json();}),
+    fetch('/api/market-history?asset=pax-gold&vs=usd&days=1').then(function(r){return r.json();})
+  ]).then(function(res){
+    var xautPrices=res[0].prices||[];
+    var paxgPrices=res[1].prices||[];
+    var labels=[],xData=[],pData=[];
+    xautPrices.forEach(function(p){
+      var d=new Date(p[0]);
+      labels.push(d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'));
+      xData.push(p[1]);
+    });
+    paxgPrices.forEach(function(p){pData.push(p[1]);});
+
+    var ctx=document.getElementById('chartGold').getContext('2d');
+    if(_chartInstances.gold){_chartInstances.gold.destroy();}
+    _chartInstances.gold=new Chart(ctx,{
+      type:'line',
+      data:{labels:labels,datasets:[
+        {label:'XAUT',data:xData,borderColor:'#b8860b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
+        {label:'PAXG',data:pData,borderColor:'#4ade80',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3}
+      ]},
+      options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'rgba(10,10,10,0.95)',titleColor:'#94a3b8',bodyColor:'#b8860b',borderColor:'#333',borderWidth:1,titleFont:{family:"'JetBrains Mono',monospace",size:10},bodyFont:{family:"'JetBrains Mono',monospace",size:11,weight:'bold'},padding:10,displayColors:true,callbacks:{title:function(items){return items[0].label+' UTC';},label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toLocaleString();}},grid:{color:'#1a1a1a'}}}}
+    });
+    var now=new Date();
+    if(statusEl)statusEl.textContent=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+
+    if(_goldChartTimer)clearInterval(_goldChartTimer);
+    _goldChartTimer=setInterval(function(){
+      var panel=document.getElementById('panel-gold');
+      if(panel&&panel.classList.contains('panel-open'))fetchGoldChart();
+    },60000);
+  }).catch(function(){
+    if(statusEl)statusEl.textContent='chart unavailable';
+  });
+}
+
+/* ── SOST PoPC Reference Price Chart (uses _sharedGold — NO extra API calls) ── */
+function fetchSostChart(){
+  var canvasEl=document.getElementById('chartSost');
+  var statusEl=document.getElementById('sostChartStatus');
+  if(!canvasEl||typeof Chart==='undefined')return;
+  var GD={"labels": ["2019-08", "2019-09", "2019-10", "2019-11", "2019-12", "2020-01", "2020-02", "2020-03", "2020-04", "2020-05", "2020-06", "2020-07", "2020-08", "2020-09", "2020-10", "2020-11", "2020-12", "2021-01", "2021-02", "2021-03", "2021-04", "2021-05", "2021-06", "2021-07", "2021-08", "2021-09", "2021-10", "2021-11", "2021-12", "2022-01", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-11", "2022-12", "2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2023-12", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07"], "sost": [0.05572, 0.05396, 0.05547, 0.05369, 0.05562, 0.05828, 0.0581, 0.05759, 0.06176, 0.06335, 0.0653, 0.07242, 0.07221, 0.0691, 0.06883, 0.06513, 0.06951, 0.06766, 0.06354, 0.06256, 0.06482, 0.06987, 0.06487, 0.06647, 0.06647, 0.06438, 0.06534, 0.06501, 0.06701, 0.06584, 0.06993, 0.071, 0.06951, 0.06733, 0.06623, 0.0647, 0.0627, 0.06083, 0.05986, 0.06482, 0.06687, 0.07066, 0.06697, 0.07213, 0.07292, 0.07192, 0.07036, 0.07199, 0.0711, 0.06774, 0.07267, 0.07461, 0.0756, 0.07467, 0.07489, 0.08182, 0.08373, 0.0853, 0.08528, 0.08971, 0.09176, 0.09657, 0.10067, 0.09713, 0.09617, 0.10249, 0.10445, 0.11452, 0.12066, 0.12053, 0.12106, 0.12093, 0.12696, 0.14181, 0.14645, 0.15454, 0.15802, 0.17833, 0.19344, 0.17167, 0.16938, 0.16649, 0.14689, 0.1507], "gold": [0.04888, 0.04733, 0.04866, 0.04709, 0.04879, 0.05113, 0.05096, 0.05052, 0.05418, 0.05557, 0.05728, 0.06353, 0.06334, 0.06062, 0.06038, 0.05713, 0.06097, 0.05935, 0.05573, 0.05488, 0.05686, 0.06129, 0.0569, 0.05831, 0.0583, 0.05648, 0.05732, 0.05703, 0.05878, 0.05776, 0.06134, 0.06228, 0.06097, 0.05906, 0.05809, 0.05675, 0.055, 0.05336, 0.05251, 0.05686, 0.05866, 0.06198, 0.05874, 0.06327, 0.06397, 0.06309, 0.06172, 0.06315, 0.06236, 0.05942, 0.06375, 0.06545, 0.06631, 0.0655, 0.06569, 0.07177, 0.07345, 0.07483, 0.0748, 0.07869, 0.08049, 0.08471, 0.0883, 0.0852, 0.08436, 0.0899, 0.09162, 0.10046, 0.10584, 0.10573, 0.10619, 0.10608, 0.11136, 0.1244, 0.12846, 0.13556, 0.13861, 0.15643, 0.16969, 0.15059, 0.14858, 0.14605, 0.12885, 0.13219]};
+  try{if(window.SOSTGold){GD.sost=GD.gold.map(function(g){return +(g*window.SOSTGold.WEIGHT_MG).toFixed(5);});}}catch(e){}  var ctx=canvasEl.getContext('2d');
+  var grad=ctx.createLinearGradient(0,0,0,160);
+  grad.addColorStop(0,'rgba(251,1,13,0.20)');grad.addColorStop(1,'rgba(251,1,13,0)');
+  if(_chartInstances.sost){_chartInstances.sost.destroy();}
+  _chartInstances.sost=new Chart(ctx,{
+    type:'line',
+    data:{labels:GD.labels,datasets:[
+      {label:'SOST gold reference (0.8886707657 mg)',data:GD.sost,borderColor:'#fb010d',backgroundColor:grad,fill:true,borderWidth:2,pointRadius:0,tension:0.25},
+      {label:'Gold (1 mg)',data:GD.gold,borderColor:'#b8860b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.25}
+    ]},
+    options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'rgba(10,10,10,0.95)',titleColor:'#94a3b8',bodyColor:'#ffd700',borderColor:'#333',borderWidth:1,titleFont:{family:"'JetBrains Mono',monospace",size:10},bodyFont:{family:"'JetBrains Mono',monospace",size:11,weight:'bold'},padding:10,displayColors:true,callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:4,maximumFractionDigits:5});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8,callback:function(v,i){var l=GD.labels[i]||"";return (l.slice(5)==="01"||i===0)?l.slice(0,4):"";}},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toFixed(3);}},grid:{color:'#1a1a1a'}}}}
+  });
+  var cur=GD.sost[GD.sost.length-1];
+  if(statusEl)statusEl.textContent='$'+cur.toFixed(4)+' gold reference (not a market price) \u00b7 monthly 2019\u20132026';
+}
+</script>
+<script src="sost-search.js?v=v553"></script>
+<!-- CRT effects -->
+<link rel="stylesheet" href="css/crt-effects.css?v=v392">
+<script src="js/crt-effects.js?v=v392"></script>
+<script src="js/sost-music.js?v=v392"></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
+  <div class="sv-content" onclick="event.stopPropagation()">
+    <button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>
+    <!-- STEP 1 — chooser -->
+    <div id="sv-chooser" class="sv-chooser">
+      <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
+      <div class="sv-cards">
+        <button class="sv-card sv-card-sost" type="button"
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=rs20261112g')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
+        </button>
+        <button class="sv-card sv-card-mech" type="button" onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')"><span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=rs20261112g')"><span class="sv-play">&#9654;</span></span><span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span></button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — player -->
+    <div id="sv-player" class="sv-player" style="display:none">
+      <video id="sv-video" class="sv-video" controls preload="metadata" playsinline>
+        <source id="sv-source" src="" type="video/mp4">
+        Your browser does not support HTML5 video.
+      </video>
+      <div class="sv-caption" id="sv-caption"></div>
+      <button class="sv-back" type="button" onclick="backSv()">&larr;&nbsp; Choose another video</button>
+    </div>
+  </div>
+</div>
+<style>
+  .sv-modal{
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,.975); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    align-items:center; justify-content:center;
+  }
+  .sv-modal.open{ display:flex; }
+  /* Page furniture must not sit over the player. Hidden only while Watch is open — the banner
+     itself is untouched and returns on close. */
+  body.sv-open #v15banner, body.sv-open nav, body.sv-open .developer-note,
+  body.sv-open #developer-note { visibility:hidden !important; }
+  body.sv-open { overflow:hidden; }
+  .sv-content{ position:relative; max-width:92vw; max-height:88vh;
+    display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .sv-video{ max-width:92vw; max-height:80vh; background:#000;
+    border-radius:10px; box-shadow:0 0 60px rgba(251,1,13,.18); outline:none; }
+  .sv-close{
+    position:absolute; top:-46px; right:-2px;
+    background:rgba(0,0,0,.8); border:1px solid rgba(255,255,255,.22);
+    color:#fff; width:38px; height:38px; border-radius:50%;
+    font-size:22px; line-height:1; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sv-close:hover{ background:rgba(251,1,13,.4); border-color:#fb010d; }
+  .sv-caption{ text-align:center; font-size:11px; letter-spacing:3px;
+    color:#94a3b8; font-family:'JetBrains Mono','IBM Plex Mono',monospace;
+    text-transform:uppercase; }
+  .sv-player{ flex-direction:column; gap:14px; align-items:center; }
+  /* chooser */
+  .sv-ch-title{ text-align:center; font-size:12px; letter-spacing:4px; color:#22d3ee;
+    font-family:'JetBrains Mono','IBM Plex Mono',monospace; text-transform:uppercase; margin-bottom:6px; }
+  .sv-cards{ display:flex; gap:22px; flex-wrap:wrap; justify-content:center; max-width:92vw; }
+  /* A single film must look chosen, not like a card went missing: the chooser widens and
+     the heading says how many there are. */
+  .sv-cards .sv-card:only-child{width:560px;max-width:76vw}
+  .sv-cards .sv-card:only-child .sv-thumb{aspect-ratio:16/9}
+
+  .sv-card{ width:340px; max-width:42vw; min-width:240px; background:linear-gradient(160deg,#0a1117,#0c1620);
+    border:1px solid rgba(34,211,238,.30); border-radius:14px; padding:0 0 16px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:stretch; overflow:hidden; text-align:left;
+    transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+  .sv-card:hover{ transform:translateY(-4px); }
+  .sv-card-sost:hover{ border-color:#22d3ee; box-shadow:0 0 26px rgba(34,211,238,.35); }
+  .sv-card-gea{ border-color:rgba(0,255,65,.30); }
+  .sv-card-gea:hover{ border-color:#00ff41; box-shadow:0 0 26px rgba(0,255,65,.30); }
+  .sv-thumb{ position:relative; width:100%; aspect-ratio:16/9; background:#000 center/cover no-repeat;
+    display:flex; align-items:center; justify-content:center; }
+  .sv-play{ width:58px; height:58px; border-radius:50%; background:rgba(0,0,0,.55);
+    border:2px solid rgba(255,255,255,.85); color:#fff; font-size:22px;
+    display:flex; align-items:center; justify-content:center; padding-left:4px; transition:transform .18s ease; }
+  .sv-card:hover .sv-play{ transform:scale(1.12); }
+  .sv-card-h{ font-size:18px; font-weight:800; color:#e5e7eb; margin:14px 16px 2px;
+    font-family:'Inter',system-ui,sans-serif; }
+  .sv-card-s{ font-size:12.5px; color:#94a3b8; margin:0 16px; font-family:'Inter',system-ui,sans-serif; }
+  .sv-back{ background:transparent; border:1px solid rgba(255,255,255,.22); color:#cbd5e1;
+    border-radius:8px; padding:7px 14px; font-size:12px; cursor:pointer; letter-spacing:1px; }
+  .sv-back:hover{ border-color:#22d3ee; color:#22d3ee; }
+  @media(max-width:560px){ .sv-card{ max-width:88vw; } .sv-cards{ gap:14px; } }
+</style>
+<script>
+  function openSv(){
+    try{document.body.classList.add('sv-open');}catch(e){}
+    var m=document.getElementById('sv-modal');
+    m.classList.add('open'); m.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    backSv();  // always start on the chooser
+  }
+  function pickSv(src,cap){
+    document.getElementById('sv-chooser').style.display='none';
+    document.getElementById('sv-player').style.display='flex';
+    document.getElementById('sv-caption').innerHTML=cap;
+    var v=document.getElementById('sv-video'), s=document.getElementById('sv-source');
+    s.setAttribute('src',src); v.load();
+    try{ v.currentTime=0; v.play().catch(function(){}); }catch(e){}
+  }
+  function backSv(){
+    var v=document.getElementById('sv-video');
+    try{ v.pause(); }catch(e){}
+    document.getElementById('sv-player').style.display='none';
+    document.getElementById('sv-chooser').style.display='block';
+  }
+  function closeSv(evt, force){
+    try{document.body.classList.remove('sv-open');}catch(e){}
+    if(evt && !force && evt.target.id!=='sv-modal') return;
+    var m=document.getElementById('sv-modal');
+    m.classList.remove('open'); m.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    var v=document.getElementById('sv-video');
+    try{ v.pause(); }catch(e){}
+  }
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') closeSv(null,true);
+  });
+</script>
+<!-- Visit counter — hidden by default, revealed by a discreet button. The visit is
+     registered silently on load (unique, seeded baseline, server-persisted, bot-filtered). -->
+<script>
+(function(){
+  var css="<style>.vcx{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border:1px solid var(--vcx-bd);border-radius:999px;background:var(--vcx-bg);font-family:ui-monospace,Menlo,Consolas,monospace;vertical-align:middle}"
+  +".vcx-dot{width:7px;height:7px;border-radius:50%;background:var(--vcx-ac);box-shadow:0 0 8px var(--vcx-ac);animation:vcxP 1.8s ease-in-out infinite;flex:0 0 auto}"
+  +"@keyframes vcxP{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}"
+  +".vcx-num{display:inline-flex;font-weight:700;font-size:15px;letter-spacing:.5px;color:var(--vcx-ac);text-shadow:0 0 10px var(--vcx-ac)}"
+  +".vcx-d{display:inline-block;height:1.25em;width:.64em;overflow:hidden}"
+  +".vcx-s{display:flex;flex-direction:column;transition:transform 1.6s cubic-bezier(.16,1,.3,1)}"
+  +".vcx-s>i{height:1.25em;line-height:1.25em;text-align:center;font-style:normal}"
+  +".vcx-sep{display:inline-block;width:.32em;text-align:center;opacity:.65;color:var(--vcx-ac)}"
+  +".vcx-lbl{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--vcx-mut)}"
+  +".vcx-btn{font:600 10px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:1.3px;text-transform:uppercase;color:var(--vcx-mut);background:transparent;border:1px solid var(--vcx-bd);border-radius:999px;padding:6px 12px;cursor:pointer;opacity:.7;transition:opacity .2s,color .2s,border-color .2s}"
+  +".vcx-btn:hover{opacity:1;color:var(--vcx-ac);border-color:var(--vcx-ac)}</style>";
+  document.head.insertAdjacentHTML('beforeend',css);
+  function fmt(n){ return Number(n).toLocaleString('en-US'); }
+  function build(el,val){
+    var s=fmt(val); el.innerHTML='';
+    for(var i=0;i<s.length;i++){
+      var ch=s[i];
+      if(ch<'0'||ch>'9'){ var sp=document.createElement('span'); sp.className='vcx-sep'; sp.textContent=ch; el.appendChild(sp); continue; }
+      var d=document.createElement('span'); d.className='vcx-d';
+      var st=document.createElement('span'); st.className='vcx-s';
+      for(var k=0;k<=9;k++){ var it=document.createElement('i'); it.textContent=k; st.appendChild(it); }
+      d.appendChild(st); el.appendChild(d);
+      (function(st,t){ st.style.transform='translateY(0)'; setTimeout(function(){ st.style.transform='translateY(-'+(t*10)+'%)'; },80); })(st,+ch);
+    }
+  }
+  function mount(o){
+    var host=document.getElementById(o.id); if(!host) return;
+    if(host.querySelector('.vcx-btn')) return;   // nav-toggle.js?v=rs20261112g already mounted it when </nav> was parsed
+    host.style.setProperty('--vcx-ac',o.accent); host.style.setProperty('--vcx-bd',o.border);
+    host.style.setProperty('--vcx-bg',o.bg); host.style.setProperty('--vcx-mut',o.mut);
+    var sk='vcx_'+o.site, hit=!sessionStorage.getItem(sk);
+    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} }
+    // ONE request on load: registers the visit (first page of the session) and returns the real count,
+    // so the odometer rolls ONCE, straight to the live number. seed is only a fallback if /counter is down.
+    var real=null, shown=false;
+    var ready=fetch(o.base+'?site='+encodeURIComponent(o.site)+(hit?'&hit=1':'')).then(function(r){return r.json();}).then(function(d){
+      if(d&&typeof d.count==='number') real=d.count;
+    }).catch(function(){});
+    var btn=document.createElement('button'); btn.type='button'; btn.className='vcx-btn'; btn.textContent=o.btn;
+    var box=document.createElement('span'); box.className='vcx'; box.style.display='none';
+    var dot=document.createElement('span'); dot.className='vcx-dot';
+    var num=document.createElement('span'); num.className='vcx-num';
+    var lbl=document.createElement('span'); lbl.className='vcx-lbl'; lbl.textContent=o.label;
+    box.appendChild(dot); box.appendChild(num); box.appendChild(lbl);
+    host.appendChild(btn); host.appendChild(box);
+    function show(){ if(shown) return; shown=true; build(num, real!==null?real:o.seed); }
+    btn.addEventListener('click',function(){
+      btn.style.display='none'; box.style.display='inline-flex';
+      if(real!==null){ show(); return; }
+      num.textContent='\u2026'; ready.then(show); setTimeout(show,4000);
+    });
+  }
+  mount({id:'vcx-sost',site:'sostcore',seed:3375,base:'/counter',btn:'▸ site visits',
+         accent:'#4ade80',border:'#16331f',bg:'rgba(8,16,10,.7)',mut:'#5f7a68',label:'site visits'});
+})();
+</script>
+</body>
+</html>

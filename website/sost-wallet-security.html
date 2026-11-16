@@ -3,14 +3,12 @@
 <head>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <meta charset="UTF-8">
-<link rel="icon" type="image/png" href="sost-logo.png?v=rs20261112g">
-<link rel="apple-touch-icon" href="sost-logo.png?v=rs20261112g">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png?v=sl20261113">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=sl20261113">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Wallet &amp; Backup Security</title>
 <meta name="description" content="What lives on-chain vs locally, how to back up a SOST wallet, how to recover from the 12-word seed, the 1000-block coinbase maturity rule, and why running the same address on two miners does not double the hashrate.">
 <meta name="robots" content="index, follow">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;
@@ -56,6 +54,12 @@
   .lang{margin-top:50px;padding-top:18px;border-top:1px dashed var(--border-med)}
   .lang h2{color:var(--cyan-primary)}
 </style>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="preload" href="fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
 </head>
 <body>
 
@@ -365,8 +369,12 @@ $ ./sost-cli --wallet /tmp/restored.json listaddresses
 </footer>
 
 </div>
-<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17c" defer></script>
 <script src="sost-search.js?v=v553"></script>
 <script src="js/nav-toggle.js?v=rs20261112g" defer></script>
+<!-- u-skin (DIRECTIVA 4D §5-E) -->
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='technology'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body>
 </html>

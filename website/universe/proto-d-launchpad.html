@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SOST — Mining Launchpad (prototype D)</title>
+<meta name="description" content="Prototype D: a step-by-step SOST mining guide with the validated v30000-final.1 commands, copy buttons, expected results, common errors and a guided diagnostic.">
+<link rel="preload" href="../fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<style>
+body{background:#000;background-image:linear-gradient(#ffffff06 1px,transparent 1px),linear-gradient(90deg,#ffffff06 1px,transparent 1px);background-size:32px 32px}
+.wrap{position:relative;z-index:var(--z-content);max-width:1320px;margin:0 auto;padding:80px max(16px,3vw) 90px;display:grid;grid-template-columns:220px minmax(0,1fr) 300px;gap:28px}
+.kick{font:600 12px var(--f-mono);letter-spacing:.35em;color:var(--tx-3)}
+h1{font:700 clamp(26px,3vw,40px)/1.08 var(--f-ui);letter-spacing:-.02em;margin:8px 0 8px}
+.lede{color:var(--tx-2);font-size:15px;line-height:1.55;margin:0 0 18px;max-width:64ch}
+/* step rail */
+.rail{position:sticky;top:80px;align-self:start}
+.rail ol{list-style:none;margin:0;padding:0;counter-reset:s}
+.rail a{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;color:var(--tx-2);text-decoration:none;font-size:14px}
+.rail a:before{counter-increment:s;content:counter(s);flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line-3);font:600 12px var(--f-mono)}
+.rail a[aria-current="step"]{color:#fff;background:#ffffff0a}
+.rail a[aria-current="step"]:before{border-color:var(--green-term);color:var(--green-term)}
+.rail a.done:before{content:"✓";color:var(--green);border-color:var(--green)}
+/* steps */
+.step{scroll-margin-top:80px;border:1px solid var(--line-2);border-radius:var(--r-2);background:#050505e6;padding:20px 22px;margin:0 0 18px}
+.step h2{margin:0 0 6px;font-size:21px;display:flex;gap:10px;align-items:baseline}
+.step h2 small{font:600 11px var(--f-mono);letter-spacing:.25em;color:var(--tx-3)}
+.step p{color:var(--tx-1);line-height:1.55;font-size:15px;margin:0 0 10px}
+.os{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+.os button{all:unset;box-sizing:border-box;cursor:pointer;padding:14px;border-radius:12px;border:1px solid var(--line-3);background:#0a0a0a}
+.os button b{display:block;font-size:16px;margin-bottom:4px}
+.os button span{font-size:12.5px;color:var(--tx-2);line-height:1.4;display:block}
+.os button[aria-checked="true"]{border-color:var(--green-term);box-shadow:inset 0 0 0 1px var(--green-term)}
+.os button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.os button.nv{border-style:dashed}
+.res{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}
+.res th,.res td{padding:8px 10px;border-bottom:1px solid #ffffff10;text-align:left;vertical-align:top}
+.res th{color:var(--tx-2);font-weight:600;white-space:nowrap}
+.res td small{display:block;color:var(--tx-3);font:11px/1.5 var(--f-mono);margin-top:2px}
+.cmd{border:1px solid var(--line-2);border-radius:12px;margin:12px 0;overflow:hidden;background:#000}
+.cmd .bar{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line-1);font:11px var(--f-mono);color:var(--tx-3)}
+.cmd .bar .copy{margin-left:auto}
+.cmd pre{margin:0;padding:12px 14px;overflow-x:auto;font:13px/1.6 var(--f-mono);color:#e2e8f0}
+.cmd pre:before{content:"$ ";color:var(--green-term)}
+.cmd .info{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line-1)}
+.cmd .info div{padding:9px 12px;font-size:12.5px;line-height:1.5;color:var(--tx-2)}
+.cmd .info div+div{border-left:1px solid var(--line-1)}
+.cmd .info b{display:block;font:600 10.5px var(--f-mono);letter-spacing:.15em;margin-bottom:3px}
+.cmd .info .ok b{color:var(--green)} .cmd .info .err b{color:var(--st-warn)} .cmd .info .nx b{color:var(--cyan)}
+.warn{border:1px solid var(--red-dim);border-left:3px solid var(--red);border-radius:8px;background:#fb010d10;padding:12px 14px;margin:10px 0;font-size:14px;line-height:1.55}
+.warn b{color:var(--red-bright)}
+.note{border-left:3px solid var(--st-warn);padding:8px 12px;margin:10px 0;font-size:13.5px;color:var(--tx-2);background:#fbbf240a;border-radius:0 8px 8px 0}
+.stepnav{display:flex;gap:8px;justify-content:space-between;margin-top:12px}
+[data-os]{display:none} body.os-windows [data-os~="windows"],body.os-linux [data-os~="linux"],body.os-macos [data-os~="macos"]{display:block}
+body:not(.os-windows):not(.os-linux):not(.os-macos) [data-os~="linux"]{display:block}
+/* diagnostic */
+.diag fieldset{border:0;margin:0;padding:0}
+.diag legend{font-weight:600;margin-bottom:8px}
+.diag label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line-2);border-radius:10px;margin:6px 0;cursor:pointer;font-size:14px;line-height:1.45}
+.diag label:has(input:checked){border-color:var(--cyan)}
+.diag input{margin-top:3px;accent-color:#22d3ee}
+.diag .ans{margin-top:10px;padding:12px 14px;border:1px solid var(--line-3);border-radius:10px;min-height:50px;font-size:14px;line-height:1.55}
+/* explanatory illustration */
+.illu{position:sticky;top:80px;align-self:start}
+.illu svg{width:100%;height:auto;display:block}
+.illu .cap{font:11.5px/1.5 var(--f-mono);color:var(--tx-2);margin-top:8px}
+.illu .st-n{transition:opacity .4s,filter .4s}
+@media (max-width:1100px){.wrap{grid-template-columns:200px minmax(0,1fr)}.illu{display:none}}
+@media (max-width:760px){
+  .wrap{grid-template-columns:minmax(0,1fr);padding-top:70px}
+  .res th,.res td{display:block;padding:4px 0}.res tr{display:block;padding:8px 0;border-bottom:1px solid #ffffff10}.res th,.res td{border:0}
+  .rail{position:sticky;top:56px;z-index:6;background:#000e;margin:0 -16px;padding:6px 16px;border-bottom:1px solid var(--line-2)}
+  .rail ol{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+  .rail a{white-space:nowrap;padding:8px;font-size:13px}
+  .rail a span{display:none} .rail a[aria-current="step"] span{display:inline}
+  .os{grid-template-columns:1fr}
+  .cmd .info{grid-template-columns:1fr}.cmd .info div+div{border-left:0;border-top:1px solid var(--line-1)}
+  .step{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){.illu .st-n{transition:none}}
+</style>
+<link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
+</head>
+<body class="os-linux">
+<a class="skip" href="#step-1">Skip to step 1</a>
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<div class="wrap">
+<nav class="rail" aria-label="Steps">
+  <ol>
+    <li><a href="#step-1"><span>System</span></a></li>
+    <li><a href="#step-2"><span>Resources</span></a></li>
+    <li><a href="#step-3"><span>Install</span></a></li>
+    <li><a href="#step-4"><span>Node</span></a></li>
+    <li><a href="#step-5"><span>Wallet &amp; key</span></a></li>
+    <li><a href="#step-6"><span>Mine</span></a></li>
+    <li><a href="#step-7"><span>Diagnose</span></a></li>
+  </ol>
+</nav>
+<main id="main">
+  <div class="kick">MINING LAUNCHPAD · V30000 (v30000-final.1)</div>
+  <h1>Mine SOST solo, step by step.</h1>
+  <p class="lede">Seven steps from a fresh computer to a running miner. Every command below is the validated one for the production release tag <code>v30000-final.1</code> (commit <code>59a4e666</code>). Copy each one, compare your screen with the expected result, and move on.</p>
+
+  <section class="step" id="step-1" aria-labelledby="t1"><h2 id="t1"><small>STEP 1</small> Choose your system</h2>
+    <p>SOST runs on Linux. On Windows it runs inside WSL2 (a Linux system that Windows installs for you).</p>
+    <div class="os" role="radiogroup" aria-label="Operating system">
+      <button type="button" role="radio" aria-checked="false" data-pick="windows"><b>Windows · WSL2</b><span>Windows 10/11. Installs Ubuntu inside Windows, then the Linux steps.</span></button>
+      <button type="button" role="radio" aria-checked="true" data-pick="linux"><b>Linux</b><span>Ubuntu or Debian with <code>apt</code>.</span></button>
+      <button type="button" role="radio" aria-checked="false" data-pick="macos" class="nv"><b>macOS</b><span>No validated procedure yet.</span></button>
+    </div>
+    <div data-os="windows">
+      <p>Press <b>Win+R</b>, type <code>cmd</code> and press Enter. In the black window run:</p>
+      <div class="cmd"><div class="bar">Windows command prompt<button class="copy" type="button">copy</button></div><pre><code>wsl --install</code></pre>
+        <div class="info"><div class="ok"><b>EXPECTED</b>It downloads and installs Ubuntu (2–5 min, needs internet) and asks you to restart.</div><div class="err"><b>IF IT FAILS</b>If Ubuntu does not open after the restart, press Win+R again, type <code>ubuntu</code> and press Enter.</div><div class="nx"><b>NEXT</b>Ubuntu asks for a new username and password. That window is your terminal: continue with step 2.</div></div></div>
+    </div>
+    <div data-os="linux"><p>Open your terminal application and continue with step 2.</p></div>
+    <div data-os="macos"><div class="note"><b>macOS is not validated.</b> The current guide only mentions installing dependencies with Homebrew; the install, build and run steps below were validated with <code>apt</code> on Linux / WSL2 only. Until a procedure is tested on macOS, this launchpad does not give macOS commands. Use a Linux machine or a Linux VM, or follow the <a href="../sost-getting-started.html" style="color:var(--cyan)">Getting Started</a> page at your own risk.</div></div>
+  </section>
+
+  <section class="step" id="step-2" aria-labelledby="t2"><h2 id="t2"><small>STEP 2</small> Check your resources</h2>
+    <table class="res"><caption class="sr">Requirements</caption>
+      <tr><th scope="row">Memory, mining</th><td><b>8 GB RAM or more</b> (4 GB dataset + 4 GB scratchpad). Several threads share one scratchpad.<small>verified in source: src/pow/convergencex.cpp:48-50 · include/sost/params.h:847 (CX_SCRATCH_M = 4096) · src/sost-miner.cpp:2482 (“Share 1 scratchpad”)</small></td></tr>
+      <tr><th scope="row">Memory, node only</th><td>About <b>500 MB</b>. A node verifies blocks without building the 4 GB dataset.<small>documented in the Quick Start; not measured here · O(1) verification: include/sost/pow/convergencex.h:34</small></td></tr>
+      <tr><th scope="row">CPU</th><td>A regular CPU. Use <code>--threads N</code> for N cores. No specialised hardware, no pools.</td></tr>
+      <tr><th scope="row">Disk</th><td>The source tree, the build and the chain data. <span class="pv unavailable">NOT DOCUMENTED</span></td></tr>
+      <tr><th scope="row">Connection</th><td>Any connection. The node connects to <code>seed.sostcore.com:19333</code>.</td></tr>
+      <tr><th scope="row">Time</th><td>About 30 minutes. The build takes 2–5 minutes; the first sync from minutes to a quarter of an hour.</td></tr>
+    </table>
+    <p class="def">Not enough free memory? See “std::bad_alloc” in step 7. No compatibility is promised beyond what is listed here.</p>
+  </section>
+
+  <section class="step" id="step-3" aria-labelledby="t3"><h2 id="t3"><small>STEP 3</small> Install the tools and build SOST</h2>
+    <p data-os="macos" style="color:var(--st-warn)">No validated macOS commands. The commands below are for Linux / WSL2.</p>
+    <div class="cmd"><div class="bar">1 · install the build tools<button class="copy" type="button">copy</button></div><pre><code>sudo apt update &amp;&amp; sudo apt install -y build-essential cmake libssl-dev libsecp256k1-dev git</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>It asks for your password (nothing appears while typing, that is normal) and finishes in 1–2 minutes without red errors.</div><div class="err"><b>IF IT FAILS</b>Red text: run the same command again.</div><div class="nx"><b>NEXT</b>Download and build SOST.</div></div></div>
+    <p>Run these one at a time, pressing Enter after each:</p>
+    <div class="cmd"><div class="bar">2 · download the source<button class="copy" type="button">copy</button></div><pre><code>git clone https://github.com/Neob1844/sost-core.git</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>A folder <code>sost-core</code> is created.</div><div class="err"><b>IF IT FAILS</b><code>git: command not found</code>: repeat command 1.</div><div class="nx"><b>NEXT</b>Enter the folder.</div></div></div>
+    <div class="cmd"><div class="bar">3<button class="copy" type="button">copy</button></div><pre><code>cd sost-core</code></pre></div>
+    <div class="cmd"><div class="bar">4<button class="copy" type="button">copy</button></div><pre><code>git fetch --tags</code></pre></div>
+    <div class="cmd"><div class="bar">5 · the production release tag<button class="copy" type="button">copy</button></div><pre><code>git checkout v30000-final.1</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>Git reports that you are at <code>59a4e666</code> (“detached HEAD” is normal for a tag).</div><div class="err"><b>IF IT FAILS</b><code>did not match any file(s)</code>: run <code>git fetch --tags</code> again, then this command.</div><div class="nx"><b>NEXT</b>Build. Do not build another branch: the tag is the production source.</div></div></div>
+    <div class="cmd"><div class="bar">6<button class="copy" type="button">copy</button></div><pre><code>mkdir build &amp;&amp; cd build</code></pre></div>
+    <div class="cmd"><div class="bar">7<button class="copy" type="button">copy</button></div><pre><code>cmake .. -DCMAKE_BUILD_TYPE=Release</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>Ends with “Build files have been written to …/build”.</div><div class="err"><b>IF IT FAILS</b><code>cmake: command not found</code>, <code>openssl/sha.h</code> or <code>secp256k1.h: No such file</code>: repeat command 1.</div><div class="nx"><b>NEXT</b>Compile.</div></div></div>
+    <div class="cmd"><div class="bar">8 · compile (2–5 min)<button class="copy" type="button">copy</button></div><pre><code>make -j$(nproc)</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>Lots of text, then <code>[100%] Built target</code>.</div><div class="err"><b>IF IT FAILS</b>The build stops with an error: check the messages for a missing package (step 7), fix it and run the same command again.</div><div class="nx"><b>NEXT</b>Step 4: start the node. Prefer prebuilt binaries? Use the <a href="../sost-upgrade.html" style="color:var(--cyan)">upgrade guide</a> and check them against the release <code>SHA256SUMS</code>.</div></div></div>
+  </section>
+
+  <section class="step" id="step-4" aria-labelledby="t4"><h2 id="t4"><small>STEP 4</small> Start your node</h2>
+    <p>The node joins the SOST network and downloads the chain. First choose your own RPC password and keep it in a private file. There is no SOST-wide password: it protects your node, and the miner reads the same file.</p>
+    <div class="cmd"><div class="bar">1 · create a private password file<button class="copy" type="button">copy</button></div><pre><code>mkdir -p ~/.sost &amp;&amp; umask 077
+openssl rand -base64 30 &gt; ~/.sost/rpc.pass
+chmod 600 ~/.sost/rpc.pass</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>No output. The file <code>~/.sost/rpc.pass</code> exists and only you can read it.</div><div class="err"><b>IF IT FAILS</b>“Permission denied”: you are not in your own home folder; open a new terminal and repeat.</div><div class="nx"><b>NEXT</b>Start the node from the <code>build/</code> folder.</div></div></div>
+    <div class="cmd"><div class="bar">2 · only if genesis_block.json is missing in build/<button class="copy" type="button">copy</button></div><pre><code>cp ../genesis_block.json .</code></pre></div>
+    <div class="cmd"><div class="bar">3 · start the node (replace PICK_A_USERNAME)<button class="copy" type="button">copy</button></div><pre><code>./sost-node --genesis genesis_block.json --connect seed.sostcore.com:19333 \
+    --rpc-user PICK_A_USERNAME --rpc-pass-file ~/.sost/rpc.pass --profile mainnet --p2p-enc on</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>It connects to the seed and syncs. You see lines like <code>[BLOCK] Height N accepted</code>. Fast sync is on by default.</div><div class="err"><b>IF IT FAILS</b><code>--rpc-pass-file</code> error: the file from command 1 is missing or not private (mode 600).</div><div class="nx"><b>NEXT</b>Leave this window open. Open a <b>new</b> terminal (WSL: Win+R, <code>ubuntu</code>) for step 5.</div></div></div>
+    <p class="def">Why a file? Anything typed on a command line is visible to other users of the machine. The RPC password is not your wallet passphrase. If you mine against a remote node, use an SSH tunnel; same-machine setups need nothing else.</p>
+  </section>
+
+  <section class="step" id="step-5" aria-labelledby="t5"><h2 id="t5"><small>STEP 5</small> Create your wallet and mining key</h2>
+    <p>Since block #7,100 every block must be signed by a mining key (SbPoW). The miner reads that key from your wallet file.</p>
+    <div class="cmd"><div class="bar">1 · in the new terminal, inside sost-core/build<button class="copy" type="button">copy</button></div><pre><code>./sost-cli newwallet</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>A file <code>wallet.json</code> is created.</div><div class="err"><b>IF IT FAILS</b>“not found”: you are not in <code>sost-core/build</code>.</div><div class="nx"><b>NEXT</b>Create the mining address.</div></div></div>
+    <div class="cmd"><div class="bar">2 · the address labelled “mining”<button class="copy" type="button">copy</button></div><pre><code>./sost-cli getnewaddress "mining"</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>An address like <code>sost1c6dac46bb3a43cefe…</code>. Write it down.</div><div class="err"><b>IF IT FAILS</b><code>wallet.json not found</code>: run command 1 first.</div><div class="nx"><b>NEXT</b>Back up the wallet, then step 6.</div></div></div>
+    <div class="warn" role="note"><b>Your wallet file is your money.</b> <code>wallet.json</code> holds your private keys, including the mining key. Never share it, never upload it, never paste it anywhere, and nobody from SOST will ever ask for it. If you lose it, the coins are gone: copy it to a USB drive now and keep that copy offline.</div>
+  </section>
+
+  <section class="step" id="step-6" aria-labelledby="t6"><h2 id="t6"><small>STEP 6</small> Start, watch and stop the miner</h2>
+    <div class="cmd"><div class="bar">1<button class="copy" type="button">copy</button></div><pre><code>cd ~/sost-core/build</code></pre></div>
+    <div class="cmd"><div class="bar">2 · start mining (replace SAME_USERNAME_AS_STEP_4)<button class="copy" type="button">copy</button></div><pre><code>./sost-miner --wallet wallet.json --mining-key-label mining \
+    --genesis genesis_block.json --chain chain.json \
+    --rpc 127.0.0.1:18232 \
+    --rpc-user SAME_USERNAME_AS_STEP_4 \
+    --rpc-pass-file ~/.sost/rpc.pass \
+    --blocks 999999 --profile mainnet --threads 4</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>Numbers scroll. When it finds a block it prints <code>BLOCK FOUND!</code>. Finding blocks is a matter of probability, not a schedule.</div><div class="err"><b>IF IT FAILS</b><code>Connection refused</code>: the node from step 4 is not running. <code>std::bad_alloc</code>: not enough memory (step 7).</div><div class="nx"><b>NEXT</b>Leave it running. Stop it any time with <b>Ctrl+C</b> in its window.</div></div></div>
+    <div class="cmd"><div class="bar">3 · check your balance (third terminal, in build/)<button class="copy" type="button">copy</button></div><pre><code>./sost-cli getbalance --rpc 127.0.0.1:18232 \
+    --rpc-user YOUR_USER --rpc-pass-file ~/.sost/rpc.pass</code></pre>
+      <div class="info"><div class="ok"><b>EXPECTED</b>Total / Available / Locked (immature).</div><div class="err"><b>IF IT FAILS</b>Authentication error: use the same username and password file as the node.</div><div class="nx"><b>NEXT</b>Mined coins become spendable after 1,000 confirmations (about 7 days).</div></div></div>
+    <p class="def">Rewards depend on how many other miners are active and are never guaranteed. Each block currently splits its reward 50 % miner / 50 % DTD. See the <a href="proto-c-orbit.html" style="color:var(--cyan)">288 Orbit</a> for how the DTD works.</p>
+  </section>
+
+  <section class="step diag" id="step-7" aria-labelledby="t7"><h2 id="t7"><small>STEP 7</small> Guided diagnostic</h2>
+    <p>Pick what you see. This check runs only in your browser and asks for nothing else.</p>
+    <div class="warn" role="note"><b>Never paste</b> private keys, seed phrases, passwords, the contents of <code>~/.sost/rpc.pass</code> or your <code>wallet.json</code> into any website, chat or support request, including this one.</div>
+    <form id="diag" onsubmit="return false"><fieldset><legend>What happened?</legend>
+      <label><input type="radio" name="d" value="cmake"> <span><code>cmake: command not found</code></span></label>
+      <label><input type="radio" name="d" value="hdr"> <span><code>openssl/sha.h</code> or <code>secp256k1.h: No such file</code> while building</span></label>
+      <label><input type="radio" name="d" value="tag"> <span><code>git checkout v30000-final.1</code> says the tag does not exist</span></label>
+      <label><input type="radio" name="d" value="refused"> <span>Miner or sost-cli: <code>Connection refused</code></span></label>
+      <label><input type="radio" name="d" value="auth"> <span>Authentication / password error from the miner or sost-cli</span></label>
+      <label><input type="radio" name="d" value="wallet"> <span><code>wallet.json not found</code></span></label>
+      <label><input type="radio" name="d" value="zero"> <span>Miner shows <code>0 H/s</code></span></label>
+      <label><input type="radio" name="d" value="alloc"> <span><code>std::bad_alloc</code> when the miner starts</span></label>
+      <label><input type="radio" name="d" value="noblock"> <span>Mining for hours and no block found</span></label>
+      <label><input type="radio" name="d" value="crash"> <span>My computer crashed. Did I lose my coins?</span></label>
+    </fieldset></form>
+    <div class="ans" id="ans" aria-live="polite">Select a symptom above.</div>
+  </section>
+</main>
+<aside class="illu" aria-label="Explanatory illustration">
+  <svg viewBox="0 0 300 560" role="img" aria-labelledby="ilT ilD"><title id="ilT">How mining fits together</title><desc id="ilD">Explanatory diagram: computer, node, peer-to-peer connection, proof-of-work search, block, reward. It is an illustration; nothing runs on your computer from this page.</desc>
+    <defs><linearGradient id="sp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset=".2" stop-color="#e879f9"/><stop offset=".4" stop-color="#3b82f6"/><stop offset=".55" stop-color="#22d3ee"/><stop offset=".7" stop-color="#a3e635"/><stop offset=".85" stop-color="#facc15"/><stop offset="1" stop-color="#fb923c"/></linearGradient></defs>
+    <path d="M150 50V510" stroke="url(#sp)" stroke-width="2" stroke-dasharray="3 5" fill="none"/>
+    <g font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" fill="#e2e8f0">
+      <g class="st-n" data-k="1"><rect x="95" y="20" width="110" height="56" rx="10" fill="#0a0a0a" stroke="#8b5cf6"/><text x="150" y="44">COMPUTER</text><text x="150" y="62" fill="#94a3b8" font-size="10">CPU · 8 GB RAM</text></g>
+      <g class="st-n" data-k="3"><rect x="95" y="108" width="110" height="56" rx="10" fill="#0a0a0a" stroke="#3b82f6"/><text x="150" y="132">NODE</text><text x="150" y="150" fill="#94a3b8" font-size="10">verifies every block</text></g>
+      <g class="st-n" data-k="4"><circle cx="150" cy="224" r="30" fill="#0a0a0a" stroke="#22d3ee"/><circle cx="72" cy="214" r="8" fill="none" stroke="#22d3ee"/><circle cx="228" cy="230" r="8" fill="none" stroke="#22d3ee"/><path d="M80 215L120 222M180 226L220 230" stroke="#22d3ee"/><text x="150" y="228">P2P</text></g>
+      <g class="st-n" data-k="6"><rect x="95" y="284" width="110" height="56" rx="10" fill="#0a0a0a" stroke="#a3e635"/><text x="150" y="308">PoW SEARCH</text><text x="150" y="326" fill="#94a3b8" font-size="10">ConvergenceX attempts</text></g>
+      <g class="st-n" data-k="6"><rect x="118" y="370" width="64" height="64" rx="6" fill="#0a0a0a" stroke="#facc15" transform="rotate(8 150 402)"/><text x="150" y="406">BLOCK</text></g>
+      <g class="st-n" data-k="5"><circle cx="150" cy="486" r="30" fill="#0a0a0a" stroke="#fb923c"/><text x="150" y="483">REWARD</text><text x="150" y="498" fill="#94a3b8" font-size="9">after 1,000 conf.</text></g>
+    </g>
+  </svg>
+  <p class="cap"><span class="pv simulated">ILLUSTRATION</span> Explanatory only. Nothing on this page runs, mines or connects on your computer.</p>
+</aside>
+</div>
+<div class="u-bar"><span>Commands: <code>website/sost-quickstart.html</code> at commit <code>025f6a02</code> (branch web/swap-retired-notice), tag <code>v30000-final.1</code> = <code>59a4e666</code></span><span class="sp"><button class="btn small" id="prevStep" type="button">← prev</button><button class="btn small" id="nextStep" type="button">next →</button></span></div>
+<script src="core/u-ui.js?v=ns20261113"></script>
+<script src="core/u-nav.js?v=in20261113a"></script>
+<script>SOSTU.nav.render(document.getElementById('nav'),'mining','Launchpad');</script>
+<script>
+(function(){
+'use strict';
+var UI=SOSTU.ui, $=function(id){return document.getElementById(id);};
+// copy buttons copy exactly the text of the command block
+document.querySelectorAll('.cmd').forEach(function(c){var b=c.querySelector('.copy'),code=c.querySelector('code');b.setAttribute('aria-label','copy command: '+code.textContent.split('\n')[0].slice(0,60));b.onclick=function(){UI.copy(b,code.textContent);};});
+// OS choice (radiogroup)
+var osBtns=[].slice.call(document.querySelectorAll('.os button'));
+function pick(os,focus){document.body.className=document.body.className.replace(/\bos-\w+/g,'').trim()+' os-'+os;osBtns.forEach(function(b){var on=b.dataset.pick===os;b.setAttribute('aria-checked',on);b.tabIndex=on?0:-1;if(on&&focus)b.focus();});try{localStorage.setItem('sostu_os',os);}catch(e){}}
+osBtns.forEach(function(b,i){b.onclick=function(){pick(b.dataset.pick);};b.onkeydown=function(e){if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();var n=osBtns[(i+(e.key==='ArrowRight'||e.key==='ArrowDown'?1:osBtns.length-1))%osBtns.length];pick(n.dataset.pick,true);}};});
+var saved=null;try{saved=localStorage.getItem('sostu_os');}catch(e){}
+if(!saved&&/Windows/.test(navigator.userAgent))saved='windows';
+pick(saved&&/^(windows|linux|macos)$/.test(saved)?saved:'linux');
+// step tracking: rail, illustration, prev/next
+var steps=[].slice.call(document.querySelectorAll('.step')),rail=[].slice.call(document.querySelectorAll('.rail a')),cur=0;
+var STAGE={0:1,1:1,2:1,3:3,4:5,5:6,6:6};
+function setCur(i){cur=i;rail.forEach(function(a,j){if(j===i)a.setAttribute('aria-current','step');else a.removeAttribute('aria-current');a.classList.toggle('done',j<i);});
+  var k=[1,1,1,3,5,6,6][i],lit={1:[1],3:[1,3,4],5:[1,3,4,5],6:[1,3,4,6,5]}[k]||[1];
+  document.querySelectorAll('.illu .st-n').forEach(function(g){var on=lit.indexOf(+g.dataset.k)>=0;g.style.opacity=on?1:.28;g.style.filter=on?'drop-shadow(0 0 6px #ffffff40)':'none';});
+  var a=rail[i];if(a&&a.scrollIntoView&&matchMedia('(max-width:760px)').matches)a.scrollIntoView({inline:'center',block:'nearest'});}
+if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)setCur(steps.indexOf(e.target));});},{rootMargin:'-30% 0px -60% 0px'});steps.forEach(function(s){io.observe(s);});}
+setCur(0);
+function go(i){i=Math.max(0,Math.min(steps.length-1,i));steps[i].scrollIntoView({behavior:UI.RM?'auto':'smooth'});setCur(i);var h=steps[i].querySelector('h2');h.tabIndex=-1;h.focus({preventScroll:true});history.replaceState(null,'','#'+steps[i].id);}
+$('prevStep').onclick=function(){go(cur-1);};$('nextStep').onclick=function(){go(cur+1);};
+// guided diagnostic: answers only from the validated guide; never asks for secrets
+var A={
+ cmake:'Install the build tools again (step 3, command 1): <code>sudo apt update &amp;&amp; sudo apt install -y build-essential cmake libssl-dev libsecp256k1-dev git</code>. Then repeat <code>cmake .. -DCMAKE_BUILD_TYPE=Release</code> in <code>build/</code>.',
+ hdr:'A development library is missing. <code>openssl/sha.h</code> → <code>sudo apt install libssl-dev</code>; <code>secp256k1.h</code> → <code>sudo apt install libsecp256k1-dev</code>. Then run <code>cmake</code> and <code>make</code> again.',
+ tag:'Fetch the tags first: <code>git fetch --tags</code>, then <code>git checkout v30000-final.1</code>. Make sure you are inside the <code>sost-core</code> folder.',
+ refused:'The node is not running or not reachable on <code>127.0.0.1:18232</code>. Start it (step 4, command 3) in its own terminal and keep that window open, then start the miner again.',
+ auth:'Node, miner and sost-cli must use the <b>same</b> <code>--rpc-user</code> and the <b>same</b> <code>--rpc-pass-file ~/.sost/rpc.pass</code>. Do not type the password on the command line, and do not send it to anyone.',
+ wallet:'Run <code>./sost-cli newwallet</code> in <code>sost-core/build</code> (step 5), or start the miner from the folder that contains <code>wallet.json</code>.',
+ zero:'Wait until the node has finished syncing, and check that the miner uses the same RPC username and password file as the node.',
+ alloc:'Less than 8 GB of free memory. Close other programs or add a swap file before starting the miner:<pre style="margin:8px 0;padding:8px;background:#000;border:1px solid #222;border-radius:6px;font:12px/1.5 ui-monospace,monospace">sudo fallocate -l 4G /swapfile\nsudo chmod 600 /swapfile\nsudo mkswap /swapfile\nsudo swapon /swapfile</pre>It gives overflow memory while the dataset loads; mining then runs normally.',
+ noblock:'That can be normal. Each attempt has a small probability of finding a block, and you compete with every other miner. Check that the miner shows a non-zero rate and the node is synced. Nothing guarantees a block in a given time.',
+ crash:'No. <code>wallet.json</code> and <code>chain.json</code> are saved on disk. Restart the node and the miner with the same commands. Keep your offline wallet backup up to date.'};
+document.querySelectorAll('#diag input').forEach(function(i){i.onchange=function(){$('ans').innerHTML=A[i.value]+'<div style="margin-top:8px"><a href="../sost-miner-troubleshooter.html" style="color:var(--cyan)">Still stuck? Full troubleshooter →</a></div>';};});
+if(/^#step-\d$/.test(location.hash)){var n=+location.hash.slice(6)-1;setTimeout(function(){setCur(n);},50);}
+})();
+</script>
+</body>
+</html>

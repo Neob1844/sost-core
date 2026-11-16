@@ -26,7 +26,7 @@
 
   var ASSETS = {
     SOST: { symbol:"SOST", name:"Sovereign Stock Token", chain:"sost", kind:"native", decimals:8,
-            logo:"sost-logo.png?v=rs20261112g", logoDropIn:null,
+            logo:"sost-logo.png?v=sl20261113", logoDropIn:null,
             status:{state:"ok", reason:"native SOST HTLC (OUT_HTLC_LOCK) lab-tested"} },
     BTC:  { symbol:"BTC", name:"Bitcoin", chain:"btc", kind:"native", decimals:8,
             logo:null, logoDropIn:LOGO_DIR+"btc.png",

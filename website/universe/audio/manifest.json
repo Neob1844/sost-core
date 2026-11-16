@@ -1,0 +1,1688 @@
+{
+ "version": 2,
+ "generated": "2026-11-03",
+ "credits": "../music-credits.html",
+ "categories": {
+  "orchestral-epic": "Orchestral epic",
+  "space-epic": "Space epic & sci-fi",
+  "dark-mysterious": "Dark & mysterious",
+  "cinematic-ambient": "Cinematic ambient",
+  "triumphant": "Triumphant",
+  "orchestral-heroic": "Orchestral heroic",
+  "electronic-cinematic": "Futuristic cinematic electronic",
+  "dark-cosmic": "Dark & cosmic",
+  "space-ambient": "Space ambient & hypnotic"
+ },
+ "styles": {
+  "epic": {
+   "label": "Epic",
+   "categories": [
+    "orchestral-epic",
+    "orchestral-heroic",
+    "triumphant"
+   ]
+  },
+  "cosmic": {
+   "label": "Cosmic",
+   "categories": [
+    "space-epic"
+   ]
+  },
+  "dark": {
+   "label": "Dark",
+   "categories": [
+    "dark-mysterious",
+    "dark-cosmic"
+   ]
+  },
+  "electronic": {
+   "label": "Electronic",
+   "categories": [
+    "electronic-cinematic"
+   ]
+  },
+  "ambient": {
+   "label": "Ambient",
+   "categories": [
+    "cinematic-ambient",
+    "space-ambient"
+   ]
+  }
+ },
+ "scenes": {
+  "vortex": {
+   "name": "Convergence Vortex (scene #1, the original singularity)",
+   "tracks": [
+    "oe05-black-vortex",
+    "oe01-egmont-overture",
+    "oe03-five-armies"
+   ]
+  },
+  "horizon": {
+   "name": "Chromatic Event Horizon",
+   "tracks": [
+    "sp07-aphelion",
+    "sp01-interloper",
+    "sp03-lightless-dawn"
+   ]
+  },
+  "spiral": {
+   "name": "Golden Spiral",
+   "tracks": [
+    "am03-frozen-star",
+    "am01-dreams-become-real",
+    "am02-floating-cities"
+   ]
+  },
+  "black-hole": {
+   "name": "(planned) Multicolour black hole",
+   "tracks": [
+    "sp03-lightless-dawn",
+    "dk02-echoes-of-time"
+   ]
+  },
+  "torus": {
+   "name": "(planned) Energetic torus",
+   "tracks": [
+    "oe06-clash-defiant",
+    "oe04-noble-race"
+   ]
+  },
+  "particle-convergence": {
+   "name": "(planned) Particle convergence",
+   "tracks": [
+    "oe04-noble-race",
+    "tr02-pathetique-iii"
+   ]
+  },
+  "orbital-geometry": {
+   "name": "(planned) Orbital geometry",
+   "tracks": [
+    "sp02-impact-lento",
+    "sp05-undaunted"
+   ]
+  },
+  "fractal": {
+   "name": "(planned) Fractal",
+   "tracks": [
+    "dk02-echoes-of-time",
+    "dk01-oppressive-gloom"
+   ]
+  },
+  "quantum-field": {
+   "name": "(planned) Quantum field",
+   "tracks": [
+    "sp05-undaunted",
+    "sp04-space-fighter-loop"
+   ]
+  },
+  "math-spiral": {
+   "name": "(planned) Mathematical spiral",
+   "tracks": [
+    "am01-dreams-become-real",
+    "am03-frozen-star"
+   ]
+  },
+  "holographic-cloud": {
+   "name": "(planned) Holographic cloud",
+   "tracks": [
+    "am02-floating-cities",
+    "dk03-lost-frontier"
+   ]
+  },
+  "block-convergence": {
+   "name": "(planned) Block convergence",
+   "tracks": [
+    "oe02-mountain-king",
+    "tr01-heroic-age"
+   ]
+  },
+  "supernova": {
+   "name": "Supernova",
+   "tracks": [
+    "oh04-uprising",
+    "oh05-brahms-symphony-1-finale",
+    "tr02-pathetique-iii"
+   ]
+  },
+  "pulsar": {
+   "name": "Pulsar",
+   "tracks": [
+    "el03-resonance",
+    "el01-machina"
+   ]
+  },
+  "hyperspace-warp": {
+   "name": "Hyperspace Warp",
+   "tracks": [
+    "sp08-escape-velocity",
+    "sp04-space-fighter-loop"
+   ]
+  },
+  "wormhole-tunnel": {
+   "name": "Wormhole Tunnel",
+   "tracks": [
+    "sp08-escape-velocity",
+    "dc01-eyes-in-the-void"
+   ]
+  },
+  "lorenz-attractor": {
+   "name": "Lorenz Attractor",
+   "tracks": [
+    "dc03-descent",
+    "dk02-echoes-of-time"
+   ]
+  },
+  "ledger-rain": {
+   "name": "Ledger Rain",
+   "tracks": [
+    "el02-neon",
+    "el05-uncharted"
+   ]
+  },
+  "aurora-curtains": {
+   "name": "Aurora Curtains",
+   "tracks": [
+    "sa02-aurora",
+    "am03-frozen-star"
+   ]
+  }
+ },
+ "families": {
+  "black-holes": {
+   "name": "Black holes",
+   "tracks": [
+    "sp07-aphelion",
+    "dc01-eyes-in-the-void",
+    "sa01-decoherence",
+    "sp03-lightless-dawn"
+   ]
+  },
+  "galaxies": {
+   "name": "Galaxies",
+   "tracks": [
+    "sp09-titan",
+    "sp06-starfire",
+    "sa02-aurora",
+    "am03-frozen-star"
+   ]
+  },
+  "pulsars": {
+   "name": "Pulsars",
+   "tracks": [
+    "el03-resonance",
+    "el01-machina",
+    "el05-uncharted",
+    "sp04-space-fighter-loop"
+   ]
+  },
+  "quasars": {
+   "name": "Quasars",
+   "tracks": [
+    "sp08-escape-velocity",
+    "sp11-proxima",
+    "oh02-victor-lux",
+    "sp01-interloper"
+   ]
+  },
+  "supernovae": {
+   "name": "Supernovae",
+   "tracks": [
+    "oh04-uprising",
+    "oh05-brahms-symphony-1-finale",
+    "oe01-egmont-overture",
+    "tr02-pathetique-iii"
+   ]
+  },
+  "magnetars": {
+   "name": "Magnetars",
+   "tracks": [
+    "el02-neon",
+    "el04-brave-space-explorers",
+    "dc04-emergent",
+    "sp05-undaunted"
+   ]
+  },
+  "nebulae": {
+   "name": "Nebulae",
+   "tracks": [
+    "sa04-hidden-nebula",
+    "sa03-futuristic-ambient-4",
+    "am02-floating-cities",
+    "am01-dreams-become-real"
+   ]
+  },
+  "cosmic-web": {
+   "name": "Cosmic web",
+   "tracks": [
+    "sp10-initiate-landing",
+    "sa04-hidden-nebula",
+    "sp02-impact-lento",
+    "el05-uncharted"
+   ]
+  },
+  "mathematical-singularities": {
+   "name": "Mathematical singularities",
+   "tracks": [
+    "oe05-black-vortex",
+    "dc03-descent",
+    "dk02-echoes-of-time",
+    "el01-machina"
+   ]
+  },
+  "extreme-events": {
+   "name": "Extreme events",
+   "tracks": [
+    "oh03-juggernaut",
+    "oh01-legionnaire",
+    "dc05-darkness-march",
+    "oe06-clash-defiant"
+   ]
+  }
+ },
+ "moods": {
+  "epic-orchestral": [
+   "oe01-egmont-overture",
+   "oe02-mountain-king",
+   "oe03-five-armies",
+   "oe04-noble-race",
+   "oe05-black-vortex",
+   "oe06-clash-defiant"
+  ],
+  "epic-space": [
+   "sp01-interloper",
+   "sp02-impact-lento",
+   "sp03-lightless-dawn",
+   "sp04-space-fighter-loop",
+   "sp05-undaunted",
+   "sp06-starfire",
+   "sp07-aphelion",
+   "sp08-escape-velocity",
+   "sp09-titan",
+   "sp10-initiate-landing",
+   "sp11-proxima"
+  ],
+  "dark-mysterious": [
+   "dk01-oppressive-gloom",
+   "dk02-echoes-of-time",
+   "dk03-lost-frontier",
+   "dk04-coriolan-overture",
+   "dc01-eyes-in-the-void",
+   "dc02-the-old-ones",
+   "dc03-descent",
+   "dc04-emergent",
+   "dc05-darkness-march"
+  ],
+  "cinematic-ambient": [
+   "am01-dreams-become-real",
+   "am02-floating-cities",
+   "am03-frozen-star",
+   "sa01-decoherence",
+   "sa02-aurora",
+   "sa03-futuristic-ambient-4",
+   "sa04-hidden-nebula"
+  ],
+  "triumphant": [
+   "oh01-legionnaire",
+   "oh02-victor-lux",
+   "oh03-juggernaut",
+   "oh04-uprising",
+   "oh05-brahms-symphony-1-finale",
+   "tr01-heroic-age",
+   "tr02-pathetique-iii"
+  ]
+ },
+ "hosting": "Audio files are NOT in git. Public same-origin directory /media/music/ (stable names <track-id>.<ext>); src paths are relative to this manifest. No service worker caches /media/music/.",
+ "tracks": [
+  {
+   "id": "oe01-egmont-overture",
+   "batch": "4C-3",
+   "category": "orchestral-epic",
+   "style": "epic",
+   "title": "Egmont Overture, Op. 84",
+   "artist": "Ludwig van Beethoven",
+   "performer": "Musopen Symphony (Musopen Kickstarter 2012)",
+   "duration": "9:01",
+   "duration_s": 540.9,
+   "license": "Public domain",
+   "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "credit_short": "Ludwig van Beethoven — Musopen Symphony · public domain (musopen.org)",
+   "source_url": "https://archive.org/details/MusopenCollectionAsFlac",
+   "bytes": 6948104,
+   "sources": [
+    {
+     "src": "../../media/music/oe01-egmont-overture.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 6948104,
+     "sha256": "20d6d97b10253cf0d1ae321013dec01c1024d632635879eda9543f24527f9c69"
+    },
+    {
+     "src": "../../media/music/oe01-egmont-overture.mp3",
+     "type": "audio/mpeg",
+     "bytes": 7573777,
+     "sha256": "04015562d360829f8be67b17ae329cbfb34e030e5c6dd3463ecc843cf70ada77"
+    }
+   ]
+  },
+  {
+   "id": "oe02-mountain-king",
+   "batch": "4C-3",
+   "category": "orchestral-epic",
+   "style": "epic",
+   "title": "In the Hall of the Mountain King (Peer Gynt Suite No. 1, Op. 46)",
+   "artist": "Edvard Grieg",
+   "performer": "Musopen Symphony (Musopen Kickstarter 2012)",
+   "duration": "2:34",
+   "duration_s": 154.1,
+   "license": "Public domain",
+   "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "credit_short": "Edvard Grieg — Musopen Symphony · public domain (musopen.org)",
+   "source_url": "https://archive.org/details/MusopenCollectionAsFlac",
+   "bytes": 1794798,
+   "sources": [
+    {
+     "src": "../../media/music/oe02-mountain-king.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 1794798,
+     "sha256": "239332169415a0c68699c96d737ee5ef79337c3dc9b62cb42f82a6f542f22d8d"
+    },
+    {
+     "src": "../../media/music/oe02-mountain-king.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2158313,
+     "sha256": "c0b2cd6421ae642c40e41d21c21f1a5d8e993e47e1eea88a33f5aabe3e39305a"
+    }
+   ]
+  },
+  {
+   "id": "oe03-five-armies",
+   "batch": "4C-3",
+   "category": "orchestral-epic",
+   "style": "epic",
+   "title": "Five Armies",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "2:36",
+   "duration_s": 155.8,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Five Armies\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875",
+   "bytes": 1962518,
+   "sources": [
+    {
+     "src": "../../media/music/oe03-five-armies.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 1962518,
+     "sha256": "931c878b23062df2dd396db00d9552c7e7f2bee9d9bfd547910bbecaa29f6ce4"
+    },
+    {
+     "src": "../../media/music/oe03-five-armies.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2182772,
+     "sha256": "7ffc23b4f176e756f21968b7231e832a2a351bd2449cd415b8f373b138cd527c"
+    }
+   ]
+  },
+  {
+   "id": "oe04-noble-race",
+   "batch": "4C-3",
+   "category": "orchestral-epic",
+   "style": "epic",
+   "title": "Noble Race",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "5:16",
+   "duration_s": 315.6,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Noble Race\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100888",
+   "bytes": 4212781,
+   "sources": [
+    {
+     "src": "../../media/music/oe04-noble-race.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 4212781,
+     "sha256": "4b43a0ec1c4e2d0d510cb3f7aa1fa625c37f3af4f15321c0bfd13c656fdbc4ba"
+    },
+    {
+     "src": "../../media/music/oe04-noble-race.mp3",
+     "type": "audio/mpeg",
+     "bytes": 4419479,
+     "sha256": "c4d9bb2efca5ad73473a7a6f76dbce578b71ab075dfe8a10d3cf04aedec37f63"
+    }
+   ]
+  },
+  {
+   "id": "oe05-black-vortex",
+   "batch": "4C-3",
+   "category": "orchestral-epic",
+   "style": "epic",
+   "title": "Black Vortex",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "2:50",
+   "duration_s": 169.7,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Black Vortex\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300037",
+   "bytes": 2155858,
+   "sources": [
+    {
+     "src": "../../media/music/oe05-black-vortex.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2155858,
+     "sha256": "ba215d63c13a96a30e6126d45c6d16b45d7070cc37b59792962ccc3c06a5e701"
+    },
+    {
+     "src": "../../media/music/oe05-black-vortex.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2376967,
+     "sha256": "5e6fa8b1ff9d81e011c52d67e32c1e6423923d8ca7693d0b86b5562318faabd1"
+    }
+   ]
+  },
+  {
+   "id": "oe06-clash-defiant",
+   "batch": "4C-3",
+   "category": "orchestral-epic",
+   "style": "epic",
+   "title": "Clash Defiant",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "6:16",
+   "duration_s": 375.6,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Clash Defiant\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600003",
+   "bytes": 4694380,
+   "sources": [
+    {
+     "src": "../../media/music/oe06-clash-defiant.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 4694380,
+     "sha256": "35441000c5ad8b83d8fe4ebb90c47512572019cf6668a2633709ef6bd279caa2"
+    },
+    {
+     "src": "../../media/music/oe06-clash-defiant.mp3",
+     "type": "audio/mpeg",
+     "bytes": 5259162,
+     "sha256": "9fb53e3c13b333b60eead9e54a0fa0fb3906e735d0e1a4e5c972af1081123c2e"
+    }
+   ]
+  },
+  {
+   "id": "oh01-legionnaire",
+   "batch": "4I",
+   "category": "orchestral-heroic",
+   "style": "epic",
+   "title": "Legionnaire",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "3:07",
+   "duration_s": 187.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Legionnaire\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/legionnaire-2022/",
+   "bytes": 2220060,
+   "sources": [
+    {
+     "src": "../../media/music/oh01-legionnaire.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2220060,
+     "sha256": "d9eebf4c3e0569c52f1c0f275abac85c7ddabe689a9d7cdb66c2205d90965d92"
+    },
+    {
+     "src": "../../media/music/oh01-legionnaire.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2620150,
+     "sha256": "7e2b4769ae74fec415adf371d61dc40cc4adc8b46a2f1f0afb350261cfef9107"
+    }
+   ]
+  },
+  {
+   "id": "oh02-victor-lux",
+   "batch": "4I",
+   "category": "orchestral-heroic",
+   "style": "epic",
+   "title": "Victor Lux",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "3:22",
+   "duration_s": 202.3,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Victor Lux\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/victor-lux/",
+   "bytes": 2435220,
+   "sources": [
+    {
+     "src": "../../media/music/oh02-victor-lux.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2435220,
+     "sha256": "9eb984173796ae87b5c425b08a797a9614ac24f1119d1da03fd5e57afb4d73c0"
+    },
+    {
+     "src": "../../media/music/oh02-victor-lux.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2833361,
+     "sha256": "dee5d1c80bdcc58cf926b69f99cc12e882558b58bbf51477d4beb8116d4c7a7a"
+    }
+   ]
+  },
+  {
+   "id": "oh03-juggernaut",
+   "batch": "4I",
+   "category": "orchestral-heroic",
+   "style": "epic",
+   "title": "Juggernaut",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "3:42",
+   "duration_s": 222.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Juggernaut\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/juggernaut/",
+   "bytes": 2674987,
+   "sources": [
+    {
+     "src": "../../media/music/oh03-juggernaut.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2674987,
+     "sha256": "837e13c61151d44b56210d09f22d625299e3b20bb60844c6ea346c30ea29b230"
+    },
+    {
+     "src": "../../media/music/oh03-juggernaut.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3109475,
+     "sha256": "f38dcc9642fe7225915e702362f55b8bf03a40e93e6ee9d9a4f16e37f95be93d"
+    }
+   ]
+  },
+  {
+   "id": "oh04-uprising",
+   "batch": "4I",
+   "category": "orchestral-heroic",
+   "style": "epic",
+   "title": "Uprising",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "3:26",
+   "duration_s": 205.7,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Uprising\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/uprising/",
+   "bytes": 2466629,
+   "sources": [
+    {
+     "src": "../../media/music/oh04-uprising.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2466629,
+     "sha256": "c1eeb237b113efbfcfc80f0914535c1a79c55c6a8865ab5a6344ff03a0407621"
+    },
+    {
+     "src": "../../media/music/oh04-uprising.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2880170,
+     "sha256": "f5dd3f6cc4116d7214282692c0f69399637f814a19489dec456622a13126fc54"
+    }
+   ]
+  },
+  {
+   "id": "oh05-brahms-symphony-1-finale",
+   "batch": "4I",
+   "category": "orchestral-heroic",
+   "style": "epic",
+   "title": "Symphony No. 1 in C minor, Op. 68 — IV. Adagio – Allegro non troppo, ma con brio",
+   "artist": "Johannes Brahms",
+   "performer": "Musopen Symphony (Musopen Kickstarter 2012)",
+   "duration": "16:57",
+   "duration_s": 1016.9,
+   "license": "Public domain",
+   "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "credit_short": "Johannes Brahms — Musopen Symphony · public domain (musopen.org)",
+   "source_url": "https://archive.org/details/MusopenCollectionAsFlac",
+   "bytes": 13992791,
+   "sources": [
+    {
+     "src": "../../media/music/oh05-brahms-symphony-1-finale.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 13992791,
+     "sha256": "c9e4362d0b9440e5d7ddc839346828a5471e44adeddf86b2b47ed2fdfeea3b0d"
+    },
+    {
+     "src": "../../media/music/oh05-brahms-symphony-1-finale.mp3",
+     "type": "audio/mpeg",
+     "bytes": 14237513,
+     "sha256": "a9f5ba26a93caa07d7de8a37f280a659f2a6a432134be6f94e6011ea512d0ed2"
+    }
+   ]
+  },
+  {
+   "id": "tr01-heroic-age",
+   "batch": "4C-3",
+   "category": "triumphant",
+   "style": "epic",
+   "title": "Heroic Age",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "1:38",
+   "duration_s": 97.5,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Heroic Age\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100848",
+   "bytes": 1193843,
+   "sources": [
+    {
+     "src": "../../media/music/tr01-heroic-age.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 1193843,
+     "sha256": "ca68b9c6e145e031672d594ac1254ab827c92ca220c0e9de43183237caced90d"
+    },
+    {
+     "src": "../../media/music/tr01-heroic-age.mp3",
+     "type": "audio/mpeg",
+     "bytes": 1365399,
+     "sha256": "50456f455d719affc481b002052bd17c2b65c896e050b75dede145b80a363e5d"
+    }
+   ]
+  },
+  {
+   "id": "tr02-pathetique-iii",
+   "batch": "4C-3",
+   "category": "triumphant",
+   "style": "epic",
+   "title": "Symphony No. 6 \"Pathétique\", Op. 74 — III. Allegro molto vivace",
+   "artist": "Pyotr Ilyich Tchaikovsky",
+   "performer": "Musopen Symphony (Musopen Kickstarter 2012)",
+   "duration": "9:53",
+   "duration_s": 593.1,
+   "license": "Public domain",
+   "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "credit_short": "Pyotr Ilyich Tchaikovsky — Musopen Symphony · public domain (musopen.org)",
+   "source_url": "https://archive.org/details/MusopenCollectionAsFlac",
+   "bytes": 7875041,
+   "sources": [
+    {
+     "src": "../../media/music/tr02-pathetique-iii.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 7875041,
+     "sha256": "770d803ebb422b1d7245decdfa0b4d70103067f5cd511a006eb28dfca9adbe9f"
+    },
+    {
+     "src": "../../media/music/tr02-pathetique-iii.mp3",
+     "type": "audio/mpeg",
+     "bytes": 8303790,
+     "sha256": "12b6a85a10dab5b6af7a67a4d275d40f8c2d1ed6ef313fb32acf78d8622ed459"
+    }
+   ]
+  },
+  {
+   "id": "sp01-interloper",
+   "batch": "4C-3",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Interloper",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "4:23",
+   "duration_s": 262.7,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Interloper\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100401",
+   "bytes": 3494323,
+   "sources": [
+    {
+     "src": "../../media/music/sp01-interloper.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3494323,
+     "sha256": "dff95844d49ffa3d1695a433e3d85b5813cd146deeca2622f9220266fd3a2862"
+    },
+    {
+     "src": "../../media/music/sp01-interloper.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3678177,
+     "sha256": "ed26b6b9480bc2c3aed242ab698f3ed71d46cc1df70379b3eee83f5433a15984"
+    }
+   ]
+  },
+  {
+   "id": "sp02-impact-lento",
+   "batch": "4C-3",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Impact Lento",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "3:31",
+   "duration_s": 210.6,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Impact Lento\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100619",
+   "bytes": 2842297,
+   "sources": [
+    {
+     "src": "../../media/music/sp02-impact-lento.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2842297,
+     "sha256": "f5759dfe44c4cd541936700b6f1e35c160fef87b6157bb3fc12eabed5000ff49"
+    },
+    {
+     "src": "../../media/music/sp02-impact-lento.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2948944,
+     "sha256": "028d2dfeb77bb7cf66f06aae812ba90e336ffa8f36e0d1ea0bcc1dd1f9639f25"
+    }
+   ]
+  },
+  {
+   "id": "sp03-lightless-dawn",
+   "batch": "4C-3",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Lightless Dawn",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "6:20",
+   "duration_s": 379.8,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Lightless Dawn\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100655",
+   "bytes": 5016619,
+   "sources": [
+    {
+     "src": "../../media/music/sp03-lightless-dawn.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 5016619,
+     "sha256": "3f4cc57d1267968dfafa4271faa5e8a0ec4018458b62d63ea926c90fa237387f"
+    },
+    {
+     "src": "../../media/music/sp03-lightless-dawn.mp3",
+     "type": "audio/mpeg",
+     "bytes": 5318775,
+     "sha256": "038d5e96af1b3f74e60196b12ea23c47c96e7e46c02bb46e6c04a25459fcd521"
+    }
+   ]
+  },
+  {
+   "id": "sp04-space-fighter-loop",
+   "batch": "4C-3",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Space Fighter Loop",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "1:41",
+   "duration_s": 101.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Space Fighter Loop\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100672",
+   "bytes": 1508083,
+   "sources": [
+    {
+     "src": "../../media/music/sp04-space-fighter-loop.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 1508083,
+     "sha256": "386036703a337c042551b596bfea50efd1cb9da0c045771c436a8e092dfcb552"
+    },
+    {
+     "src": "../../media/music/sp04-space-fighter-loop.mp3",
+     "type": "audio/mpeg",
+     "bytes": 1416607,
+     "sha256": "fa5dd92b7cdca7be8310a9554838bbde37aeaa1868668c360b05ca237c0e5b04"
+    }
+   ]
+  },
+  {
+   "id": "sp05-undaunted",
+   "batch": "4C-3",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Undaunted",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "3:32",
+   "duration_s": 212.5,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Undaunted\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400025",
+   "bytes": 2611249,
+   "sources": [
+    {
+     "src": "../../media/music/sp05-undaunted.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2611249,
+     "sha256": "c5ee294c1365e4cefb07254b79dc153669f392d6a920d0bb891daf8edf615ae5"
+    },
+    {
+     "src": "../../media/music/sp05-undaunted.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2976370,
+     "sha256": "a5c61a677b8b215aaf58547bd41c05d35659e03d1e3c536a5d24f5cfe165e66d"
+    }
+   ]
+  },
+  {
+   "id": "sp06-starfire",
+   "batch": "4I",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Starfire",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "5:41",
+   "duration_s": 341.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Starfire\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/starfire/",
+   "bytes": 4159288,
+   "sources": [
+    {
+     "src": "../../media/music/sp06-starfire.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 4159288,
+     "sha256": "0a3ca713509a89dc23ed4b7ee4a6db1076122c1d8e892dc24367ee5e81be9f47"
+    },
+    {
+     "src": "../../media/music/sp06-starfire.mp3",
+     "type": "audio/mpeg",
+     "bytes": 4775301,
+     "sha256": "d0b4e6b620d5c7edc3c7e3347f69f549d8fbc9d4b694c2da649e9d682d9fcf3f"
+    }
+   ]
+  },
+  {
+   "id": "sp07-aphelion",
+   "batch": "4I",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Aphelion",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "7:02",
+   "duration_s": 422.3,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Aphelion\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/aphelion/",
+   "bytes": 5183611,
+   "sources": [
+    {
+     "src": "../../media/music/sp07-aphelion.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 5183611,
+     "sha256": "7ad57254113181d32407a0846ca74b0bdce01f90e2a0ab10d93b6333c65a195f"
+    },
+    {
+     "src": "../../media/music/sp07-aphelion.mp3",
+     "type": "audio/mpeg",
+     "bytes": 5912673,
+     "sha256": "780b441485686024c17f190d436f1ff9de78244e123d49d195c8d44310bf0969"
+    }
+   ]
+  },
+  {
+   "id": "sp08-escape-velocity",
+   "batch": "4I",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Escape Velocity",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "4:31",
+   "duration_s": 270.6,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Escape Velocity\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/escape-velocity/",
+   "bytes": 3377359,
+   "sources": [
+    {
+     "src": "../../media/music/sp08-escape-velocity.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3377359,
+     "sha256": "39a723d6960f0f12ecbcf37c6236d5222906689b8d6a9fbc36716305d40b47c8"
+    },
+    {
+     "src": "../../media/music/sp08-escape-velocity.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3788611,
+     "sha256": "e66439b949e6c338211d2e6921b980bb7e22643318d44f7ab51f9dbd1f2630f3"
+    }
+   ]
+  },
+  {
+   "id": "sp09-titan",
+   "batch": "4I",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Titan",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "2:56",
+   "duration_s": 175.8,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Titan\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/titan/",
+   "bytes": 2103424,
+   "sources": [
+    {
+     "src": "../../media/music/sp09-titan.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2103424,
+     "sha256": "1a221fa840af6c66b02fb87c53920d581ccb60e584c7d2a63c1bf5530e823c11"
+    },
+    {
+     "src": "../../media/music/sp09-titan.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2461790,
+     "sha256": "9ad43628783e5eaecde06cf83785f66a4b1a6eb107b5e628e47327b037296f89"
+    }
+   ]
+  },
+  {
+   "id": "sp10-initiate-landing",
+   "batch": "4I",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Initiate Landing",
+   "artist": "Alexandr Zhelanov",
+   "performer": "Alexandr Zhelanov",
+   "duration": "3:19",
+   "duration_s": 199.2,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Initiate Landing\" by Alexandr Zhelanov — CC BY 4.0 · OpenGameArt.org",
+   "source_url": "https://opengameart.org/content/initiate-landing",
+   "bytes": 2530021,
+   "sources": [
+    {
+     "src": "../../media/music/sp10-initiate-landing.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2530021,
+     "sha256": "bc1fc34ae759515ac5dfe7d13c642522f14953827b3d363c0384e9699e635d7a"
+    },
+    {
+     "src": "../../media/music/sp10-initiate-landing.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2792780,
+     "sha256": "66171d73cacca5d90f86958d9e795f1d38d69bd2ea333de12a3a797b95340f92"
+    }
+   ]
+  },
+  {
+   "id": "sp11-proxima",
+   "batch": "4I",
+   "category": "space-epic",
+   "style": "cosmic",
+   "title": "Proxima",
+   "artist": "Alexandr Zhelanov",
+   "performer": "Alexandr Zhelanov",
+   "duration": "3:09",
+   "duration_s": 189.0,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Proxima\" by Alexandr Zhelanov — CC BY 4.0 · OpenGameArt.org",
+   "source_url": "https://opengameart.org/content/proxima",
+   "bytes": 2563407,
+   "sources": [
+    {
+     "src": "../../media/music/sp11-proxima.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2563407,
+     "sha256": "9e717c8543247c4f28ab9e14ab4c2fc0337110d7f8e70f4cdefb7c9485d32779"
+    },
+    {
+     "src": "../../media/music/sp11-proxima.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2647217,
+     "sha256": "3a2afe6143d7d721fe359ff1cb243711cec31e792b15d865bb85bf1b651e1973"
+    }
+   ]
+  },
+  {
+   "id": "el01-machina",
+   "batch": "4I",
+   "category": "electronic-cinematic",
+   "style": "electronic",
+   "title": "Machina",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "4:51",
+   "duration_s": 290.9,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Machina\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/machina/",
+   "bytes": 3806631,
+   "sources": [
+    {
+     "src": "../../media/music/el01-machina.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3806631,
+     "sha256": "137e0c06bfba390ab2b35f3aeb3aa63234950fd1485bbe8073d1ad93ba7ddb6d"
+    },
+    {
+     "src": "../../media/music/el01-machina.mp3",
+     "type": "audio/mpeg",
+     "bytes": 4073495,
+     "sha256": "77885581fd3ef5c66c67d4f81d174478ce44b47f246e44b446d52afb7513a839"
+    }
+   ]
+  },
+  {
+   "id": "el02-neon",
+   "batch": "4I",
+   "category": "electronic-cinematic",
+   "style": "electronic",
+   "title": "Neon",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "4:19",
+   "duration_s": 259.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Neon\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/neon/",
+   "bytes": 3431813,
+   "sources": [
+    {
+     "src": "../../media/music/el02-neon.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3431813,
+     "sha256": "f71fa1969bd5b371b5035e9fbc7c7be3aac0fbf3431e75e5bdf26ee9a7c885ca"
+    },
+    {
+     "src": "../../media/music/el02-neon.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3628052,
+     "sha256": "a64f9b762e8445d4be256ec7d3b19ab2fcb4b2ad673f5547fc0635fabeffcf99"
+    }
+   ]
+  },
+  {
+   "id": "el03-resonance",
+   "batch": "4I",
+   "category": "electronic-cinematic",
+   "style": "electronic",
+   "title": "Resonance",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "4:26",
+   "duration_s": 266.0,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Resonance\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/resonance/",
+   "bytes": 3363707,
+   "sources": [
+    {
+     "src": "../../media/music/el03-resonance.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3363707,
+     "sha256": "030b9d8debaa1e2a99f3ebe1944e2e3b1d6edb0410150e29db07743c563fa110"
+    },
+    {
+     "src": "../../media/music/el03-resonance.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3724971,
+     "sha256": "a80ee7fee4f6ead5d55b6a0e2add99bc64e48c145c16254751c7bdc4746b2be0"
+    }
+   ]
+  },
+  {
+   "id": "el04-brave-space-explorers",
+   "batch": "4I",
+   "category": "electronic-cinematic",
+   "style": "electronic",
+   "title": "Brave Space Explorers",
+   "artist": "Alexandr Zhelanov",
+   "performer": "Alexandr Zhelanov",
+   "duration": "3:36",
+   "duration_s": 215.9,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Brave Space Explorers\" by Alexandr Zhelanov — CC BY 4.0 · OpenGameArt.org",
+   "source_url": "https://opengameart.org/content/brave-space-explorers",
+   "bytes": 2749506,
+   "sources": [
+    {
+     "src": "../../media/music/el04-brave-space-explorers.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2749506,
+     "sha256": "4f9012fd4bbb73ca6f517687f23ed06c4e1c44b6e34b8501548892e4f18d9ab0"
+    },
+    {
+     "src": "../../media/music/el04-brave-space-explorers.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3025745,
+     "sha256": "ff07fd6aa59c1caa87295fa90abdf47f3839d4be2c1cb706b8130d1e88dfc699"
+    }
+   ]
+  },
+  {
+   "id": "el05-uncharted",
+   "batch": "4I",
+   "category": "electronic-cinematic",
+   "style": "electronic",
+   "title": "Uncharted",
+   "artist": "Type 42",
+   "performer": "Type 42",
+   "duration": "3:32",
+   "duration_s": 212.3,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Uncharted\" by Type 42 — CC BY 4.0 · OpenGameArt.org",
+   "source_url": "https://opengameart.org/content/distant-sci-fielectronic-music-pack",
+   "bytes": 3130918,
+   "sources": [
+    {
+     "src": "../../media/music/el05-uncharted.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3130918,
+     "sha256": "142bd631fe62dad3de270d5f78583f2ea9e305cba8d56222de9bda9857fb2709"
+    },
+    {
+     "src": "../../media/music/el05-uncharted.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2974148,
+     "sha256": "b8f5138be30c5acfe8abaacb2eb9b8dbdcbeff5a6c774cfc186da3e0369fe919"
+    }
+   ]
+  },
+  {
+   "id": "dk01-oppressive-gloom",
+   "batch": "4C-3",
+   "category": "dark-mysterious",
+   "style": "dark",
+   "title": "Oppressive Gloom",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "3:19",
+   "duration_s": 199.4,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Oppressive Gloom\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100885",
+   "bytes": 2462267,
+   "sources": [
+    {
+     "src": "../../media/music/dk01-oppressive-gloom.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2462267,
+     "sha256": "dbca6e6f3710b151e7400a615b49e5377dc85ae44f78b41c686a8d5ef2faf9e1"
+    },
+    {
+     "src": "../../media/music/dk01-oppressive-gloom.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2792423,
+     "sha256": "b2f8224019a5dcdf1df710ca47fa62ce63e13387ac922f9b1df2adab23bc8038"
+    }
+   ]
+  },
+  {
+   "id": "dk02-echoes-of-time",
+   "batch": "4C-3",
+   "category": "dark-mysterious",
+   "style": "dark",
+   "title": "Echoes of Time",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "4:45",
+   "duration_s": 285.2,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Echoes of Time\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300029",
+   "bytes": 4333522,
+   "sources": [
+    {
+     "src": "../../media/music/dk02-echoes-of-time.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 4333522,
+     "sha256": "1849e64e2da323ffff4386b16bcc78760d8f18de87350c492afd41c532d84d08"
+    },
+    {
+     "src": "../../media/music/dk02-echoes-of-time.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3993061,
+     "sha256": "8abd5c761b1e0003dd21d7707e33c926ea6b60b264030ee7209e2262fd806f00"
+    }
+   ]
+  },
+  {
+   "id": "dk03-lost-frontier",
+   "batch": "4C-3",
+   "category": "dark-mysterious",
+   "style": "dark",
+   "title": "Lost Frontier",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "4:25",
+   "duration_s": 264.9,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Lost Frontier\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300039",
+   "bytes": 3703880,
+   "sources": [
+    {
+     "src": "../../media/music/dk03-lost-frontier.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3703880,
+     "sha256": "113407398910f19c0db4cdb3929e2307dbdc7b8c6fc6270355cd6689308327d4"
+    },
+    {
+     "src": "../../media/music/dk03-lost-frontier.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3709997,
+     "sha256": "1d477bb1785a98e20388e5bba5eadcd3c9dc127b86a81e6e5c9371b44343d590"
+    }
+   ]
+  },
+  {
+   "id": "dk04-coriolan-overture",
+   "batch": "4C-3",
+   "category": "dark-mysterious",
+   "style": "dark",
+   "title": "Coriolan Overture, Op. 62",
+   "artist": "Ludwig van Beethoven",
+   "performer": "Musopen Symphony (Musopen Kickstarter 2012)",
+   "duration": "8:19",
+   "duration_s": 498.7,
+   "license": "Public domain",
+   "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "credit_short": "Ludwig van Beethoven — Musopen Symphony · public domain (musopen.org)",
+   "source_url": "https://archive.org/details/MusopenCollectionAsFlac",
+   "bytes": 6320650,
+   "sources": [
+    {
+     "src": "../../media/music/dk04-coriolan-overture.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 6320650,
+     "sha256": "ee595464aa0018295a7ba11b62f2e74bfa4e2f113a0881097d81e38bbe3dd217"
+    },
+    {
+     "src": "../../media/music/dk04-coriolan-overture.mp3",
+     "type": "audio/mpeg",
+     "bytes": 6983151,
+     "sha256": "17cb7212fe40ac51562474bafe0346e8ff7d18ef1d86fbf9258c56564eedb64f"
+    }
+   ]
+  },
+  {
+   "id": "dc01-eyes-in-the-void",
+   "batch": "4I",
+   "category": "dark-cosmic",
+   "style": "dark",
+   "title": "Eyes In The Void",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "4:24",
+   "duration_s": 264.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Eyes In The Void\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/eyes-in-the-void/",
+   "bytes": 3019024,
+   "sources": [
+    {
+     "src": "../../media/music/dc01-eyes-in-the-void.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3019024,
+     "sha256": "cdfe09e9b5e14d905cf909566348dea38a88ec590e52936396cfa0159bfe3950"
+    },
+    {
+     "src": "../../media/music/dc01-eyes-in-the-void.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3697915,
+     "sha256": "5932f854c84f90ac8a5db69945ec2e85c6f76122df22fd4b1facd771d68e48e6"
+    }
+   ]
+  },
+  {
+   "id": "dc02-the-old-ones",
+   "batch": "4I",
+   "category": "dark-cosmic",
+   "style": "dark",
+   "title": "The Old Ones",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "5:02",
+   "duration_s": 302.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"The Old Ones\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/the-old-ones/",
+   "bytes": 3653503,
+   "sources": [
+    {
+     "src": "../../media/music/dc02-the-old-ones.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3653503,
+     "sha256": "b31ccec4db1304ed5a3c522fcf9ed24e32bd432c6506ee4665267eb2fa5dd496"
+    },
+    {
+     "src": "../../media/music/dc02-the-old-ones.mp3",
+     "type": "audio/mpeg",
+     "bytes": 4230025,
+     "sha256": "ae2b7d5db858519b4fe948d675f80dbd89f6c1f5f43bb9930095f8cbcbee877a"
+    }
+   ]
+  },
+  {
+   "id": "dc03-descent",
+   "batch": "4I",
+   "category": "dark-cosmic",
+   "style": "dark",
+   "title": "Descent",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "2:18",
+   "duration_s": 137.7,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Descent\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/descent/",
+   "bytes": 1827450,
+   "sources": [
+    {
+     "src": "../../media/music/dc03-descent.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 1827450,
+     "sha256": "02c21a415710b27fc8a5579a169dbe9a672c8ed53c0a7d9fc55bcb86a3524950"
+    },
+    {
+     "src": "../../media/music/dc03-descent.mp3",
+     "type": "audio/mpeg",
+     "bytes": 1928946,
+     "sha256": "31c83953a9066d8aa9da3e4ada96c56fafaf09216f8996a14555527f8d59abe8"
+    }
+   ]
+  },
+  {
+   "id": "dc04-emergent",
+   "batch": "4I",
+   "category": "dark-cosmic",
+   "style": "dark",
+   "title": "Emergent",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "3:51",
+   "duration_s": 231.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Emergent\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/emergent/",
+   "bytes": 2851783,
+   "sources": [
+    {
+     "src": "../../media/music/dc04-emergent.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2851783,
+     "sha256": "2fd500c0d13f2827d00271d936dc0edb4694d78e60a09c98ecf260758702b419"
+    },
+    {
+     "src": "../../media/music/dc04-emergent.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3236376,
+     "sha256": "c532a54de5598ccdc3752ba1d5f6af776d562168a3b27594999eba0aeac2f530"
+    }
+   ]
+  },
+  {
+   "id": "dc05-darkness-march",
+   "batch": "4I",
+   "category": "dark-cosmic",
+   "style": "dark",
+   "title": "Darkness March",
+   "artist": "Alexandr Zhelanov",
+   "performer": "Alexandr Zhelanov",
+   "duration": "2:29",
+   "duration_s": 148.8,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Darkness March\" by Alexandr Zhelanov — CC BY 4.0 · OpenGameArt.org",
+   "source_url": "https://opengameart.org/content/darkness-march",
+   "bytes": 1802657,
+   "sources": [
+    {
+     "src": "../../media/music/dc05-darkness-march.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 1802657,
+     "sha256": "c37ec2d9dc687d1cee78e14c114e1af7ecb74f22fac89d22d97eacac6dc146f3"
+    },
+    {
+     "src": "../../media/music/dc05-darkness-march.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2085487,
+     "sha256": "e8aed9c038511cd53051db95086bc35958b762ca18ed6e3f05500e70406387c7"
+    }
+   ]
+  },
+  {
+   "id": "am01-dreams-become-real",
+   "batch": "4C-3",
+   "category": "cinematic-ambient",
+   "style": "ambient",
+   "title": "Dreams Become Real",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "6:50",
+   "duration_s": 410.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Dreams Become Real\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500027",
+   "bytes": 6099023,
+   "sources": [
+    {
+     "src": "../../media/music/am01-dreams-become-real.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 6099023,
+     "sha256": "3e3f20b2dc349bc23c257f563093f5ff4deb3896d748213fd4acf0fed471b7aa"
+    },
+    {
+     "src": "../../media/music/am01-dreams-become-real.mp3",
+     "type": "audio/mpeg",
+     "bytes": 5741910,
+     "sha256": "a8295946aedc43937f0748a5a89da40b5da2d68bf9fa35b74a608719a8ba0e73"
+    }
+   ]
+  },
+  {
+   "id": "am02-floating-cities",
+   "batch": "4C-3",
+   "category": "cinematic-ambient",
+   "style": "ambient",
+   "title": "Floating Cities",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "3:04",
+   "duration_s": 184.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Floating Cities\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600018",
+   "bytes": 2711904,
+   "sources": [
+    {
+     "src": "../../media/music/am02-floating-cities.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2711904,
+     "sha256": "95a1551c1007968a83dcebcac340e8b713fd0abdbca32f397350441118a9c03f"
+    },
+    {
+     "src": "../../media/music/am02-floating-cities.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2577747,
+     "sha256": "2b697f82bf52708a44f7e28810400aacd0ca1e8367a09af2ff43d935c5516759"
+    }
+   ]
+  },
+  {
+   "id": "am03-frozen-star",
+   "batch": "4C-3",
+   "category": "cinematic-ambient",
+   "style": "ambient",
+   "title": "Frozen Star",
+   "artist": "Kevin MacLeod",
+   "performer": "Kevin MacLeod",
+   "duration": "3:41",
+   "duration_s": 221.3,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Frozen Star\" Kevin MacLeod (incompetech.com)",
+   "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100356",
+   "bytes": 3242278,
+   "sources": [
+    {
+     "src": "../../media/music/am03-frozen-star.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3242278,
+     "sha256": "dbc83dde86e29c227bcd0eeba67e5b5f86814dd61c8537a76655e7107aa078a0"
+    },
+    {
+     "src": "../../media/music/am03-frozen-star.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3099252,
+     "sha256": "00939b59f1d5038bcaa64c552407900d3b1582fa9dd554c793351203b65da6b0"
+    }
+   ]
+  },
+  {
+   "id": "sa01-decoherence",
+   "batch": "4I",
+   "category": "space-ambient",
+   "style": "ambient",
+   "title": "Decoherence",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "10:18",
+   "duration_s": 618.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Decoherence\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/decoherence/",
+   "bytes": 7835172,
+   "sources": [
+    {
+     "src": "../../media/music/sa01-decoherence.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 7835172,
+     "sha256": "38e35fb2932f1385cd61dd56d7adb09907d42a2a40cb8d73ebb51fdf78af076f"
+    },
+    {
+     "src": "../../media/music/sa01-decoherence.mp3",
+     "type": "audio/mpeg",
+     "bytes": 8654436,
+     "sha256": "572c63b7135240a66cc3b82dabb68986ae2f30663ca973b1cf2882eb42e425e6"
+    }
+   ]
+  },
+  {
+   "id": "sa02-aurora",
+   "batch": "4I",
+   "category": "space-ambient",
+   "style": "ambient",
+   "title": "Aurora",
+   "artist": "Scott Buckley",
+   "performer": "Scott Buckley",
+   "duration": "8:19",
+   "duration_s": 498.8,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Aurora\" by Scott Buckley — CC BY 4.0 · scottbuckley.com.au",
+   "source_url": "https://www.scottbuckley.com.au/library/aurora/",
+   "bytes": 6370669,
+   "sources": [
+    {
+     "src": "../../media/music/sa02-aurora.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 6370669,
+     "sha256": "eca41880e69bd60ed79b6cb4a5b98354b878f2b1e9b3935215b20b2b08fd7805"
+    },
+    {
+     "src": "../../media/music/sa02-aurora.mp3",
+     "type": "audio/mpeg",
+     "bytes": 6983848,
+     "sha256": "1c0c957010f09e682fbfc11022b4482c82e283011cfec8795f049769b2359ec8"
+    }
+   ]
+  },
+  {
+   "id": "sa03-futuristic-ambient-4",
+   "batch": "4I",
+   "category": "space-ambient",
+   "style": "ambient",
+   "title": "Futuristic Ambient 4",
+   "artist": "Alexandr Zhelanov",
+   "performer": "Alexandr Zhelanov",
+   "duration": "2:45",
+   "duration_s": 164.6,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Futuristic Ambient 4\" by Alexandr Zhelanov — CC BY 4.0 · OpenGameArt.org",
+   "source_url": "https://opengameart.org/content/futuristic-ambient",
+   "bytes": 2039556,
+   "sources": [
+    {
+     "src": "../../media/music/sa03-futuristic-ambient-4.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 2039556,
+     "sha256": "a793d1b14442d831015a2719e6c678eaa89f1f28e935f050307fee70d599262b"
+    },
+    {
+     "src": "../../media/music/sa03-futuristic-ambient-4.mp3",
+     "type": "audio/mpeg",
+     "bytes": 2305287,
+     "sha256": "4ff0ddf909081760ba9dc881494965e2723648d7db09c7c49256253491514748"
+    }
+   ]
+  },
+  {
+   "id": "sa04-hidden-nebula",
+   "batch": "4I",
+   "category": "space-ambient",
+   "style": "ambient",
+   "title": "Hidden Nebula",
+   "artist": "Type 42",
+   "performer": "Type 42",
+   "duration": "4:21",
+   "duration_s": 261.1,
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "credit_short": "\"Hidden Nebula\" by Type 42 — CC BY 4.0 · OpenGameArt.org",
+   "source_url": "https://opengameart.org/content/distant-sci-fielectronic-music-pack",
+   "bytes": 3841212,
+   "sources": [
+    {
+     "src": "../../media/music/sa04-hidden-nebula.webm",
+     "type": "audio/webm; codecs=\"opus\"",
+     "bytes": 3841212,
+     "sha256": "87c593ecadcf3fcd2ef99679ca5050c91fb48b7ef8e7d2fbfdfae3c0d857924a"
+    },
+    {
+     "src": "../../media/music/sa04-hidden-nebula.mp3",
+     "type": "audio/mpeg",
+     "bytes": 3657306,
+     "sha256": "269d134f8b9d952f570c80e89a04dd509154939051f2e49c648e7cceabfd199b"
+    }
+   ]
+  }
+ ]
+}

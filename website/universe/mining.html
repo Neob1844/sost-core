@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mining — SOST (Convergence Universe preview)</title>
+<meta name="description" content="Mine SOST with ConvergenceX on an ordinary CPU: memory-hard proof of work, the verified step-by-step commands and every mining page.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="assets/brand/sost-eye.ico?v=sl20261113" sizes="16x16 32x32 48x48 64x64">
+<link rel="apple-touch-icon" href="assets/brand/sost-eye-180.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<link rel="preload" href="../fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="core/u-display.css">
+<link rel="stylesheet" href="core/u-section.css">
+<link rel="stylesheet" href="core/u-audio.css?v=gm-20261104">
+<style>.sx{--acc:#facc15;--acc2:#a3e635}.step p{margin:0 0 8px;color:var(--tx-2);font-size:13.5px;line-height:1.55}</style>
+<link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
+</head>
+<body class="sx">
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<header class="sx-hero" aria-labelledby="h1">
+  <canvas id="cv" aria-hidden="true"></canvas>
+  <div class="sx-copy">
+    <p class="eyebrow">SOST · Mining</p>
+    <h1 id="h1">Mine with your CPU. <em>Memory is the work.</em></h1>
+    <p class="lede">ConvergenceX is memory-hard proof of work: the miner builds and holds a large dataset and scratchpad, and walks through it in sequential rounds. Any ordinary computer with enough RAM can mine solo; any node verifies the result quickly.</p>
+    <div class="acts"><a class="btn primary" href="#steps">Start mining: the commands</a><a class="btn" href="proto-d-launchpad.html">Mining Launchpad</a><a class="btn" href="../sost-miner-troubleshooter.html">Troubleshooter</a></div>
+  </div>
+  <p class="sx-legend">Scratchpad · memory cells lit by sequential, data-dependent reads (an illustration of memory-hard work, not live mining data)</p>
+</header>
+<main id="main">
+<section class="sec" aria-labelledby="hReq">
+  <p class="eyebrow">What you need</p><h2 id="hReq">Before you start</h2>
+  <div class="pillars">
+    <div class="pillar"><h3>Memory</h3><blockquote id="ram">—</blockquote><a class="src" href="../sost-community.html">sost-community.html →</a></div>
+    <div class="pillar"><h3>Why memory-hard</h3><blockquote>The miner must build and hold the full 4 GB dataset and 4 GB scratchpad in memory to solve the ConvergenceX puzzle.</blockquote><a class="src" href="../sost-technology.html">sost-technology.html →</a></div>
+    <div class="pillar"><h3>Solo, no pools</h3><p>Each miner works on its own blocks; the reasons are explained in "Why no pools".</p><a class="src" href="../sost-why-no-pools.html">Why no pools →</a></div>
+    <div class="pillar"><h3>System</h3><p>The guide uses Ubuntu (on Windows through WSL). Step 0 of the full guide shows how to get it.</p><a class="src" href="../sost-quickstart.html">Quick Start, step 0 →</a></div>
+  </div>
+</section>
+<section class="sec" id="steps" aria-labelledby="hSteps">
+  <p class="eyebrow">Verified commands</p><h2 id="hSteps">From zero to mining</h2>
+  <p class="lead">Exact commands of the verified mining guide (production tag, RPC password read from a private file). Copy buttons copy the command without the <code>$</code> prompt. Explanations, screenshots and options stay in the full guide.</p>
+  <div class="cmds" id="cmds"><p class="note">Loading the guide…</p></div>
+  <p class="src" id="cmdSrc"></p>
+</section>
+<section class="sec" aria-labelledby="hAll">
+  <p class="eyebrow">All mining pages</p><h2 id="hAll">Guides and tools</h2>
+  <ul class="links" id="links"></ul>
+</section>
+</main>
+<footer class="site" aria-label="Site directory"><div class="dir" id="dir"></div><p class="fine">SOST · Section: Mining.</p></footer>
+<div class="u-bar"><span>SOST · Mining · commands from the verified guide (see source line)</span></div>
+<script src="core/u-ui.js?v=ns20261113"></script>
+<script src="core/u-nav.js?v=in20261113a"></script>
+<script src="core/u-section.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i);}, E=SOSTU.section.esc;
+try{SOSTU.nav.render($('nav'),'mining');SOSTU.nav.directory($('dir'));}catch(e){}
+SOSTU.section.links($('links'),'mining',{skip:['mining.html'],
+ 'proto-d-launchpad.html':{desc:'Guided launch: choose your system, follow the steps.'},
+ '../sost-mine.html':{desc:'The miner page.'},
+ '../sost-quickstart.html':{desc:'The full step-by-step guide with explanations.'},
+ '../sost-getting-started.html':{desc:'Full setup: node, wallet, miner.'},
+ '../sost-mining-calculator.html':{desc:'Estimate, not a promise.'},
+ '../sost-why-no-pools.html':{desc:'Why SOST mining is solo.'},
+ '../sost-miner-troubleshooter.html':{desc:'Diagnose common miner errors.'},
+ '../sost-infrastructure.html':{desc:'Seed nodes and infrastructure.'}});
+fetch('data/mining-guide.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(g){
+  $('ram').textContent=g.ram||'';
+  $('cmds').innerHTML=g.steps.filter(function(s){return s.commands.length;}).map(function(s,i){
+    return '<div class="step"><h3><i>'+(s.num?'STEP '+E(s.num):'NOTE')+'</i>'+E(s.title)+'</h3>'+s.commands.map(function(c,j){return '<pre class="cmd" data-s="'+i+'" data-c="'+j+'"><span class="t"></span><button class="copy" type="button" aria-label="Copy command">copy</button></pre>';}).join('')+'</div>';
+  }).join('');
+  var withCmd=g.steps.filter(function(s){return s.commands.length;});
+  document.querySelectorAll('#cmds pre.cmd').forEach(function(p){ var c=withCmd[+p.dataset.s].commands[+p.dataset.c]; p.querySelector('.t').textContent=c;
+    p.querySelector('.copy').addEventListener('click',function(){ SOSTU.ui.copy(this,c.split('\n').map(function(l){return l.replace(/^\$ /,'');}).join('\n')); }); });
+  $('cmdSrc').textContent='Source: '+g.source.branch+' @ '+g.source.commit+' · '+g.source.file+' · sha256 '+g.source.sha256.slice(0,16)+'… (verbatim).';
+}).catch(function(){ $('cmds').innerHTML='<p class="note">The command list could not be loaded. The full guide is at <a href="../sost-quickstart.html">sost-quickstart.html</a>.</p>'; });
+// ---- Scratchpad (Canvas 2D): cells + data-dependent walkers (illustration)
+var cols=0, rws=0, cell=14, heat=null, walk=[];
+function lay(w,h){ cell=w<560?10:14; cols=Math.ceil(w/cell); rws=Math.ceil(h/cell); heat=new Float32Array(cols*rws); walk=[]; for(var i=0;i<7;i++) walk.push({i:(i*7919)%(cols*rws),s:(i+1)*2654435761>>>0,c:['#facc15','#a3e635','#fb923c','#facc15','#a3e635','#22d3ee','#facc15'][i]}); }
+var acc=0;
+SOSTU.section.scene($('cv'),function(c,w,h,t,dt){
+  if(!heat||cols!==Math.ceil(w/cell)) lay(w,h);
+  c.fillStyle='#000'; c.fillRect(0,0,w,h);
+  acc+=dt*60; var steps=Math.min(6,Math.floor(acc)); acc-=steps;
+  for(var k=0;k<steps;k++) walk.forEach(function(q){ q.s^=q.s<<13; q.s^=q.s>>>17; q.s^=q.s<<5; q.s>>>=0; var j=(q.i+((q.s%97)-48)+((q.s>>>8)%5-2)*cols+cols*rws)%(cols*rws); if((q.s&31)===0) j=q.s%(cols*rws); q.i=j; heat[j]=1; q.last=j; });
+  for(var y=0;y<rws;y++) for(var x=0;x<cols;x++){ var i=y*cols+x, v=heat[i]; if(v>0.01){ heat[i]=v*.965;
+      c.fillStyle='rgba(250,204,21,'+(v*.75).toFixed(3)+')'; c.fillRect(x*cell+1,y*cell+1,cell-2,cell-2); }
+    else if(((x*31+y*17)%11)===0){ c.fillStyle='rgba(163,230,53,.06)'; c.fillRect(x*cell+1,y*cell+1,cell-2,cell-2); } }
+  walk.forEach(function(q){ var x=q.i%cols, y=Math.floor(q.i/cols); c.fillStyle=q.c; c.shadowColor=q.c; c.shadowBlur=12; c.fillRect(x*cell,y*cell,cell,cell); c.shadowBlur=0; });
+  // round counter ring (illustration of sequential rounds)
+  var R=Math.min(w,h)*.16, cx=w*(w<560?.5:.78), cy=h*(w<560?.28:.46), f=(t*.12)%1;
+  c.strokeStyle='rgba(250,204,21,.18)'; c.lineWidth=6; c.beginPath(); c.arc(cx,cy,R,0,7); c.stroke();
+  c.strokeStyle='#facc15'; c.beginPath(); c.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+f*6.2832); c.stroke();
+  c.fillStyle='#e2e8f0'; c.font='600 12px ui-monospace,monospace'; c.textAlign='center'; c.fillText('SEQUENTIAL ROUNDS',cx,cy+4); c.textAlign='start';
+});
+})();
+</script>
+<script src="core/u-audio.js?v=gm-20261104" data-autoplay defer></script>
+<script src="core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
+</body>
+</html>

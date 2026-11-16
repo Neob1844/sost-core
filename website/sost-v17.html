@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST V17 — What's New · Network Upgrade at Block #40,000</title>
+<meta name="description" content="SOST V17: the coordinated network upgrade targeting block #40,000. What changes, the real status of every item, rewards 80/15/5, maturity, reorganization safety, Digital Vault, bridge and decentralization.">
+<link rel="canonical" href="https://sostcore.com/sost-v17.html">
+<meta property="og:title" content="SOST V17 — Network Upgrade at Block #40,000">
+<meta property="og:description" content="What changes in V17, the real status of every item, and what node operators and miners must do.">
+<meta property="og:url" content="https://sostcore.com/sost-v17.html">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/favicon.ico?v=sl20261113" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=sl20261113">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
+<link rel="stylesheet" href="css/v17.css?v=v17a">
+</head>
+<body>
+<main class="v17" id="top">
+
+<p style="margin:6px 0 0"><span class="tag t-test" data-status>STATUS: TESTING</span> <span class="muted" style="font-size:13px">Updated 14 November 2026 · nothing on this page is active on mainnet yet</span></p>
+<h1>SOST V17 &mdash; Network Upgrade at <em>Block #40,000</em></h1>
+<p class="lead">SOST is preparing a coordinated network upgrade targeting block #40,000. Proposed improvements include revised mining and DTD rewards, new coinbase maturity rules, stronger reorganization safeguards, improved P2P synchronization and enhanced node and wallet security. Node operators and miners must prepare compatible, verified software before activation. The release remains subject to final testing and approval.</p>
+
+<div class="grid">
+  <div class="kpi"><b class="live" id="kH">&hellip;</b><span>current height (live)</span></div>
+  <div class="kpi"><b class="live" id="kL">&hellip;</b><span>blocks to #40,000</span></div>
+  <div class="kpi"><b class="live" id="kW">&hellip;</b><span>blocks to the upgrade window (#39,900)</span></div>
+  <div class="kpi"><b class="live" id="kD">&hellip;</b><span>estimate at the 10-minute target &mdash; not a fixed date</span></div>
+</div>
+
+<div class="btns">
+  <a class="btn primary" href="sost-v17-upgrade.html">Operator Upgrade Guide</a>
+  <a class="btn" href="sost-v17-upgrade.html#release">Release &amp; Checksums</a>
+  <a class="btn" href="downloads/v17/SOST_V17_Operator_Guide.pdf">Guide (PDF)</a>
+  <a class="btn" href="news.html#historical-network-upgrades">Historical Network Upgrades</a>
+</div>
+
+<div class="crit"><span class="h">&#9888; CRITICAL &mdash; RISK OF BLOCKCHAIN SPLIT</span>
+All validating nodes and miners must prepare the approved V17 release before block #40,000. Running incompatible software after activation can split the network into competing chains, causing rejected blocks, divergent balances and unreliable confirmations. <b>Recommended coordinated restart window: blocks #39,900&ndash;#39,999.</b><br>
+The final release must be published <b>before</b> #39,900: the window is for installing and verifying it, not for starting distribution. The window is counted in blocks; its length in hours depends on the real block rate.</div>
+
+<nav class="toc" aria-label="Contents">
+  <a href="#status">Status</a><a href="#changes">V30000 &rarr; V17</a><a href="#rewards">Rewards 80/15/5</a><a href="#maturity">Maturity</a>
+  <a href="#reorg">Reorganization safety</a><a href="#vault">Digital Vault</a><a href="#bridge">Atomic Bridge</a>
+  <a href="#decentralization">Decentralization</a><a href="#compat">Compatibility</a><a href="#inventory">Full inventory</a>
+</nav>
+
+<h2 id="status"><small>Where we are</small>Status of the upgrade</h2>
+<p>The status moves through five stages. It only advances with evidence; it never advances because a date has arrived.</p>
+<div class="tbl"><table>
+<tr><th>Stage</th><th>Meaning</th><th>Now</th></tr>
+<tr><td>PROPOSED</td><td>Rules written and discussed</td><td>done</td></tr>
+<tr><td><b>TESTING</b></td><td>A candidate build exists and runs the test gates</td><td><b>current stage</b></td></tr>
+<tr><td>RELEASE READY</td><td>Final binaries tagged on GitHub, SHA-256 published, owner approval given</td><td>not yet</td></tr>
+<tr><td>ACTIVATION SCHEDULED</td><td>Operators asked to upgrade; window #39,900&ndash;#39,999 announced as final</td><td>not yet</td></tr>
+<tr><td>ACTIVE</td><td>Block #40,000 accepted under the V17 rules and the network verified afterwards</td><td>not yet</td></tr>
+</table></div>
+<p class="muted">Until the release is published there is <b>nothing to install</b>. Today the valid build is V30000 FINAL (<a href="sost-v30000-history.html">binaries and checksums</a>). Do not run unofficial or candidate builds on mainnet.</p>
+<p>Activation needs an explicit <b>GO / NO-GO</b> decision based on consensus tests, the state of the network and the ability to coordinate operators. If #40,000 is not safe, the activation moves to a later height through a new, tested release (the only fallback height built into the code is #50,000). The height is never changed unilaterally or by a web page.</p>
+
+<h2 id="changes"><small>Summary</small>What changes from V30000 to V17</h2>
+<div class="tbl"><table>
+<tr><th>Area</th><th>Today (V30000 rules)</th><th>V17 candidate (from #40,000)</th><th>Status</th></tr>
+<tr><td>Block reward split</td><td>50% miner / 50% DTD</td><td>80% miner / 15% DTD / 5% Jackpot accumulator</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Transaction fees</td><td>Split with the subsidy</td><td>100% to the block miner</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Jackpot funding</td><td>Frozen reserve only (H)</td><td>Reserve H first, then the new accumulator J</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>DTD / Jackpot winner seed</td><td>From the block id (can be re-signed)</td><td>From the PoW commit (DTD-F1): re-signing a block no longer changes the winner</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Normal DTD eligibility</td><td>Mining activity rules</td><td>Same rules + active NODE_BIND and 3 of the last 4 heartbeats</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>PoW proof (ConvergenceX)</td><td>Transcript V2 (sampled witnesses)</td><td>Transcript V3: full re-execution of the attempt, no sampled witnesses</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Native multisig</td><td>Not available</td><td>M-of-N outputs (N &le; 15), transaction version 2, chain-bound signatures, <code>sostms1&hellip;</code> addresses</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Block limits</td><td>1 MB, 65,536 txs</td><td>Same, enforced on every path, plus 12,000 signature checks per block</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Coinbase maturity</td><td>1,000 blocks for every coinbase output</td><td>Proposal: 1,000 for participating miners, 5,000 otherwise (rule B or C)</td><td><span class="tag t-dec">TESTING &mdash; DECISION PENDING</span></td></tr>
+<tr><td>Chain selection / reorg cap</td><td>Most work; 500-block reorganization cap</td><td>Unchanged</td><td><span class="tag t-def">NO CHANGE</span></td></tr>
+<tr><td>Total supply and emission schedule</td><td>~4.669 M SOST maximum</td><td>Unchanged</td><td><span class="tag t-def">NO CHANGE</span></td></tr>
+</table></div>
+
+<h2 id="rewards"><small>Economics</small>Rewards: 80 / 15 / 5</h2>
+<p><b>Before #40,000 this is a candidate, not an active rule.</b> Every block below #40,000 keeps the current rule: 50% to the miner and 50% to the DTD, fees included. The numbers below come from the consensus code of the V17 candidate (<code>include/sost/v17_economics.h</code>, spec <code>docs/v40000/V17_ECONOMICS_NORMATIVE.md</code>).</p>
+<div class="tbl"><table>
+<tr><th>Destination</th><th>Share of the block subsidy</th><th class="n">Block #40,000 (subsidy 7.85100863 SOST)</th><th class="n">Same block today (50/50)</th></tr>
+<tr><td>Proof-of-Work miner</td><td>80% (+ all fees)</td><td class="n">6.28080691 SOST</td><td class="n">3.92550432 SOST</td></tr>
+<tr><td>Deterministic Token Distribution (DTD)</td><td>15%</td><td class="n">1.17765129 SOST</td><td class="n">3.92550431 SOST</td></tr>
+<tr><td>Jackpot accumulator J</td><td>5%</td><td class="n">0.39255043 SOST</td><td class="n">&mdash;</td></tr>
+</table></div>
+<ul>
+<li><b>Per block, in integer units</b> (1 SOST = 100,000,000 stocks): DTD = subsidy &times; 15 / 100 and J = subsidy &times; 5 / 100, both rounded down; the miner receives the rest. The miner therefore absorbs any rounding remainder (at most 2 stocks), and the three parts always add up to the subsidy exactly.</li>
+<li><b>Fees:</b> 100% to the miner of the block. They are not split, not burned.</li>
+<li><b>DTD:</b> paid every block to one eligible winner, as today. If nobody is eligible, the 15% rolls over to the next block, as today.</li>
+<li><b>Accumulator J:</b> a consensus balance (no address, no key, no custodian) that grows by 5% of each block subsidy, about 0.39 SOST per block today (about 113 SOST per 288-block Jackpot cycle).</li>
+<li><b>Jackpot prizes:</b> unchanged rules &mdash; every 288 blocks, base 100 SOST, rollover up to a 500 SOST cap, Jackpot V2 winner (NODE_BIND + heartbeats, weighted by PoW). Only the funding changes: the historical reserve <b>H</b> pays first; when H is not enough, J pays the rest. The first V17 Jackpot is at #40,266.</li>
+<li><b>Historical reserve:</b> H (about 64,674 SOST today) stays reserved for Jackpot payments only. It is not moved and not reassigned.</li>
+<li><b>Supply:</b> the emission schedule and the maximum supply (~4.669 M SOST) do not change. No new SOST is created and nothing is burned: J only holds back part of the subsidy and pays it out later. At every height: unspent outputs + pending DTD + J = everything emitted.</li>
+<li><b>Maturity of payouts:</b> the miner output and J-funded Jackpot payouts follow coinbase maturity; H-funded payouts stay immediately spendable, as today.</li>
+</ul>
+
+<h2 id="maturity"><small>Spendability</small>Coinbase maturity: 1,000 and 5,000 blocks</h2>
+<div class="note"><b>Decision pending.</b> The participation-based maturity has two variants (B and C) that are <b>incompatible with each other</b>. Both were tested on a devnet (20/20 each); the choice is the owner's and has not been made. If no decision is taken in time, V17 ships <b>without</b> this rule and maturity stays at 1,000 blocks for every coinbase output. This page will not present either variant as final before that decision.</div>
+<h3>The rule in force today (and in V17 unless a variant is approved)</h3>
+<p>Every coinbase output can be spent after <b>1,000 confirmations</b>. A reward with fewer confirmations is <b>immature</b> and is not spendable: wallets and the Explorer must show it as immature, never as available.</p>
+<h3>The proposal</h3>
+<div class="tbl"><table>
+<tr><th></th><th>Variant B</th><th>Variant C (recommended by the technical report)</th></tr>
+<tr><td>1,000 blocks if&hellip;</td><td>the miner is Jackpot V2-eligible at H&minus;1: SbPoW signature, &ge; 3 blocks in the last 2,016, active NODE_BIND, heartbeats</td><td>the miner runs a participating node: active NODE_BIND at H&minus;1 and 3 of the last 4 heartbeats (no block quota)</td></tr>
+<tr><td>5,000 blocks if&hellip;</td><td>any of those conditions is missing</td><td>no active NODE_BIND or not enough heartbeats</td></tr>
+<tr><td>Small miners (&lt; 3 blocks in 2,016)</td><td>always 5,000, even with a node</td><td>1,000 if they run a node</td></tr>
+<tr><td>Measured on mainnet #32,814&ndash;#34,157</td><td>3.65% of blocks would get 5,000 &mdash; all 49 small miners</td><td>3.65% today (no small miner runs a node yet); 0 if they run one</td></tr>
+</table></div>
+<ul>
+<li><b>Only the miner output</b> (<code>OUT_COINBASE_MINER</code>) is affected. DTD, Jackpot, transfers and every non-coinbase output are not.</li>
+<li><b>Not retroactive:</b> rewards created before #40,000 keep the 1,000-block rule.</li>
+<li><b>Fixed at creation:</b> the maturity is decided when the reward is created; gaining or losing eligibility later does not change it.</li>
+<li><b>Reorganizations:</b> recomputed from the state before the block when a block is reconnected; restored when it is disconnected (tested on devnet).</li>
+<li><b>Worst case:</b> 5,000 blocks, about 35 days at the 10-minute target. No funds are locked permanently.</li>
+<li><b>Example:</b> a miner without a node finds block #40,500. Under B or C its 6.28 SOST become spendable at #45,500. With an active NODE_BIND and 3 of 4 heartbeats (C), or also &ge; 3 blocks in the last 2,016 (B), they become spendable at #41,500.</li>
+<li><b>Where to see it:</b> on the maturity development branch the CLI and the local wallet already read the per-output maturity (tested 10/10). The web wallet, the Digital Vault and the Explorer still have to display it before the rule can be activated.</li>
+</ul>
+
+<h2 id="reorg"><small>Security</small>Reorganization and network safety</h2>
+<p>V17 does <b>not</b> change how the best chain is chosen: it is still the valid chain with the most accumulated work, with the existing 500-block reorganization cap. A new work rule was studied in depth and rejected for #40,000 because simulations did not show it to be safe enough. What V17 adds is hardening of the node around that rule. Results below are from the lab gates on the integrated candidate (13 November 2026, private test networks, not mainnet):</p>
+<div class="tbl"><table>
+<tr><th>Test</th><th>What it checks</th><th>Result</th></tr>
+<tr><td>Unit and integration tests</td><td>Consensus, economics, multisig, maturity, P2P helpers</td><td>166/166 PASS</td></tr>
+<tr><td>Deep fork</td><td>Long competing forks, recovery and restore after failed reorganizations</td><td>102/102 checks, 25/25 scenarios</td></tr>
+<tr><td>Extended reorganizations</td><td>Reorganizations at the cap, mixed V16/V17 peers</td><td>42/43 &mdash; the one failure is an old V16 node penalising an honest V17 peer; with V17 on both sides it passes</td></tr>
+<tr><td>Scenario x6</td><td>Six-node partition and rejoin</td><td>10/10</td></tr>
+<tr><td>DEFER</td><td>Blocks whose PoW check is deferred and retried; who is charged; queue limits</td><td>86/86</td></tr>
+<tr><td>Mix V16/V17</td><td>Old and new nodes together below the activation height</td><td>27/27</td></tr>
+<tr><td>Initial block download + kill -9</td><td>Sync from genesis; hard kill during load; restart</td><td>PASS (&asymp; 395 blocks/min; after the kill, 25 blocks re-downloaded, nothing corrupted)</td></tr>
+<tr><td>P2P-R6 tip poll</td><td>A node whose peers stop relaying asks for the tip itself</td><td>PASS: reached the tip in &asymp; 90 s; the old code stayed stuck</td></tr>
+<tr><td>Liveness</td><td>Following batch jumps; reconnecting after a peer restart</td><td>PASS</td></tr>
+</table></div>
+<ul>
+<li><b>Chain file writes:</b> the chain file is no longer rewritten on every block. This removed the main sync bottleneck (measured on 21,869 real blocks: complete in 300 s instead of 6,487 blocks in 8 minutes) and the window in which a crash could damage it.</li>
+<li><b>Checkpoints:</b> unchanged.</li>
+<li><b>Malicious peers:</b> fake &ldquo;done&rdquo; messages, stale replies and resubmitted forks are handled without penalising honest slow peers.</li>
+<li><b>Immature funds:</b> immature outputs stay unspendable through reorganizations.</li>
+<li><b>Still pending before release:</b> a full sync of the real mainnet history with the final V17 binary, and the merge of the pinned cryptographic library (below).</li>
+</ul>
+<p class="muted">No software can make reorganizations impossible, and nothing protects against an attacker with a majority of the hashrate. With mining concentrated in two addresses today (see <a href="#decentralization">Decentralization</a>), confirmations should be counted conservatively.</p>
+
+<h2 id="vault"><small>Wallet security</small>Digital Vault and web wallet</h2>
+<p>These protections are built and tested in the lab (end-to-end on a devnet: 45/45 checks). <b>They are not yet in the production wallet.</b> They are not consensus rules and do not depend on block #40,000.</p>
+<div class="tbl"><table>
+<tr><th>Protection</th><th>Status</th></tr>
+<tr><td>Tiered authorization of every send: 100 / 500 / 1,000 SOST levels, password or security key above the first level, cumulative limits per period, cancellable delay for large sends</td><td><span class="tag t-test">TESTING</span></td></tr>
+<tr><td>Check of the exact bytes about to be broadcast (recipients, amounts, fee, change), with alerts for address substitution and unusual fees</td><td><span class="tag t-test">TESTING</span></td></tr>
+<tr><td>No two operations at once from two tabs or windows (the race found in the audit is fixed)</td><td><span class="tag t-test">TESTING</span></td></tr>
+<tr><td>Authorizations expire (2 minutes) and cannot be reused</td><td><span class="tag t-test">TESTING</span></td></tr>
+<tr><td>Immature outputs never counted as spendable</td><td><span class="tag t-test">TESTING</span></td></tr>
+<tr><td>Safe recovery and backup files, protection against key loss</td><td><span class="tag t-test">TESTING</span></td></tr>
+</table></div>
+<p><b>Important limit:</b> these checks run in the browser. While a wallet is unlocked its key is in the page&rsquo;s memory, so malicious code in the page or a malicious extension could sign without them. They protect against mistakes and many attacks, but they are <b>not</b> an independent cryptographic control such as a separate signing device or multisig.</p>
+
+<h2 id="bridge"><small>Ethereum</small>SOST &harr; wSOST Atomic Bridge &mdash; under development</h2>
+<p><span class="tag t-plan">UNDER DEVELOPMENT</span> The bridge is <b>not</b> part of V17 and is not activated by it. It needs its own security review and its own launch authorization. No bridge contract holds real funds.</p>
+<ul>
+<li><b>Design:</b> 1:1 in both directions. Native SOST is locked on the SOST chain; the same amount of wSOST is delivered on Ethereum; returning wSOST burns it and releases the SOST.</li>
+<li><b>Reserve:</b> verifiable on-chain at any time (locked SOST = wSOST in circulation).</li>
+<li><b>Verification:</b> a light client of the SOST chain on Ethereum checks the PoW of the relevant blocks; independent watchers can raise alarms. Measures against double spending and a confirmation depth against reorganizations are part of the design.</li>
+<li><b>Fees:</b> no protocol fee. Users pay external Ethereum gas (lab measurement: about 190,000 gas per claim).</li>
+<li><b>Ethereum L1 or L2:</b> still being evaluated.</li>
+<li><b>State:</b> contracts and tests in the lab only. The native lock on the SOST side is not in the V17 consensus. Mining concentration must improve before a bridge can rely on SOST confirmations.</li>
+</ul>
+
+<h2 id="decentralization"><small>Goals and measurements</small>Decentralization &amp; network resilience</h2>
+<p>For SOST, decentralization means more than more nodes. <b>SOST has not reached it yet</b>: today two addresses produce almost all blocks. This is what we are working toward, separated into what exists, what is pending, and what we measure.</p>
+<div class="tbl"><table>
+<tr><th>Goal</th><th>State</th></tr>
+<tr><td>1. More independent miners</td><td>Measured: 51 addresses mined at least one block in the last 2,016 blocks</td></tr>
+<tr><td>2. Less concentration of block production</td><td>Measured: <b>74.7%</b> and <b>22.6%</b> for the two largest addresses (last 2,016 blocks to #35,095); every other address &le; 0.05%. Not decentralized.</td></tr>
+<tr><td>3. Less dependence on one mining address</td><td>Pending (same measurement)</td></tr>
+<tr><td>4. Public nodes run by different people</td><td>Pending: one public SOST node today; the collector sees 2 external hosts</td></tr>
+<tr><td>5. Nodes in different places and providers</td><td>Pending</td></tr>
+<tr><td>6. Several peers for sync and relay</td><td>Implemented in V17: tip poll when relays stall; outbound peer target</td></tr>
+<tr><td>7. Full sync from genesis</td><td>Implemented and tested (lab); real-mainnet replay with the final binary pending</td></tr>
+<tr><td>8. Independent, working DNS seeds</td><td>Pending: <code>seed.sostcore.com</code> resolves; <code>seed-eu</code>, <code>seed-us</code>, <code>seed-apac</code> do not yet. A seed-node kit exists; operators can add seeds in <code>seeds.txt</code> without a new binary</td></tr>
+<tr><td>9. Accessible CPU mining</td><td>Implemented (ConvergenceX, CPU-oriented)</td></tr>
+<tr><td>10. No permission needed to mine</td><td>Implemented: PoW is permissionless</td></tr>
+<tr><td>11. NODE_BIND and HEARTBEAT verifiable without private lists</td><td>Implemented: both are on-chain transactions any node checks</td></tr>
+<tr><td>12. Resistance to disconnections, partitions and server failures</td><td>Improved in V17 (tests above); still one main public node</td></tr>
+<tr><td>13. Public, verifiable code and binaries</td><td>Code public on GitHub; V17 release with SHA-256 and reproducible build pending</td></tr>
+<tr><td>14. Tools to run your own node</td><td>Available (guide, seed-node kit); simpler installers pending</td></tr>
+</table></div>
+<p class="muted">Peer connection counts do not tell how many operators have upgraded: one operator can open many connections, and many nodes are not reachable.</p>
+
+<h2 id="compat"><small>Who must do what</small>Compatibility</h2>
+<div class="tbl"><table>
+<tr><th>Software</th><th>Must upgrade for V17?</th><th>What happens if it is not upgraded after #40,000</th></tr>
+<tr><td><code>sost-node</code> (validating node)</td><td><b>Yes</b></td><td>It rejects V17 blocks (different reward split) and follows a different chain: a chain split, with divergent balances and confirmations</td></tr>
+<tr><td><code>sost-miner</code></td><td><b>Yes</b></td><td>It builds old-rule coinbases; V17 nodes reject its blocks. A miner that cannot be upgraded must stop before #40,000</td></tr>
+<tr><td><code>sost-cli</code></td><td>Recommended</td><td>Old commands keep working for existing transactions; new outputs (multisig, Jackpot J) and maturity information need the V17 CLI</td></tr>
+<tr><td>Web wallet / Digital Vault</td><td>Updated by SOST on the website</td><td>Nothing for users to install</td></tr>
+<tr><td>Explorer</td><td>Updated by SOST on the website</td><td>&mdash;</td></tr>
+<tr><td>NODE_BIND and heartbeats</td><td>No new registration</td><td>Existing NODE_BINDs stay valid; heartbeats continue as today. No key change is required</td></tr>
+<tr><td>Chain data and wallet files</td><td>Kept</td><td>No resync and no wallet migration are planned</td></tr>
+</table></div>
+<p>Below #40,000 the V17 node validates every block exactly like V30000 (tested with old and new nodes together), so installing it during the window does not split the network.</p>
+
+<h2 id="inventory"><small>Everything in the candidate</small>Full inventory</h2>
+<p class="muted">ACTIVE = live on mainnet today · INCLUDED IN V17 CANDIDATE = in the code that would activate at #40,000 · TESTING = built, still being tested or not merged · PLANNED = designed, not built · DEFERRED = not in V17.</p>
+<div class="tbl"><table>
+<tr><th>Item</th><th>Status</th></tr>
+<tr><td>Reward split 80/15/5 and Jackpot accumulator J</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>DTD-F1: winner seeds from the PoW commit</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>DTD node-participation gate (NODE_BIND + heartbeats)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>ConvergenceX Transcript V3</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Native multisig, transaction version 2, chain-bound signatures</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Multisig addresses <code>sostms1&hellip;</code> and CLI commands</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Block limits on every path and 12,000 signature-check cap</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>NODE_BIND / HEARTBEAT version fence</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>P2P sync fix (no chain-file rewrite per block)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>P2P tip poll (R6), message validation, honest-peer protection</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>DEFER retry policy</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>RPC: <code>getjackpotstate</code>, V17 fields in <code>getblock</code>, <code>getlotterystate</code>, <code>getsupplyinfo</code>, multisig in <code>getaddressinfo</code></td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Miner: builds the V17 coinbase, refuses to mine V17 without a V17 template</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>CLI: NODE_BIND signed in two halves (node key and mining key on different machines)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>libsecp256k1 pinned to v0.6.0, statically linked, reproducible build</td><td><span class="tag t-test">TESTING</span> (separate branch, gates to repeat after merge)</td></tr>
+<tr><td>Participation maturity 1,000 / 5,000 (B or C)</td><td><span class="tag t-dec">TESTING &mdash; DECISION PENDING</span></td></tr>
+<tr><td>Digital Vault protections</td><td><span class="tag t-test">TESTING</span></td></tr>
+<tr><td>Explorer: V17 reward row, H and J shown separately, maturity</td><td><span class="tag t-test">TESTING</span></td></tr>
+<tr><td>Independent DNS seeds and seed nodes</td><td><span class="tag t-plan">PLANNED</span></td></tr>
+<tr><td>SOST &harr; wSOST Atomic Bridge</td><td><span class="tag t-plan">UNDER DEVELOPMENT</span> (separate authorization)</td></tr>
+<tr><td>New chain-selection (work) rule</td><td><span class="tag t-def">DEFERRED</span></td></tr>
+<tr><td>Deep-reorganization rule SACS V2</td><td><span class="tag t-def">DEFERRED</span> (500-block cap stays)</td></tr>
+<tr><td>Native assets for the public</td><td><span class="tag t-def">DEFERRED</span> (#50,000 or later)</td></tr>
+<tr><td>V30000 rules, NODE_BIND, heartbeats, Jackpot V2</td><td><span class="tag t-active">ACTIVE</span> (since #30,000)</td></tr>
+</table></div>
+
+<p class="foot">SOST V17 &middot; preparation notice, 14 November 2026. This page describes a candidate under test. It is not a release announcement and contains no installable software. Earlier upgrades: <a href="news.html#historical-network-upgrades">Historical Network Upgrades</a> &middot; <a href="sost-v30000-history.html">V30000 (#30,000)</a>.</p>
+</main>
+<script>
+(function(){var V=40000,W=39900,f=function(n){return Number(n).toLocaleString('en-US')};
+function paint(h){if(!(h>0))return;var l=V-h,w=W-h;document.getElementById('kH').textContent=f(h);
+document.getElementById('kL').textContent=l>0?f(l):'reached';document.getElementById('kW').textContent=w>0?f(w):'open';
+var d=new Date(Date.now()+Math.max(l,0)*600000);document.getElementById('kD').textContent=l>0?('≈ '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})):'—';}
+function get(){fetch('/api/control_room.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){paint(+d.height)}).catch(function(){})}
+get();setInterval(get,120000);})();
+</script>
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='mining'</script>
+<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
+</body>
+</html>

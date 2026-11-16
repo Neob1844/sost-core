@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Blockchain — SOST (Convergence Universe preview)</title>
+<meta name="description" content="The SOST blockchain: real recent blocks, how the network works, and every blockchain page: Explorer, Control Room, network status, decentralization, transactions, genesis.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="assets/brand/sost-eye.ico?v=sl20261113" sizes="16x16 32x32 48x48 64x64">
+<link rel="apple-touch-icon" href="assets/brand/sost-eye-180.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<link rel="preload" href="../fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="core/u-display.css">
+<link rel="stylesheet" href="core/u-section.css">
+<link rel="stylesheet" href="core/u-audio.css?v=gm-20261104">
+<style>
+.sx{--acc:#22d3ee;--acc2:#3b82f6}
+.lat{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.lat li a{display:grid;grid-template-columns:110px 1fr auto;gap:12px;align-items:center;padding:9px 14px;border:1px solid var(--line-2);border-radius:10px;background:#050505e6;color:#e2e8f0;text-decoration:none;font:12.5px var(--f-mono)}
+.lat li a:hover{border-color:var(--acc)} .lat li a i{width:10px;height:10px;border-radius:3px;display:inline-block;background:var(--c);margin-right:8px;vertical-align:-1px}
+.lat .dim{color:var(--tx-3)}
+@media (max-width:520px){.lat li a{grid-template-columns:90px 1fr}.lat li a .dim:last-child{display:none}}
+/* P0: block link + producer link side by side in the same row look */
+.lat li.lb{display:grid;grid-template-columns:110px 1fr auto;gap:12px;align-items:center;padding:0 14px 0 0;border:1px solid var(--line-2);border-radius:10px;background:#050505e6;font:12.5px var(--f-mono)}
+.lat li.lb:hover{border-color:var(--acc)}
+.lat li.lb>a{display:block;padding:9px 14px;border:0;background:none;border-radius:10px 0 0 10px}
+.lat li.lb a.u-cl{display:inline;padding:0;border:0;border-bottom:1px dotted #7dd3fc66;background:none}
+@media (max-width:520px){.lat li.lb{grid-template-columns:90px 1fr}.lat li.lb>.dim:last-child{display:none}}
+</style>
+<link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
+</head>
+<body class="sx">
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<header class="sx-hero" aria-labelledby="h1">
+  <canvas id="cv" aria-hidden="true"></canvas>
+  <div class="sx-copy">
+    <p class="eyebrow">SOST · Blockchain</p>
+    <h1 id="h1">Every block, <em>ordered and public.</em></h1>
+    <p class="lede">The chain of real SOST blocks, as served by the public node: each block a crystal in the colour of the address that produced it, spaced by the time it took. Explore any block, transaction or address, and see how the network keeps time.</p>
+    <div class="acts"><a class="btn primary" href="../sost-explorer.html">Open the Explorer</a><a class="btn" href="../sost-control-room.html">Control Room</a><a class="btn" href="../sost-network-status.html">Network status</a></div>
+  </div>
+  <p class="sx-legend" id="legend">Chain Lattice · the latest real blocks, newest in front · colour = producing address (top producers of the last 1,200 blocks) · gap = block time</p>
+</header>
+<main id="main">
+<section class="sec" aria-labelledby="hNow">
+  <p class="eyebrow">Right now</p><h2 id="hNow">The chain at a glance</h2>
+  <div class="stats">
+    <div class="stat"><div class="k">Tip</div><div class="n" id="vTip">—</div><div class="s" id="sTip"></div></div>
+    <div class="stat"><div class="k">Average block time</div><div class="n" id="vAvg">—</div><div class="s" id="sAvg"></div></div>
+    <div class="stat"><div class="k">Active producers</div><div class="n" id="vMin">—</div><div class="s" id="sMin"></div></div>
+    <div class="stat"><div class="k">Difficulty (bitsQ)</div><div class="n" id="vBits">—</div><div class="s" id="sBits"></div></div>
+  </div>
+</section>
+<section class="sec" aria-labelledby="hHow">
+  <p class="eyebrow">How the network works</p><h2 id="hHow">One ordered chain, verifiable by anyone</h2>
+  <div class="pillars">
+    <div class="pillar"><h3>Blocks</h3><p>A new block is targeted every 600 seconds. Each block records its height, time, difficulty and the address that produced it; the Explorer shows all of it.</p><a class="src" href="../sost-explorer.html">Explorer →</a></div>
+    <div class="pillar"><h3>Proof of work</h3><blockquote>Mining is memory-hard (ASIC resistant), but verification is lightweight (anyone can run a node).</blockquote><a class="src" href="../sost-technology.html">sost-technology.html →</a></div>
+    <div class="pillar"><h3>Difficulty</h3><blockquote>Per-block adaptive difficulty, and a real-time stability overlay.</blockquote><p>cASERT sets the difficulty (bitsQ) block by block; the Equalizer profile is shown live in the Control Room.</p><a class="src" href="../casert-spec.html">ConvergenceX &amp; cASERT spec →</a></div>
+    <div class="pillar"><h3>Since genesis</h3><p>Genesis block: 2026-03-15 18:00:00 UTC. Every block since then links to the previous one, so the history is one ordered chain.</p><a class="src" href="../sost-genesis.html">Genesis →</a></div>
+  </div>
+</section>
+<section class="sec" aria-labelledby="hLat">
+  <p class="eyebrow">Latest blocks</p><h2 id="hLat">The newest blocks</h2>
+  <ul class="lat" id="latest"><li class="dim">Loading the collector snapshot…</li></ul>
+  <p class="note" id="latNote"></p>
+</section>
+<section class="sec" aria-labelledby="hAll">
+  <p class="eyebrow">All blockchain pages</p><h2 id="hAll">Explore the chain</h2>
+  <ul class="links" id="links"></ul>
+  <p class="note">One Explorer: <a href="../sost-explorer.html">sostcore.com/sost-explorer.html</a> (Mining Observatory, Galaxy, Mosaic, inspectors), with the Control Room unchanged.</p>
+</section>
+</main>
+<footer class="site" aria-label="Site directory"><div class="dir" id="dir"></div><p class="fine">SOST · Section: Blockchain.</p></footer>
+<div class="u-bar"><span id="uStatus"><span class="st loading">LOADING</span></span></div>
+<div class="u-offline" id="uOffline"></div>
+<script src="../control-room/state.js"></script>
+<script src="../control-room/adapter.js"></script>
+<script src="core/u-data.js"></script>
+<script src="core/u-ui.js?v=ns20261113"></script>
+<script src="core/u-chain.js?v=p0-20261105"></script>
+<script src="core/u-nav.js?v=in20261113a"></script>
+<script src="core/u-section.js"></script>
+<script>
+(function(){
+var UI=SOSTU.ui, $=function(i){return document.getElementById(i);};
+try{SOSTU.nav.render($('nav'),'blockchain');SOSTU.nav.directory($('dir'));}catch(e){}
+SOSTU.section.links($('links'),'blockchain',{skip:['blockchain.html'],
+ '../sost-explorer.html':{desc:'The SOST Explorer: blocks, transactions, addresses, search, Mining Observatory, Galaxy, DTD and Jackpot.'},
+ '../sost-control-room.html':{desc:'Live window, archive and every Control Room indicator, unchanged.'},
+ '../sost-network-status.html':{desc:'Peers and nodes seen by the public node.'},
+ '../sost-decentralization.html':{desc:'Block production by address, with its method and limits.'},
+ '../sost-transactions.html':{desc:'Transaction format.'},
+ '../sost-genesis.html':{desc:'Block 0 and the history of the launch.'},
+ 'proto-c-orbit.html':{desc:'DTD and Jackpot, 288 Orbit view.'},
+ '../sost-markets.html':{desc:'Gold reference (XAUT / PAXG); not a market price.'},
+ '../beacon.html':{desc:'Beacon.'}});
+var PAL=['#22d3ee','#e879f9','#a3e635','#facc15','#fb923c','#8b5cf6','#3b82f6','#4ade80'];
+function lab(s,txt){ if(s.status==='live') return UI.pv('observed',txt||null); return UI.pv('historical',(s.status==='fixture'?'FIXTURE · NOT LIVE':String(s.status).toUpperCase()+' · NOT LIVE')+(txt?' · '+txt:'')); }
+// ---- Chain Lattice (Canvas 2D): real rows only; nothing is drawn until the snapshot arrives
+var rows=[], colorOf={}, pulseAt=-1e9;
+function rgba(h,a){var n=parseInt(h.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')';}
+function cube(c,x,y,s,col,glow){ var h=s*.5;
+  c.fillStyle=rgba(col,.22+glow*.4); c.beginPath(); c.moveTo(x,y-h); c.lineTo(x+s,y-h-s*.5); c.lineTo(x+s,y+h-s*.5); c.lineTo(x,y+h); c.closePath(); c.fill();
+  c.fillStyle=rgba(col,.12+glow*.3); c.beginPath(); c.moveTo(x,y-h); c.lineTo(x-s,y-h-s*.5); c.lineTo(x-s,y+h-s*.5); c.lineTo(x,y+h); c.closePath(); c.fill();
+  c.fillStyle=rgba(col,.35+glow*.5); c.beginPath(); c.moveTo(x,y-h); c.lineTo(x+s,y-h-s*.5); c.lineTo(x,y-h-s); c.lineTo(x-s,y-h-s*.5); c.closePath(); c.fill();
+  c.strokeStyle=rgba(col,.8); c.lineWidth=1; c.beginPath(); c.moveTo(x,y+h); c.lineTo(x,y-h); c.lineTo(x+s,y-h-s*.5); c.lineTo(x,y-h-s); c.lineTo(x-s,y-h-s*.5); c.lineTo(x,y-h); c.moveTo(x-s,y-h-s*.5); c.lineTo(x-s,y+h-s*.5); c.lineTo(x,y+h); c.lineTo(x+s,y+h-s*.5); c.lineTo(x+s,y-h-s*.5); c.stroke(); }
+SOSTU.section.scene($('cv'),function(c,w,h,t){
+  c.fillStyle='#000'; c.fillRect(0,0,w,h);
+  // depth grid
+  c.strokeStyle='rgba(34,211,238,.06)'; c.lineWidth=1; var gy=h*.62;
+  for(var i=-12;i<=24;i++){ c.beginPath(); c.moveTo(w*.5+i*60,gy+400); c.lineTo(w*.5+i*60-600,gy-300); c.stroke(); c.beginPath(); c.moveTo(w*.5+i*60-600,gy+400); c.lineTo(w*.5+i*60,gy-300); c.stroke(); }
+  if(!rows.length) return;
+  var N=rows.length, s=Math.max(12,Math.min(26,w/60)), x=w*(w<560?.94:.86), y=h*(w<560?.36:.70), pts=[];
+  for(var k=N-1;k>=0;k--){ var r=rows[k], prev=rows[k-1], gap=prev?Math.max(.25,Math.min(3,(r.t-prev.t)/600)):1; pts.push({x:x,y:y,r:r,sc:s}); var d=s*1.25+gap*s*.9; x-=d*.92; y-=d*.42; s*=.968; }
+  // hash links with travelling light
+  for(var j=0;j<pts.length-1;j++){ var a=pts[j],b=pts[j+1]; c.strokeStyle='rgba(148,163,184,.25)'; c.beginPath(); c.moveTo(a.x,a.y); c.lineTo(b.x,b.y); c.stroke();
+    var f=(t*.35+j*.13)%1; c.fillStyle='rgba(34,211,238,'+(.7*(1-j/pts.length))+')'; c.beginPath(); c.arc(b.x+(a.x-b.x)*f,b.y+(a.y-b.y)*f,1.6,0,7); c.fill(); }
+  for(var q=pts.length-1;q>=0;q--){ var P=pts[q], col=colorOf[P.r.miner]||'#64748b', glow=q===0?.5+.5*Math.sin(t*2.4):0;
+    glow=Math.max(glow, Math.max(0,1-(performance.now()-pulseAt)/1600)*(q===0?1:0));
+    c.globalAlpha=Math.max(.15,1-q/pts.length); cube(c,P.x,P.y,P.sc,col,glow); c.globalAlpha=1;
+    if(q<6&&w>560){ c.fillStyle='rgba(226,232,240,'+(.8-q*.12)+')'; c.font='11px ui-monospace,monospace'; c.fillText('#'+P.r.h.toLocaleString('en-US'),P.x-P.sc,P.y+P.sc*.5+16); } }
+});
+SOSTU.data.subscribe(function(s){
+  UI.bindStatus(s); if(!s.state) return;
+  var a=s.state.active, cc=s.concentration; colorOf={}; cc.w1200.list.forEach(function(p,i){colorOf[p.addr]=i<PAL.length?PAL[i]:'#64748b';});
+  rows=s.rows.slice(-40); if(s.newBlocks.length&&!s.replay) pulseAt=performance.now();
+  $('vTip').textContent='#'+UI.num(s.state.meta.height); $('sTip').innerHTML=lab(s)+' tip age '+UI.dur(a.chain.tipAge.value);
+  $('vAvg').textContent=a.timing.avg288.value?Math.round(a.timing.avg288.value)+' s':'—'; $('sAvg').innerHTML=lab(s,'WINDOW 288')+' target 600 s';
+  $('vMin').textContent=UI.num(a.miners.active288.value); $('sMin').innerHTML=lab(s,'WINDOW 288')+' addresses that produced a block';
+  $('vBits').textContent=UI.num(a.consensus.bitsQ.value); $('sBits').innerHTML=lab(s)+' Equalizer next '+UI.esc(a.consensus.equalizerNext.value||'—');
+  var html=''; s.rows.slice(-10).reverse().forEach(function(r){ var prev=null; for(var i=s.rows.length-1;i>0;i--) if(s.rows[i].h===r.h){prev=s.rows[i-1];break;}
+    // P0: the block and its producer are two links to two records (block → Explorer, producer → its address page); never nested
+    html+='<li class="lb"><a href="../sost-explorer.html?search='+r.h+'"><span><i style="--c:'+(colorOf[r.miner]||'#64748b')+'"></i>#'+UI.num(r.h)+'</span></a><span class="dim">'+(SOSTU.chain?SOSTU.chain.link(r.miner,UI.short(r.miner),{title:'Open producer address '+r.miner+' in the Explorer'}):UI.esc(UI.short(r.miner)))+'</span><span class="dim">'+(prev?Math.round(r.t-prev.t)+' s after the previous':'')+'</span></li>'; });
+  $('latest').innerHTML=html; $('latNote').innerHTML=lab(s)+' Block time = time field of the block minus that of the previous block.';
+  $('legend').textContent='Chain Lattice · the latest '+rows.length+' real blocks (#'+UI.num(rows[0].h)+'–#'+UI.num(rows[rows.length-1].h)+'), newest in front · colour = producing address · gap = block time';
+});
+})();
+</script>
+<script src="core/u-audio.js?v=gm-20261104" data-autoplay defer></script>
+<script src="core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
+</body>
+</html>

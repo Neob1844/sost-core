@@ -37,7 +37,7 @@
       var note = document.createElement('div');
       note.id = 'popc-dex-gate-note';
       note.style.cssText = 'max-width:1100px;margin:14px auto;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center';
-      note.innerHTML = '⊘ PoPC contract trading is <b>disabled in V15</b>. Use the <b>Atomic Swap DEX</b> for non-custodial swap / OTC coordination. PoPC is a native SOST bond — see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.';
+      note.innerHTML = '⊘ PoPC contract trading is <b>disabled in V15</b>. Public atomic swaps are <b>not currently authorized</b> (HTLC atomic swap contracts RETIRED after security finding H-01). PoPC is a native SOST bond — see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.';
       var main = document.querySelector('main') || document.querySelector('.hero') || document.body;
       if (main && main.parentNode) {
         if (main.tagName === 'MAIN' || main.classList.contains('hero')) main.parentNode.insertBefore(note, main);

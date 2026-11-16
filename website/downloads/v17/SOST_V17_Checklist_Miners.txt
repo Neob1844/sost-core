@@ -1,0 +1,35 @@
+SOST V17 - MINER CHECKLIST (block #40,000)
+Preparation version, 14 November 2026. Status: TESTING - no V17 release published yet.
+Guide: https://sostcore.com/sost-v17-upgrade.html
+
+Never share your recovery phrase, private keys or passwords. Nobody from SOST will ask for them.
+
+NOW (before the release)
+[ ] My miner and the node it uses run V30000 FINAL (checksums on sost-v30000-history.html)
+[ ] Miner start command saved: --wallet, --mining-key-label, --rpc, --rpc-user, --rpc-pass-file, --profile mainnet, --realtime, --threads
+[ ] Mining address written down and checked
+[ ] Wallet and keys backed up offline
+[ ] Optional, for normal-DTD eligibility from #40,000: an active NODE_BIND and heartbeats in 3 of the last 4 epochs
+    (register the NODE_BIND well before #40,000; existing NODE_BINDs stay valid, no key change)
+
+WHEN THE RELEASE IS PUBLISHED (before #39,900)
+[ ] V17 sost-miner taken ONLY from sostcore.com and github.com/Neob1844/sost-core/releases
+[ ] sha256sum sost-miner matches SHA256SUMS exactly (not the V30000 hash)
+[ ] Building from source? Limit jobs (-j1 or -j2) so the build does not starve the running miner
+
+DURING THE WINDOW #39,900 - #39,999 (node first, then miner)
+[ ] The node I mine on is already upgraded to V17, synced and has peers
+[ ] Old miner stopped; pgrep -a sost-miner prints nothing
+[ ] Executable replaced with the verified V17 sost-miner
+[ ] Same address, wallet, key label and flags (--realtime stays)
+[ ] Miner reaches the node and gets work (no RPC errors)
+[ ] My next block is accepted and shown on the Explorer with my address
+[ ] No old miner still running anywhere with the same address
+
+IF THE MINER CANNOT BE UPGRADED IN TIME
+[ ] Stop it before #40,000. After activation an old miner only produces blocks the network rejects.
+
+AT AND AFTER #40,000 (do not restart exactly at #40,000)
+[ ] Blocks keep being accepted; the miner output is 80% of the subsidy plus fees
+[ ] Rewards shown as immature until they mature (1,000 blocks; a 1,000/5,000 participation rule is still a pending decision)
+[ ] Problem? Stop mining and report height + tip hash + build checksum

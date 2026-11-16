@@ -209,8 +209,8 @@
     PAIRS: ['SOST/ETH', 'SOST/BNB', 'SOST/USDC', 'SOST/USDT', 'SOST/PAXG', 'SOST/XAUT'],
     consoleUrl: function () { return '/atomic-swap.html'; },   // link/embed target (v1)
     note: function () {
-      return 'Liquidity bridge, not the checkout. EVM HTLC live at V14 (ETH/BNB/ERC-20); ' +
-             'SOST-native leg and BTC are V15. PAXG/XAUT only after SafeERC20 + balance-delta tests.';
+      return 'RETIRED: the HTLC atomic swap contracts have been retired following a security finding (H-01). ' +
+             'Public atomic swaps are not currently authorized.';
     }
   };
 

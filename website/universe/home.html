@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{if(sessionStorage.getItem('sostu_imm')==='1')document.documentElement.classList.add('u-imm')}catch(e){}</script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SOST — Native Layer 1 Proof-of-Work Blockchain</title>
+<meta name="description" content="SOST is a native proof-of-work Layer 1 mined on ordinary CPUs with ConvergenceX. Explore the live network, start mining, open the wallet, read the protocol.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="assets/brand/sost-eye.ico?v=sl20261113" sizes="16x16 32x32 48x48 64x64">
+<link rel="icon" type="image/png" href="assets/brand/sost-eye-192.png?v=sl20261113" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/brand/sost-eye-180.png?v=sl20261113">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<link rel="preload" href="../fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="universe.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="core/u-ui.css">
+<link rel="stylesheet" href="core/u-site.css">
+<link rel="stylesheet" href="core/u-brand.css">
+<link rel="stylesheet" href="core/u-display.css">
+<style>
+.hero{position:relative;height:min(100svh,940px);min-height:620px;overflow:hidden;contain:layout paint}
+.hero .poster,.hero #stage,.hero #frozen{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.hero #stage{opacity:0;transition:opacity .9s var(--ease)}
+.hero #stage.on{opacity:1}
+.hero #frozen{display:none}
+body.static .hero #stage{visibility:hidden} body.static.frame .hero #frozen{display:block}
+.hero .veil{position:absolute;inset:0;background:linear-gradient(90deg,#000e 0,#000a 34%,#0000 62%),linear-gradient(#0000 70%,#000 100%);pointer-events:none}
+.hero .hcopy{position:relative;z-index:var(--z-content);height:100%;display:flex;flex-direction:column;justify-content:center;padding:96px var(--gutter) 64px;max-width:760px}
+.hero h1{font:700 var(--fs-5)/1.03 var(--f-ui);letter-spacing:-.025em;margin:18px 0 16px;max-width:12ch}
+/* "decentralized." — the full official palette spread across the word, red → magenta → violet → blue → cyan → lime → gold → orange on the final dot (owner reference DECENTRALIZED_GRADIENT_REFERENCE_owner_2026-11-03.png) */
+.hero h1 .spec{background:linear-gradient(90deg,#fb010d 0%,#e879f9 17%,#8b5cf6 32%,#3b82f6 47%,#22d3ee 61%,#a3e635 75%,#facc15 88%,#fb923c 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.04em}
+.hero .latest{min-height:52px;box-sizing:border-box} /* reserves the two rows of latest blocks: no layout shift when they arrive */
+.hero .lede{max-width:48ch;color:#cbd5e1;font-size:clamp(16px,1.3vw,19px);line-height:1.55;margin:0 0 24px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap}
+.latest{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0 0;padding:0;list-style:none;min-height:27px;max-width:620px}
+.latest li a{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;border:1px solid #ffffff1a;background:#050505b3;font:11px var(--f-mono);color:var(--tx-2);text-decoration:none}
+.latest li a:hover,.latest li a:focus-visible{color:#fff;border-color:var(--c)}
+.latest li.new a{animation:arrive 1.6s var(--ease)}
+@keyframes arrive{from{border-color:#fff;box-shadow:0 0 18px #22d3ee}}
+#genesis{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.hero .hcopy{z-index:6}
+/* the singularity centre (geometry shared by the WebGL scene and the splash); the centre stays free: no eye, no text (DIRECTIVAS 4C-1) */
+#scnTest[hidden]{display:none}
+.u-bar{max-width:100%;box-sizing:border-box;overflow:hidden}
+@media (min-width:761px){.u-bar{height:69px;align-items:center}} /* fixed bar height: no shift while its controls load */
+.u-bar #uStatus{min-width:0;flex:1 1 auto;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.u-bar .sp{flex:0 1 auto;min-width:0;flex-wrap:wrap;justify-content:flex-end;row-gap:6px}
+.u-bar .scn-next{white-space:nowrap;border-color:#ffffff3a}
+.u-bar .qnote{font:10.5px var(--f-mono);color:#fbbf24;max-width:24ch;white-space:normal;line-height:1.25}
+.u-bar .qnote:empty{display:none}
+@media (max-width:1100px){.u-bar a[href*="matrix-legacy"],.u-bar #fps{display:none}}
+@media (max-width:760px){.u-bar{flex-wrap:wrap;row-gap:6px}.u-bar #uStatus .prov{display:none}.u-bar .sp{margin-left:auto}.u-bar #replayIntro{display:none}}
+@media (max-width:400px){.u-bar .hide-xs{display:none}.u-bar .qual button{padding:4px 6px}}
+.u-bar .scn{display:inline-flex;align-items:center;gap:6px;font:11px var(--f-mono);color:var(--tx-2);white-space:nowrap}.u-bar .scn b{color:#e2e8f0;font-weight:600}
+.u-bar #scnSel{background:#07080c;color:#e2e8f0;border:1px solid #ffffff2a;border-radius:6px;font:11px var(--f-mono);padding:2px 4px}.u-bar #scnInfo{font:10.5px var(--f-mono);color:var(--tx-3)}
+.coreanchor{position:absolute;z-index:3;pointer-events:none;margin:0;border-radius:50%;left:var(--ex,66%);top:var(--ey,50%);width:var(--ed,300px);height:var(--ed,300px);transform:translate(-50%,-50%)}
+/* splash overlay */
+.splash{position:fixed;inset:0;z-index:28;background:#000;cursor:pointer;transition:opacity .38s}
+.splash[hidden]{display:none}
+.splash canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.splash.reveal{background:#0000}
+.splash.gone{opacity:0;pointer-events:none}
+.splash .sp-rain{position:absolute;inset:0;overflow:hidden;pointer-events:none;transition:opacity .7s}
+.splash .sp-rain.off{opacity:0}
+.splash .sp-rain i{position:absolute;top:0;font:600 17px/1.06 var(--f-mono);font-style:normal;color:#ff2d3b;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:0;
+  text-shadow:0 0 6px #fb010d;-webkit-mask-image:linear-gradient(#0000,#000 78%,#fff);mask-image:linear-gradient(#0000,#000 78%,#fff);animation:sprain 2s linear infinite;will-change:transform}
+@keyframes sprain{from{transform:translateY(-100%)}to{transform:translateY(100vh)}}
+@media (max-width:560px){.splash .sp-rain i{font-size:14px}}
+.splash .sp-boot{position:absolute;left:40px;bottom:150px;font:600 12.5px var(--f-mono);color:#ff2d3b;letter-spacing:.04em}
+.splash .sp-boot:after{content:"▌";animation:blink .8s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.splash.run .sp-boot,.splash.still .sp-boot{display:none}
+.splash .sp-still{position:absolute;inset:0;display:none;place-items:center;align-content:center;gap:16px}
+.splash.still .sp-still{display:grid}
+.splash .sp-still img{width:min(62vmin,440px);height:auto}
+.splash .sp-still span:last-child{font:700 12px var(--f-mono);letter-spacing:.42em;color:#cbd5e1}
+body.splash-on .u-nav{z-index:32;opacity:.62;transition:opacity .4s}
+body.splash-on .u-nav:hover,body.splash-on .u-nav:focus-within{opacity:1}
+@media (max-width:560px){.splash .sp-boot{left:16px;bottom:118px;font-size:10.5px}}
+.skipintro{position:fixed;z-index:33;right:var(--gutter);bottom:64px}
+.skipintro[hidden]{display:none}
+.brand{transition:opacity .4s}
+
+.snap{position:relative;padding-top:28px}
+.snap .pills{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.snap .pills span{font:600 11px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;border-radius:999px;border:1px solid var(--line-2);background:#050505e6;color:#e2e8f0}
+.snap .pills span:first-child{border-color:#22d3ee88;color:#67e8f9}
+.snap-g{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+.gen{position:relative;overflow:hidden;padding:20px 22px;border-radius:var(--r-2);border:1px solid var(--line-2);background:#050505e6}
+.gen::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15)}
+.gen .k,.snap .k{font:11px var(--f-mono);letter-spacing:.14em;color:var(--tx-3);text-transform:uppercase}
+.gen .dt{font:13px var(--f-mono);color:var(--tx-2);margin:4px 0 12px}
+.gen .ctr{display:flex;gap:14px;flex-wrap:wrap;font:700 clamp(26px,4.2vw,44px)/1 var(--f-mono);color:#fff;font-variant-numeric:tabular-nums}
+.gen .ctr small{display:block;font:600 10px var(--f-mono);letter-spacing:.16em;color:var(--tx-3);margin-top:6px}
+/* Genesis Clock (owner P0, 5 Nov 2026): CSS / SVG only, no second WebGL engine; same data and calculation; fixed box sizes (no layout shift) */
+.gc{background:radial-gradient(120% 90% at 50% 0%,#0d0a1a,#000 62%);border-color:#ffffff1f;isolation:isolate;transition:border-color .25s,box-shadow .25s}
+.gc::before{height:2px;background:linear-gradient(90deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c,#8b5cf6);background-size:200% 100%;animation:gcline 9s linear infinite}
+@keyframes gcline{to{background-position:-200% 0}}
+.gc::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(60% 50% at 50% 62%,#8b5cf61a,#0000 70%);opacity:.9;z-index:-1}
+.gc-orb{position:absolute;inset:6% 2% -8% 2%;width:96%;height:102%;opacity:.38;pointer-events:none;z-index:-1}
+.gc-orb ellipse{stroke-dasharray:2 6;animation:gcorb 60s linear infinite}
+@keyframes gcorb{to{stroke-dashoffset:-800}}
+.gc-pts{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.gc-pts i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:0;animation:gcpt 7s ease-in-out infinite}
+.gc-pts i:nth-child(1){left:12%;top:30%}.gc-pts i:nth-child(2){left:84%;top:22%;animation-delay:1.2s}.gc-pts i:nth-child(3){left:66%;top:78%;animation-delay:2.4s;background:#22d3ee}
+.gc-pts i:nth-child(4){left:30%;top:84%;animation-delay:3.5s;background:#e879f9}.gc-pts i:nth-child(5){left:92%;top:60%;animation-delay:4.6s}.gc-pts i:nth-child(6){left:6%;top:70%;animation-delay:5.5s;background:#facc15}.gc-pts i:nth-child(7){left:48%;top:14%;animation-delay:6.2s;background:#a3e635}
+@keyframes gcpt{0%,100%{opacity:0;transform:translateY(0)}40%{opacity:.7}70%{opacity:0;transform:translateY(-10px)}}
+.gc .gc-t{position:relative;display:inline-block;color:#e5e7eb;text-decoration:none;font-weight:600;letter-spacing:.24em;padding:3px 8px;margin-left:-8px;border:1px solid transparent;border-radius:8px;transition:border-color .2s,color .2s,background .2s}
+.gc .gc-t:hover,.gc .gc-t:focus-visible{color:#fff;border-color:#22d3ee88;background:#22d3ee0d;outline:none}
+.gc .gc-t::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:3;white-space:nowrap;padding:6px 9px;border-radius:8px;border:1px solid #ffffff26;background:#07080cf5;color:#cbd5e1;font:11px/1.3 var(--f-mono);letter-spacing:.02em;text-transform:none;opacity:0;transform:translateY(-3px);pointer-events:none;transition:opacity .18s,transform .18s}
+.gc .gc-t:hover::after,.gc .gc-t:focus-visible::after{opacity:1;transform:none}
+.gc:has(.gc-t:hover),.gc:has(.gc-t:focus-visible){border-color:#22d3ee66;box-shadow:0 0 0 1px #22d3ee22,0 18px 50px #8b5cf61f}
+.gc .dt{letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+.gc-ctr{gap:0!important;align-items:flex-start;flex-wrap:nowrap!important;font:700 clamp(30px,4.6vw,54px)/1 var(--f-mono)!important}
+.gc-ctr .u{display:flex;flex-direction:column;align-items:center;min-width:2.3ch}
+.gc-ctr .u.d{min-width:3.4ch}
+.gc-ctr b{font-weight:700;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#fff 0%,#e9e5ff 45%,#a5b4fc 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 18px #8b5cf655,0 0 2px #fff8;filter:drop-shadow(0 0 10px #22d3ee22)}
+.gc-ctr .sp{padding:0 .18em;color:#8b5cf6;opacity:.9;animation:gcsep 2s steps(1) infinite}
+@keyframes gcsep{50%{opacity:.35}}
+.gc-ctr small{letter-spacing:.2em!important;font-size:9.5px!important;color:#8b98a8!important;margin-top:9px!important}
+.gc.gc-pulse .gc-ctr b{animation:gcpulse 1.2s ease-out}
+@keyframes gcpulse{0%{text-shadow:0 0 34px #22d3eeaa,0 0 2px #fff}100%{text-shadow:0 0 18px #8b5cf655,0 0 2px #fff8}}
+.gc-h{margin:10px 0 0;font:11.5px var(--f-mono);color:var(--tx-3)}
+.gc-h code{font-size:11.5px}
+@media (max-width:420px){.gc-ctr{font-size:clamp(24px,8.2vw,34px)!important}.gc-ctr small{letter-spacing:.12em!important;font-size:8.5px!important}.gc .gc-t::after{white-space:normal;width:240px}}
+/* reduced motion / OFF profile: the counter keeps counting; every decoration stops */
+@media (prefers-reduced-motion:reduce){.gc::before,.gc-orb ellipse,.gc-pts i,.gc-ctr .sp,.gc.gc-pulse .gc-ctr b{animation:none!important}.gc-pts,.gc-orb .gc-sat{display:none}}
+html.u-q-off .gc::before,html.u-q-off .gc-orb ellipse,html.u-q-off .gc-ctr .sp{animation:none!important}html.u-q-off .gc-pts,html.u-q-off .gc-orb{display:none}
+.qa{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}
+.qa a,.qa button{all:unset;cursor:pointer;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid var(--line-2);background:#050505e6;color:#e2e8f0;font:600 13px var(--f-ui)}
+.qa a:hover,.qa button:hover,.qa a:focus-visible,.qa button:focus-visible{border-color:#ffffff66;color:#fff}
+.qa a::after,.qa button::after{content:"→";color:var(--tx-3)}
+.snap-r{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-top:14px}
+.appc{padding:16px 18px;border-radius:var(--r-2);border:1px solid var(--line-2);background:#050505e6}
+.appc h3{margin:6px 0;font-size:16px}.appc p{margin:0 0 10px;color:var(--tx-2);font-size:13px;line-height:1.55}
+.appc ul{list-style:none;margin:0 0 10px;padding:0;font:12px var(--f-mono);color:var(--tx-2)}.appc li{padding:3px 0}
+.chainl{padding:16px 18px;border-radius:var(--r-2);border:1px solid var(--line-2);background:#050505e6}
+.chainl dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 8px}
+.chainl dt{font:10px var(--f-mono);letter-spacing:.12em;color:var(--tx-3);text-transform:uppercase}
+.chainl dd{margin:4px 0 0;font:600 18px var(--f-mono);color:#fff;font-variant-numeric:tabular-nums}
+.chainl dd small{display:block;font:11px var(--f-mono);color:var(--tx-2);font-weight:400;margin-top:2px}
+.rel{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;border:1px solid var(--line-1);background:#030303;font:11px var(--f-mono);color:var(--tx-3)}
+.rel b{color:#e2e8f0;font-weight:600}
+.rel>span{min-width:0;max-width:100%;overflow-wrap:anywhere}.rel .pv{white-space:normal;overflow-wrap:anywhere}   /* long manifest values never widen the page (360 px) */.rel .ok{color:#4ade80}.rel .off{color:#fb923c}
+@media (max-width:900px){.snap-g,.snap-r{grid-template-columns:1fr}.chainl dl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:420px){.qa a,.qa button{padding:11px 10px;font-size:12.5px}.gen .ctr{gap:10px}}@media (max-width:340px){.qa{grid-template-columns:1fr}}
+.status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stc{background:#050505e6;border:1px solid var(--line-2);border-radius:var(--r-2);padding:14px 16px;min-height:128px;display:flex;flex-direction:column;gap:4px}
+.stc .k{font:11px var(--f-mono);letter-spacing:.1em;color:var(--tx-3);text-transform:uppercase}
+.stc .n{font:600 24px/1.2 var(--f-mono);color:#fff;min-height:29px}
+.stc .s{font:11px/1.5 var(--f-mono);color:var(--tx-3);margin-top:auto;min-height:34px}
+@media (max-width:900px){.status{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.journeys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.jr{position:relative;display:flex;flex-direction:column;gap:8px;padding:20px;border-radius:var(--r-2);background:#050505e6;border:1px solid var(--line-2);text-decoration:none;min-height:210px;transition:transform .25s var(--ease),border-color .25s}
+.jr:hover,.jr:focus-visible{transform:translateY(-3px);border-color:var(--c)}
+.jr .no{font:700 12px var(--f-mono);color:var(--c);letter-spacing:.2em}
+.jr h3{margin:0;font-size:20px;color:#fff}.jr p{margin:0;color:var(--tx-2);font-size:14px;line-height:1.5}
+.jr .go{margin-top:auto;font:600 13px var(--f-mono);color:var(--c)}
+.jr:before{content:"";position:absolute;inset:0 0 auto 0;height:2px;border-radius:var(--r-2) var(--r-2) 0 0;background:var(--c);opacity:.8}
+.minor{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+@media (max-width:900px){.journeys{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.journeys,.status{grid-template-columns:1fr}.jr{min-height:0}}
+.conc-big{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
+.conc-big div{min-width:120px}
+.conc-bar{display:flex;height:16px;border-radius:5px;overflow:hidden;background:#111;margin:10px 0 6px}
+.conc-bar span{display:block;height:100%}
+.eco{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.eco a,.eco div.m{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:12px;border:1px solid var(--line-2);background:#050505e6;text-decoration:none;color:var(--tx-1);min-height:118px}
+.eco a:hover,.eco a:focus-visible{border-color:#ffffff55}
+.eco b{font-size:15px}.eco small{color:var(--tx-2);font-size:12.5px;line-height:1.45}
+.eco .ms{align-self:flex-start}
+.legend-ms{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.legend-ms span.d{font:11px var(--f-mono);color:var(--tx-3)}
+footer.site{position:relative;z-index:var(--z-content);border-top:1px solid var(--line-1);margin-top:60px;padding:40px var(--gutter) 110px;max-width:var(--maxw);margin-left:auto;margin-right:auto}
+footer.site .fine{margin-top:26px;font:12px/1.6 var(--f-mono);color:var(--tx-3)}
+dialog.vid{padding:0;border:1px solid var(--line-3);border-radius:var(--r-2);background:#000;width:min(960px,calc(100vw - 24px))}
+dialog.vid::backdrop{background:#000d}
+dialog.vid video{display:block;width:100%;height:auto;max-height:80vh;background:#000}
+dialog.vid .bar{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:8px 12px;font:12px var(--f-mono);color:var(--tx-2)}
+@media (max-width:560px){
+  .hero{height:auto;min-height:0}
+  .hero .poster,.hero #stage,.hero #frozen{height:56svh;bottom:auto}
+  .hero .veil{height:56svh;background:linear-gradient(#0000 55%,#000 100%)}
+  .hero .hcopy{padding:calc(56svh - 40px) var(--gutter) 30px;height:auto}
+  .hero h1{font-size:34px;max-width:none}
+}
+@media (prefers-reduced-motion:reduce){.hero #stage{transition:none}.jr{transition:none}}
+
+/* ---- Home layout v2 (owner mockup HOME_LAYOUT_owner_2026-11-04.png, «aplícala tal cual», English texts) ----
+   The scene (100 random scenes, posters, WebGL) keeps its own position and code; around it: copy on the left, the
+   four-step list top-right, the cube chain from the singularity to the right edge, four glass cards at the bottom. */
+.hero{display:flex;flex-direction:column;height:auto;min-height:clamp(640px,100svh,1080px);padding-bottom:96px;box-sizing:border-box}
+/* the scene layers keep the engine's own size (canvas buffer = min(viewport height, 940)): never stretched */
+.hero .poster,.hero #stage,.hero #frozen,.hero .veil{height:min(100svh,940px);bottom:auto}
+.hero .hcopy{flex:none;justify-content:flex-start;padding:clamp(88px,10.4vh,160px) var(--gutter) 20px;max-width:700px;height:auto}
+@media (min-width:1500px){.hero .hcopy{max-width:min(900px,52vw)}}
+.hero .eyebrow{letter-spacing:.42em;color:#cbd5e1;font-weight:500;margin-bottom:22px}
+.hero .eyebrow:after{width:64px;height:2px}
+/* headline (owner orders 4 Nov 2026, afternoon): «Decentralized / Mathematical / Convergence», large hero size; Space Grotesk 700,
+   tight leading; lines 1-2 light grey-white, line 3 SOST spectrum */
+.hero h1#h1:not(#_){font-size:clamp(48px,5.6vw,108px);font-weight:700!important;line-height:.96!important;letter-spacing:-.035em!important;max-width:none;margin:0 0 24px}
+.hero h1 .l{display:block;color:#e8eaf0}
+.hero h1 .l.spec{background:linear-gradient(90deg,#fb010d 0%,#e879f9 18%,#8b5cf6 34%,#3b82f6 50%,#22d3ee 66%,#a3e635 82%,#facc15 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;width:max-content;max-width:100%;padding-right:.03em}
+@media (max-width:1099px){.hero h1#h1:not(#_){font-size:clamp(46px,8.2vw,80px)}}
+@media (max-width:560px){.hero h1#h1:not(#_){font-size:min(12.2vw,58px)}}
+/* owner 4 Nov 2026, evening: the headline uses the SOST wordmark face (Goldman 700, as «SOST» beside the logo), Home only;
+   sizes ×0.94 against the Space Grotesk ones because Goldman is wider. The lede and the rest of the site keep their fonts */
+.hero h1#h1:not(#_):not(#__){font-family:var(--f-wordmark,'SOST Wordmark'),sans-serif!important;letter-spacing:-.08em!important;font-size:clamp(45px,5.26vw,101px)}
+.hero h1#h1:not(#_):not(#__) .l{padding-right:.04em}
+@media (max-width:1099px){.hero h1#h1:not(#_):not(#__){font-size:clamp(43px,7.7vw,75px)}}
+@media (max-width:560px){.hero h1#h1:not(#_):not(#__){font-size:min(12.6vw,58px)}}
+.hero .lede{font-size:clamp(16px,1.25vw,21px);line-height:1.5;max-width:30ch;color:#e2e8f0;margin:0 0 30px}
+.hero .ctas{gap:16px}
+.hero .ctas .btn{display:inline-flex;align-items:center;gap:12px;padding:14px 26px;border-radius:999px;font-size:14px}
+.hero .ctas .btn svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.hero .ctas .btn.go{background:linear-gradient(#07070b,#07070b) padding-box,linear-gradient(90deg,#facc15,#fb923c,#e879f9,#8b5cf6,#3b82f6,#22d3ee) border-box;border:1.5px solid transparent;box-shadow:0 0 22px #fb923c40,0 0 34px #3b82f630;animation:none}
+.hero .ctas .btn.go svg{stroke:#facc15}
+.hero .ctas .btn.ghost{background:#06070bcc;border:1px solid #ffffff2e}
+.hero .latest{margin-top:22px}
+#chainCv{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;animation:chainglow 7s ease-in-out infinite}
+@keyframes chainglow{50%{opacity:.82}}
+.hcards{position:relative;z-index:6;margin:auto var(--gutter) 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.4vw,24px)}
+.hc{position:relative;overflow:hidden;display:grid;grid-template-columns:auto 1fr;column-gap:16px;align-content:start;min-height:clamp(140px,16vh,172px);padding:20px 22px;border-radius:16px;text-decoration:none;color:#fff;
+  background:linear-gradient(160deg,#ffffff0d,#ffffff03 60%) ,#05060acc;border:1px solid #ffffff1f;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 #ffffff14;transition:border-color .25s,transform .25s var(--ease)}
+.hc:hover,.hc:focus-visible{border-color:color-mix(in srgb,var(--c) 70%,transparent);transform:translateY(-2px)}
+.hc>svg{grid-row:1/3;width:30px;height:30px;fill:none;stroke:var(--c);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px var(--c));position:relative;z-index:1}
+.hc h3{margin:2px 0 6px;font-size:clamp(16px,1.25vw,21px);color:#fff;position:relative;z-index:1}
+.hc p{margin:0;max-width:24ch;font-size:clamp(13px,.95vw,15px);line-height:1.4;color:#cbd5e1;position:relative;z-index:1}
+.hc canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hline{position:absolute;z-index:6;left:25%;right:25%;bottom:76px;height:1px;background:linear-gradient(90deg,#0000,#8b5cf6,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c,#e879f9,#0000);opacity:.8}
+.hero .veil{background:linear-gradient(90deg,#000d 0,#0009 30%,#0000 56%),linear-gradient(#0000 62%,#000c 100%)}
+@media (max-width:1099px){
+  .hero{min-height:0;padding-bottom:30px}
+  .hero .hcopy{min-height:min(100svh,940px);box-sizing:border-box;justify-content:center;padding:96px var(--gutter) 40px}
+  #chainCv{display:none}
+  .hcards{margin:0 var(--gutter);grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hline{position:relative;left:auto;right:auto;bottom:auto;margin:26px 25% 0}
+}
+@media (max-width:560px){
+  .hero .poster,.hero #stage,.hero #frozen{height:48svh}
+  .hero .veil{height:48svh}
+  .hero .hcopy{min-height:0;padding:calc(48svh - 64px) var(--gutter) 26px}
+  .hcards{grid-template-columns:1fr}
+  .hc{min-height:158px}
+}
+@media (prefers-reduced-motion:reduce){#chainCv{animation:none}.hc{transition:none}}
+/* P3 interactive cubes (core/u-cubes.js): the canvas stays pointer-events:none, the engine takes a press only on a cube and never on
+   text, links, buttons, nav, cards or labels. Toolbar: one discreet row under the chain, right-aligned; desktop layouts only (like the chain) */
+.cubeBar{position:absolute;z-index:6;right:var(--gutter);display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:999px;background:#05060ab3;border:1px solid #ffffff1a;
+  font:600 9.5px var(--f-mono);letter-spacing:.14em;color:#94a3b8;opacity:.62;transition:opacity .25s,border-color .25s}
+.cubeBar:hover,.cubeBar:focus-within{opacity:1;border-color:#ffffff33}
+.cubeBar .cb-l{padding:0 6px 0 4px;color:#64748b}
+.cubeBar button{font:inherit;letter-spacing:inherit;color:#cbd5e1;background:none;border:1px solid transparent;border-radius:999px;padding:4px 8px;cursor:pointer}
+.cubeBar button:hover{color:#fff;border-color:#ffffff2a}
+.cubeBar button[aria-pressed="true"]{color:#fff;border-color:#22d3ee99;box-shadow:0 0 10px #22d3ee33 inset}
+.cubeBar button[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
+.cubeBar button:focus-visible{outline:2px solid #22d3ee;outline-offset:1px}
+.cubeBar .cb-on{color:#a3e635}
+.cubeBar .cb-tier{padding:0 4px;color:#64748b;font-weight:500;letter-spacing:.08em}
+.cubeBar .cb-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cubeBar.off [data-m],.cubeBar.off .cb-kb,.cubeBar.off .cb-l{display:none}
+.cubeBar.off .cb-on{color:#94a3b8}
+html.cube-hover .hero,html.cube-hover .hero *{cursor:grab}
+html.cube-drag,html.cube-drag *{cursor:grabbing!important;user-select:none;-webkit-user-select:none}
+html.u-imm .cubeBar{opacity:0;visibility:hidden;pointer-events:none}
+@media (max-width:1099px){.cubeBar{display:none}}
+
+/* hero lede (owner 4 Nov 2026): full name + ConvergenceX; Space Grotesk 400 for the body, same family as the headline */
+.hero .lede{max-width:min(54ch,100%);font-size:clamp(16px,1.15vw,20px);line-height:1.5;color:#e2e8f0;margin-bottom:26px}
+.hero .lede .lede2{color:#cbd5e1}
+/* status grid: a long badge («FIXTURE · NOT LIVE · WINDOW 288») wraps inside its cell instead of widening the page at ~981 px */
+#stGrid .stc .pv{max-width:100%;white-space:normal}
+.st.na{color:var(--tx-2);font-weight:600;letter-spacing:.02em}.st.lv{color:#fbbf24;border-color:rgba(251,191,36,.45)}#status .stnote{margin:-6px 0 14px;font-size:.92rem;color:#cbd5e1}#status .stnote .when{color:#94a3b8}.st.na:before{content:"○"}
+.u-bar #uStatus .u-ns{color:var(--tx-2);font:11px var(--f-mono);text-decoration:underline;text-underline-offset:2px}
+.rel.rel-min{display:block;padding:10px 14px;font:11.5px var(--f-mono);color:var(--tx-3)}.rel.rel-min a{color:var(--tx-2)}
+#status .lead .pv{margin-left:4px}
+/* the four-step panel (static labels over the scene) */
+/* IMMERSIVE MODE (owner order 4 Nov 2026): one control hides the static interface layers (top navigation, the four-step panel,
+   the four cards and the decorative line). The scene canvases, the cube chain and every animation are never touched.
+   Nothing comes back by moving the pointer: Menu / Cards (top right) show them for a moment, the eye exits. */
+.u-nav,.hcards,.hline{transition:opacity .4s var(--ease),translate .4s var(--ease),visibility 0s}
+html.u-imm .u-nav:not(.open),html.u-imm .hcards,html.u-imm .hline{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s var(--ease),translate .4s var(--ease),visibility 0s .4s}
+html.u-imm .u-nav:not(.open){translate:0 -16px}
+html.u-imm .hcards{translate:0 14px}
+html.u-imm.peek-nav .u-nav,html.u-imm.peek-cards .hcards{opacity:1;visibility:visible;pointer-events:auto;translate:0 0;transition:opacity .25s var(--ease),translate .25s var(--ease),visibility 0s}
+.imm-t[aria-pressed="true"]{border-color:#e879f9aa;color:#fff;box-shadow:0 0 14px #e879f940}
+.imm-t svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px}
+.imm-fab{position:fixed;z-index:calc(var(--z-bar) + 2);top:14px;right:var(--gutter);display:none;align-items:center;gap:8px;transition:top .25s var(--ease)}
+html.u-imm .imm-fab{display:flex}
+html.u-imm.peek-nav .imm-fab{top:calc(var(--hud-h,66px) + 22px)}
+@media (max-width:520px){html.u-imm.peek-nav .imm-fab{top:76px}}
+.imm-tab{all:unset;box-sizing:border-box;cursor:pointer;font:600 10.5px var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:#cbd5e1;
+  height:34px;display:inline-flex;align-items:center;padding:0 14px;border-radius:999px;border:1px solid #ffffff2e;background:#05060ad9;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.imm-tab[aria-expanded="true"]{color:#fff;border-color:#22d3ee88}
+.imm-tab:hover{color:#fff;border-color:#ffffff5c}
+.imm-eye{width:42px;height:42px;padding:0;justify-content:center;border-color:#e879f9aa;box-shadow:0 0 16px #e879f945}
+.imm-eye svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.imm-tab:focus-visible,.imm-t:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+@media (max-width:1099px){html.u-imm .hcards{display:none}html.u-imm.peek-cards .hcards{display:grid}}
+@media (prefers-reduced-motion:reduce){.u-nav,.hcards,.hline,html.u-imm .u-nav:not(.open),html.u-imm .hcards,html.u-imm .hline,html.u-imm.peek-nav .u-nav,html.u-imm.peek-cards .hcards{transition:none;translate:none}}
+@media (min-width:1100px) and (max-height:940px){.hero .hcopy{padding-top:clamp(84px,calc(30vh - 160px),100px)}.hero .eyebrow{margin-bottom:12px}.hero h1#h1:not(#_){font-size:clamp(46px,min(calc(23.7vh - 124px),6.8vw),96px);margin-bottom:14px}.hero h1#h1:not(#_):not(#__){font-size:clamp(43px,min(calc(22.3vh - 117px),6.4vw),90px)}.hero .lede{font-size:15.5px;margin-bottom:20px}.hero .ctas .btn{padding:12px 22px}.hero .latest{margin-top:14px}.hc{min-height:104px;padding:14px 20px}.hc p{font-size:13px}.hero{padding-bottom:84px}}
+@media (min-width:1100px) and (max-height:740px){.hero .lede{margin-bottom:16px}.hero .latest{margin-top:10px}}
+/* P0 MOBILE HOTFIX (owner order 4 Nov 2026) — phones and tablets only; the desktop layout is unchanged.
+   Immersive (≤ 1099 px): the header, the four-step labels, the cards, the bottom HUD, the music pill and the menu all go; only one
+   EXIT IMMERSIVE button stays (no Menu / Hide menu / Cards tabs, nothing that needs hover). The scene is never touched. */
+.imm-eye .imm-x{display:none}
+@media (max-width:1099px){
+  html.u-imm .u-nav,html.u-imm .u-bar,html.u-imm .ua,html.u-imm #sostCursorBtn{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s var(--ease),visibility 0s .3s}
+  html.u-imm .imm-fab .imm-tab:not(.imm-eye){display:none}
+  html.u-imm .imm-fab,html.u-imm.peek-nav .imm-fab{top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px))}
+  html.u-imm .imm-eye{width:auto;height:40px;padding:0 15px;gap:8px;font:600 11px var(--f-mono);letter-spacing:.14em}
+  html.u-imm .imm-eye .imm-x{display:inline}
+}
+/* Bottom bar on phones (≤ 760 px): one compact row — music (icon), LIVE, IMMERSIVE and SCENE ▴, which unfolds the scene name,
+   ANOTHER SCENE, AUTO/HIGH/BAL/LITE/OFF and the device-profile note above it on demand. Phones in landscape (height ≤ 500 px) use the same compact row. */
+.u-bar .bar-more{display:none}
+@media (max-width:760px),(max-width:1099px) and (max-height:500px){
+  .u-bar{height:auto;flex-wrap:wrap;row-gap:8px;column-gap:8px;min-height:50px;padding:7px 10px calc(7px + env(safe-area-inset-bottom,0px)) 58px}
+  .u-bar #uStatus{flex:0 1 auto}
+  .u-bar:not(.xp) #uStatus > :not(.st){display:none}
+  .u-bar:not(.xp) .scn,.u-bar:not(.xp) .qual,.u-bar .hide-m{display:none!important}
+  .u-bar .sp{gap:8px}
+  .u-bar .bar-more{display:inline-flex;white-space:nowrap}
+  .u-bar:not(.xp) #replayIntro{display:none!important}
+  .u-bar{background:#050507f2;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .u-bar .bar-more[aria-expanded="true"]{border-color:#22d3ee99;color:#fff}
+  .u-bar.xp{background:#030305;box-shadow:0 -24px 60px #000d}
+  .u-bar.xp .sp{flex:1 1 100%;justify-content:flex-end}
+  .u-bar.xp .scn,.u-bar.xp .qual:not([hidden]){order:-1;flex:1 1 100%;flex-wrap:wrap;justify-content:flex-start;row-gap:6px}
+  .u-bar.xp .qual .qnote{max-width:none}
+  .ua:not(.ua-low){left:calc(10px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  .ua:not(.ua-low) .ua-fab{width:36px;height:34px;padding:0;justify-content:center}
+  .ua:not(.ua-low) .ua-fab-t{display:none}
+}
+@media (max-width:380px){.u-bar{column-gap:6px;padding-left:54px;padding-right:8px}.u-bar .imm-t,.u-bar .bar-more{padding-left:9px;padding-right:9px}.u-bar .imm-t svg{display:none}.u-bar #uStatus .st{padding-left:6px;padding-right:6px}}
+</style>
+<link rel="stylesheet" href="core/u-audio.css?v=gm-20261104">
+<link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
+</head>
+<body class="intro">
+<div class="splash" id="splash" hidden aria-hidden="true"><canvas id="splashCv"></canvas><div class="sp-boot">CONVERGENCEX // BOOT</div><div class="sp-still"><img id="spStill" alt="" width="712" height="716"><span>MATHEMATICAL CONVERGENCE</span></div></div>
+<a class="skip" href="#main">Skip to content</a>
+<nav class="u-nav" id="nav" aria-label="Primary"></nav>
+<div class="imm-fab" id="immFab" role="group" aria-label="Immersive mode controls"><button type="button" class="imm-tab" id="immNavTab" aria-controls="nav" aria-expanded="false" title="Show the navigation for a moment">Menu</button><button type="button" class="imm-tab" id="immCardsTab" aria-controls="hcards" aria-expanded="false" title="Show the cards for a moment">Cards</button><button type="button" class="imm-tab imm-eye" id="immEye" title="Exit immersive: show the whole interface again" aria-label="Exit immersive mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></svg><span class="imm-x">Exit immersive</span></button></div>
+<button class="btn small ghost skipintro" id="skipIntro" type="button" hidden>Skip intro (Esc) ›</button>
+<main id="main">
+<section class="hero" aria-labelledby="h1">
+  <img class="poster" id="poster" src="assets/scenes/vortex-1440.webp" srcset="assets/scenes/vortex-780.webp 780w, assets/scenes/vortex-1440.webp 1440w" sizes="100vw" width="1440" height="860" alt="" fetchpriority="high" decoding="async">
+<script>
+// Decide before the first paint: the hero scene of the Singularity Library (same rules as SOSTU.scenes.pick in core/u-scenes.js:
+// ?scene=<id> locks it, a visitor lock (sostu_scene_lock), otherwise random and never the previous one) — its poster is the LCP image;
+// and the intro: full Matrix Genesis splash once per browsing session (sessionStorage) or with ?intro=1, none on later pages of the session.
+(function(){var Q=new URLSearchParams(location.search),i=Q.get('intro'),seen=false,last=null,lock=null,IDS=['vortex','kerr-ergosphere','tidal-disruption','einstein-ring','photon-geodesics','eht-crescent','gravity-well','hawking-evaporation','horizon','black-hole','wormhole-tunnel','grand-design','barred-spiral','elliptical','irregular','antennae','cartwheel','sombrero','milky-way-inside','polar-ring','spiral','pulsar','binary-stars','pulse-waterfall','crab-wind','black-widow','double-pulsar','neutron-interior','striped-wind','polar-cap','timing-array','quasar-jet','agn-unified','blazar','radio-lobes','head-tail','light-echo','lyman-forest','einstein-cross','precessing-jet','feedback-bubbles','supernova','deflagration','sn1987a','cas-a','cloud-crushing','veil-filaments','sasi-shock','onion-shells','pulsational-shells','superbubble','magnetic-dipole','giant-flare','twisted-magnetosphere','frb-chirp','coronal-loops','reconnection-x','trapped-fireball','multipole-field','alfven-waves','magnetic-bottle','holographic-cloud','pillars','ring-nebula','hourglass','stellar-nursery','bok-globule','reflection-wisps','cats-eye','protoplanetary','cloud-collapse','filament-web','zeldovich','redshift-wedge','galaxy-cluster','void-foam','bao-shells','cmb-sphere','merger-tree','hubble-grid','weak-lensing','torus','particle-convergence','fractal','quantum-field','lorenz-attractor','torus-knot','spherical-harmonics','mobius-ribbon','calabi-yau','hyperspace-warp','grb-jet','kilonova','bbh-merger','gw-polarization','vacuum-decay','cosmic-strings','white-hole','air-shower','inflation-genesis'];
+ try{try{seen=sessionStorage.getItem('sostu_splash_session_v4')==='1';}catch(e){}last=localStorage.getItem('sostu_scene_last');lock=localStorage.getItem('sostu_scene_lock');}catch(e){}
+ var sc=Q.get('scene'),why='url'; if(IDS.indexOf(sc)<0){ if(IDS.indexOf(lock)>=0){sc=lock;why='locked';} else { var pool=IDS.filter(function(x){return x!==last;}),r=0; try{var u=new Uint32Array(1);crypto.getRandomValues(u);r=u[0];}catch(e){r=Math.floor(Math.random()*1e9);} sc=pool[r%pool.length];why='random'; } }
+ window.__scene={id:sc,why:why,last:last}; document.documentElement.dataset.scene=sc;
+ var pi=document.getElementById('poster'); if(sc!=='vortex'){pi.src='assets/scenes/'+sc+'-1440.webp';pi.srcset='assets/scenes/'+sc+'-780.webp 780w, assets/scenes/'+sc+'-1440.webp 1440w';}
+ var mode=i==='genesis'?'genesis':i==='1'?'splash':i==='0'||Q.get('q')==='off'?'none':(seen?'none':'splash');
+ window.__introMode=mode; if(mode==='splash'){var spl=document.getElementById('splash'); spl.hidden=false;document.body.classList.add('splash-on');
+  // DIRECTIVA 4D §4: the Matrix rain is on screen from the very first paint (CSS only, compositor-animated), before the canvas
+  // splash can draw; it hands over to the canvas rain on its first frame (u-splash.js adds .off).
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){ var G='ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789Σ', rn=document.createElement('div'), n=Math.max(16,Math.min(64,Math.round(innerWidth/24))), h='';
+   rn.className='sp-rain'; for(var c=0;c<n;c++){ var t=''; for(var k=0;k<22;k++) t+=G[(c*31+k*17+(c*k)%7)%G.length];
+    h+='<i style="left:'+((c+.5)/n*100).toFixed(2)+'%;animation-duration:'+(1.6+((c*37)%23)/14).toFixed(2)+'s;animation-delay:-'+(((c*53)%29)/12).toFixed(2)+'s;opacity:'+(.55+((c*13)%9)/20).toFixed(2)+'">'+t+'</i>'; }
+   rn.innerHTML=h; spl.appendChild(rn); } }
+ document.getElementById('spStill').src='assets/brand/sost-eye-512.png?v=sl20261113';})();
+</script>
+  <canvas id="stage" aria-hidden="true"></canvas>
+  <canvas id="genesis" aria-hidden="true" hidden></canvas>
+  <img id="frozen" alt="" aria-hidden="true">
+  <div class="veil"></div>
+  <p class="coreanchor" id="coreAnchor" aria-hidden="true"></p>
+  <script>
+  // singularity geometry, shared by the WebGL scene, this anchor and the splash (set before the splash starts): centre at offx (NDC),
+  // radius r × half the stage height (r = projected radius of the torus, 1.28 world units)
+  (function(){var M=function(){return innerWidth<=560;},G=window.__coreGeo={offx:function(){return innerWidth>900?.32:0;},h:function(){return M()?innerHeight*.56:Math.min(innerHeight,940);},r:function(){return .53;}};
+   function place(){var a=document.getElementById('coreAnchor'),h=G.h(),r=G.r()*h/2;a.style.setProperty('--ex',((1+G.offx())/2*innerWidth)+'px');a.style.setProperty('--ey',(h/2)+'px');a.style.setProperty('--ed',(2*r)+'px');}
+   place();addEventListener('resize',place);})();
+  </script>
+  <canvas id="chainCv" aria-hidden="true"></canvas>
+  <div class="hcopy">
+    <div class="eyebrow">SOSTCORE</div>
+    <h1 id="h1"><span class="l">Decentralized</span> <span class="l">Mathematical</span> <span class="l spec">Convergence</span></h1>
+    <p class="lede">Sovereign Stock Token (SOST) is a native Layer 1 proof-of-work (PoW) blockchain that turns computation into order, security and real value. <span class="lede2">Powered by ConvergenceX, its tested, memory-hard proof-of-work algorithm, SOST enables solo CPU mining and an independently verifiable blockchain.</span></p>
+    <div class="ctas">
+      <a class="btn primary go" href="proto-d-launchpad.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 14.2 9.8M12.6 8.2l3.2 3.2M6.2 6.4C10.6 3 16.4 2.4 21.4 2.6c.2 5-.4 10.8-3.8 15.2-.4-4.4-2-8.3-4.9-11.2C9.8 3.7 7 6 6.2 6.4z"/></svg>Start mining <span aria-hidden="true">→</span></a>
+      <a class="btn ghost" href="../sost-explorer.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 20 7.4v9.2l-8 4.6-8-4.6V7.4zM4 7.4l8 4.6 8-4.6M12 12v9.2"/></svg>Explore the blockchain</a>
+    </div>
+    <ul class="latest" id="latest" aria-label="Latest blocks (open in the Explorer)"><li><span class="skeleton" style="display:inline-block;width:240px;height:25px"></span></li></ul>
+  </div>
+  <nav class="hcards" id="hcards" aria-label="SOST at a glance">
+    <a class="hc" href="technology.html" style="--c:#e879f9" data-art="wave" data-pal="#fb923c,#fb010d,#e879f9"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 14.2 9.8M12.6 8.2l3.2 3.2M6.2 6.4C10.6 3 16.4 2.4 21.4 2.6c.2 5-.4 10.8-3.8 15.2-.4-4.4-2-8.3-4.9-11.2C9.8 3.7 7 6 6.2 6.4z"/></svg><h3>Real PoW</h3><p>Security, decentralization and fair emission</p><canvas aria-hidden="true"></canvas></a>
+    <a class="hc" href="blockchain.html" style="--c:#22d3ee" data-art="cubes" data-pal="#22d3ee,#3b82f6,#8b5cf6"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 7.5 12 12 3 7.5zM3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg><h3>SOST Blockchain</h3><p>Transparent, efficient and free of intermediaries</p><canvas aria-hidden="true"></canvas></a>
+    <a class="hc" href="mining.html" style="--c:#2dd4bf" data-art="wave" data-pal="#22d3ee,#2dd4bf,#a3e635"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.5" r="2"/><circle cx="4.5" cy="19" r="2"/><circle cx="19.5" cy="19" r="2"/><path d="M11 6.3 5.5 17.2M13 6.3l5.5 10.9M6.5 19h11"/></svg><h3>Accessible Mining</h3><p>Take part with your own hardware and join the network</p><canvas aria-hidden="true"></canvas></a>
+    <a class="hc" href="ecosystem.html" style="--c:#e879f9" data-art="wave" data-pal="#8b5cf6,#e879f9,#fb923c"><svg viewBox="0 0 32 16" aria-hidden="true"><path d="M16 8c-3-4-5.5-5.5-8-5.5a5.5 5.5 0 0 0 0 11c2.5 0 5-1.5 8-5.5s5.5-5.5 8-5.5a5.5 5.5 0 0 1 0 11c-2.5 0-5-1.5-8-5.5"/></svg><h3>Expanding Ecosystem</h3><p>Technology, utilities and continuous growth</p><canvas aria-hidden="true"></canvas></a>
+  </nav>
+  <div class="hline" aria-hidden="true"></div>
+</section>
+
+<section class="sec snap" id="snapshot" aria-labelledby="snapH">
+  <div class="eyebrow">Protocol snapshot</div>
+  <h2 id="snapH">Live protocol overview</h2>
+  <div class="pills" aria-label="Principles"><span>Mainnet</span><span>No ICO</span><span>No premine</span><span>No VCs</span><span>No governance</span></div>
+  <div class="snap-g">
+    <div class="gen gc" aria-labelledby="genK">
+      <svg class="gc-orb" aria-hidden="true" focusable="false" viewBox="0 0 600 300" preserveAspectRatio="none"><defs><linearGradient id="gcG" x1="0" x2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset=".25" stop-color="#e879f9"/><stop offset=".5" stop-color="#22d3ee"/><stop offset=".75" stop-color="#a3e635"/><stop offset="1" stop-color="#facc15"/></linearGradient></defs><ellipse cx="300" cy="170" rx="282" ry="104" fill="none" stroke="url(#gcG)" stroke-width="1" vector-effect="non-scaling-stroke"/><circle class="gc-sat" r="2.6" fill="#fff"><animateMotion dur="24s" repeatCount="indefinite" path="M18,170 a282,104 0 1,0 564,0 a282,104 0 1,0 -564,0"/></circle></svg>
+      <span class="gc-pts" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <a class="k gc-t" id="genK" href="../sost-explorer.html?search=0" data-tip="Block #0 · 6517916b98…699f37 · open it in the Explorer" aria-describedby="gcTip">Genesis block</a><span class="sr" id="gcTip">Opens block 0 (hash 6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37) in the Explorer</span>
+      <div class="dt"><time datetime="2026-03-15T18:00:00Z">15 March 2026 · 18:00:00 UTC</time> · <a href="../sost-genesis.html">details</a></div>
+      <div class="ctr gc-ctr" id="genCtr" role="timer" aria-live="off" aria-label="Time since genesis"><span class="u"><b>—</b><small>DAYS</small></span></div>
+      <p class="gc-h">Block 0 · <a class="u-cl" href="../sost-explorer.html?search=6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37" title="Open block 0 6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37 in the Explorer"><code>6517916b98ab…fe699f37</code></a> <button type="button" class="u-cl-copy" data-copy-id="6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37" aria-label="Copy the genesis block hash" title="Copy the full genesis hash"></button></p>
+      <p class="note" style="margin:10px 0 0">Time elapsed since the genesis block (timestamp 1773597600 in <code>genesis_block.json</code>), counted by your browser clock.</p>
+    </div>
+    <nav class="qa" aria-label="Quick actions">
+      <a href="#watch" id="qaWatch">▶ Watch · videos</a>
+      <a href="../sost-explorer.html">Open Explorer</a>
+      <a href="../sost-mine.html">Mine SOST in 10 min</a>
+      <a href="../sost-quickstart.html">Quick Start</a>
+      <a href="../sost-getting-started.html">Full Setup</a>
+      <a href="../sost-whitepaper.html">Read Whitepaper</a>
+    </nav>
+  </div>
+  <div class="snap-r">
+    <div class="appc"><span class="k">SOST App</span><h3>Web app (PWA)</h3>
+      <p>The SOST app is a read-only Progressive Web App that opens the SOST Explorer, installable from a supported browser (including Chrome on Android).</p>
+      <ul><li>Web app · <span class="ms active">AVAILABLE</span></li><li>Android (Google Play) · <span class="ms blocked">NOT PUBLICLY AVAILABLE</span></li></ul>
+      <a class="btn small" href="install.html">Install the SOST app →</a></div>
+    <div class="chainl" aria-labelledby="clK"><span class="k" id="clK">Chain status</span> <span id="clPv"></span>
+      <dl>
+        <div><dt>Last block</dt><dd id="clTip">—<small>&nbsp;</small></dd></div>
+        <div><dt>Difficulty · bitsQ</dt><dd id="clBits">—<small>&nbsp;</small></dd></div>
+        <div><dt>Total supply</dt><dd id="clSup">—<small>&nbsp;</small></dd></div>
+        <div><dt>UTXOs</dt><dd id="clUtxo">—<small>&nbsp;</small></dd></div>
+      </dl></div>
+  </div>
+  <div class="rel rel-min" id="relStrip" aria-label="Current software"></div>
+</section>
+
+<section class="sec" id="status" aria-labelledby="statusH">
+  <div class="eyebrow">Network status</div>
+  <h2 id="statusH">The network, as the public node sees it</h2>
+  <p class="lead">Measured from the public node, refreshed every 15 s.</p>
+  <p class="stnote" id="stNote" aria-live="polite"></p>
+  <div class="status" id="stGrid">
+    <div class="stc"><span class="k">Chain tip · last block</span><span class="n" id="vTip">—</span><span class="s" id="sTip">loading…</span></div>
+    <div class="stc"><span class="k">Supply issued</span><span class="n" id="vSup">—</span><span class="s" id="sSup"></span></div>
+    <div class="stc"><span class="k">Difficulty · bitsQ</span><span class="n" id="vBits">—</span><span class="s" id="sBits"></span></div>
+    <div class="stc"><span class="k">Public node · status</span><span class="n" id="vSync">—</span><span class="s" id="sSync"></span></div>
+  </div>
+  <div class="minor"><a class="btn small" href="../sost-explorer.html">Block time, producers, DTD, Jackpot and peers: Explorer →</a><a class="btn small" href="../sost-explorer.html">Advanced statistics</a><a class="btn small" href="../sost-network-status.html">Network status page</a></div>
+</section>
+
+<section class="sec" id="journeys" aria-labelledby="jH">
+  <div class="eyebrow">Where to start</div>
+  <h2 id="jH">Four ways in</h2>
+  <div class="journeys">
+    <a class="jr" style="--c:#fb010d" href="#understand"><span class="no">01 · UNDERSTAND</span><h3>What SOST is</h3><p>A CPU-mined Layer 1 with a fixed, asymptotic supply. Half of every block goes to the miner and half to a deterministic draw among active miners.</p><span class="go">Read the overview ↓</span></a>
+    <a class="jr" style="--c:#22d3ee" href="../sost-explorer.html"><span class="no">02 · EXPLORE</span><h3>Explore the network</h3><p>Blocks, transactions, addresses, difficulty, producers and the DTD Jackpot, with the source and age of every number.</p><span class="go">Open the Explorer →</span></a>
+    <a class="jr" style="--c:#a3e635" href="proto-d-launchpad.html"><span class="no">03 · MINE</span><h3>Start mining</h3><p>Windows (WSL2) or Linux, 8 GB of RAM in total. Validated commands with copy buttons, expected output and a guided diagnostic.</p><span class="go">Mining Launchpad →</span></a>
+    <a class="jr" style="--c:#facc15" href="../sost-wallet.html"><span class="no">04 · WALLET</span><h3>Your wallet</h3><p>The self-custody web wallet: keys stay in your browser. Back up the seed offline; nobody can recover it for you.</p><span class="go">Open the wallet →</span></a>
+  </div>
+  <div class="minor"><a class="btn small" href="../sost-whitepaper.html">Whitepaper</a><a class="btn small" href="../sost-protocol-spec.html">Protocol spec</a><a class="btn small" href="../sost-pitch-deck">Project Pitch Deck (PDF)</a><a class="btn small" href="../sost-faq.html">FAQ</a><a class="btn small" href="../sost-help.html">Help</a><a class="btn small" href="../sost-community.html">Community</a><a class="btn small" href="https://github.com/Neob1844/sost-core">GitHub</a><a class="btn small" href="../news.html">News</a></div>
+</section>
+
+<section class="sec" id="concentration" aria-labelledby="cH">
+  <div class="eyebrow">Block production by address · measured</div>
+  <h2 id="cH">Who produced the recent blocks</h2>
+  <p class="lead">Blocks grouped by coinbase (miner) address over the collector's block series. A small, young network with few active miners is expected to show few addresses here. The figures are reported as measured, without a judgement.</p>
+  <div class="grid g2">
+    <div class="box" id="conc1200"><span class="k">Last 1,200 blocks</span><div class="skeleton" style="height:150px"></div></div>
+    <div class="box" id="conc288"><span class="k">Last 288 blocks</span><div class="skeleton" style="height:150px"></div></div>
+  </div>
+  <div class="box" id="concHist" style="margin-top:14px"><span class="k">History · consecutive 288-block windows</span><div class="skeleton" style="height:120px"></div></div>
+  <div class="box" style="margin-top:14px">
+    <h3>Method and limits</h3>
+    <p><b>Share</b> = blocks of one address ÷ blocks in the window. <b>HHI</b> (Herfindahl–Hirschman index) = Σ share², with shares in %, so 10,000 = one producer. <b>Nakamoto coefficient</b> = the fewest addresses that together produced more than 50 % of the blocks.</p>
+    <p><b>Windows.</b> The two boxes use the newest 1,200 and 288 rows. The history splits the same series into consecutive, non-overlapping 288-block windows ending at the newest block; an incomplete oldest window is dropped.</p>
+    <p><b>An address is not an entity.</b> One person can mine to many addresses and one address can be shared, so these counts say nothing certain about how many people mine.</p>
+    <p><b>Block production is not hashrate.</b> Blocks found in a window depend on luck and timing as well as on work; no hashrate, ownership or intent is inferred from them.</p>
+    <a href="../sost-explorer.html">Full producer list by address in the Explorer →</a>
+  </div>
+</section>
+
+<section class="sec" id="understand" aria-labelledby="uH">
+  <div class="eyebrow">Overview</div>
+  <h2 id="uH">What SOST is</h2>
+  <p class="lead">SOST (Sovereign Stock Token) is a native Layer 1 blockchain secured by proof-of-work. It has no ICO, no premine and no venture allocation. The consensus rules changed only through network-adopted upgrades at announced heights (V13, V15, V30000); see <a href="../sost-foundation.html">governance</a>.</p>
+  <div class="grid g4">
+    <div class="box"><span class="k">Time</span><h3>600 s blocks</h3><p>144 blocks a day. cASERT sets two separate things: bitsQ (Q16.16 numeric target, from the 288-block average, ±15 s dead band) and the Equalizer profile (43 profiles, E7–H35).</p><a href="../casert-spec.html">cASERT spec</a></div>
+    <div class="box"><span class="k">Work</span><h3>ConvergenceX</h3><p>Memory-hard CPU proof-of-work: 4 GB dataset + 4 GB scratchpad, 8 GB of RAM in total for mining (threads share one scratchpad). Verification needs about 500 MB, no dataset.</p><a href="../sost-technology.html">Technology</a></div>
+    <div class="box"><span class="k">Scarcity</span><h3>≈ 4,669,201 SOST</h3><p>Asymptotic cap (Feigenbaum δ × 10⁶). The reward decays by e<sup>−1/4</sup> each epoch of 131,553 blocks (~2.5 years); about 95 % is mined in ~12 epochs.</p><a href="../sost-tokenomics.html">Tokenomics</a></div>
+    <div class="box"><span class="k">Distribution</span><h3>50 % miner · 50 % DTD</h3><p>Enforced since V15 (#25,000). Until #25,000 the other half went 25 % to a metals reserve and 25 % to PoPC; both shares are 0 today. <span class="ms retired">HISTORICAL · RETIRED</span></p><a href="#dtd">How the DTD works</a></div>
+  </div>
+  <details class="more" style="margin-top:14px"><summary>Protocol summary table</summary>
+    <div class="tblw"><table class="tbl"><tbody>
+      <tr><th>Consensus</th><td>ConvergenceX proof-of-work, CPU-oriented (no claim that ASICs are impossible)</td></tr>
+      <tr><th>Block time</th><td>600 s target; bitsQ from the 288-block mean; Equalizer E7–H35 (V8, #5,750+)</td></tr>
+      <tr><th>Monetary policy</th><td>Initial reward 7.85100863 SOST; q = e<sup>−1/4</sup> per 131,553-block epoch; asymptotic cap ≈ 4,669,201</td></tr>
+      <tr><th>Emission split</th><td>50 % miner / 50 % DTD since #25,000 (metals reserve and PoPC shares: 0)</td></tr>
+      <tr><th>Reserve</th><td>Historical only. SOST is not backed by gold and has no peg or redemption right</td></tr>
+      <tr><th>Unit</th><td>1 SOST = 100,000,000 stocks</td></tr>
+      <tr><th>Address</th><td><code>sost1</code> + 40 hex characters</td></tr>
+      <tr><th>Signatures</th><td>ECDSA secp256k1, LOW-S; Schnorr only for SbPoW miner signatures</td></tr>
+      <tr><th>Genesis</th><td>2026-03-15 18:00:00 UTC (<a href="../sost-genesis.html">genesis</a>)</td></tr>
+      <tr><th>Release</th><td id="relRow">see protocol-status.json</td></tr>
+      <tr><th>Standards</th><td>SLIP-0044 coin type 1869902947 (0x6F747463), merged 2026-06-15 (<a href="https://github.com/satoshilabs/slips/pull/2004">PR 2004</a>); BIP-173/350 addresses; path m/44'/1869902947'/0'/0/0 (HD derivation planned; the reference wallet is BIP-39 seed = key)</td></tr>
+    </tbody></table></div>
+  </details>
+  <details class="more"><summary>Emission by epoch</summary>
+    <div class="tblw"><table class="tbl"><thead><tr><th>Epoch</th><th>Blocks</th><th class="r">Reward / block (SOST)</th></tr></thead><tbody>
+      <tr><td>0</td><td>0 – 131,552</td><td class="r">7.85100863</td></tr><tr><td>1</td><td>131,553 – 263,105</td><td class="r">≈ 6.1145</td></tr>
+      <tr><td>2</td><td>263,106 – 394,658</td><td class="r">≈ 4.7613</td></tr><tr><td>3</td><td>…</td><td class="r">≈ 3.7084</td></tr>
+      <tr><td>4</td><td>…</td><td class="r">≈ 2.8882</td></tr><tr><td>5</td><td>…</td><td class="r">≈ 2.2492</td></tr>
+    </tbody><caption>Each epoch multiplies the reward by e<sup>−1/4</sup> ≈ 0.7788. Source: website/index.html Key Statistics (reward panel).</caption></table></div>
+  </details>
+</section>
+
+<section class="sec" id="dtd" aria-labelledby="dH">
+  <div class="eyebrow">DTD and DTD Jackpot <span class="ms active">ACTIVE</span></div>
+  <h2 id="dH">Value returns to the people who run the network</h2>
+  <p class="lead">Two deterministic, keyless, supply-neutral draws. Same blocks + same rules + same state = same result: anyone can recompute every winner. Nothing here is random and nothing is a promise of gain.</p>
+  <div class="grid g2">
+    <div class="box"><h3>① Normal DTD · every block</h3>
+      <p>Half of each block's subsidy goes to one eligible miner. Eligibility: an SbPoW-signed block in the last 288 blocks (since #30,000), a 6-block cooldown that yields if it would empty the set, and anti-dominance (≥ 10 % of 288 blocks) armed only with ≥ 11 distinct miners.</p>
+      <p class="note">Seed: SHA256("SOST_LOTTERY_V11" ‖ hashes h−16…h−1 ‖ h) mod the size of the sorted eligible list. History: 2-of-3 blocks at #7,100, 1-of-3 from #12,100, every block since V15 (#25,000).</p></div>
+    <div class="box"><h3>② DTD Jackpot V2 · every 288 blocks</h3>
+      <p>Drains the reserve accumulated before #25,000: base 100 SOST, cap 500, at heights #25,290 + 288k. Since #30,000 (first V2 draw #30,186): NODE_BIND + heartbeats in 3 of the last 4 epochs + ≥ 3 SbPoW blocks in the last 2,016, weighted by those blocks; no cooldown or anti-dominance; rollover when nobody is eligible.</p>
+      <p class="note">Seed: SHA256("SOST_HIST_JACKPOT" ‖ 16 hashes ‖ h) mod total weight. #25,290–#29,898 paid the DTD winner (historical rule).</p></div>
+  </div>
+  <div class="minor"><a class="btn small" href="proto-c-orbit.html">288 Orbit (confirmed jackpots)</a><a class="btn small" href="../sost-explorer.html">DTD in the Explorer</a><a class="btn small" href="../sost-tokenomics.html">Tokenomics</a></div>
+</section>
+
+<section class="sec" id="ecosystem" aria-labelledby="eH">
+  <div class="eyebrow">Ecosystem</div>
+  <h2 id="eH">Modules and their real status</h2>
+  <p class="lead">Not everything that has a page is running. Each module states its status; the source is <code>protocol-status.json</code> and the security notices.</p>
+  <div class="legend-ms" id="msLegend"></div>
+  <div class="notice-h01" role="note">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span>Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div>
+  <div class="eco" id="eco"></div>
+</section>
+
+<section class="sec" id="verify" aria-labelledby="vH">
+  <div class="eyebrow">Audit &amp; verify</div>
+  <h2 id="vH">What you can check today, and what is not claimed</h2>
+  <div class="grid g2">
+    <div class="box"><h3>Verifiable</h3><p>Source code <a href="https://github.com/Neob1844/sost-core">Neob1844/sost-core</a> · <code>genesis_block.json</code> · emission split in <code>include/sost/params.h</code> (50/25/25 for #0–#24,999, 50/50 from #25,000) · SbPoW signatures from #7,100 · anti-dominance in <code>src/lottery.cpp</code> · deterministic builds · every DTD and Jackpot winner recomputable from block hashes.</p></div>
+    <div class="box"><h3>Not claimed</h3><p>No post-quantum safety (ECDSA today; PQ is research). No external security audit. No price floor, peg or redemption. No regulatory clearance. No exchange listing. The network is young; few addresses produce most blocks today (measured above). <a href="../sost-whitepaper.html#sec-decentralization">Honest assessment</a></p></div>
+  </div>
+</section>
+
+<section class="sec" id="research" aria-labelledby="rH">
+  <div class="eyebrow">Research <span class="ms research">RESEARCH</span></div>
+  <h2 id="rH">#40,000 — V17 proposed upgrade (not active)</h2>
+  <p class="lead">V17 is a release candidate under testing: no release has been published and nothing is active. Proposed from #40,000: 80 % miner / 15 % DTD / 5 % into a Jackpot accumulator (no new supply), a PoW-commit winner seed, full re-execution of ConvergenceX proofs and native multisig. Native assets and the wSOST bridge are not part of V17. If the release criteria are not met, nothing activates (the only alternative height prepared is #50,000). Current consensus is unchanged: 50 % miner / 50 % DTD. <a href="../news.html#decentralization">Read the notice</a></p>
+</section>
+
+<section class="sec" id="app" aria-labelledby="aH">
+  <div class="grid g2">
+    <div class="box"><span class="k">Web app</span><h3 id="aH">SOST App</h3><p>The SOST app is a Progressive Web App that opens the SOST Explorer and can be installed from a supported browser. An Android app is not publicly available on Google Play.</p><a href="install.html">Install the SOST app →</a></div>
+    <div class="box" id="watch"><span class="k">Watch</span><h3>Videos</h3><p>SOST in 3 minutes (protocol, mining, tokenization). The mechanisms film also shows the atomic swap, retired under H-01 <span class="ms retired">HISTORICAL · RETIRED</span>.</p>
+      <div class="minor"><button class="btn small" type="button" data-vid="../sost-intro.mp4?v=20261011b" data-poster="../sost-intro-poster.jpg?v=rs20261112g">▶ SOST in 3 minutes</button><button class="btn small" type="button" data-vid="../sost-mechanisms.mp4?v=20261011c" data-poster="../sost-mechanisms-poster.jpg?v=rs20261112g">▶ Mechanisms (DTD, Jackpot, retired swap)</button></div></div>
+  </div>
+  <p class="note" id="devnote" style="margin-top:14px">Developer note: SOST is experimental software in pre-market testing. Success, value, listings and adoption are not guaranteed. Music in the videos: Scott Buckley (CC BY 4.0).</p>
+</section>
+</main>
+
+<div id="u-audio"></div>
+<footer class="site" aria-label="Site directory">
+  <div class="dir" id="dir"></div>
+  <p class="fine">SOST · ConvergenceX proof-of-work · genesis 2026-03-15 18:00:00 UTC · MIT License (<a href="../sost-license.html">license</a>) · <a href="https://bitcointalk.org/index.php?topic=5579432">Bitcointalk ANN</a> · <a href="https://t.me/SOSTProtocolOfficial">Telegram</a> · <a href="../index-legacy.html">Previous home page</a>.</p>
+</footer>
+<dialog class="vid" id="vid" aria-label="Video"><div class="bar"><span id="vidT">Video</span><button class="btn small" type="button" id="vidX">Close (Esc)</button></div><video id="vidV" controls preload="none" playsinline></video></dialog>
+<div class="u-offline" id="uOffline"></div>
+<div class="u-bar"><span id="uStatus" data-compact="1"><span class="st loading">LOADING</span></span>
+  <span class="sp"><span class="scn" id="scn"><span class="hide-m">scene</span> <b id="scnName">—</b> <button class="btn small scn-next" id="scnNext" type="button" title="Show another scene (never the same one twice)">↻ <span class="hide-xs">Another scene</span></button></span><span class="qual" role="group" aria-label="Scene test controls" id="scnTest" hidden><select id="scnSel" aria-label="Scene"></select><button id="scnLock" type="button" aria-pressed="false">LOCK</button><span id="scnInfo"></span></span><button class="btn small imm-t" id="immT" type="button" aria-pressed="false" title="Immersive mode: hide the navigation, the labels and the cards. The scene keeps running."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg> <span>Immersive</span></button><button class="btn small bar-more" id="barMore" type="button" aria-expanded="false" aria-controls="scn" title="Scene and effects controls">Scene <span aria-hidden="true">▴</span></button><a class="btn small hide-m" href="legacy/matrix-legacy.html" title="Plays the original 12 s red Matrix splash, unchanged">Matrix Legacy</a><button class="btn small" id="replayIntro" type="button">↺ intro</button>
+  <span class="qual" role="group" aria-label="Visual quality"><span class="hide-m">effects</span><button data-q="auto">AUTO</button><button data-q="high">HIGH</button><button data-q="balanced">BAL</button><button data-q="lite">LITE</button><button data-q="off">OFF</button><span class="qnote" id="qNote" role="status" aria-live="polite"></span></span>
+  <span class="fps hide-m" id="fps" aria-hidden="true"></span></span></div>
+
+<script src="core/u-genesis.js"></script>
+<script src="core/u-splash.js?v=sp-20261105"></script>
+<script>
+(function(){var mode=window.__introMode, sk=document.getElementById('skipIntro');
+ // a splash failure never blocks Home (owner P0, 5 Nov 2026): done() runs once; a script error or a stall hands over to Home
+ var fin=false; function done(){if(fin)return;fin=true;document.body.classList.remove('intro','splash-on');sk.hidden=true;if(window.__afterIntro)window.__afterIntro();}
+ function fail(){['splash','genesis'].forEach(function(id){var e=document.getElementById(id);if(e)e.hidden=true;});done();}
+ if(mode==='none'){done();return;}
+ sk.hidden=false; var g;
+ setTimeout(function(){if(fin)return;try{g&&g.skip();}catch(e){}setTimeout(function(){if(!fin)fail();},900);},15000);
+ try{
+ if(mode==='genesis'){var gc=document.getElementById('genesis');gc.hidden=false;
+   g=SOSTU.genesis.play({canvas:gc,center:function(){var r=gc.getBoundingClientRect(),W=r.width,H=r.height,x=W>900?(1+.32)/2*W:W/2,a=.2644*H;return {x:x,y:H/2,a:a,b:a*.58};},onDone:done});}
+ else {var ea=document.getElementById('coreAnchor'),ov=document.getElementById('splash');
+   g=SOSTU.splash.play({overlay:ov,canvas:document.getElementById('splashCv'),scene:window.__scene.id,
+     target:function(){var r=ea.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,r:r.width/2};},
+     tip:function(){var L=window.SOSTU&&SOSTU.data&&SOSTU.data.last&&SOSTU.data.last();return L&&L.state?{h:L.state.meta.height,status:L.status}:null;},
+     onReveal:function(){document.body.classList.remove('splash-on');},onDone:done});
+   ov.addEventListener('click',function(){g.skip();});}
+ }catch(e){fail();return;}
+ window.__intro=g; function skip(){try{g.skip();}catch(e){fail();}} sk.onclick=skip;
+ addEventListener('keydown',function(e){if(e.key==='Escape')skip();},{once:true});
+ addEventListener('wheel',skip,{passive:true,once:true});addEventListener('touchmove',skip,{passive:true,once:true});
+})();
+</script>
+<script src="../control-room/state.js"></script>
+<script src="../control-room/adapter.js"></script>
+<script src="core/u-data.js"></script>
+<script src="core/u-ui.js?v=p020261113"></script>
+<script src="core/u-chain.js?v=p0-20261105"></script>   <!-- blockchain link router: every address / block / tx opens its own record -->
+<script>
+// IMMERSIVE MODE (owner orders 4 Nov 2026): only toggles classes on <html>; never touches the scene, its canvases or the engine.
+// Nothing reappears by moving the pointer: the navigation and the cards come back only through the Menu / Cards buttons; the eye exits.
+(function(){var H=document.documentElement,b=document.getElementById('immT'),tn=document.getElementById('immNavTab'),tc=document.getElementById('immCardsTab'),eye=document.getElementById('immEye');if(!b)return;
+ function peek(k,on){H.classList.toggle('peek-'+k,on);var t=k==='nav'?tn:tc;if(t){t.setAttribute('aria-expanded',String(on));t.textContent=k==='nav'?(on?'Hide menu':'Menu'):(on?'Hide cards':'Cards')}}
+ function set(on,save){if(window.SOSTU&&SOSTU.nav&&SOSTU.nav.close)SOSTU.nav.close();var xb=document.querySelector('.u-bar.xp');if(xb){xb.classList.remove('xp');var bm=document.getElementById('barMore');if(bm)bm.setAttribute('aria-expanded','false')}H.classList.toggle('u-imm',on);peek('nav',false);peek('cards',false);b.setAttribute('aria-pressed',String(on));b.querySelector('span').textContent=on?'Exit immersive':'Immersive';
+  b.title=on?'Exit immersive mode: show the navigation, the labels and the cards again':'Immersive mode: hide the navigation, the labels and the cards. The scene keeps running.';
+  if(save)try{on?sessionStorage.setItem('sostu_imm','1'):sessionStorage.removeItem('sostu_imm')}catch(e){}}
+ set(H.classList.contains('u-imm'),false);
+ b.addEventListener('click',function(){set(!H.classList.contains('u-imm'),true)});
+ if(eye)eye.addEventListener('click',function(){set(false,true);b.focus({preventScroll:true})});
+ if(tn)tn.addEventListener('click',function(){peek('nav',!H.classList.contains('peek-nav'))});
+ if(tc)tc.addEventListener('click',function(){peek('cards',!H.classList.contains('peek-cards'))});
+ var bm=document.getElementById('barMore'),bar=bm&&bm.closest('.u-bar');
+ function more(o){bar.classList.toggle('xp',o);bm.setAttribute('aria-expanded',String(o))}
+ if(bm){bm.addEventListener('click',function(){more(!bar.classList.contains('xp'))});
+  document.addEventListener('click',function(e){if(bar.classList.contains('xp')&&!bar.contains(e.target))more(false)});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&bar.classList.contains('xp')){more(false);bm.focus()}})}
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&H.classList.contains('u-imm')&&(H.classList.contains('peek-nav')||H.classList.contains('peek-cards'))){peek('nav',false);peek('cards',false)}});
+})();
+</script>
+<script src="core/u-nav.js?v=in20261113a"></script>
+<script src="core/u-home-art.js?v=p3-20261104" defer></script>
+<script src="core/u-cubes.js?v=p3-20261104" defer></script>   <!-- P3 interactive cubes over the chain canvas -->
+<script src="core/u-eco.js"></script>
+<script src="core/u-core.js"></script>
+<script src="core/u-scenes.js"></script>
+<script src="core/u-audio.js?v=gm-20261104" data-autoplay defer></script>   <!-- soundtrack: tries to really play on load (random track); if the browser blocks it, starts on the first interaction -->
+<script src="core/u-cursor.js?v=p0-20261105" defer></script>   <!-- gravitational cursor (one shared engine; off on touch, reduced motion and secret pages) -->
+<script>
+(function(){
+'use strict';
+var UI=SOSTU.ui, N=SOSTU.nav, $=function(i){return document.getElementById(i);};
+N.render($('nav'),'home'); N.directory($('dir'));
+// ---- ecosystem map (status from protocol-status.json, security notices and the site audit)
+var ECO=SOSTU.eco.LIST;   // shared with ecosystem.html (core/u-eco.js), one source of real states
+$('eco').innerHTML=ECO.map(function(m){return '<a href="'+m[3]+'"><b>'+UI.esc(m[0])+'</b>'+N.badge(m[1])+(m[4]?' <span class="ms blocked">'+UI.esc(m[4])+'</span>':'')+'<small>'+UI.esc(m[2])+'</small></a>';}).join('');
+$('msLegend').innerHTML=Object.keys(N.STATUS).map(function(k){return N.badge(k)+'<span class="d">'+UI.esc(N.STATUS[k].desc)+'</span>';}).join('');
+// ---- protocol status manifest (one GET, static file)
+fetch('../protocol-status.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(p){
+  $('relRow').textContent=p.node_release+' ('+p.release_tag+', commit '+String(p.node_build_commit).slice(0,8)+'); '+p.jackpot_v2;
+}).catch(function(){});
+// ---- videos (lazy: nothing is downloaded until a film is chosen)
+document.querySelectorAll('[data-vid]').forEach(function(b){b.onclick=function(){var v=$('vidV');v.poster=b.dataset.poster;v.src=b.dataset.vid;$('vidT').textContent=b.textContent.replace('▶ ','');$('vid').showModal();v.play().catch(function(){});};});
+$('vidX').onclick=function(){$('vid').close();}; $('vid').addEventListener('close',function(){var v=$('vidV');v.pause();v.removeAttribute('src');v.load();});
+// ---- Convergence Core: deferred until after first paint + idle; poster stays the LCP element
+var MOB=function(){return innerWidth<=560;};
+var core=null, SC=SOSTU.scenes, SCN=SC.byId(window.__scene.id)||SC.SCENES[0];
+var OFFX=window.__coreGeo.offx, STH=window.__coreGeo.h;
+SC.init(SCN.id, window.__scene.why);
+function bootCore(){ if(core) return; var Q=new URLSearchParams(location.search);
+  core=SOSTU.core.mount({canvas:$('stage'),frozen:$('frozen'),settled:false,scene:SCN.index,tier:Q.get('q')?null:SC.profile(SCN)==='high'?'auto':SC.profile(SCN),
+  offx:OFFX, height:STH,
+  gain:function(){return MOB()?.62:1;}, onFps:function(t){$('fps').textContent=t; if(core&&core.tier==='auto'){ var r=core.perf.tier; $('qNote').textContent=r!=='balanced'&&r!=='high'?'AUTO → '+(QN[r]||r)+' (frame time)':''; }},
+  onState:function(s,why){ if(s==='static') $('fps').textContent='static · '+why; }});
+  window.__core=core; SC.attach(core); markQ(core.tier); if(!Q.get('q')&&SC.profile(SCN)!=='high') $('qNote').textContent='device profile: '+QN[SC.profile(SCN)]+' (phone, ≤4 cores, ≤4 GB or Save-Data)'; qCheck(); }
+function idle(f){ (window.requestIdleCallback||function(cb){return setTimeout(cb,200);})(f,{timeout:1500}); }
+function afterPaint(f){ requestAnimationFrame(function(){ requestAnimationFrame(function(){ idle(f); }); }); }
+// Measured (qa-phase4c/perf_4c1.jsonl): an idle slot can come BEFORE the first contentful paint is presented (WSLg GPU start-up), and the
+// GL context creation then delays the paint by ~1.4 s. So the scene boots only after the LCP candidate has been painted (+250 ms),
+// with a 5 s safety net; the poster is the LCP and stays until a real WebGL frame exists.
+function afterLCP(f){ var done=false; function go(){ if(done) return; done=true; setTimeout(function(){ afterPaint(f); },250); }
+  try{ new PerformanceObserver(function(l){ if(l.getEntries().length) go(); }).observe({type:'largest-contentful-paint',buffered:true}); }catch(e){}
+  try{ if(performance.getEntriesByName('first-contentful-paint').length) go(); }catch(e){} setTimeout(go,5000); }
+function bootWhenFree(){ if(document.body.classList.contains('intro')){ window.__afterIntro=function(){ afterPaint(bootCore); }; return; } afterLCP(bootCore); }
+if(document.readyState==='complete') bootWhenFree(); else addEventListener('load',bootWhenFree);
+// Singularity Library: public = scene name + ↻ (another scene, never the same); ?test=1 adds selector, lock and profile/fps (DIRECTIVAS 4C-2)
+var API=window.SOSTUniverse.scene, TEST=new URLSearchParams(location.search).get('test')==='1';
+function showScene(d){ $('scnName').textContent=d.name; var sel=$('scnSel'); if(sel.options.length) sel.value=d.id; $('scnLock').setAttribute('aria-pressed',String(API.locked()===d.id));
+  $('scnInfo').textContent=' #'+(d.index+1)+'/'+SC.SCENES.length+' · '+d.id+' · '+d.reason+' · profile '+SC.profile(SC.byId(d.id)); var pi=$('poster'); pi.srcset=''; pi.src='assets/scenes/'+d.id+(innerWidth<=780?'-780':'-1440')+'.webp'; }
+API.on(showScene);
+$('scnNext').onclick=function(){ API.randomize(); if(!core) bootCore(); };
+if(TEST){ $('scnTest').hidden=false; $('scnSel').innerHTML=SC.SCENES.map(function(x){return '<option value="'+x.id+'">'+(x.index+1)+' · '+x.name+'</option>';}).join(''); $('scnSel').value=API.id;
+  $('scnSel').onchange=function(){API.set(this.value,'test-select');}; $('scnLock').onclick=function(){var on=this.getAttribute('aria-pressed')!=='true'; API.lock(on); this.setAttribute('aria-pressed',String(on));}; }
+// a click or tap on the hero sends an energy wave through the universe
+var hero=document.querySelector('.hero');
+hero.addEventListener('pointerdown',function(e){ if(e.target.closest('a,button,select')) return; if(core) core.pulse(); },{passive:true});
+function markQ(q){document.querySelectorAll('.qual button[data-q]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.q===q?'true':'false');});}
+// Quality profiles (DIRECTIVA 4H stage A): the button pressed is the profile that actually runs; when a limit applies (scene cap,
+// no half-float target on this GPU, auto down-tuning) the note says so instead of pretending.
+var QN={high:'HIGH',balanced:'BAL',lite:'LITE',off:'OFF'}, QO=['lite','balanced','high'];
+function capOf(){ var sc=SC.byId(API.id); return (sc&&sc.cap)||'high'; }
+function applyQ(q){ try{document.documentElement.classList.toggle('u-q-off',q==='off');}catch(e){} if(!core) bootCore(); var note=''; if(q!=='auto'&&q!=='off'&&QO.indexOf(q)>QO.indexOf(capOf())){ note=QN[q]+' → '+QN[capOf()]+': limit of this scene'; q=capOf(); }
+  core.setTier(q,false); markQ(q==='auto'?'auto':q); $('qNote').textContent=note; qCheck(); }
+function qCheck(){ setTimeout(function(){ if(!core) return; var p=core.perf, n=$('qNote').textContent;
+  if(p.cfg&&p.cfg.hdr&&p.hdr===false&&n.indexOf('HDR')<0) $('qNote').textContent=(n?n+' · ':'')+'no HDR target on this GPU: tone mapping off'; },2500); }
+document.querySelectorAll('.qual button[data-q]').forEach(function(b){b.onclick=function(){ applyQ(b.dataset.q); };});
+API.on(function(d){ if(!core||d.reason==='current') return; var t=core.tier; if(t!=='auto'&&t!=='off'&&QO.indexOf(t)>QO.indexOf(capOf())){ core.setTier(capOf(),false); markQ(capOf()); $('qNote').textContent=QN[t]+' → '+QN[capOf()]+': limit of this scene'; } });
+$('replayIntro').onclick=function(){ location.href=location.pathname+'?intro=1'; };
+// ---- Protocol snapshot (DIRECTIVA 4G §2): genesis counter, chain line with provenance, release / activation strip
+(function(){ var G=Date.UTC(2026,2,15,18,0,0), el=$('genCtr'), RMv=SOSTU.core&&SOSTU.core.RM;
+  function p2(n){return (n<10?'0':'')+n;}
+  function tick(){ var d=Math.max(0,Date.now()-G), D=Math.floor(d/864e5), H=Math.floor(d%864e5/36e5), M=Math.floor(d%36e5/6e4), S=Math.floor(d%6e4/1e3);
+    var u=function(v,l,c){return '<span class="u'+(c||'')+'"><b>'+v+'</b><small>'+l+'</small></span>';}, sep='<span class="sp" aria-hidden="true">:</span>';
+    el.innerHTML=u(D,'DAYS',' d')+sep+u(p2(H),'HOURS')+sep+u(p2(M),'MINUTES')+sep+u(p2(S),'SECONDS',' s');
+    if(S===0&&!RMv){el.parentNode.classList.remove('gc-pulse');void el.offsetWidth;el.parentNode.classList.add('gc-pulse');} }   // one soft pulse per minute
+  tick(); setInterval(tick, 1000);
+  $('qaWatch').onclick=function(e){ var b=document.querySelector('[data-vid]'); if(b){ e.preventDefault(); b.click(); } };
+})();
+var SNAP={act:null,height:null,m:null};
+function relRender(){ var m=SNAP.m; if(!m) return;   // 13-Nov-2026: one discreet line; release history and upgrade notes live in News
+  $('relStrip').innerHTML='<span>Current software <b>'+UI.esc(m.release_tag)+'</b> · <a href="../news.html">release history and upgrade notes</a></span>'; }
+fetch('../protocol-status.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(m){SNAP.m=m;relRender();}).catch(function(){});
+SOSTU.data.subscribe(function(s){ if(!s.state) return; var a=s.state.active, info=(s.doc&&s.doc.bundle&&s.doc.bundle.info)||{};
+  SNAP.height=s.state.meta.height; relRender();
+  $('clPv').innerHTML=okData(s)?stTag(s):stTag(s);
+  if(!okData(s)){ ['clTip','clBits','clSup','clUtxo'].forEach(function(id){$(id).innerHTML='—<small>&nbsp;</small>';}); return; }
+  $('clTip').innerHTML='#'+UI.num(s.state.meta.height)+'<small>'+UI.dur(a.chain.tipAge.value)+' ago</small>';
+  var b=a.consensus.bitsQ; $('clBits').innerHTML=(b.q16!=null?b.q16.toFixed(2):'—')+'<small>Equalizer '+UI.esc(a.consensus.equalizerNext.value||'—')+'</small>';
+  $('clSup').innerHTML=UI.num(a.supply.total.value,0)+'<small>SOST issued</small>';
+  $('clUtxo').innerHTML=(info.utxo_count!=null?UI.num(info.utxo_count):'—')+'<small>unspent outputs</small>'; });
+// ---- data (one shared layer, no RPC)
+var PAL=['#22d3ee','#e879f9','#a3e635','#facc15','#fb923c','#8b5cf6','#3b82f6','#4ade80'];
+function kindOf(s){return s.status==='live'?'observed':'historical';}
+// 13-Nov-2026: no per-value STALE pills on Home. LIVE data is shown; anything else is blanked with one discreet notice
+// (u-data.js still decides LIVE / STALE / OFFLINE exactly as before; details stay on the Network status page).
+function okData(s){ return !!s.state; }   // P0 13-Nov: any validated document (live, last verified or stored) is shown, with its date
+function ageOf(s){ return s.collectedAt?Math.max(0,Date.now()/1000-s.collectedAt):null; }
+function stTag(s){ if(s.status==='live') return UI.pv('observed','LIVE'); if(s.status==='fixture') return UI.pv('historical','FIXTURE · NOT LIVE');
+  if(!s.state) return UI.pv('unavailable','OFFLINE · source unreachable');
+  return s.status==='offline'?UI.pv('unavailable','OFFLINE · LAST VERIFIED DATA'):UI.pv('historical','LAST VERIFIED'); }
+function stWhen(s){ if(!s.state||s.status==='fixture') return ''; var a=ageOf(s);
+  return ' <span class="when">collected '+UI.utc(s.collectedAt)+(a!=null&&a>=60?' ('+UI.dur(a)+' ago)':'')+(s.status==='offline'?' · source unreachable now':s.status==='stale'?' · newer data not yet verified':'')+'</span>'; }
+function lab(s,txt){ if(s.status==='live') return txt?UI.pv('observed',txt):''; if(s.status==='fixture') return UI.pv('historical','FIXTURE · NOT LIVE'); return ''; }
+function asOf(s,to){ return s.status==='live'?UI.pv('observed','MEASURED'):UI.pv('historical','up to #'+UI.num(to)); }
+function concBox(el,c,title,s){
+  if(!c||!c.window){el.innerHTML='<span class="k">'+title+'</span><p>'+UI.pv('unavailable')+'</p>';return;}
+  var bar=c.list.slice(0,8).map(function(p,i){return '<span style="width:'+p.pct.toFixed(2)+'%;background:'+PAL[i]+'" title="'+UI.esc(UI.short(p.addr)+': '+p.pct.toFixed(2)+' %')+'"></span>';}).join('')+'<span style="flex:1;background:#64748b"></span>';
+  var rows=c.list.slice(0,5).map(function(p,i){return '<tr><td><svg width="9" height="9" aria-hidden="true"><rect width="9" height="9" fill="'+PAL[i]+'"/></svg> '+(SOSTU.chain?SOSTU.chain.link(p.addr,UI.short(p.addr),{copy:true,title:'Open address '+p.addr+' in the Explorer (balance, UTXOs, transactions, rewards)'}):'<span title="'+UI.esc(p.addr)+'">'+UI.esc(UI.short(p.addr))+'</span>')+'</td><td class="r">'+UI.num(p.n)+'</td><td class="r">'+p.pct.toFixed(2)+' %</td></tr>';}).join('');
+  el.innerHTML='<span class="k">'+title+' · #'+UI.num(c.from)+'–#'+UI.num(c.to)+'</span> '+asOf(s,c.to)+
+   '<div class="conc-big"><div><div class="n">'+c.top2.toFixed(1)+' %</div><div class="note">2 largest addresses</div></div><div><div class="n">'+UI.num(c.hhi)+'</div><div class="note">HHI (0–10,000)</div></div><div><div class="n">'+c.nakamoto+'</div><div class="note">Nakamoto coefficient</div></div><div><div class="n">'+c.producers+'</div><div class="note">distinct addresses</div></div></div>'+
+   '<div class="conc-bar" role="img" aria-label="Share of blocks by address">'+bar+'</div>'+
+   '<div class="tblw"><table class="tbl"><thead><tr><th>Address</th><th class="r">Blocks</th><th class="r">Share</th></tr></thead><tbody>'+rows+'</tbody><caption>'+UI.num(c.window)+' blocks, '+UI.utc(c.fromT)+' → '+UI.utc(c.toT)+'. Top 5 of '+c.producers+'.</caption></table></div>';
+}
+function concHist(el,ser,s){
+  if(!ser||!ser.length){el.innerHTML='<span class="k">History · consecutive 288-block windows</span><p>'+UI.pv('unavailable')+'</p>';return;}
+  var W=Math.max(1,ser.length), bars=ser.map(function(w,i){var x=8+i*(284/W), bw=284/W-6, h=w.top2*0.9; return '<rect x="'+x.toFixed(1)+'" y="'+(96-h).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" fill="#22d3ee" opacity=".75"><title>#'+w.from+'–#'+w.to+': top-2 '+w.top2.toFixed(1)+' %</title></rect>';}).join('');
+  var rows=ser.slice().reverse().map(function(w){return '<tr><td>#'+UI.num(w.from)+'–#'+UI.num(w.to)+'</td><td class="r">'+w.top2.toFixed(1)+' %</td><td class="r">'+UI.num(w.hhi)+'</td><td class="r">'+w.nakamoto+'</td><td class="r">'+w.producers+'</td></tr>';}).join('');
+  el.innerHTML='<span class="k">History · consecutive 288-block windows</span> '+asOf(s,ser[ser.length-1].to)+
+   '<svg viewBox="0 0 300 104" width="100%" height="104" role="img" aria-label="Top-2 address share per 288-block window, oldest left"><line x1="4" y1="96" x2="296" y2="96" stroke="#333"/><line x1="4" y1="51" x2="296" y2="51" stroke="#222" stroke-dasharray="3 3"/><text x="296" y="48" fill="#777" font-size="8" text-anchor="end">50 %</text>'+bars+'</svg>'+
+   '<div class="tblw"><table class="tbl"><thead><tr><th>Window</th><th class="r">Top-2</th><th class="r">HHI</th><th class="r">Nakamoto</th><th class="r">Addresses</th></tr></thead><tbody>'+rows+'</tbody><caption>Newest first. Bars: top-2 share, oldest left.</caption></table></div>';
+}
+SOSTU.data.subscribe(function(s){
+  UI.bindStatus(s); if(!s.state){ $('stNote').innerHTML=stTag(s); if(s.status==='offline') $('sTip').textContent='The public node could not be reached. No figures are shown rather than unverified ones.'; return; }
+  var a=s.state.active, c=s.concentration;
+  var colorOf={}; c.w1200.list.forEach(function(p,i){colorOf[p.addr]=i<PAL.length?PAL[i]:'#64748b';});
+  var fresh=s.newBlocks.length>0&&!s.replay;
+  $('stNote').innerHTML=stTag(s)+stWhen(s);
+  var list=s.rows.slice(-12).reverse().map(function(r,i){return Object.assign({color:colorOf[r.miner]||'#64748b',fresh:fresh&&i===0},r);});
+  if(core&&fresh) core.pulse();   // a new real block sends one energy wave (the lateral crystals are removed, DIRECTIVAS 4C-1)
+  ['Tip','Sup','Bits','Sync'].forEach(function(k){ $('v'+k).textContent='—'; $('s'+k).innerHTML=''; });
+  if(!okData(s)) $('sTip').textContent='No validated data from the public node yet.';
+  else {
+  var ta=a.chain.tipAge.value, last=s.rows.length?s.rows[s.rows.length-1]:null;
+  $('vTip').textContent='#'+UI.num(s.state.meta.height);
+  $('sTip').innerHTML='last block '+(ta!=null?UI.dur(ta)+' ago':'—')+(last&&last.t?' · '+UI.utc(last.t):'')+
+    (s.status==='live'&&ta>1800?'<br>No new block yet. The node is reachable and this height is current.':'');
+  $('vSup').textContent=UI.num(a.supply.total.value,0)+' SOST'; $('sSup').innerHTML='issued so far · cap ≈ 4,669,201';
+  var bq=a.consensus.bitsQ; $('vBits').textContent=UI.num(bq.value); $('sBits').innerHTML='Q16 '+(bq.q16!=null?bq.q16.toFixed(2):'—')+' · Equalizer next '+UI.esc(a.consensus.equalizerNext.value||'—');
+  var ns=(s.doc&&s.doc.bundle&&s.doc.bundle.netsum)||{}, ln=ns.local_node||null;   // the node's own health report (peer heights are taken at connect time, not used)
+  if(!ln){ $('vSync').textContent='—'; $('sSync').textContent='no health report in this snapshot'; }
+  else { $('vSync').textContent=ln.status==='ONLINE'&&(ln.tip_age_s==null||ns.tip_stale_after_s==null||ln.tip_age_s<ns.tip_stale_after_s)?'Online · at tip':(ln.status||'—');
+    $('sSync').innerHTML='height #'+UI.num(ln.height)+' · '+UI.num(ns.connections)+' peer connection'+(ns.connections===1?'':'s')+(ln.reasons&&ln.reasons.length?' · '+UI.esc(ln.reasons.join(', ')):''); }
+  }
+  concBox($('conc1200'),c.w1200,'Last 1,200 blocks',s); concBox($('conc288'),c.w288,'Last 288 blocks',s); concHist($('concHist'),c.series288,s);
+  var html='';
+  s.rows.slice(-6).reverse().forEach(function(r,i){var col=colorOf[r.miner]||'#64748b';html+='<li'+(fresh&&i===0?' class="new"':'')+'><a style="--c:'+col+'" href="../sost-explorer.html?search='+r.h+'"><svg width="9" height="9" aria-hidden="true"><circle cx="4.5" cy="4.5" r="4" fill="'+col+'"/></svg>#'+UI.num(r.h)+' <span class="sr">open block in the Explorer, interval </span>'+UI.dur(r.dt)+'</a></li>';});
+  $('latest').innerHTML=html;
+  if(fresh) UI.live('New block '+s.newBlocks[s.newBlocks.length-1]+' observed by the public node');
+});
+})();
+</script>
+</body>
+</html>

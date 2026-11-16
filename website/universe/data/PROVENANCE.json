@@ -1,0 +1,38 @@
+{
+ "_note": "FIXTURES for local prototypes only. Read-only HTTPS GET copies of the public collector snapshots on sostcore.com. Never presented as LIVE.",
+ "control_room.json": {
+  "source": "https://sostcore.com/api/control_room.json",
+  "captured_utc": "2026-11-03T14:36:05Z",
+  "tip": 33558
+ },
+ "block_series.json": {
+  "source": "https://sostcore.com/api/block_series.json",
+  "captured_utc": "2026-11-03T14:36:05Z",
+  "tip": 33552,
+  "rows": 1200
+ },
+ "address_earnings.json": {
+  "source": "https://sostcore.com/api/address_earnings.json",
+  "captured_utc": "2026-11-03T15:05:25Z",
+  "tip": 33560,
+  "used_for": "confirmed DTD Jackpot events (jackpots[]: h, addr, sat, txid, v)"
+ },
+ "node_participation.json": {
+  "source": "https://sostcore.com/api/node_participation.json",
+  "captured_utc": "2026-11-03T16:07:02Z",
+  "tip": 33568,
+  "used_for": "Explorer 2.0 NODE_BIND participation panel"
+ },
+ "dtd_history_acc.json": {
+  "source": "https://sostcore.com/api/dtd_history_acc.json",
+  "captured_utc": "2026-11-03T16:07:02Z",
+  "scannedHeight": 33562,
+  "used_for": "Explorer 2.0 DTD winners and long producer periods"
+ },
+ "rpc/ondemand.json": {
+  "source": "https://sostcore.com/rpc (public gateway, read-only methods only)",
+  "captured_utc": "2026-11-03T16:08Z",
+  "calls": 15,
+  "used_for": "fixture answers for on-demand block/tx/address lookups; anything not captured shows UNAVAILABLE"
+ }
+}
