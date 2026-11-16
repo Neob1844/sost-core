@@ -209,7 +209,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 | Initial block reward | 7.85100863 SOST |
 | Emission | Smooth exponential decay, q = e^(-1/4) |
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |
-| Max supply | 4,669,201 SOST hard cap, enforced at consensus level (subsidy drops to zero when cap is reached; miners earn fees only) |
+| Max supply | 4,669,201.54789641 SOST: the exact sum of the integer emission schedule (the subsidy reaches zero after 82 epochs; miners then earn fees only). Consensus also enforces a `SUPPLY_CAP` ceiling of 4,669,201.60910299 SOST, which the schedule never reaches |
 | 95% supply | ~12 epochs (~30 years) |
 | Reward split | **50% miner / 50% DTD** from V15 (#25,000). Before V15: 50% miner / 25% Gold Funding Vault / 25% PoPC Pool. Gold Vault and PoPC receive **0% of new emission** from V15; their existing balances fund the DTD Jackpot (100 SOST base, 500 cap, no new emission). |
 | Coinbase maturity | 1,000 blocks |

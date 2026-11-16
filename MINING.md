@@ -129,7 +129,7 @@ Then mine at least 1 block to confirm the transaction:
 | Initial reward | 7.85100863 SOST |
 | Coinbase split | 50% miner / 50% DTD since block #25,000 (50% miner / 25% Gold Vault / 25% PoPC Pool for blocks 0–24,999) |
 | Maturity | 1,000 blocks |
-| Max supply | ~4,669,201 SOST |
+| Max supply | 4,669,201.54789641 SOST |
 | Min relay fee | Dynamic relay floor, base 10 stocks/byte since block 15,000 (mempool policy) |
 | P2P port | 19333 |
 | RPC port | 18232 |

@@ -416,7 +416,7 @@ cp -r ~/.sost/chainstate_backup_<timestamp> ~/.sost/chainstate
 | Recompensa inicial | 7.85100863 SOST |
 | Distribución | 50% minero · 50% DTD desde el bloque #25.000 (antes: 50% minero · 25% Gold Vault · 25% PoPC Pool) |
 | Madurez coinbase | 1,000 bloques (~7 días) |
-| Supply máximo | ~4,669,201 SOST |
+| Supply máximo | 4.669.201,54789641 SOST |
 | Puerto P2P | 19333 |
 | Puerto RPC | 18232 |
 | Formato de dirección | `sost1` + 40 caracteres hex |
