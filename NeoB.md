@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SOST is a CPU-friendly, gold-backed cryptocurrency with a UTXO-based transaction model. Every block allocates 50% to miner, 25% to Gold Vault, 25% to PoPC Pool — hardcoded and immutable. C++17 codebase, built with CMake.
+SOST is a CPU-friendly Proof-of-Work cryptocurrency with a UTXO-based transaction model. It is not backed by gold. The coinbase split is 50% miner / 50% DTD since V15 (block #25,000); blocks 0–24,999 used 50% miner / 25% Gold Vault / 25% PoPC Pool. C++17 codebase, built with CMake.
 
 ## Build Commands
 

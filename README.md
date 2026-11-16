@@ -226,27 +226,28 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 
 ## Constitutional Addresses
 
-These addresses receive coinbase rewards at every block. Hardcoded at genesis, immutable forever.
+The coinbase split changed at V15 (block #25,000).
 
-| Role | Allocation |
-|------|-----------|
-| Miner reward | 50% to miner's configured address |
-| Gold Funding Vault | 25% to automatic XAUT/PAXG purchases (auditable on-chain) |
-| PoPC Pool | 25% to Proof of Personal Custody rewards |
+| Role | Blocks 0–24,999 (historical) | Since block #25,000 (current) |
+|------|-----------|-----------|
+| Miner reward | 50% to the miner's address | 50% to the miner's address |
+| Gold Funding Vault | 25% | 0% of new emission |
+| PoPC Pool | 25% | 0% of new emission |
+| DTD (on-chain distribution draw) | — | 50% |
 
-Gold Funding Vault and PoPC Pool addresses are defined in `include/sost/params.h`.
+The Gold Funding Vault and PoPC Pool addresses are defined in `include/sost/params.h`. Their balances from blocks 0–24,999 stay on chain and fund the DTD Jackpot; they receive no new emission. SOST is not backed by gold and is not redeemable for gold.
 
 ### Transaction Fees
 
 | Parameter | Value |
 |-----------|-------|
-| Min relay fee | 1 stock/byte (0.00000001 SOST/byte) |
-| Typical TX (~250 bytes) | ~0.00000250 SOST |
-| Fee split | 50% miner / 25% Gold Vault / 25% PoPC Pool |
+| Min relay fee | Dynamic relay floor (mempool policy, not consensus): base 10 stocks/byte since block 15,000 (1 stock/byte before), raised under mempool pressure |
+| Typical TX (~250 bytes) | ~0.0000025 SOST at the base floor |
+| Fee split | Same as the block subsidy: 50% miner / 50% DTD since #25,000 (50/25/25 before) |
 | Fee market | RBF (Replace-by-Fee) + CPFP (Child-Pays-for-Parent) |
 | Arithmetic | Rational integer (no floating-point in consensus) |
 
-Fees follow the same constitutional 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) as block subsidies. After emission ends, fees continue accumulating gold reserves in perpetuity.
+Fees follow the same split as block subsidies: 50/25/25 for blocks 0&ndash;24,999 and 50% miner / 50% DTD since #25,000. Fees no longer fund the Gold Funding Vault or the PoPC Pool.
 
 ## Native Financial Primitives
 

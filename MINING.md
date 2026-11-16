@@ -86,7 +86,7 @@ Adjust `--threads` to your CPU core count (leave 1-2 cores free for the node).
 
 The miner will:
 - Fetch pending transactions from the mempool
-- Build a candidate block with the correct coinbase split (50% to you, 25% Gold Vault, 25% PoPC Pool)
+- Build a candidate block with the correct coinbase split (50% to you and 50% to the DTD since block #25,000; 50% / 25% Gold Vault / 25% PoPC Pool before)
 - Run the ConvergenceX proof-of-work algorithm
 - Submit solved blocks to your node via RPC
 - Your node validates and broadcasts to the network
@@ -127,10 +127,10 @@ Then mine at least 1 block to confirm the transaction:
 | Algorithm | ConvergenceX (CPU, 4GB RAM, ASIC-resistant) |
 | Block time | 10 minutes target |
 | Initial reward | 7.85100863 SOST |
-| Coinbase split | 50% miner / 25% Gold Vault / 25% PoPC Pool |
-| Maturity | 100 confirmations |
+| Coinbase split | 50% miner / 50% DTD since block #25,000 (50% miner / 25% Gold Vault / 25% PoPC Pool for blocks 0–24,999) |
+| Maturity | 1,000 blocks |
 | Max supply | ~4,669,201 SOST |
-| Min relay fee | 0.00001 SOST (1,000 stocks) |
+| Min relay fee | Dynamic relay floor, base 10 stocks/byte since block 15,000 (mempool policy) |
 | P2P port | 19333 |
 | RPC port | 18232 |
 

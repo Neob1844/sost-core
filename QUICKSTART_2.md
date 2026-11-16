@@ -182,7 +182,7 @@ Respuesta esperada:
 ...
 ```
 
-Cada bloque genera ~7.85 SOST de recompensa total. El 50% (~3.93 SOST) va a tu wallet. El 25% va al Gold Vault y el 25% al PoPC Pool.
+Cada bloque genera ~7.85 SOST de recompensa total. El 50% (~3.93 SOST) va a tu wallet y el otro 50% al DTD, el sorteo on-chain entre mineros recientes (desde el bloque #25.000; hasta el #24.999 era 25% Gold Vault y 25% PoPC Pool). La recompensa decrece de forma suave con el tiempo.
 
 ### 7.1 — Parámetros del minero
 
@@ -414,7 +414,7 @@ cp -r ~/.sost/chainstate_backup_<timestamp> ~/.sost/chainstate
 | Algoritmo | ConvergenceX (CPU, 4GB RAM) |
 | Tiempo objetivo por bloque | 10 minutos |
 | Recompensa inicial | 7.85100863 SOST |
-| Distribución | 50% minero · 25% Gold Vault · 25% PoPC Pool |
+| Distribución | 50% minero · 50% DTD desde el bloque #25.000 (antes: 50% minero · 25% Gold Vault · 25% PoPC Pool) |
 | Madurez coinbase | 1,000 bloques (~7 días) |
 | Supply máximo | ~4,669,201 SOST |
 | Puerto P2P | 19333 |
