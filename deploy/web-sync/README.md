@@ -11,7 +11,9 @@ deploy/web-sync/web-drift-check.sh            # exit 0 = in sync, 1 = drift, 2 =
 ```
 
 It hashes every file on the server and in `website/` (git-tracked files) and lists
-CHANGED / ONLY IN PROD / ONLY IN REPO. It never writes to the server.
+CHANGED / ONLY IN PROD / ONLY IN REPO, then every path skipped by `EXCLUDE.txt`
+(grouped), so an exclusion never hides a new file silently. It fails if an excluded
+path is tracked in git. It never writes to the server.
 
 ## Rules for every web change
 
