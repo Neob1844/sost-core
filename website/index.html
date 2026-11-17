@@ -564,10 +564,9 @@ html.u-imm.peek-nav .imm-fab{top:calc(var(--hud-h,66px) + 22px)}
 <section class="sec" id="app" aria-labelledby="aH">
   <div class="grid g2">
     <div class="box"><span class="k">Web app</span><h3 id="aH">SOST App</h3><p>The SOST app is a Progressive Web App that opens the SOST Explorer and can be installed from a supported browser. An Android app is not publicly available on Google Play.</p><a href="install.html">Install the SOST app →</a></div>
-    <div class="box" id="watch"><span class="k">Watch</span><h3>Videos</h3><p>SOST in 3 minutes (protocol, mining, tokenization). The mechanisms film also shows the atomic swap, retired under H-01 <span class="ms retired">HISTORICAL · RETIRED</span>.</p>
-      <div class="minor"><button class="btn small" type="button" data-vid="../sost-intro.mp4?v=20261011b" data-poster="../sost-intro-poster.jpg?v=rs20261112g">▶ SOST in 3 minutes</button><button class="btn small" type="button" data-vid="../sost-mechanisms.mp4?v=20261011c" data-poster="../sost-mechanisms-poster.jpg?v=rs20261112g">▶ Mechanisms (DTD, Jackpot, retired swap)</button></div></div>
+    <div class="box" id="watch"><span class="k">Watch</span><h3>Videos</h3><p><b>SOST: A New Digital Universe</b> (1:56) presents the network; <b>Inside SOST: The Protocol in Motion</b> (2:16) explains how the protocol works today. Both state what is active (V16) and what is only proposed or planned (V17, Universal Assets, wSOST). English and Spanish subtitles.</p><div class="minor"><button class="btn small" type="button" data-vid="../sost-film-universe.mp4?v=f20261117" data-poster="../sost-film-universe-poster.jpg?v=f20261117">▶ SOST: A New Digital Universe</button><button class="btn small" type="button" data-vid="../sost-film-inside.mp4?v=f20261117" data-poster="../sost-film-inside-poster.jpg?v=f20261117">▶ Inside SOST</button></div><p class="fine" style="margin-top:8px">Previous films, kept as historical records (their content is outdated, including the retired atomic swap): <a href="../sost-intro.mp4">SOST in 3 minutes (Oct 2026)</a> · <a href="../sost-mechanisms.mp4">Mechanisms (Oct 2026)</a>.</p></div></div>
   </div>
-  <p class="note" id="devnote" style="margin-top:14px">Developer note: SOST is experimental software in pre-market testing. Success, value, listings and adoption are not guaranteed. Music in the videos: Scott Buckley (CC BY 4.0).</p>
+  <p class="note" id="devnote" style="margin-top:14px">Developer note: SOST is experimental software in pre-market testing. Success, value, listings and adoption are not guaranteed. Music in the videos: ‘Starfire’ and ‘Convergence’ by Scott Buckley (CC BY 4.0, scottbuckley.com.au).</p>
 </section>
 </main>
 
@@ -656,7 +655,7 @@ fetch('../protocol-status.json',{cache:'no-cache'}).then(function(r){return r.js
   $('relRow').textContent=p.node_release+' ('+p.release_tag+', commit '+String(p.node_build_commit).slice(0,8)+'); '+p.jackpot_v2;
 }).catch(function(){});
 // ---- videos (lazy: nothing is downloaded until a film is chosen)
-document.querySelectorAll('[data-vid]').forEach(function(b){b.onclick=function(){var v=$('vidV');v.poster=b.dataset.poster;v.src=b.dataset.vid;$('vidT').textContent=b.textContent.replace('▶ ','');$('vid').showModal();v.play().catch(function(){});};});
+document.querySelectorAll('[data-vid]').forEach(function(b){b.onclick=function(){var v=$('vidV');v.poster=b.dataset.poster;v.src=b.dataset.vid;(function(src){var b=src.split('?')[0].replace(/\.mp4$/,'');[].slice.call(v.querySelectorAll('track')).forEach(function(t){v.removeChild(t);});if(/sost-film-/.test(b)){[['en','English'],['es','Espa\u00f1ol']].forEach(function(l){var t=document.createElement('track');t.kind='subtitles';t.srclang=l[0];t.label=l[1];t.src=b+'.'+l[0]+'.vtt?v=f20261117';v.appendChild(t);});}})(b.dataset.vid);$('vidT').textContent=b.textContent.replace('▶ ','');$('vid').showModal();v.play().catch(function(){});};});
 $('vidX').onclick=function(){$('vid').close();}; $('vid').addEventListener('close',function(){var v=$('vidV');v.pause();v.removeAttribute('src');v.load();});
 // ---- Convergence Core: deferred until after first paint + idle; poster stays the LCP element
 var MOB=function(){return innerWidth<=560;};

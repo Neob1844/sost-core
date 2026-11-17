@@ -1,0 +1,158 @@
+WEBVTT
+
+1
+00:00:05.500 --> 00:00:09.500 line:1
+01 · CONVERGENCEX AND CPU MINING
+
+2
+00:00:21.000 --> 00:00:25.000 line:1
+02 · A BLOCK IS BUILT, SIGNED AND VALIDATED
+
+3
+00:00:38.500 --> 00:00:42.500 line:1
+03 · TRANSACTIONS TRAVEL BETWEEN NODES
+
+4
+00:00:52.000 --> 00:00:56.000 line:1
+04 · BLOCK REWARD AND THE DTD  ·  V16, ACTIVE
+
+5
+00:01:07.500 --> 00:01:11.500 line:1
+05 · THE DTD JACKPOT  ·  ACTIVE
+
+6
+00:01:21.000 --> 00:01:25.000 line:1
+06 · V17 AT BLOCK #40,000  ·  PROPOSED
+
+7
+00:01:34.500 --> 00:01:38.500 line:1
+07 · UNIVERSAL ASSETS  ·  IN DEVELOPMENT
+
+8
+00:01:50.000 --> 00:01:54.000 line:1
+08 · wSOST  ·  PLANNED, NOT DEPLOYED
+
+9
+00:00:06.600 --> 00:00:10.600 line:-4
+A miner fills in a block header and tries a nonce.
+
+10
+00:00:10.900 --> 00:00:15.500 line:-4
+Each attempt runs 100,000 sequential rounds over a 32 × 32 integer problem,
+reading a 4 GB dataset and a 4 GB scratchpad that depend on the running state.
+
+11
+00:00:15.800 --> 00:00:20.600 line:-4
+A stability check closes the attempt with a 32-byte commitment.
+It wins only if it is below the target set by cASERT.
+
+12
+00:00:22.000 --> 00:00:27.600 line:-4
+Transactions are gathered into a block.
+A Merkle root commits to all of them.
+
+13
+00:00:28.000 --> 00:00:32.200 line:-4
+Since block #7,100 every block carries the miner’s public key
+and a Schnorr (BIP-340) signature — SbPoW.
+
+14
+00:00:32.600 --> 00:00:38.200 line:-4
+Every node recomputes the proof of work and the difficulty
+and checks every rule before it accepts the block.
+
+15
+00:00:39.400 --> 00:00:44.000 line:-4
+A wallet signs a transaction in the browser.
+The private key never leaves the device.
+
+16
+00:00:44.400 --> 00:00:48.400 line:-4
+Nodes relay it to their peers.
+It waits in each node’s mempool.
+
+17
+00:00:48.600 --> 00:00:51.800 line:-4
+A miner includes it in the next block.
+
+18
+00:00:53.000 --> 00:00:57.800 line:-4
+Since block #25,000 every block pays 50 % to its miner
+and 50 % to the DTD — subsidy and fees alike.
+
+19
+00:00:58.200 --> 00:01:02.600 line:-4
+The DTD draws one winner per block, uniformly,
+among addresses that produced a signed block in the last 288 blocks.
+
+20
+00:01:03.000 --> 00:01:07.200 line:-4
+Cooldown and anti-dominance rules apply.
+An unpaid share rolls over.
+
+21
+00:01:08.400 --> 00:01:12.800 line:-4
+Former vault and pool balances form a frozen consensus reserve.
+Only the Jackpot rule can spend it.
+
+22
+00:01:13.200 --> 00:01:16.800 line:-4
+Every 288 blocks: base 100 SOST, capped at 500, with rollover.
+
+23
+00:01:17.200 --> 00:01:20.800 line:-4
+Winners need ≥ 3 PoW blocks in the last 2,016, an active NODE_BIND and heartbeats.
+Weight grows with PoW blocks, not with the number of nodes.
+
+24
+00:01:22.000 --> 00:01:26.400 line:-4
+V16 is the consensus in force today.
+
+25
+00:01:26.800 --> 00:01:30.400 line:-4
+V17 proposes 80 % miner · 15 % DTD · 5 % to a Jackpot accumulator,
+new winner seeds, full re-execution of proofs and native multisig.
+
+26
+00:01:30.600 --> 00:01:34.300 line:-4
+It is not active and no release has been published.
+It would activate only if nodes and miners adopt a release before #40,000.
+
+27
+00:01:35.400 --> 00:01:39.800 line:-4
+Planned: record an asset’s fingerprint on chain
+and have it verified by a quorum of custodians.
+
+28
+00:01:40.200 --> 00:01:44.800 line:-4
+On mainnet the asset layer is switched off (fail-closed).
+Public issuance stays disabled.
+
+29
+00:01:45.200 --> 00:01:49.800 line:-4
+The gate can only open or restrict new issuance —
+it can never move, freeze or confiscate SOST or existing assets.
+
+30
+00:01:51.000 --> 00:01:55.400 line:-4
+Design: an ERC-20 at 1 SOST = 1 wSOST, from a fixed inventory
+released only against verified SOST deposits.
+
+31
+00:01:55.800 --> 00:02:00.400 line:-4
+The contracts exist only in a local laboratory.
+Nothing is deployed on Ethereum mainnet or any public testnet. There is no official address.
+
+32
+00:02:00.800 --> 00:02:05.300 line:-4
+Before any value: new SOST consensus rules, decentralised block production,
+an independent external audit and legal review.
+
+33
+00:02:07.000 --> 00:02:15.500 line:-4
+SOST — Independent Layer 1 Blockchain
+sostcore.com  ·  Whitepaper v4.7
+
+34
+00:02:08.000 --> 00:02:15.500 line:-1
+Music: ‘Convergence’ by Scott Buckley — CC BY 4.0 — scottbuckley.com.au
