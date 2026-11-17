@@ -597,11 +597,11 @@ window.__sostNavHost = function () { return window.__sostUniverseShell() ? null 
       +'<button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>'
       +'<div id="sv-chooser" class="sv-chooser"><div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>'
       +'<div class="sv-cards">'
-      +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-film-universe.mp4?v=f20261117\',\'SOST: A New Digital Universe &middot; 1:56\')">'
-      +'<span class="sv-thumb" style="background-image:url(\'sost-film-universe-poster.jpg?v=f20261117\')"><span class="sv-play">&#9654;</span></span>'
+      +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-film-universe.mp4?v=f20261117b\',\'SOST: A New Digital Universe &middot; 1:56\')">'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-film-universe-poster.jpg?v=f20261117b\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">SOST: A New Digital Universe</span><span class="sv-card-s">Cinematic overview &middot; 1:56</span></button>'
-      +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-film-inside.mp4?v=f20261117\',\'Inside SOST: The Protocol in Motion &middot; 2:16\')">'
-      +'<span class="sv-thumb" style="background-image:url(\'sost-film-inside-poster.jpg?v=f20261117\')"><span class="sv-play">&#9654;</span></span>'
+      +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-film-inside.mp4?v=f20261117b\',\'Inside SOST: The Protocol in Motion &middot; 2:16\')">'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-film-inside-poster.jpg?v=f20261117b\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">Inside SOST</span><span class="sv-card-s">How the protocol works today: mining, blocks, DTD, Jackpot, V17 &middot; 2:16</span></button>'
       +'</div></div>'
       +'<div id="sv-player" class="sv-player" style="display:none">'
@@ -616,7 +616,7 @@ window.__sostNavHost = function () { return window.__sostUniverseShell() ? null 
     m.classList.add('open'); m.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; window.backSv(); };
   window.pickSv=function(src,cap){ document.getElementById('sv-chooser').style.display='none';
     document.getElementById('sv-player').style.display='flex'; document.getElementById('sv-caption').innerHTML=cap;
-    var v=document.getElementById('sv-video'),s=document.getElementById('sv-source'); s.setAttribute('src',src); var b=src.split('?')[0].replace(/\.mp4$/,'');[].slice.call(v.querySelectorAll('track')).forEach(function(t){v.removeChild(t);});if(/sost-film-/.test(b)){[['en','English'],['es','Espa\u00f1ol']].forEach(function(l){var t=document.createElement('track');t.kind='subtitles';t.srclang=l[0];t.label=l[1];t.src=b+'.'+l[0]+'.vtt?v=f20261117';v.appendChild(t);});} v.load();
+    var v=document.getElementById('sv-video'),s=document.getElementById('sv-source'); s.setAttribute('src',src); var b=src.split('?')[0].replace(/\.mp4$/,'');[].slice.call(v.querySelectorAll('track')).forEach(function(t){v.removeChild(t);});if(!document.getElementById('sv-cue-css')){var cs=document.createElement('style');cs.id='sv-cue-css';cs.textContent='video::cue{font-size:clamp(15px,2.8vh,34px);line-height:1.35;color:#fff;background:rgba(0,0,0,.62)}';document.head.appendChild(cs);}if(/sost-film-/.test(b)){[['en','English'],['es','Espa\u00f1ol']].forEach(function(l){var t=document.createElement('track');t.kind='subtitles';t.srclang=l[0];t.label=l[1];t.src=b+'.'+l[0]+'.vtt?v=f20261117bb';if(l[0]==='en'){t.default=true;}v.appendChild(t);});var en=function(){for(var i=0;i<v.textTracks.length;i++){var k=v.textTracks[i];k.mode=(k.language==='en')?'showing':'disabled';}};en();v.addEventListener('loadedmetadata',en,{once:true});} v.load();
     try{ v.currentTime=0; v.play().catch(function(){}); }catch(e){} };
   window.backSv=function(){ var v=document.getElementById('sv-video'); try{ v.pause(); }catch(e){}
     document.getElementById('sv-player').style.display='none'; document.getElementById('sv-chooser').style.display='block'; };

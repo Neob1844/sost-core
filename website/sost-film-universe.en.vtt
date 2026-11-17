@@ -1,72 +1,59 @@
 WEBVTT
 
 1
-00:00:02.000 --> 00:00:07.000 line:-4
+00:00:02.000 --> 00:00:07.000 line:91%,end align:center size:90%
 Out of noise, a rule that anyone can verify.
 
 2
-00:00:11.600 --> 00:00:15.900 line:-4
-SOVEREIGN STOCK TOKEN — SOST
-
-3
-00:00:17.400 --> 00:00:23.400 line:-4
+00:00:17.400 --> 00:00:23.400 line:91%,end align:center size:90%
 15 March 2026 · 18:00 UTC — the genesis block
 An independent Layer 1 blockchain. No premine, no ICO.
 
-4
-00:00:24.200 --> 00:00:30.600 line:-4
+3
+00:00:24.200 --> 00:00:30.600 line:91%,end align:center size:90%
 Every block links to the one before it, back to genesis.
 
-5
-00:00:32.600 --> 00:00:37.600 line:-4
+4
+00:00:32.600 --> 00:00:37.600 line:91%,end align:center size:90%
 ConvergenceX — a memory-hard, sequential proof of work
 100,000 rounds per attempt · 4 GB dataset · 4 GB scratchpad
 
-6
-00:00:38.000 --> 00:00:42.800 line:-4
+5
+00:00:38.000 --> 00:00:42.800 line:91%,end align:center size:90%
 A reference miner built for ordinary CPUs.
 Consensus does not enforce CPU-only mining.
 
-7
-00:00:44.000 --> 00:00:51.800 line:-4
+6
+00:00:44.000 --> 00:00:51.800 line:91%,end align:center size:90%
 Every node re-checks every block.
 Verification needs only a few megabytes.
 
-8
-00:00:53.400 --> 00:01:00.200 line:-4
+7
+00:00:53.400 --> 00:01:00.200 line:91%,end align:center size:90%
 V16 — active since block #25,000
 Each block pays 50 % to its miner and 50 % to the DTD.
 
-9
-00:01:01.000 --> 00:01:08.400 line:-4
+8
+00:01:01.000 --> 00:01:08.400 line:91%,end align:center size:90%
 DTD: one winner per block, drawn among recent miners.
 DTD Jackpot: every 288 blocks, paid from the frozen consensus reserve.
 
-10
-00:01:09.600 --> 00:01:16.600 line:-4
+9
+00:01:09.600 --> 00:01:16.600 line:91%,end align:center size:90%
 Self-custodial web wallet · public Explorer · open-source nodes
 Interfaces as shown on sostcore.com in November 2026.
 
-11
-00:01:18.000 --> 00:01:27.200 line:-4
+10
+00:01:18.000 --> 00:01:27.200 line:91%,end align:center size:90%
 Universal Assets — registering and verifying real-world assets
 In development and not active on mainnet. Tokenization is a later phase. Illustrative concept.
 
-12
-00:01:28.600 --> 00:01:34.600 line:-4
+11
+00:01:28.600 --> 00:01:34.600 line:91%,end align:center size:90%
 Block #40,000 — a planned milestone
 V17 is a proposed upgrade in testing. It is not active and no release has been published.
 
-13
-00:01:35.200 --> 00:01:40.600 line:-4
+12
+00:01:35.200 --> 00:01:40.600 line:91%,end align:center size:90%
 wSOST on Ethereum — planned, not deployed
 No wSOST contract and no bridge are in operation.
-
-14
-00:01:50.300 --> 00:01:55.600 line:-4
-SOST — Independent Layer 1 Blockchain
-sostcore.com
-
-15
-00:01:51.300 --> 00:01:55.600 line:-1
-Music: ‘Starfire’ by Scott Buckley — CC BY 4.0 — scottbuckley.com.au
