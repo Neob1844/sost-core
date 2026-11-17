@@ -639,7 +639,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- LOADING SCREEN (14-Nov-2026, owner GO «corregir logotipo y tiempo de carga»)
      Official SOST logo only: gold Σ in its rainbow orbit, NO outer ring (Brand Kit v3.1, brand/primary/sost-logo-512-transparent.png).
      Black background. No disc, ring, red halo or circular glow: the only glow is a blurred copy of the logo itself.
-     Visible at least 5 s from the start of the page load (performance.now(), whose origin is the navigation start), every load.
+     Visible at least 8 s from the start of the page load (performance.now(), whose origin is the navigation start), every load
+     (17-Nov-2026: was 5 s; closes at max(8 s, real READY time)). Central block drawn 35 % larger (--sx).
      READY only when the Explorer is really ready (chain height + supply rendered, first block rows, search engine, DOM). It never
      calls the node itself: it watches the Explorer's own /rpc answers passively. «Live data loaded» vs «Last verified data» is
      decided by the age of the newest block the node returned. Failure clocks count visible time only. Slow or failing node: says so, RETRY / OPEN THE EXPLORER
@@ -662,14 +663,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 <style>
-#exLoadOv{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;margin:0;padding:16px;box-sizing:border-box;
+#exLoadOv{--sx:1.35;position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;margin:0;padding:16px;box-sizing:border-box;
   background:#000;font-family:'JetBrains Mono',ui-monospace,monospace;color:#e8ecf2;transition:opacity .6s ease}
 #exLoadOv[hidden]{display:none}
 #exLoadOv.sx-out{opacity:0;pointer-events:none}
 html.sx-loading,html.sx-loading body{overflow:hidden}
 html.sx-loading #jackpotHint{visibility:hidden!important}
-#exLoadOv .sx-stage{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:560px;width:100%}
-#exLoadOv .sx-logo{position:relative;width:min(300px,62vw,38vh);aspect-ratio:1}
+#exLoadOv .sx-stage{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:calc(560px*var(--sx));width:100%}
+#exLoadOv .sx-logo{position:relative;width:min(calc(300px*var(--sx)),calc(62vw*var(--sx)),calc(38vh*var(--sx)));aspect-ratio:1}
 #exLoadOv .sx-logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;user-select:none}
 /* 1 the emblem appears · 2 the rainbow bands light up softly (brightness/saturation of the logo itself) */
 #exLoadOv .sx-mark{opacity:0;transform:scale(.94);animation:sxIn .9s ease-out .1s forwards,sxBands 3.2s ease-in-out 1s infinite}
@@ -678,22 +679,25 @@ html.sx-loading #jackpotHint{visibility:hidden!important}
 @keyframes sxBands{0%,100%{filter:brightness(.94) saturate(1)}50%{filter:brightness(1.1) saturate(1.18)}}
 @keyframes sxGlow{0%,100%{opacity:.12}50%{opacity:.34}}
 @media (prefers-reduced-motion:reduce){#exLoadOv .sx-mark{animation:none;opacity:1;transform:none}#exLoadOv .sx-glow{animation:none;opacity:.2}#exLoadOv{transition:none}}
-#exLoadOv .sx-lbl{margin-top:clamp(18px,3.6vh,32px);font-weight:700;font-size:clamp(14px,2.2vh,18px);letter-spacing:.34em;padding-left:.34em;color:#fac950}
+#exLoadOv .sx-lbl{margin-top:calc(clamp(18px,3.6vh,32px)*var(--sx));font-weight:700;font-size:calc(clamp(14px,2.2vh,18px)*var(--sx));letter-spacing:.34em;padding-left:.34em;color:#fac950}
 #exLoadOv .sx-lbl.ok{color:#4ade80}#exLoadOv .sx-lbl.warn{color:#fbbf24}#exLoadOv .sx-lbl.bad{color:#f87171}
-#exLoadOv .sx-sub{margin-top:8px;font-size:12.5px;color:#a8b0bd;min-height:1.4em;max-width:92vw}
-#exLoadOv .sx-steps{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;font-size:11px;letter-spacing:.06em;color:#5b6270}
-#exLoadOv .sx-steps li{display:flex;align-items:center;gap:6px}
-#exLoadOv .sx-steps li:before{content:"";width:6px;height:6px;border-radius:50%;background:#2c313b;flex:none}
+#exLoadOv .sx-sub{margin-top:calc(8px*var(--sx));font-size:calc(12.5px*var(--sx));color:#a8b0bd;min-height:1.4em;max-width:92vw}
+#exLoadOv .sx-steps{list-style:none;margin:calc(18px*var(--sx)) 0 0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:calc(6px*var(--sx)) calc(16px*var(--sx));font-size:calc(11px*var(--sx));letter-spacing:.06em;color:#5b6270}
+#exLoadOv .sx-steps li{display:flex;align-items:center;gap:calc(6px*var(--sx))}
+#exLoadOv .sx-steps li:before{content:"";width:calc(6px*var(--sx));height:calc(6px*var(--sx));border-radius:50%;background:#2c313b;flex:none}
 #exLoadOv .sx-steps li.on{color:#e8ecf2}#exLoadOv .sx-steps li.on:before{background:#fac950}
 #exLoadOv .sx-steps li.done{color:#9aa3b1}#exLoadOv .sx-steps li.done:before{background:#4ade80}
 #exLoadOv .sx-steps li.bad{color:#f8a3a3}#exLoadOv .sx-steps li.bad:before{background:#f87171}
-#exLoadOv .sx-err{margin-top:18px;border:1px solid #3a3f4a;border-radius:10px;padding:12px 16px;background:#0b0c10;max-width:520px}
-#exLoadOv .sx-err p{margin:0}#exLoadOv .sx-err-t{font-weight:700;color:#fbbf24;font-size:13px}
-#exLoadOv .sx-err-d{margin-top:4px !important;font-size:12px;color:#c3c9d3}
+#exLoadOv .sx-err{margin-top:calc(18px*var(--sx));border:1px solid #3a3f4a;border-radius:10px;padding:calc(12px*var(--sx)) calc(16px*var(--sx));background:#0b0c10;max-width:min(calc(520px*var(--sx)),100%);box-sizing:border-box}
+#exLoadOv .sx-err p{margin:0}#exLoadOv .sx-err-t{font-weight:700;color:#fbbf24;font-size:calc(13px*var(--sx))}
+#exLoadOv .sx-err-d{margin-top:4px !important;font-size:calc(12px*var(--sx));color:#c3c9d3}
 #exLoadOv .sx-err-b{margin-top:10px !important;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-#exLoadOv .sx-err-b button{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.12em;padding:8px 12px;border-radius:6px;border:1px solid #fac950;background:#fac950;color:#000;cursor:pointer}
+#exLoadOv .sx-err-b button{font:700 calc(11px*var(--sx)) 'JetBrains Mono',monospace;letter-spacing:.12em;padding:calc(8px*var(--sx)) calc(12px*var(--sx));border-radius:6px;border:1px solid #fac950;background:#fac950;color:#000;cursor:pointer}
 #exLoadOv .sx-err-b button.sec{background:transparent;color:#fac950}
-#exLoadOv .sx-err-n{margin-top:8px !important;font-size:10.5px;color:#7d8593}
+#exLoadOv .sx-err-n{margin-top:8px !important;font-size:calc(10.5px*var(--sx));color:#7d8593}
+/* very short viewports (phones in landscape): scale less so the block never overflows */
+@media (max-height:560px){#exLoadOv{--sx:1.1}}
+@media (max-height:420px){#exLoadOv{--sx:1}}
 </style>
 <script>
 (function(){
@@ -701,7 +705,7 @@ html.sx-loading #jackpotHint{visibility:hidden!important}
   var d=document, ov=d.getElementById('exLoadOv'); if(!ov) return;
   var lbl=d.getElementById('exLoadLbl'), sub=d.getElementById('exLoadSub'), steps=d.getElementById('exLoadSteps'),
       err=d.getElementById('exLoadErr'), errT=d.getElementById('exLoadErrT'), errD=d.getElementById('exLoadErrD');
-  var MIN_MS=5000, AUTO_LIMITED_MS=45000, STALE_S=3600;
+  var MIN_MS=8000, AUTO_LIMITED_MS=45000, STALE_S=3600;   // 17-Nov-2026: minimum 5 s -> 8 s
   function now(){ return (window.performance&&performance.now)?performance.now():Date.now()-T0; }   // ms since the navigation started
   var T0=Date.now(); d.documentElement.classList.add('sx-loading');
   var closed=false, state='', failMode='', jsErr=[], dcl=false, readyAt=0, verdict='';
@@ -754,7 +758,7 @@ html.sx-loading #jackpotHint{visibility:hidden!important}
   function hide(){ ov.classList.add('sx-out'); setTimeout(function(){ ov.hidden=true; d.documentElement.classList.remove('sx-loading'); },650); }
   function finish(){   // called only once READY is true and at least MIN_MS have passed
     closed=true; clearInterval(poll);
-    window.__exLoader={state:'ready',verdict:verdict,readyAtMs:Math.round(readyAt),closedAtMs:Math.round(now()),rpcOk:net.ok,rpcFail:net.fail,tip:net.tipH};
+    window.__exLoader={state:'ready',verdict:verdict,minMs:MIN_MS,readyAtMs:Math.round(readyAt),closedAtMs:Math.round(now()),rpcOk:net.ok,rpcFail:net.fail,tip:net.tipH};
     hide(); try{ d.dispatchEvent(new CustomEvent('sost:explorer-ready',{detail:window.__exLoader})); }catch(e){}
   }
   function ready(){
@@ -777,7 +781,7 @@ html.sx-loading #jackpotHint{visibility:hidden!important}
   function check(){
     if(closed) return;
     var t=now(), v=vtick();
-    if(readyAt){ if(t>=MIN_MS) finish(); return; }          // READY: keep the screen until 5 s have passed
+    if(readyAt){ if(t>=MIN_MS) finish(); return; }          // READY: keep the screen until MIN_MS (8 s) have passed
     if(d.readyState==='loading'&&!net.first&&!net.fail){ setStep('init'); return; }
     if(!chain()){
       setStep(net.ok===0&&!/\d/.test(txt('dHeight'))?'node':'chain');
@@ -820,7 +824,7 @@ html.sx-loading #jackpotHint{visibility:hidden!important}
 
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-11-04-v587-sigma-loader';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-11-17-v587-splash8s';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
