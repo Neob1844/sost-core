@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST V17 — What's New · Network Upgrade at Block #40,000</title>
-<meta name="description" content="SOST V17: the coordinated network upgrade targeting block #40,000. What changes, the real status of every item, rewards 80/15/5, maturity, reorganization safety, Digital Vault, bridge and decentralization.">
+<meta name="description" content="SOST V17: the coordinated network upgrade targeting block #40,000. What changes, the real status of every item, rewards 80/10/5/5 (proposed), maturity, reorganization safety, Digital Vault, bridge and decentralization.">
 <link rel="canonical" href="https://sostcore.com/sost-v17.html">
 <meta property="og:title" content="SOST V17 — Network Upgrade at Block #40,000">
 <meta property="og:description" content="What changes in V17, the real status of every item, and what node operators and miners must do.">
@@ -22,7 +22,7 @@
 <body>
 <main class="v17" id="top">
 
-<p style="margin:6px 0 0"><span class="tag t-test" data-status>STATUS: TESTING</span> <span class="muted" style="font-size:13px">Updated 14 November 2026 · nothing on this page is active on mainnet yet</span></p>
+<p style="margin:6px 0 0"><span class="tag t-test" data-status>STATUS: TESTING</span> <span class="muted" style="font-size:13px">Updated 17 November 2026 · nothing on this page is active on mainnet yet</span></p>
 <h1>SOST V17 &mdash; Network Upgrade at <em>Block #40,000</em></h1>
 <p class="lead">SOST is preparing a coordinated network upgrade targeting block #40,000. Proposed improvements include revised mining and DTD rewards, new coinbase maturity rules, stronger reorganization safeguards, improved P2P synchronization and enhanced node and wallet security. Node operators and miners must prepare compatible, verified software before activation. The release remains subject to final testing and approval.</p>
 
@@ -45,7 +45,7 @@ All validating nodes and miners must prepare the approved V17 release before blo
 The final release must be published <b>before</b> #39,900: the window is for installing and verifying it, not for starting distribution. The window is counted in blocks; its length in hours depends on the real block rate.</div>
 
 <nav class="toc" aria-label="Contents">
-  <a href="#status">Status</a><a href="#changes">V30000 &rarr; V17</a><a href="#rewards">Rewards 80/15/5</a><a href="#maturity">Maturity</a>
+  <a href="#status">Status</a><a href="#changes">V30000 &rarr; V17</a><a href="#rewards">Rewards 80/10/5/5</a><a href="#maturity">Maturity</a>
   <a href="#reorg">Reorganization safety</a><a href="#vault">Digital Vault</a><a href="#bridge">Atomic Bridge</a>
   <a href="#decentralization">Decentralization</a><a href="#compat">Compatibility</a><a href="#inventory">Full inventory</a>
 </nav>
@@ -66,7 +66,7 @@ The final release must be published <b>before</b> #39,900: the window is for ins
 <h2 id="changes"><small>Summary</small>What changes from V30000 to V17</h2>
 <div class="tbl"><table>
 <tr><th>Area</th><th>Today (V30000 rules)</th><th>V17 candidate (from #40,000)</th><th>Status</th></tr>
-<tr><td>Block reward split</td><td>50% miner / 50% DTD</td><td>80% miner / 15% DTD / 5% Jackpot accumulator</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Block reward split</td><td>50% miner / 50% DTD</td><td>Proposed: 80% miner / 10% DTD / 5% Jackpot accumulator / 5% Useful Compute vault (the candidate code still implements 80% / 15% / 5%)</td><td><span class="tag t-dec">PROPOSED &mdash; CODE CHANGE PENDING</span></td></tr>
 <tr><td>Transaction fees</td><td>Split with the subsidy</td><td>100% to the block miner</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>Jackpot funding</td><td>Frozen reserve only (H)</td><td>Reserve H first, then the new accumulator J</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>DTD / Jackpot winner seed</td><td>From the block id (can be re-signed)</td><td>From the PoW commit (DTD-F1): re-signing a block no longer changes the winner</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
@@ -79,22 +79,25 @@ The final release must be published <b>before</b> #39,900: the window is for ins
 <tr><td>Total supply and emission schedule</td><td>~4.669 M SOST maximum</td><td>Unchanged</td><td><span class="tag t-def">NO CHANGE</span></td></tr>
 </table></div>
 
-<h2 id="rewards"><small>Economics</small>Rewards: 80 / 15 / 5</h2>
-<p><b>Before #40,000 this is a candidate, not an active rule.</b> Every block below #40,000 keeps the current rule: 50% to the miner and 50% to the DTD, fees included. The numbers below come from the consensus code of the V17 candidate (<code>include/sost/v17_economics.h</code>, spec <code>docs/v40000/V17_ECONOMICS_NORMATIVE.md</code>).</p>
+<h2 id="rewards"><small>Economics</small>Rewards: 80 / 10 / 5 / 5 (proposed)</h2>
+<p><b>Before #40,000 this is a proposal, not an active rule.</b> Every block below #40,000 keeps the current rule: 50% to the miner and 50% to the DTD, fees included.</p>
+<p><b>Proposed revision (17 November 2026):</b> reserve 5% of every block subsidy for a <b>Useful Compute vault</b>, taken from the DTD share (15% &rarr; 10%). The V17 candidate code (<code>include/sost/v17_economics.h</code>, spec <code>docs/v40000/V17_ECONOMICS_NORMATIVE.md</code>) still implements 80 / 15 / 5; the new split needs code changes, tests and review before it can be part of a published release. The table shows the proposed split.</p>
 <div class="tbl"><table>
 <tr><th>Destination</th><th>Share of the block subsidy</th><th class="n">Block #40,000 (subsidy 7.85100863 SOST)</th><th class="n">Same block today (50/50)</th></tr>
 <tr><td>Proof-of-Work miner</td><td>80% (+ all fees)</td><td class="n">6.28080691 SOST</td><td class="n">3.92550432 SOST</td></tr>
-<tr><td>Deterministic Token Distribution (DTD)</td><td>15%</td><td class="n">1.17765129 SOST</td><td class="n">3.92550431 SOST</td></tr>
+<tr><td>Deterministic Token Distribution (DTD)</td><td>10%</td><td class="n">0.78510086 SOST</td><td class="n">3.92550431 SOST</td></tr>
 <tr><td>Jackpot accumulator J</td><td>5%</td><td class="n">0.39255043 SOST</td><td class="n">&mdash;</td></tr>
+<tr><td>Useful Compute vault U (proposed)</td><td>5%</td><td class="n">0.39255043 SOST</td><td class="n">&mdash;</td></tr>
 </table></div>
 <ul>
-<li><b>Per block, in integer units</b> (1 SOST = 100,000,000 stocks): DTD = subsidy &times; 15 / 100 and J = subsidy &times; 5 / 100, both rounded down; the miner receives the rest. The miner therefore absorbs any rounding remainder (at most 2 stocks), and the three parts always add up to the subsidy exactly.</li>
+<li><b>Per block, in integer units</b> (1 SOST = 100,000,000 stocks): DTD = subsidy &times; 10 / 100, J = subsidy &times; 5 / 100 and U = subsidy &times; 5 / 100, each rounded down; the miner receives the rest. The miner therefore absorbs any rounding remainder (at most 3 stocks), and the four parts always add up to the subsidy exactly.</li>
 <li><b>Fees:</b> 100% to the miner of the block. They are not split, not burned.</li>
-<li><b>DTD:</b> paid every block to one eligible winner, as today. If nobody is eligible, the 15% rolls over to the next block, as today.</li>
+<li><b>DTD:</b> paid every block to one eligible winner, as today. If nobody is eligible, the 10% rolls over to the next block, as today.</li>
+<li><b>Useful Compute vault U (proposed):</b> a consensus balance (no address, no key, no custodian) that would grow by 5% of each block subsidy, about 0.39 SOST per block today. It would pay rewards only for computation verified independently, never twice for the same task. The verification and payout rules are still being designed; until they are specified, tested and activated, U cannot be spent.</li>
 <li><b>Accumulator J:</b> a consensus balance (no address, no key, no custodian) that grows by 5% of each block subsidy, about 0.39 SOST per block today (about 113 SOST per 288-block Jackpot cycle).</li>
 <li><b>Jackpot prizes:</b> unchanged rules &mdash; every 288 blocks, base 100 SOST, rollover up to a 500 SOST cap, Jackpot V2 winner (NODE_BIND + heartbeats, weighted by PoW). Only the funding changes: the historical reserve <b>H</b> pays first; when H is not enough, J pays the rest. The first V17 Jackpot is at #40,266.</li>
 <li><b>Historical reserve:</b> H (about 64,674 SOST today) stays reserved for Jackpot payments only. It is not moved and not reassigned.</li>
-<li><b>Supply:</b> the emission schedule and the maximum supply (~4.669 M SOST) do not change. No new SOST is created and nothing is burned: J only holds back part of the subsidy and pays it out later. At every height: unspent outputs + pending DTD + J = everything emitted.</li>
+<li><b>Supply:</b> the emission schedule and the maximum supply (~4.669 M SOST) do not change. No new SOST is created and nothing is burned: J and U only hold back part of the subsidy and pay it out later. At every height: unspent outputs + pending DTD + J + U = everything emitted.</li>
 <li><b>Maturity of payouts:</b> the miner output and J-funded Jackpot payouts follow coinbase maturity; H-funded payouts stay immediately spendable, as today.</li>
 </ul>
 
@@ -205,7 +208,8 @@ The final release must be published <b>before</b> #39,900: the window is for ins
 <p class="muted">ACTIVE = live on mainnet today · INCLUDED IN V17 CANDIDATE = in the code that would activate at #40,000 · TESTING = built, still being tested or not merged · PLANNED = designed, not built · DEFERRED = not in V17.</p>
 <div class="tbl"><table>
 <tr><th>Item</th><th>Status</th></tr>
-<tr><td>Reward split 80/15/5 and Jackpot accumulator J</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Jackpot accumulator J</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Reward split: proposed 80/10/5/5 with a Useful Compute vault (candidate code still 80/15/5)</td><td><span class="tag t-dec">PROPOSED &mdash; CODE CHANGE PENDING</span></td></tr>
 <tr><td>DTD-F1: winner seeds from the PoW commit</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>DTD node-participation gate (NODE_BIND + heartbeats)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>ConvergenceX Transcript V3</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>

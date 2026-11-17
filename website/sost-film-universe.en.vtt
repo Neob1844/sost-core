@@ -39,21 +39,41 @@ DTD: one winner per block, drawn among recent miners.
 DTD Jackpot: every 288 blocks, paid from the frozen consensus reserve.
 
 9
-00:01:09.600 --> 00:01:16.600 line:91%,end align:center size:90%
+00:01:10.000 --> 00:01:15.600 line:91%,end align:center size:90%
+Today the chain is near block #36,000 (November 2026).
+Block #40,000 is the planned point for the V17 upgrade.
+
+10
+00:01:16.200 --> 00:01:23.000 line:91%,end align:center size:90%
+V17 proposes 80 % to PoW miners, 10 % to the DTD,
+5 % to the Jackpot and 5 % to Useful Compute. Proposed — not active.
+
+11
+00:01:24.400 --> 00:01:29.800 line:91%,end align:center size:90%
+Useful Compute: 5 % of each block held in a native vault with no private key,
+to reward scientific and industrial computation that clients actually need.
+
+12
+00:01:30.200 --> 00:01:36.400 line:91%,end align:center size:90%
+Rewards only after independent verification — never twice for the same task.
+Proposed for V17: verification and payout rules are still being designed.
+
+13
+00:01:37.400 --> 00:01:44.400 line:91%,end align:center size:90%
 Self-custodial web wallet · public Explorer · open-source nodes
 Interfaces as shown on sostcore.com in November 2026.
 
-10
-00:01:18.000 --> 00:01:27.200 line:91%,end align:center size:90%
+14
+00:01:45.800 --> 00:01:55.000 line:91%,end align:center size:90%
 Universal Assets — registering and verifying real-world assets
 In development and not active on mainnet. Tokenization is a later phase. Illustrative concept.
 
-11
-00:01:28.600 --> 00:01:34.600 line:91%,end align:center size:90%
+15
+00:01:56.400 --> 00:02:02.400 line:91%,end align:center size:90%
 Block #40,000 — a planned milestone
 V17 is a proposed upgrade in testing. It is not active and no release has been published.
 
-12
-00:01:35.200 --> 00:01:40.600 line:91%,end align:center size:90%
+16
+00:02:03.000 --> 00:02:08.400 line:91%,end align:center size:90%
 wSOST on Ethereum — planned, not deployed
 No wSOST contract and no bridge are in operation.

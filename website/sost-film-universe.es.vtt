@@ -39,21 +39,41 @@ DTD: un ganador por bloque, sorteado entre los mineros recientes.
 DTD Jackpot: cada 288 bloques, pagado desde la reserva congelada por consenso.
 
 9
-00:01:09.600 --> 00:01:16.600 line:91%,end align:center size:90%
+00:01:10.000 --> 00:01:15.600 line:91%,end align:center size:90%
+Hoy la cadena se acerca al bloque #36.000 (noviembre de 2026).
+El bloque #40.000 es el punto previsto para la actualización V17.
+
+10
+00:01:16.200 --> 00:01:23.000 line:91%,end align:center size:90%
+V17 propone un 80 % para los mineros PoW, un 10 % para el DTD,
+un 5 % para el Jackpot y un 5 % para Useful Compute. Propuesta, no activa.
+
+11
+00:01:24.400 --> 00:01:29.800 line:91%,end align:center size:90%
+Useful Compute: un 5 % de cada bloque en una bóveda nativa sin clave privada,
+para recompensar cálculos científicos e industriales que los clientes necesiten de verdad.
+
+12
+00:01:30.200 --> 00:01:36.400 line:91%,end align:center size:90%
+Recompensas solo tras una verificación independiente, nunca dos veces por la misma tarea.
+Propuesto para V17: las reglas de verificación y de pago aún están en diseño.
+
+13
+00:01:37.400 --> 00:01:44.400 line:91%,end align:center size:90%
 Wallet web sin custodia · Explorer público · nodos de código abierto
 Interfaces tal como aparecían en sostcore.com en noviembre de 2026.
 
-10
-00:01:18.000 --> 00:01:27.200 line:91%,end align:center size:90%
+14
+00:01:45.800 --> 00:01:55.000 line:91%,end align:center size:90%
 Universal Assets — registro y verificación de activos reales
 En desarrollo y no activo en mainnet. La tokenización es una fase posterior. Concepto ilustrativo.
 
-11
-00:01:28.600 --> 00:01:34.600 line:91%,end align:center size:90%
+15
+00:01:56.400 --> 00:02:02.400 line:91%,end align:center size:90%
 Bloque #40.000 — un hito previsto
 V17 es una actualización propuesta en pruebas. No está activa y no se ha publicado ninguna versión.
 
-12
-00:01:35.200 --> 00:01:40.600 line:91%,end align:center size:90%
+16
+00:02:03.000 --> 00:02:08.400 line:91%,end align:center size:90%
 wSOST en Ethereum — previsto, no desplegado
 No hay ningún contrato wSOST ni ningún puente en funcionamiento.
