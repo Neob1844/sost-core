@@ -184,7 +184,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v576"></script>
-<script src="js/nav-toggle.js?v=rs20261112g-f20261117c"></script>
+<script src="js/nav-toggle.js?v=rs20261112g-f20261117d"></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
@@ -638,16 +638,16 @@ Type:  limit orders with explicit slippage tolerance
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-film-universe.mp4?v=f20261117c','SOST: A New Digital Universe &middot; 2:23')">
-          <span class="sv-thumb" style="background-image:url('sost-film-universe-poster.jpg?v=f20261117c')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-film-universe.mp4?v=f20261117d','SOST: A New Digital Universe &middot; 2:23')">
+          <span class="sv-thumb" style="background-image:url('sost-film-universe-poster.jpg?v=f20261117d')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST: A New Digital Universe</span>
           <span class="sv-card-s">Cinematic overview &middot; 2:23</span>
         </button>
         <button class="sv-card sv-card-mech" type="button"
-          onclick="pickSv('sost-film-inside.mp4?v=f20261117c','Inside SOST: The Protocol in Motion &middot; 2:16')">
-          <span class="sv-thumb" style="background-image:url('sost-film-inside-poster.jpg?v=f20261117c')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-film-inside.mp4?v=f20261117d','Inside SOST: The Protocol in Motion &middot; 2:20')">
+          <span class="sv-thumb" style="background-image:url('sost-film-inside-poster.jpg?v=f20261117d')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">Inside SOST</span>
-          <span class="sv-card-s">How the protocol works today: mining, blocks, DTD, Jackpot, V17 &middot; 2:16</span>
+          <span class="sv-card-s">How the protocol works today: mining, blocks, DTD, Jackpot, V17 &middot; 2:20</span>
         </button>
       </div>
     </div>
@@ -731,7 +731,7 @@ Type:  limit orders with explicit slippage tolerance
     document.getElementById('sv-player').style.display='flex';
     document.getElementById('sv-caption').innerHTML=cap;
     var v=document.getElementById('sv-video'), s=document.getElementById('sv-source');
-    s.setAttribute('src',src); var b=src.split('?')[0].replace(/\.mp4$/,'');[].slice.call(v.querySelectorAll('track')).forEach(function(t){v.removeChild(t);});if(!document.getElementById('sv-cue-css')){var cs=document.createElement('style');cs.id='sv-cue-css';cs.textContent='video::cue{font-size:clamp(15px,2.8vh,34px);line-height:1.35;color:#fff;background:rgba(0,0,0,.62)}';document.head.appendChild(cs);}if(/sost-film-/.test(b)){[['en','English'],['es','Espa\u00f1ol']].forEach(function(l){var t=document.createElement('track');t.kind='subtitles';t.srclang=l[0];t.label=l[1];t.src=b+'.'+l[0]+'.vtt?v=f20261117cb';if(l[0]==='en'){t.default=true;}v.appendChild(t);});var en=function(){for(var i=0;i<v.textTracks.length;i++){var k=v.textTracks[i];k.mode=(k.language==='en')?'showing':'disabled';}};en();v.addEventListener('loadedmetadata',en,{once:true});} v.load();
+    s.setAttribute('src',src); var b=src.split('?')[0].replace(/\.mp4$/,'');[].slice.call(v.querySelectorAll('track')).forEach(function(t){v.removeChild(t);});if(!document.getElementById('sv-cue-css')){var cs=document.createElement('style');cs.id='sv-cue-css';cs.textContent='video::cue{font-size:clamp(15px,2.8vh,34px);line-height:1.35;color:#fff;background:rgba(0,0,0,.62)}';document.head.appendChild(cs);}if(/sost-film-/.test(b)){[['en','English'],['es','Espa\u00f1ol']].forEach(function(l){var t=document.createElement('track');t.kind='subtitles';t.srclang=l[0];t.label=l[1];t.src=b+'.'+l[0]+'.vtt?v=f20261117db';if(l[0]==='en'){t.default=true;}v.appendChild(t);});var en=function(){for(var i=0;i<v.textTracks.length;i++){var k=v.textTracks[i];k.mode=(k.language==='en')?'showing':'disabled';}};en();v.addEventListener('loadedmetadata',en,{once:true});} v.load();
     try{ v.currentTime=0; v.play().catch(function(){}); }catch(e){}
   }
   function backSv(){
