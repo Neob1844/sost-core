@@ -55,6 +55,12 @@
 '.sost-v17-crit b{color:#fff}' +
 '.sost-v17-now{margin:12px 0;padding:10px 13px;border-radius:8px;border:1px solid rgba(57,255,20,.45);background:rgba(57,255,20,.05);color:#d9f7dc}' +
 '.sost-v17-now b{color:#39ff14}' +
+'.sost-v17-split{margin:12px 0;padding:10px 13px;border-radius:8px;border:1px solid rgba(212,175,55,.45);background:rgba(212,175,55,.05)}' +
+'.sost-v17-split .h{display:block;color:#f6d77a;font-weight:900;letter-spacing:.8px;font-size:12px;margin-bottom:4px}' +
+'.sost-v17-split ul{margin:4px 0 6px;padding-left:4px;list-style:none}' +
+'.sost-v17-split li{margin:2px 0}' +
+'.sost-v17-split b{color:#fff}' +
+'.sost-v17-split p{margin:.45em 0;color:#c9ced8}' +
 '.sost-v17-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}' +
 '.sost-v17-links a{display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;border:1px solid rgba(212,175,55,.6);' +
 '  color:#f6d77a;text-decoration:none;font-size:12px;font-weight:700;background:rgba(212,175,55,.06)}' +
@@ -77,6 +83,14 @@
 '  <p class="sost-v17-live" data-v17-live>SOST V17 &mdash; network upgrade &middot; block #40,000</p>' +
 '  <p>SOST is preparing a coordinated network upgrade targeting block <b>#40,000</b>. Proposed improvements include revised mining and DTD rewards, ' +
 '  new coinbase maturity rules, stronger reorganization safeguards, improved P2P synchronization and enhanced node and wallet security.</p>' +
+'  <div class="sost-v17-split"><span class="h">PROPOSED V17 &mdash; NOT ACTIVE</span>' +
+'   <ul><li>&#9935;&#65039; <b>80%</b> PoW miners</li>' +
+'   <li>&#127919; <b>10%</b> Deterministic Token Distribution (DTD)</li>' +
+'   <li>&#127942; <b>5%</b> DTD Jackpot</li>' +
+'   <li>&#129504; <b>5%</b> Useful Compute Reward</li></ul>' +
+'   <p>This split replaces the earlier 80/15/5 proposal. It is <b>not yet implemented or activated in consensus</b>, and it does not increase the total SOST emission.</p>' +
+'   <p><b>Useful Compute Reward (5%, proposed):</b> A future protocol-controlled vault intended to fund independently verified CPU/GPU computational tasks, ' +
+'   including scientific research, simulations and data processing. Verification and payment rules remain under development; no Useful Compute rewards are active.</p></div>' +
 '  <p>Node operators and miners must prepare compatible, verified software before activation. The release remains subject to final testing and approval.</p>' +
 '  <p style="color:#a9b1bf">Status: <b style="color:#f6d77a">' + STATUS + '</b> &mdash; ' + STATUS_NOTE + '</p>' +
 '  <div class="sost-v17-crit"><span class="h">&#9888; CRITICAL &mdash; COORDINATED NETWORK UPGRADE REQUIRED</span>' +
