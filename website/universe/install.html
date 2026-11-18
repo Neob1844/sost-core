@@ -119,6 +119,7 @@ main{position:relative;z-index:var(--z-content);max-width:1080px;margin:0 auto;p
           <li>Confirm with <b>Install</b>. SOST appears with your other apps.</li></ol></div>
       </div>
       <p class="ins-fine">Safari on macOS (Sonoma or later): <b>File</b> → <b>Add to Dock</b>.</p>
+<p class="ins-fine"><b>No install option?</b> SOST is probably installed already, maybe an older version. Type <b>edge://apps</b> (Edge) or <b>chrome://apps</b> (Chrome) in the address bar: open SOST from there, or remove an old copy (right-click → <b>Uninstall</b>), reload this page and press <b>Install SOST</b>. A private window (InPrivate / Incognito) cannot install apps. Removing the app never deletes a wallet.</p>
     </div>
     <div class="ins-panel" role="tabpanel" id="p-and" aria-labelledby="t-and" hidden>
       <div class="ins-two">
@@ -162,6 +163,7 @@ main{position:relative;z-index:var(--z-content);max-width:1080px;margin:0 auto;p
   </section>
 </main>
 <script src="core/u-nav.js?v=in20261113b"></script>
-<script src="core/u-install.js?v=in20261113b"></script>
+<script src="/sw-register.js?v=pwa20261118"></script>
+<script src="core/u-install.js?v=pwa20261118"></script>
 </body>
 </html>

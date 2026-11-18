@@ -54,5 +54,12 @@
       "sizes": "48x48",
       "type": "image/png"
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://sostcore.com/site.webmanifest"
+    }
+  ],
+  "prefer_related_applications": false
 }

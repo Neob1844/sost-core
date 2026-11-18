@@ -1,10 +1,12 @@
-/* Install SOST (universe/install.html), owner P0 13-Nov-2026.
+/* Install SOST (universe/install.html), owner P0 13-Nov-2026; detection and messages revised pwa-20261118.
  * Installs the main SOST app (/site.webmanifest: id "/", name "SOST"), the same app identity as existing installs.
- *   Chrome / Edge / Samsung Internet: the browser's own install dialog (beforeinstallprompt), started by the button.
- *   iPhone / iPad: no install API exists; the iOS steps are selected and the button points to them.
- *   Already inside the installed app (display-mode standalone): says so.
- *   Otherwise: the button is disabled and the steps for this device are selected; nothing is downloaded.
- * Stores nothing (no cookie, no localStorage). */
+ *   Chrome / Edge / Brave / Opera / Samsung Internet: the browser's own install dialog (beforeinstallprompt), started by the button.
+ *   Already installed: detected inside the app (display-mode) and, where the browser supports it, from a normal tab
+ *     (navigator.getInstalledRelatedApps + manifest related_applications). Says how to open it.
+ *   iPhone / iPad, Safari on macOS, Firefox on a computer: no install API; the right steps are selected.
+ *   Chromium without the dialog after a while: most likely already installed (also an older install), private window,
+ *     or blocked by policy. Says so and shows how to check (edge://apps, chrome://apps).
+ * Stores nothing (no cookie, no localStorage). The service worker (/sw.js) is registered by /sw-register.js. */
 (function () {
   'use strict';
   if (window.SOSTU && SOSTU.nav) SOSTU.nav.render(document.getElementById('nav'), 'install');   // same header as Home / Explorer
@@ -13,8 +15,16 @@
   var ua = navigator.userAgent || '';
   var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   var android = /Android/.test(ua);
-  var firefox = /Firefox\//.test(ua) && !/Seamonkey/.test(ua);
-  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  var firefox = /Firefox\/|FxiOS\//.test(ua) && !/Seamonkey/.test(ua);
+  var edge = /Edg(e|A|iOS)?\//.test(ua);
+  var chromium = !!window.chrome || /Chrome\/|CriOS\//.test(ua);
+  var macSafari = !ios && /Macintosh/.test(ua) && /Safari\//.test(ua) && !chromium && !firefox;
+  var appsUrl = edge ? 'edge://apps' : 'chrome://apps';
+  var inApp = false;
+  ['standalone', 'minimal-ui', 'window-controls-overlay', 'fullscreen'].forEach(function (m) {
+    if (window.matchMedia && matchMedia('(display-mode: ' + m + ')').matches) inApp = true;
+  });
+  if (navigator.standalone === true) inApp = true;
   var deferred = null, mode = 'wait';
 
   // ---- device tabs (WAI-ARIA tabs: arrows, Home, End)
@@ -39,35 +49,52 @@
   function status(html, ok) { st.innerHTML = html; st.className = 'ins-status' + (ok ? ' ok' : ''); }
   function setBtn(label, enabled) { txt.textContent = label; btn.setAttribute('aria-disabled', enabled ? 'false' : 'true'); }
   function goSteps() { var h = document.getElementById('how'); if (h) h.scrollIntoView({ behavior: 'smooth', block: 'start' }); var t = document.getElementById(mine); if (t) t.focus({ preventScroll: true }); }
+  function installedMsg() {
+    mode = 'installed'; setBtn('Already installed', false);
+    status('<b>SOST is already installed on this device.</b> Open it from ' +
+      (android ? 'your home screen or app drawer.' : 'the Start menu, the taskbar or your apps' +
+        (chromium ? ' (or the <b>Open in app</b> icon in the address bar).' : '.')), true);
+  }
 
-  if (standalone) {
+  if (inApp) {
     mode = 'inapp'; setBtn('You are in the SOST app', false);
     status('<b>SOST is installed</b> and you are using it now.', true);
     return;
   }
   if (ios) {
     mode = 'steps'; setBtn('Show the 3 steps', true);
-    status('On iPhone and iPad, install SOST from Safari’s <b>Share</b> menu: <b>Add to Home Screen</b>.');
+    status('On iPhone and iPad, install SOST from the <b>Share</b> menu: <b>Add to Home Screen</b>.');
   } else if (firefox && !android) {
     mode = 'steps'; setBtn('See the options', true);
-    status('Firefox on a computer cannot install web apps. Open this page in <b>Edge</b> or <b>Chrome</b> to install SOST.');
+    status('Firefox on a computer cannot install web apps. Open <b>sostcore.com/install</b> in <b>Edge</b> or <b>Chrome</b> to install SOST.');
+  } else if (macSafari) {
+    mode = 'steps'; setBtn('Show the steps', true);
+    status('Safari on a Mac installs SOST from its menu: <b>File</b> → <b>Add to Dock</b>.');
   } else {
     setBtn('Install SOST', false);
     status('Checking whether this browser can install SOST…');
-    // If the browser does not offer installation within a few seconds, SOST is most likely installed already
-    // (browsers stop offering it) or this browser needs its own menu. Say both, honestly.
+    // Chromium browsers stop offering installation once the app is installed, and never offer it in a private
+    // window or when an administrator blocks it. If no dialog has been offered after a while, say all of that.
     setTimeout(function () {
       if (mode !== 'wait') return;
       mode = 'steps'; setBtn('Show the steps', true);
-      status('This browser has not offered the install dialog. If SOST is already installed, open it from your apps' +
-        (android ? ' or home screen' : ' (Edge and Chrome also show <b>Open in app</b> in the address bar)') + '. Otherwise use the browser menu: see the steps below.');
-    }, 3500);
+      status('This browser has not offered installation. <b>SOST may already be installed</b> (also an older version): ' +
+        (android ? 'look for it on your home screen.' : 'open <b>' + appsUrl + '</b> in the address bar to see it, open it or remove an old copy, then reload this page.') +
+        ' A private (InPrivate / Incognito) window cannot install apps. Otherwise use the browser menu: see the steps below.');
+    }, 6000);
+  }
+
+  // Already installed? (Chromium: same-origin web app listed in the manifest's related_applications)
+  if (navigator.getInstalledRelatedApps) {
+    navigator.getInstalledRelatedApps().then(function (apps) {
+      if (apps && apps.length && mode !== 'ready' && mode !== 'done') installedMsg();
+    }).catch(function () {});
   }
 
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault(); deferred = e; mode = 'ready';
     setBtn('Install SOST', true);
-    status('Ready. Your browser will ask you to confirm: <b>Install</b>.');
+    status('Ready. Press <b>Install SOST</b>; your browser will ask you to confirm with <b>Install</b>.');
   });
   btn.addEventListener('click', function () {
     if (btn.getAttribute('aria-disabled') === 'true') return;
