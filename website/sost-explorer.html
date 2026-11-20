@@ -648,8 +648,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <div id="exLoadOv" role="status" aria-live="polite" aria-label="Loading the SOST Explorer">
   <div class="sx-stage">
     <div class="sx-logo" aria-hidden="true">
-      <img class="sx-glow" src="brand/primary/sost-logo-512-transparent.png?v=bk31" alt="" decoding="async">
-      <img class="sx-mark" src="brand/primary/sost-logo-512-transparent.png?v=bk31" alt="" decoding="async" fetchpriority="high">
+      <div class="sx-rot" id="exSpinRot">
+        <img class="sx-glow" src="brand/primary/sost-logo-ring-512-transparent.png?v=spin1" alt="" decoding="async">
+        <img class="sx-mark" id="exSpinRing" src="brand/primary/sost-logo-ring-512-transparent.png?v=spin1" alt="" decoding="async" fetchpriority="high">
+      </div>
+      <img class="sx-sig" src="brand/primary/sost-logo-sigma-512-transparent.png?v=spin1" alt="" decoding="async" fetchpriority="high">
     </div>
     <div class="sx-lbl" id="exLoadLbl">CONNECTING</div>
     <div class="sx-sub" id="exLoadSub">Starting the SOST Explorer</div>
@@ -669,16 +672,22 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 #exLoadOv.sx-out{opacity:0;pointer-events:none}
 html.sx-loading,html.sx-loading body{overflow:hidden}
 html.sx-loading #jackpotHint{visibility:hidden!important}
-#exLoadOv .sx-stage{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:calc(560px*var(--sx));width:100%}
+#exLoadOv .sx-stage{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:calc(560px*var(--sx));width:100%}
 #exLoadOv .sx-logo{position:relative;width:min(calc(300px*var(--sx)),calc(62vw*var(--sx)),calc(38vh*var(--sx)));aspect-ratio:1}
+/* 20-Nov-2026: the rainbow ring and the gold Σ are two layers of the same official logo (exact split, recomposite = original):
+   only the ring turns; the Σ stays still. Without JS the two layers simply show the unchanged logo. */
+#exLoadOv .sx-logo{opacity:0;transform:scale(.94);animation:sxIn .9s ease-out .1s forwards}
+#exLoadOv .sx-rot{position:absolute;inset:0;will-change:transform}
+#exLoadOv .sx-bub{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 #exLoadOv .sx-logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;user-select:none}
 /* 1 the emblem appears · 2 the rainbow bands light up softly (brightness/saturation of the logo itself) */
-#exLoadOv .sx-mark{opacity:0;transform:scale(.94);animation:sxIn .9s ease-out .1s forwards,sxBands 3.2s ease-in-out 1s infinite}
+#exLoadOv .sx-mark{animation:sxBands 3.2s ease-in-out 1s infinite}
+#exLoadOv .sx-sig{filter:drop-shadow(0 0 10px rgba(250,201,80,.28))}
 #exLoadOv .sx-glow{opacity:0;filter:blur(22px) saturate(1.3);transform:scale(1.02);animation:sxGlow 3.2s ease-in-out 1s infinite}
 @keyframes sxIn{to{opacity:1;transform:scale(1)}}
 @keyframes sxBands{0%,100%{filter:brightness(.94) saturate(1)}50%{filter:brightness(1.1) saturate(1.18)}}
 @keyframes sxGlow{0%,100%{opacity:.12}50%{opacity:.34}}
-@media (prefers-reduced-motion:reduce){#exLoadOv .sx-mark{animation:none;opacity:1;transform:none}#exLoadOv .sx-glow{animation:none;opacity:.2}#exLoadOv{transition:none}}
+@media (prefers-reduced-motion:reduce){#exLoadOv .sx-logo{animation:none;opacity:1;transform:none}#exLoadOv .sx-mark{animation:none}#exLoadOv .sx-glow{animation:none;opacity:.2}#exLoadOv{transition:none}}
 #exLoadOv .sx-lbl{margin-top:calc(clamp(18px,3.6vh,32px)*var(--sx));font-weight:700;font-size:calc(clamp(14px,2.2vh,18px)*var(--sx));letter-spacing:.34em;padding-left:.34em;color:#fac950}
 #exLoadOv .sx-lbl.ok{color:#4ade80}#exLoadOv .sx-lbl.warn{color:#fbbf24}#exLoadOv .sx-lbl.bad{color:#f87171}
 #exLoadOv .sx-sub{margin-top:calc(8px*var(--sx));font-size:calc(12.5px*var(--sx));color:#a8b0bd;min-height:1.4em;max-width:92vw}
@@ -805,6 +814,124 @@ html.sx-loading #jackpotHint{visibility:hidden!important}
   setStep('init');
 })();
 </script>
+<script>
+/* SPLASH SPIN (20-Nov-2026, owner request): on every load one of 30 spin programmes is drawn at random (never the same one twice
+   in a row in this tab) and the rainbow ring runs it; while it turns it throws colour bubbles, each one coloured like the band
+   it leaves from, more of them the faster it turns. ?spin=1..30 forces a programme (review). Pure decoration: it never touches
+   the loader's state or timing, stops when the loading screen closes, and any error just leaves the logo still. */
+(function(){
+  'use strict';
+  try{
+  var d=document, ov=d.getElementById('exLoadOv'), rot=d.getElementById('exSpinRot'), ring=d.getElementById('exSpinRing');
+  if(!ov||!rot||!ring) return;
+  var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var pw=Math.pow, PI=Math.PI, sin=Math.sin, cos=Math.cos;
+  var EZ={
+    sine:function(u){return -(cos(PI*u)-1)/2;},
+    cubic:function(u){return u<.5?4*u*u*u:1-pw(-2*u+2,3)/2;},
+    quint:function(u){return u<.5?16*pw(u,5):1-pw(-2*u+2,5)/2;},
+    quartOut:function(u){return 1-pw(1-u,4);},
+    expoOut:function(u){return u>=1?1:1-pw(2,-10*u);},
+    backOut:function(u){var c=1.70158;return 1+(c+1)*pw(u-1,3)+c*pw(u-1,2);},
+    backInOut:function(u){var c=1.70158*1.525;return u<.5?(pw(2*u,2)*((c+1)*2*u-c))/2:(pw(2*u-2,2)*((c+1)*(u*2-2)+c)+2)/2;},
+    elasticOut:function(u){return u<=0?0:u>=1?1:pw(2,-10*u)*sin((u*10-.75)*(2*PI/3))+1;},
+    bounceOut:function(u){var n=7.5625,k=2.75;if(u<1/k)return n*u*u;if(u<2/k)return n*(u-=1.5/k)*u+.75;if(u<2.5/k)return n*(u-=2.25/k)*u+.9375;return n*(u-=2.625/k)*u+.984375;},
+    double:function(u){return .5*EZ.cubic(Math.min(1,u*2))+.5*EZ.cubic(Math.max(0,u*2-1));},
+    pendulum:function(u){return EZ.sine(u)+.12*sin(u*PI*5)*(1-u);},
+    overshoot:function(u){return u<.62?1.35*EZ.cubic(u/.62):1.35-.35*EZ.sine((u-.62)/.38);},
+    stutter:function(u){var n=6,k=Math.min(n-1,Math.floor(u*n)),f=u*n-k;return (k+EZ.cubic(f))/n;},
+    rush:function(u){return u<.8?pw(u/.8,3)*1.04:1.04-.04*EZ.elasticOut((u-.8)/.2);}
+  };
+  // [name, turns (negative = anticlockwise), seconds, easing, tilt° (3D wobble of the ring plane)]
+  var P=[
+    ['Drift',.5,4.5,'sine',0],['Half turn back',-.5,4,'quartOut',0],['One calm turn',1,5,'sine',0],['One turn snap',1,2.5,'backOut',0],
+    ['One turn elastic',1,3.5,'elasticOut',0],['Wind-up',1,3.5,'backInOut',0],['Two smooth',2,5,'cubic',0],['Two counter',-2,4.5,'cubic',0],
+    ['Two brake',2,4,'expoOut',0],['Two bounce',2,4.5,'bounceOut',0],['Three spin',3,5,'quartOut',0],['Three counter tilt',-3,5.5,'cubic',16],
+    ['Three elastic',3,5,'elasticOut',0],['Four whirl',4,5.5,'expoOut',0],['Four wind-up',4,6,'backInOut',0],['Five rush',5,5.5,'quartOut',0],
+    ['Six cyclone',6,6.5,'expoOut',0],['Eight vortex',8,7,'expoOut',14],['Double pulse',2,5,'double',0],['Double pulse counter',-3,6,'double',0],
+    ['Pendulum',1,6,'pendulum',0],['Wide pendulum',-2,6.5,'pendulum',0],['Overshoot and return',1.5,5,'overshoot',0],['Stutter steps',2,5,'stutter',0],
+    ['Accelerate and lock',3,5,'rush',0],['Tilted orbit',1,5,'sine',22],['Tilted counter',-2,5,'quartOut',20],['Gyroscope',3,6,'cubic',32],
+    ['Slow breath',.75,5,'sine',12],['Storm',7,6,'backOut',10]
+  ];
+  var id=-1, m=/[?&]spin=(\d+)/.exec(location.search);
+  if(m&&+m[1]>=1&&+m[1]<=P.length) id=+m[1]-1;
+  else{ var last=-1; try{last=+(sessionStorage.getItem('sx_spin')||-1);}catch(e){}
+    var r=function(){ if(window.crypto&&crypto.getRandomValues){var a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]/4294967296;} return Math.random(); };
+    do{ id=Math.floor(r()*P.length); }while(id===last&&P.length>1);
+    try{sessionStorage.setItem('sx_spin',String(id));}catch(e){} }
+  var pr=P[id], TURNS=pr[1], DUR=pr[2]*1000, EASE=EZ[pr[3]], TILT=RM?0:pr[4], DIR=TURNS<0?-1:1, DRIFT=7*DIR;   // drift °/s once the programme ends
+  if(RM){ TURNS=.25*DIR; DUR=6000; EASE=EZ.sine; }
+  window.__exSpin={id:id+1,name:pr[0],turns:TURNS,seconds:DUR/1000,easing:RM?'sine':pr[3],tilt:TILT,reducedMotion:!!RM};
+  var START=350;   // ms after the logo starts fading in
+  function angle(t){   // degrees at t ms since the spin clock started
+    var u=Math.max(0,Math.min(1,t/DUR)), a=360*TURNS*EASE(u);
+    if(t>DUR){ var s=(t-DUR)/1000; a+=DRIFT*(s-1.5*(1-Math.exp(-s/1.5))); }   // drift ramps in smoothly
+    return a;
+  }
+  // --- bubbles ---
+  var cv=null, cx=null, pts=[], bubs=[], DPR=Math.min(2,window.devicePixelRatio||1), W=0, H=0;
+  var MAXB=RM?0:(Math.min(innerWidth,innerHeight)<600?140:260);
+  if(MAXB){ cv=d.createElement('canvas'); cv.className='sx-bub'; cv.setAttribute('aria-hidden','true'); ov.insertBefore(cv,ov.firstChild); cx=cv.getContext('2d'); }
+  function size(){ if(!cv) return; W=ov.clientWidth; H=ov.clientHeight; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR); cx.setTransform(DPR,0,0,DPR,0,0); }
+  function sample(){   // outer-edge points of the ring with their colour, in image units (-0.5..0.5)
+    var N=160, c=d.createElement('canvas'); c.width=c.height=N; var g=c.getContext('2d'); g.drawImage(ring,0,0,N,N);
+    var px=g.getImageData(0,0,N,N).data, out=[];
+    function A(x,y){ x=Math.round(x); y=Math.round(y); return x<0||y<0||x>=N||y>=N?0:px[(y*N+x)*4+3]; }
+    for(var y=0;y<N;y++) for(var x=0;x<N;x++){ var i=(y*N+x)*4; if(px[i+3]<200) continue;
+      var dx=x-N/2, dy=y-N/2, L=Math.sqrt(dx*dx+dy*dy)||1;
+      if(A(x+dx/L*3,y+dy/L*3)<30) out.push({x:dx/N,y:dy/N,c:px[i]+','+px[i+1]+','+px[i+2]}); }
+    return out;
+  }
+  function hsl(h){ h/=60; var x=1-Math.abs(h%2-1), f=[[1,x,0],[x,1,0],[0,1,x],[0,x,1],[x,0,1],[1,0,x]][Math.floor(h)%6]; return f.map(function(v){return Math.round(40+v*215);}).join(','); }
+  function emit(n,th,rx,ry,om,cxp,cyp,sz){
+    for(var k=0;k<n;k++){ if(bubs.length>=MAXB) bubs.shift();   // full: the oldest bubble makes room (steady stream, no bursts)
+      var p=pts[(Math.random()*pts.length)|0], x=p.x*sz, y=p.y*sz, c=cos(th), s=sin(th);
+      var X=(x*c-y*s)*ry, Y=(x*s+y*c)*rx, L=Math.sqrt(X*X+Y*Y)||1, out=25+Math.random()*70, tg=.55+Math.random()*.35;
+      bubs.push({x:cxp+X,y:cyp+Y,vx:-om*Y*tg+X/L*out,vy:om*X*tg+Y/L*out-10,r:(3.5+Math.random()*Math.random()*16)*Math.max(.7,sz/400),
+        life:0,max:1.8+Math.random()*2.4,c:p.c,w:Math.random()*PI*2});
+    }
+  }
+  function draw(dt){
+    cx.clearRect(0,0,W,H); cx.globalCompositeOperation='lighter';
+    for(var i=bubs.length-1;i>=0;i--){ var b=bubs[i]; b.life+=dt; if(b.life>=b.max||b.x<-40||b.x>W+40||b.y<-40||b.y>H+40){ bubs.splice(i,1); continue; }
+      var dr=Math.exp(-dt*.9); b.vx*=dr; b.vy=b.vy*dr-22*dt; b.w+=dt*2.2; b.x+=(b.vx+sin(b.w)*9)*dt; b.y+=b.vy*dt;
+      var q=b.life/b.max, a=q<.12?q/.12:1-pw((q-.12)/.88,1.6), r=b.r*(1+q*.35);
+      var gr=cx.createRadialGradient(b.x-r*.3,b.y-r*.35,r*.05,b.x,b.y,r);
+      gr.addColorStop(0,'rgba(255,255,255,'+(.55*a)+')'); gr.addColorStop(.35,'rgba('+b.c+','+(.10*a)+')');
+      gr.addColorStop(.86,'rgba('+b.c+','+(.42*a)+')'); gr.addColorStop(1,'rgba('+b.c+',0)');
+      cx.fillStyle=gr; cx.beginPath(); cx.arc(b.x,b.y,r,0,2*PI); cx.fill(); }
+    cx.globalCompositeOperation='source-over';
+  }
+  // --- clock ---
+  var t0=0, lastT=0, lastA=0, acc=0, raf=0;
+  function frame(ts){
+    if(ov.hidden||(ov.classList.contains('sx-out')&&!bubs.length)){ stop(); return; }
+    if(!t0){ t0=ts+START; lastT=ts; }
+    var t=ts-t0, dt=Math.min(.05,(ts-lastT)/1000)||0; lastT=ts;
+    var a=angle(Math.max(0,t)), ts2=ts/1000, rx=TILT*sin(ts2*1.3), ry=TILT*.6*cos(ts2*.9);
+    rot.style.transform=(TILT?'perspective(900px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg) ':'')+'rotate('+a.toFixed(2)+'deg)';
+    if(cx){
+      var om=dt>0?(a-lastA)*PI/180/dt:0;   // rad/s
+      if(pts.length&&t>0&&!ov.classList.contains('sx-out')){
+        var R=rot.getBoundingClientRect(), O=ov.getBoundingClientRect(), sz=rot.offsetWidth;
+        acc+=dt*(5+Math.min(220,Math.abs(om)*180/PI*.28)); var n=acc|0; acc-=n;
+        if(n) emit(n,a*PI/180,cos(rx*PI/180),cos(ry*PI/180),om,R.left-O.left+R.width/2,R.top-O.top+R.height/2,sz);
+      }
+      draw(dt);
+    }
+    lastA=a; raf=requestAnimationFrame(frame);
+  }
+  function stop(){ cancelAnimationFrame(raf); raf=0; removeEventListener('resize',size); if(cv&&cv.parentNode) cv.parentNode.removeChild(cv); bubs=[]; }
+  function go(){
+    if(cv){ size(); addEventListener('resize',size);
+      try{ pts=sample(); }catch(e){ pts=[]; }
+      if(pts.length<20){ pts=[]; for(var k=0;k<180;k++){ var th=k/180*2*PI; pts.push({x:.47*cos(th),y:.36*sin(th),c:hsl(k*2)}); } } }
+    raf=requestAnimationFrame(frame);
+  }
+  if(ring.complete&&ring.naturalWidth) go(); else { ring.addEventListener('load',go); ring.addEventListener('error',function(){ ring.removeEventListener('load',go); }); }
+  }catch(e){}
+})();
+</script>
 <!-- explorer-shell (DIRECTIVA 4F/4G) -->
 <header class="xs-head" id="xsHead">
 <nav class="u-nav hud" id="uNav" role="navigation" aria-label="Site"><a class="brand has-sect-m wm-pair" href="universe/home.html" aria-label="SOST home"><span class="eyemark" aria-hidden="true"><img class="sig" src="universe/assets/brand/sost-eye-128.png?v=sl20261113" width="56" height="56" alt="" decoding="async"></span><span class="wm">SOST</span><span class="sect wm">EXPLORER</span></a></nav>
@@ -824,7 +951,7 @@ html.sx-loading #jackpotHint{visibility:hidden!important}
 
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-11-17-v587-splash8s';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-11-20-v587-splashspin';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
