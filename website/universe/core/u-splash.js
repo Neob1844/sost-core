@@ -73,12 +73,91 @@
     };
   }
 
+  /* 40 TRANSFORMATION EFFECTS (20-Nov-2026, owner request): the Matrix rain stays exactly as it was; what the particles become after it is
+   * drawn at random on every intro (never the same one twice in a row in this browser; ?fx=1..40 forces one). Effect 1 is the original
+   * five-petal rose. Each effect = a shape the particles are drawn onto (pt: particle index n, angle th, jitter rr, time t -> unit coords,
+   * radius ≈ 1), whether its outline is drawn as a guide line, the backdrop grid, the turn speed/direction and the swirl of the
+   * convergence. Every effect still converges onto the same singularity, so the hand-over to the hero is unchanged. */
+  var TAU = 6.283185307179586, NFX = 2800;
+  function hsh(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  function pol(r, a) { return [r * Math.cos(a), r * Math.sin(a)]; }
+  function poly(k, th, skip) {   // regular polygon / star outline (skip 2 = pentagram-style star), parameter th
+    skip = skip || 1; var u = th / TAU * k, i = Math.floor(u), f = u - i, a0 = i * skip / k * TAU - TAU / 4, a1 = (i + 1) * skip / k * TAU - TAU / 4;
+    return [Math.cos(a0) + (Math.cos(a1) - Math.cos(a0)) * f, Math.sin(a0) + (Math.sin(a1) - Math.sin(a0)) * f];
+  }
+  function rot3(x, y, z, ax, ay) { var c = Math.cos(ax), s = Math.sin(ax), y2 = y * c - z * s, z2 = y * s + z * c; c = Math.cos(ay); s = Math.sin(ay); var x3 = x * c + z2 * s, z3 = -x * s + z2 * c, f = 3 / (3 + z3); return [x3 * f, y2 * f]; }
+  var ATT = {};
+  function attractor(kind) {   // precomputed once per load, only for the effect drawn
+    if (ATT[kind]) return ATT[kind]; var a = [], i, x = .1, y = 0, z = 0, mx = 0;
+    if (kind === 'lorenz') { for (i = 0; i < NFX + 400; i++) { for (var k = 0; k < 4; k++) { var dx = 10 * (y - x), dy = x * (28 - z) - y, dz = x * y - 8 / 3 * z; x += dx * .004; y += dy * .004; z += dz * .004; } if (i >= 400) a.push([x / 22, (z - 25) / 22]); } }
+    else if (kind === 'clifford') { for (i = 0; i < NFX + 50; i++) { var nx = Math.sin(-1.4 * y) + Math.cos(1.6 * x), ny = Math.sin(1.7 * x) + .7 * Math.cos(-1.4 * y); x = nx; y = ny; if (i >= 50) a.push([x / 2.1, y / 1.8]); } }
+    else if (kind === 'dejong') { for (i = 0; i < NFX + 50; i++) { var mx2 = Math.sin(1.641 * y) - Math.cos(1.902 * x), my2 = Math.sin(.316 * x) - Math.cos(1.525 * y); x = mx2; y = my2; if (i >= 50) a.push([x / 2, y / 2]); } }
+    else if (kind === 'sierpinski') { var V = [[0, -1], [-.95, .75], [.95, .75]]; x = 0; y = 0; for (i = 0; i < NFX + 20; i++) { var v = V[Math.floor(hsh(i) * 3)]; x = (x + v[0]) / 2; y = (y + v[1]) / 2; if (i >= 20) a.push([x, y]); } }
+    else if (kind === 'fern') { x = 0; y = 0; for (i = 0; i < NFX + 20; i++) { var r = hsh(i * 3.1), nx3, ny3; if (r < .01) { nx3 = 0; ny3 = .16 * y; } else if (r < .86) { nx3 = .85 * x + .04 * y; ny3 = -.04 * x + .85 * y + 1.6; } else if (r < .93) { nx3 = .2 * x - .26 * y; ny3 = .23 * x + .22 * y + 1.6; } else { nx3 = -.15 * x + .28 * y; ny3 = .26 * x + .24 * y + .44; } x = nx3; y = ny3; if (i >= 20) a.push([x / 5.2, 1 - y / 5]); } }
+    return (ATT[kind] = a);
+  }
+  var SIG = [[.62, -.78], [-.62, -.78], [.12, 0], [-.62, .78], [.62, .78]], SIGL = [];
+  (function () { var L = 0; for (var i = 0; i < 4; i++) { var d = Math.hypot(SIG[i + 1][0] - SIG[i][0], SIG[i + 1][1] - SIG[i][1]); SIGL.push(L); L += d; } SIGL.push(L); })();
+  function sigma(th) { var u = th / TAU * SIGL[4], i = 0; while (i < 3 && u > SIGL[i + 1]) i++; var f = (u - SIGL[i]) / (SIGL[i + 1] - SIGL[i]); return [SIG[i][0] + (SIG[i + 1][0] - SIG[i][0]) * f, SIG[i][1] + (SIG[i + 1][1] - SIG[i][1]) * f]; }
+  var CUBE = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]], CV = [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]];
+  // [name, pt(n, th, rr, t), guide line?, grid ('polar' | 'rings' | 'spokes' | 'none'), turn speed (rad/s, sign = direction), convergence swirl (rad, sign = direction), size (default 1)]
+  var FXS = [
+    ['Five-petal rose', function (n, th) { return pol(Math.cos(5 * th), th); }, 1, 'polar', .35, 2.4],
+    ['Three-petal rose', function (n, th) { return pol(Math.cos(3 * th), th); }, 1, 'polar', -.4, -2.4],
+    ['Eight-petal rose', function (n, th) { return pol(Math.cos(4 * th), th); }, 1, 'polar', .3, 2.8],
+    ['Seven-half rose', function (n, th) { var a = th * 2; return pol(Math.cos(3.5 * a), a); }, 1, 'rings', -.3, 2.2],
+    ['Cardioid', function (n, th) { var p = pol((1 + Math.cos(th)) * .55, th); return [p[0] - .3, p[1]]; }, 1, 'polar', .5, -2.6],
+    ['Lemniscate', function (n, th) { var d = 1 + Math.sin(th) * Math.sin(th); return [Math.cos(th) / d, Math.sin(th) * Math.cos(th) / d]; }, 1, 'spokes', .45, 3],
+    ['Lissajous 3:2', function (n, th) { return [Math.sin(3 * th + .5), Math.sin(2 * th)]; }, 1, 'none', .25, -2.4, 0.72],
+    ['Lissajous 5:4', function (n, th) { return [Math.sin(5 * th + .3), Math.sin(4 * th)]; }, 1, 'none', -.25, 2.4, 0.72],
+    ['Spirograph', function (n, th) { var a = th * 3; return [(2 * Math.cos(a) + 1.6 * Math.cos(2 * a / 3 * 5 / 2)) / 3.6, (2 * Math.sin(a) - 1.6 * Math.sin(2 * a / 3 * 5 / 2)) / 3.6]; }, 1, 'rings', .3, 2.6, 0.85],
+    ['Epitrochoid', function (n, th) { var a = th; return [(Math.cos(a) * 1.5 - .7 * Math.cos(6 * a)) / 2.2, (Math.sin(a) * 1.5 - .7 * Math.sin(6 * a)) / 2.2]; }, 1, 'polar', -.35, -2.8],
+    ['Astroid', function (n, th) { return [Math.pow(Math.cos(th), 3), Math.pow(Math.sin(th), 3)]; }, 1, 'spokes', .4, 2.4],
+    ['Deltoid', function (n, th) { return [(2 * Math.cos(th) + Math.cos(2 * th)) / 3, (2 * Math.sin(th) - Math.sin(2 * th)) / 3]; }, 1, 'polar', -.5, -2.2],
+    ['Heart', function (n, th) { return [Math.pow(Math.sin(th), 3), -(13 * Math.cos(th) - 5 * Math.cos(2 * th) - 2 * Math.cos(3 * th) - Math.cos(4 * th)) / 17]; }, 1, 'none', 0, 2.4, 0.85],
+    ['Butterfly', function (n, th) { var a = th * 6, r = Math.exp(Math.sin(a)) - 2 * Math.cos(4 * a) + Math.pow(Math.sin((2 * a - Math.PI) / 24), 5); return [Math.sin(a) * r / 3.6, -Math.cos(a) * r / 3.6]; }, 1, 'none', 0, -2.6, 0.85],
+    ['Sunflower', function (n) { return pol(Math.sqrt((n % NFX) / NFX), n * 2.399963); }, 0, 'rings', .3, 3, 0.72],
+    ['Archimedean spiral', function (n, th) { var a = th * 3; return pol(a / (TAU * 3), a); }, 1, 'polar', .9, 3.2],
+    ['Twin log spiral', function (n, th) { var a = th * 2, r = Math.exp(.18 * a) / Math.exp(.18 * TAU * 2); return pol(r, a + (n % 2) * Math.PI); }, 0, 'polar', -.8, -3.2],
+    ['Four-arm galaxy', function (n, th, rr) { var r = Math.sqrt(hsh(n)), arm = n % 4; return pol(r * rr, arm / 4 * TAU + r * 4.2 + (hsh(n + 7) - .5) * .5 * (1 - r * .5)); }, 0, 'none', .6, 3, 0.85],
+    ['Orbit rings', function (n, th) { return pol([.35, .58, .8, 1][n % 4], th); }, 0, 'rings', .5, -2.4],
+    ['Hexagon', function (n, th) { return poly(6, th); }, 1, 'spokes', .35, 2.2, 0.85],
+    ['Pentagram', function (n, th) { return poly(5, th * 2, 2); }, 1, 'polar', -.4, -2.6],
+    ['Hexagram', function (n, th) { var p = poly(3, th); return n % 2 ? p : [p[0], -p[1]]; }, 0, 'polar', .3, 2.4],
+    ['Squircle', function (n, th) { var c = Math.cos(th), s = Math.sin(th); return [Math.sign(c) * Math.pow(Math.abs(c), .4), Math.sign(s) * Math.pow(Math.abs(s), .4)]; }, 1, 'spokes', -.3, 2.6, 0.68],
+    ['Trefoil knot', function (n, th) { return [(Math.sin(th) + 2 * Math.sin(2 * th)) / 3, (Math.cos(th) - 2 * Math.cos(2 * th)) / 3]; }, 1, 'none', .45, -2.8],
+    ['Torus knot 2:5', function (n, th) { var a = th * 2, r = (2 + Math.cos(5 * a / 2)) / 3; return pol(r, a); }, 1, 'rings', -.4, 2.8],
+    ['Gear', function (n, th) { return pol(.85 + .15 * Math.tanh(4 * Math.sin(12 * th)), th); }, 1, 'spokes', .6, 2.2],
+    ['Double helix', function (n, th, rr, t) { var x = th / TAU * 2 - 1, ph = x * 9 + t * 2; return [x * 1.1, Math.sin(ph + (n % 2) * Math.PI) * .32]; }, 0, 'none', 0, -3, 0.8],
+    ['Sigma', function (n, th) { return sigma(th); }, 1, 'none', 0, 2.4, 0.58],
+    ['Square lattice', function (n) { var k = 22, i = n % (k * k); return [(i % k) / (k - 1) * 2 - 1, Math.floor(i / k) / (k - 1) * 2 - 1]; }, 0, 'none', .25, 3, 0.5],
+    ['Hex lattice', function (n) { var k = 21, i = n % (k * k), r = Math.floor(i / k), c = i % k; return [((c + (r % 2) * .5) / (k - .5) * 2 - 1) * .95, (r / (k - 1) * 2 - 1) * .86]; }, 0, 'none', -.25, -3, 0.52],
+    ['Starburst', function (n, th, rr) { var k = 16, a = (n % k) / k * TAU; return pol(hsh(n) * rr, a); }, 0, 'spokes', .5, 2.6],
+    ['Maurer rose', function (n, th) { var q = Math.floor(th / TAU * 361), f = th / TAU * 361 - q, a0 = q * 71 * Math.PI / 180, a1 = (q + 1) * 71 * Math.PI / 180, p0 = pol(Math.sin(6 * a0), a0), p1 = pol(Math.sin(6 * a1), a1); return [p0[0] + (p1[0] - p0[0]) * f, p0[1] + (p1[1] - p0[1]) * f]; }, 1, 'none', .2, -2.4],
+    ['Sierpinski', function (n) { return attractor('sierpinski')[n % NFX]; }, 0, 'none', 0, 2.8, 0.8],
+    ['Lorenz', function (n) { return attractor('lorenz')[n % NFX]; }, 0, 'none', .2, -2.6, 0.85],
+    ['Clifford', function (n) { return attractor('clifford')[n % NFX]; }, 0, 'rings', -.2, 2.6, 0.8],
+    ['De Jong', function (n) { return attractor('dejong')[n % NFX]; }, 0, 'none', .25, -2.6, 0.8],
+    ['Fern', function (n) { var p = attractor('fern')[n % NFX]; return [p[0] * 1.6, p[1] * 1.9 - .95]; }, 0, 'none', 0, 3, 0.7],
+    ['Spinning cube', function (n, th, rr, t) { var e = CUBE[n % 12], u = hsh(n), a = CV[e[0]], b = CV[e[1]]; return rot3((a[0] + (b[0] - a[0]) * u) * .62, (a[1] + (b[1] - a[1]) * u) * .62, (a[2] + (b[2] - a[2]) * u) * .62, t * .9, t * 1.3); }, 0, 'none', 0, 2.4, 0.8],
+    ['Fibonacci sphere', function (n, th, rr, t) { var i = n % NFX, y = 1 - 2 * (i + .5) / NFX, r = Math.sqrt(1 - y * y), a = i * 2.399963; return rot3(Math.cos(a) * r * .95, y * .95, Math.sin(a) * r * .95, .4, t * 1.1); }, 0, 'none', 0, -2.4, 0.68],
+    ['Atom orbitals', function (n, th) { var k = n % 3, a = k / 3 * Math.PI, e = pol(1, th); e[1] *= .3; return [e[0] * Math.cos(a) - e[1] * Math.sin(a), e[0] * Math.sin(a) + e[1] * Math.cos(a)]; }, 0, 'polar', .5, 2.6]
+  ];
+  function pickFx() {
+    var q = new URLSearchParams(location.search).get('fx'); if (q && +q >= 1 && +q <= FXS.length) return +q - 1;
+    var last = -1, i; try { last = +(localStorage.getItem('sostu_splash_fx') || -1); } catch (e) {}
+    function rnd() { if (root.crypto && crypto.getRandomValues) { var a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296; } return Math.random(); }
+    do { i = Math.floor(rnd() * FXS.length); } while (i === last && FXS.length > 1);
+    try { localStorage.setItem('sostu_splash_fx', String(i)); } catch (e) {}
+    return i;
+  }
+
   function play(o) {
     var ov = o.overlay, cv = o.canvas, RM = root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var perf = { mode: RM ? 'reduced' : lightWanted() ? 'light' : 'full', frames: 0, longest: 0, startedAt: null, totalMs: null, skipped: false, firstFrameAt: null, plates: null };
     var done = false, raf = 0, t0 = 0, revealed = false, light = perf.mode === 'light', timers = [];
     var V = o.variant || 'a', B = o.base || '', K = V === 'a' ? 0 : 1;
-    U.splash.perf = perf; mark();          // seen as soon as it starts: a reload mid-splash never replays it
+    var FI = pickFx(), FX = FXS[FI]; perf.fx = { id: FI + 1, name: FX[0] }; U.splash.perf = perf; mark();          // seen as soon as it starts: a reload mid-splash never replays it
     function finish() {
       if (done) return; done = true; if (raf) cancelAnimationFrame(raf); timers.forEach(clearTimeout); mark();
       perf.totalMs = Math.round(performance.now() - (perf.startedAt || performance.now()));
@@ -166,11 +245,14 @@
       var geoA = ease((t - 2.4) / .5) * (1 - ease((t - 3.6) / .6));
       if (geoA > 0) {
         ctx.globalCompositeOperation = 'lighter'; var Rg = tgt.r * 2.3 * (1 - .25 * ease((t - 2.9) / 1.2)), rot = t * .35;
-        for (var ring = 1; ring <= 4; ring++) { ctx.globalAlpha = geoA * .14; ctx.strokeStyle = SPEC[(ring * 2) % 7]; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X, Y, Rg * ring / 4, 0, 7); ctx.stroke(); }
-        ctx.globalAlpha = geoA * .08; ctx.strokeStyle = '#e2e8f0'; ctx.beginPath(); for (var sp = 0; sp < 12; sp++) { var an = sp / 12 * 6.2832 + rot * .3; ctx.moveTo(X, Y); ctx.lineTo(X + Math.cos(an) * Rg, Y + Math.sin(an) * Rg); } ctx.stroke();
-        var gr = ctx.createLinearGradient(X - Rg, Y, X + Rg, Y); SPEC.forEach(function (h, j) { gr.addColorStop(j / 6, h); });
-        ctx.globalAlpha = geoA * .55; ctx.strokeStyle = gr; ctx.lineWidth = 1.4; ctx.beginPath();
-        for (var q = 0; q <= 360; q++) { var th = q / 360 * 6.2832, rr = Rg * Math.cos(5 * th); ctx.lineTo(X + Math.cos(th + rot) * rr, Y + Math.sin(th + rot) * rr); } ctx.stroke();
+        rot = t * FX[4]; Rg *= FX[6] || 1; var GRID = FX[3];
+        if (GRID === 'polar' || GRID === 'rings') for (var ring = 1; ring <= 4; ring++) { ctx.globalAlpha = geoA * .14; ctx.strokeStyle = SPEC[(ring * 2) % 7]; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X, Y, Rg * ring / 4, 0, 7); ctx.stroke(); }
+        if (GRID === 'polar' || GRID === 'spokes') { ctx.globalAlpha = geoA * .08; ctx.strokeStyle = '#e2e8f0'; ctx.beginPath(); for (var sp = 0; sp < 12; sp++) { var an = sp / 12 * 6.2832 + rot * .3; ctx.moveTo(X, Y); ctx.lineTo(X + Math.cos(an) * Rg, Y + Math.sin(an) * Rg); } ctx.stroke(); }
+        if (FX[2]) {
+          var gr = ctx.createLinearGradient(X - Rg, Y, X + Rg, Y); SPEC.forEach(function (h, j) { gr.addColorStop(j / 6, h); });
+          ctx.globalAlpha = geoA * .55; ctx.strokeStyle = gr; ctx.lineWidth = 1.4; ctx.beginPath(); var cr0 = Math.cos(rot), sr0 = Math.sin(rot);
+          for (var q = 0; q <= 720; q++) { var gp = FX[1](q, q / 720 * 6.2832, 1, t); ctx.lineTo(X + (gp[0] * cr0 - gp[1] * sr0) * Rg, Y + (gp[0] * sr0 + gp[1] * cr0) * Rg); } ctx.stroke();
+        }
       }
       // ---------- particles: detach → spectrum → rose → orbital structure
       if (t >= 2.2 && !P.length) spawn(2.2);
@@ -178,21 +260,21 @@
         ctx.globalCompositeOperation = 'lighter';
         var conv = (t - 3.4) / 1.9, shock = t > 2.3 && t < 2.75 ? (1 - (t - 2.3) / .45) : 0, pA = t < 2.5 ? (t - 2.2) / .3 : t > 6.5 ? Math.max(0, 1 - (t - 6.5) / 1.1) : 1;
         var cT = ease((t - 2.3) / .8), geoW = ease((t - 2.6) / .7) * (1 - ease((t - 3.5) / .5));
-        var Rg2 = tgt.r * 2.3 * (1 - .25 * ease((t - 2.9) / 1.2)), rot2 = t * .35;
+        var Rg2 = tgt.r * 2.3 * (FX[6] || 1) * (1 - .25 * ease((t - 2.9) / 1.2)), rot2 = t * FX[4], cr2 = Math.cos(rot2), sr2 = Math.sin(rot2);
         for (var i = 0; i < P.length; i++) {
           var p = P[i];
           var fx = Math.cos(p.y * .011 + t * 1.3) + .6 * Math.sin((p.x + p.y) * .007 - t), fyv = Math.sin(p.x * .009 - t * 1.1) - .5 * Math.cos((p.x - p.y) * .006 + t * .7);
           p.vx = p.vx * .94 + fx * .16; p.vy = p.vy * .94 + fyv * .16;
           if (shock) { var dx = p.x - X, dy = p.y - Y, dd = Math.sqrt(dx * dx + dy * dy) + 30; p.vx += dx / dd * shock * 1.0; p.vy += dy / dd * shock * 1.0; }
           p.x += p.vx; p.y += p.vy;
-          if (geoW > 0) { var th2 = p.th, rr2 = Rg2 * Math.cos(5 * th2) * p.rr; var gx = X + Math.cos(th2 + rot2) * rr2, gy = Y + Math.sin(th2 + rot2) * rr2; p.x += (gx - p.x) * geoW * .12; p.y += (gy - p.y) * geoW * .12; }
+          if (geoW > 0) { var gq = FX[1](i, p.th, p.rr, t), gu = gq[0] * (FX[2] ? p.rr : 1), gv = gq[1] * (FX[2] ? p.rr : 1); var gx = X + (gu * cr2 - gv * sr2) * Rg2, gy = Y + (gu * sr2 + gv * cr2) * Rg2; p.x += (gx - p.x) * geoW * .12; p.y += (gy - p.y) * geoW * .12; }
           var kq = eo((conv - p.del) / .8), Xp = p.x, Yp = p.y, z = 0, f = 1;
           if (kq > 0) {
             var qq;
             // targets = the singularity: rim of the black heart (radius .40 R) and the tilted torus (radius R, vertical ratio sin .62)
             var a = p.th + t * (p.ring < 0 ? 1.1 : .35); if (p.ring < 0) { var rr3 = R * .41 * p.rr; qq = { x: X + Math.cos(a) * rr3, y: Y + Math.sin(a) * rr3, z: 0, f: 1 }; }
             else { var tub = R * (.24 + .06 * p.ring) * Math.sin(p.th * 3 + p.ring), rr4 = R * p.rr + tub * Math.cos(p.th * 5); qq = { x: X + Math.cos(a) * rr4, y: Y + Math.sin(a) * rr4 * .58 + tub * .5 * Math.sin(p.th * 5), z: Math.sin(a), f: 1 }; }
-            var swr = (1 - kq) * 2.4, ca = Math.cos(swr), sa = Math.sin(swr), ox = qq.x - X, oy = qq.y - Y;
+            var swr = (1 - kq) * FX[5], ca = Math.cos(swr), sa = Math.sin(swr), ox = qq.x - X, oy = qq.y - Y;
             var qx = X + (ox * ca - oy * sa) * (1 + (1 - kq) * .6), qy = Y + (ox * sa + oy * ca) * (1 + (1 - kq) * .6);
             Xp = p.x + (qx - p.x) * kq; Yp = p.y + (qy - p.y) * kq; z = qq.z * kq; f = qq.f;
             if (kq > .995) { p.x = Xp; p.y = Yp; p.vx = p.vy = 0; }
