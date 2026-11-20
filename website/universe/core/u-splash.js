@@ -143,21 +143,69 @@
     ['Fibonacci sphere', function (n, th, rr, t) { var i = n % NFX, y = 1 - 2 * (i + .5) / NFX, r = Math.sqrt(1 - y * y), a = i * 2.399963; return rot3(Math.cos(a) * r * .95, y * .95, Math.sin(a) * r * .95, .4, t * 1.1); }, 0, 'none', 0, -2.4, 0.68],
     ['Atom orbitals', function (n, th) { var k = n % 3, a = k / 3 * Math.PI, e = pol(1, th); e[1] *= .3; return [e[0] * Math.cos(a) - e[1] * Math.sin(a), e[0] * Math.sin(a) + e[1] * Math.cos(a)]; }, 0, 'polar', .5, 2.6]
   ];
-  function pickFx() {
-    var q = new URLSearchParams(location.search).get('fx'); if (q && +q >= 1 && +q <= FXS.length) return +q - 1;
-    var last = -1, i; try { last = +(localStorage.getItem('sostu_splash_fx') || -1); } catch (e) {}
+  /* 40 CONVERGENCE ENDINGS (20-Nov-2026, owner request «el círculo rojo prevalece en todas»): what the particles converge onto and the
+   * centre they light up are drawn at random too, independently of the transformation effect (?cv=1..40 forces one; never the same one
+   * twice in a row). Ending 1 is the original tilted torus with the black heart and its scene-coloured rim (red in the vortex scene). */
+  function tgtShape(kind, p, i, t, R) {   // -> [dx, dy, z] relative to the centre
+    var a, r, q, k;
+    switch (kind) {
+      case 'ring': a = p.th + t * .6; return pol(R * (.92 + .16 * hsh(i)), a).concat(0);
+      case 'disk': r = R * (.42 + .8 * hsh(i)); a = p.th + t * 1.2 * R / r; q = pol(r, a); return [q[0], q[1] * .34, Math.sin(a)];
+      case 'shell': q = (function () { var y = 1 - 2 * ((i % 997) + .5) / 997, rr = Math.sqrt(1 - y * y), b = i * 2.399963; return rot3(Math.cos(b) * rr, y, Math.sin(b) * rr, .35, t * 1.1); })(); return [q[0] * R * .85, q[1] * R * .85, 0];
+      case 'spiral2': r = (i % 500) / 500; a = (i % 2) * Math.PI + r * 5.5 - t * .9; return pol(R * (.12 + r), a).concat(0);
+      case 'saturn': if (i % 5 < 2) { q = rot3(Math.cos(p.th) * Math.sin(i), Math.cos(i * 1.3), Math.sin(p.th) * Math.sin(i), .3, t * .8); return [q[0] * R * .42, q[1] * R * .42, 0]; }
+        a = p.th + t * .7; q = pol(R * (.85 + .45 * hsh(i)), a); return [q[0], q[1] * .26, Math.sin(a)];
+      case 'atom3': k = i % 3; a = p.th + t * (1.3 + k * .3); q = pol(R, a); q[1] *= .32; var b2 = k / 3 * Math.PI; return [q[0] * Math.cos(b2) - q[1] * Math.sin(b2), q[0] * Math.sin(b2) + q[1] * Math.cos(b2), 0];
+      case 'gyro': k = i % 3; a = p.th + t * .9; var c3 = [Math.cos(a), Math.sin(a)], v = k === 0 ? [c3[0], c3[1], 0] : k === 1 ? [c3[0], 0, c3[1]] : [0, c3[0], c3[1]]; q = rot3(v[0], v[1], v[2], t * .7, t * 1.1); return [q[0] * R * .9, q[1] * R * .9, 0];
+      case 'flower': a = p.th + t * .5; return pol(R * (.72 + .32 * Math.cos(6 * a - t)), a).concat(0);
+      case 'nebula': r = R * Math.min(1.3, Math.sqrt(-2 * Math.log(1 - hsh(i) * .98)) * .42); a = p.th + t * (.9 - r / R * .4); return pol(r, a).concat(0);
+      case 'pulsar': if (i % 10 < 3) { var s2 = i % 2 ? 1 : -1, d = .35 + 1.3 * ((hsh(i) + t * .35) % 1); return [(hsh(i + 3) - .5) * R * .12 * d, s2 * R * d, 0]; }
+        a = p.th + t * 1.5; q = pol(R * (.5 + .5 * hsh(i)), a); return [q[0], q[1] * .22, 0];
+      case 'tunnel': k = i % 6; a = p.th + t * (k % 2 ? .8 : -.8); q = pol(R * (.25 + .17 * k), a); return [q[0], q[1] * .62 + R * .05 * k, 0];
+      case 'galaxy': r = Math.pow(hsh(i), .7); a = (i % 3) / 3 * TAU + r * 4.5 + t * .5 + (hsh(i + 5) - .5) * .45; q = pol(R * 1.15 * r, a); return [q[0], q[1] * .6, 0];
+      case 'mandala': k = i % 5; a = p.th + t * (k % 2 ? .4 : -.4); return pol(R * (.3 + .18 * k) * (1 + .09 * Math.cos(8 * a)), a).concat(0);
+      case 'sigma': q = sigma(p.th); return [q[0] * R * .85, q[1] * R * .85, 0];
+      case 'hexring': q = poly(6, p.th); a = t * .4; return [(q[0] * Math.cos(a) - q[1] * Math.sin(a)) * R, (q[0] * Math.sin(a) + q[1] * Math.cos(a)) * R, 0];
+      case 'star': q = poly(5, p.th * 2, 2); a = -t * .3; return [(q[0] * Math.cos(a) - q[1] * Math.sin(a)) * R * 1.05, (q[0] * Math.sin(a) + q[1] * Math.cos(a)) * R * 1.05, 0];
+      case 'lemni': a = p.th + t * .8; var dd = 1 + Math.sin(a) * Math.sin(a); return [R * 1.25 * Math.cos(a) / dd, R * 1.25 * Math.sin(a) * Math.cos(a) / dd, 0];
+      case 'cube': var e = CUBE[i % 12], u = hsh(i), A1 = CV[e[0]], B1 = CV[e[1]]; q = rot3(A1[0] + (B1[0] - A1[0]) * u, A1[1] + (B1[1] - A1[1]) * u, A1[2] + (B1[2] - A1[2]) * u, t * .8, t * 1.2); return [q[0] * R * .55, q[1] * R * .55, 0];
+      case 'dnaring': a = p.th + t * .45; return pol(R * (1 + .2 * Math.sin(12 * a + t * 3 + (i % 2) * Math.PI)), a).concat(0);
+      case 'heart': q = [Math.pow(Math.sin(p.th), 3), -(13 * Math.cos(p.th) - 5 * Math.cos(2 * p.th) - 2 * Math.cos(3 * p.th) - Math.cos(4 * p.th)) / 17]; return [q[0] * R, q[1] * R, 0];
+      case 'double': k = i % 2; a = p.th + t * (k ? 1 : -1); return pol(R * (k ? .62 : 1.05), a).concat(0);
+    }
+    return null;
+  }
+  // [name, particle target, centre style, colour]
+  var CVS = [
+    ['Singularity (original)', 'torus', 'heart', ''], ['Spectral ring', 'ring', 'spectral', ''], ['Accretion eclipse', 'disk', 'eclipse', '#e2e8f0'],
+    ['Plasma sphere', 'shell', 'orb', '#22d3ee'], ['Golden twin spiral', 'spiral2', 'ring', '#facc15'], ['Ringed planet', 'saturn', 'ring', '#facc15'],
+    ['Atom', 'atom3', 'orb', '#ffffff'], ['Gyroscope', 'gyro', 'spectral', ''], ['Pulsing flower', 'flower', 'pulse', ''], ['Nebula star', 'nebula', 'star', '#ffffff'],
+    ['Pulsar', 'pulsar', 'orb', '#22d3ee'], ['Tunnel', 'tunnel', 'none', ''], ['Golden galaxy', 'galaxy', 'orb', '#facc15'], ['Mandala', 'mandala', 'spectral', ''],
+    ['Sigma constellation', 'sigma', 'star', '#facc15'], ['Hexagon gate', 'hexring', 'hex', ''], ['Golden pentagram', 'star', 'ring', '#facc15'],
+    ['Infinity', 'lemni', 'orb', '#8b5cf6'], ['Tesseract', 'cube', 'none', ''], ['DNA halo', 'dnaring', 'ring', '#22d3ee'], ['Heart', 'heart', 'ring', '#e879f9'],
+    ['Counter-rotation', 'double', 'eclipse', '#e2e8f0'], ['Spectral torus', 'torus', 'spectral', ''], ['Sigma ring', 'ring', 'sigma', '#facc15'],
+    ['Disk flare', 'disk', 'star', '#fb923c'], ['Eclipsed sphere', 'shell', 'eclipse', '#e2e8f0'], ['Violet spiral', 'spiral2', 'ring', '#8b5cf6'],
+    ['Spectral planet', 'saturn', 'spectral', ''], ['Sigma atom', 'atom3', 'sigma', '#facc15'], ['Glowing gyroscope', 'gyro', 'orb', '#a3e635'],
+    ['Golden flower', 'flower', 'ring', '#facc15'], ['Nebula pulse', 'nebula', 'pulse', ''], ['Pulsar flare', 'pulsar', 'star', '#ffffff'],
+    ['Spectral tunnel', 'tunnel', 'spectral', ''], ['Eclipsed galaxy', 'galaxy', 'eclipse', '#e2e8f0'], ['Hex mandala', 'mandala', 'hex', ''],
+    ['Green hexagon', 'hexring', 'orb', '#a3e635'], ['Spectral DNA', 'dnaring', 'spectral', ''], ['Sigma orbits', 'double', 'sigma', '#facc15'], ['Pulsing cube', 'cube', 'pulse', '']
+  ];
+  function pickRnd(key, n, param) {
+    var q = new URLSearchParams(location.search).get(param); if (q && +q >= 1 && +q <= n) return +q - 1;
+    var last = -1, i; try { last = +(localStorage.getItem(key) || -1); } catch (e) {}
     function rnd() { if (root.crypto && crypto.getRandomValues) { var a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296; } return Math.random(); }
-    do { i = Math.floor(rnd() * FXS.length); } while (i === last && FXS.length > 1);
-    try { localStorage.setItem('sostu_splash_fx', String(i)); } catch (e) {}
+    do { i = Math.floor(rnd() * n); } while (i === last && n > 1);
+    try { localStorage.setItem(key, String(i)); } catch (e) {}
     return i;
   }
+  function pickFx() { return pickRnd('sostu_splash_fx', FXS.length, 'fx'); }
 
   function play(o) {
     var ov = o.overlay, cv = o.canvas, RM = root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var perf = { mode: RM ? 'reduced' : lightWanted() ? 'light' : 'full', frames: 0, longest: 0, startedAt: null, totalMs: null, skipped: false, firstFrameAt: null, plates: null };
     var done = false, raf = 0, t0 = 0, revealed = false, light = perf.mode === 'light', timers = [];
     var V = o.variant || 'a', B = o.base || '', K = V === 'a' ? 0 : 1;
-    var FI = pickFx(), FX = FXS[FI]; perf.fx = { id: FI + 1, name: FX[0] }; U.splash.perf = perf; mark();          // seen as soon as it starts: a reload mid-splash never replays it
+    var FI = pickFx(), FX = FXS[FI], CI = pickRnd('sostu_splash_cv', CVS.length, 'cv'), CVE = CVS[CI]; perf.fx = { id: FI + 1, name: FX[0] }; perf.cv = { id: CI + 1, name: CVE[0] }; U.splash.perf = perf; mark();          // seen as soon as it starts: a reload mid-splash never replays it
     function finish() {
       if (done) return; done = true; if (raf) cancelAnimationFrame(raf); timers.forEach(clearTimeout); mark();
       perf.totalMs = Math.round(performance.now() - (perf.startedAt || performance.now()));
@@ -272,7 +320,9 @@
           if (kq > 0) {
             var qq;
             // targets = the singularity: rim of the black heart (radius .40 R) and the tilted torus (radius R, vertical ratio sin .62)
-            var a = p.th + t * (p.ring < 0 ? 1.1 : .35); if (p.ring < 0) { var rr3 = R * .41 * p.rr; qq = { x: X + Math.cos(a) * rr3, y: Y + Math.sin(a) * rr3, z: 0, f: 1 }; }
+            var a = p.th + t * (p.ring < 0 ? 1.1 : .35), ts = CVE[1] === 'torus' ? null : tgtShape(CVE[1], p, i, t, R);
+            if (ts) qq = { x: X + ts[0], y: Y + ts[1], z: ts[2], f: 1 };
+            else if (p.ring < 0) { var rr3 = R * .41 * p.rr; qq = { x: X + Math.cos(a) * rr3, y: Y + Math.sin(a) * rr3, z: 0, f: 1 }; }
             else { var tub = R * (.24 + .06 * p.ring) * Math.sin(p.th * 3 + p.ring), rr4 = R * p.rr + tub * Math.cos(p.th * 5); qq = { x: X + Math.cos(a) * rr4, y: Y + Math.sin(a) * rr4 * .58 + tub * .5 * Math.sin(p.th * 5), z: Math.sin(a), f: 1 }; }
             var swr = (1 - kq) * FX[5], ca = Math.cos(swr), sa = Math.sin(swr), ox = qq.x - X, oy = qq.y - Y;
             var qx = X + (ox * ca - oy * sa) * (1 + (1 - kq) * .6), qy = Y + (ox * sa + oy * ca) * (1 + (1 - kq) * .6);
@@ -286,14 +336,43 @@
         }
       }
       // ---------- the black heart of the singularity and its rim (scene colour: red / spectral photon ring / gold) — the centre stays free
-      var coreA = ease((t - 4.0) / 1.0) * (t < 7.0 ? 1 : Math.max(0, 1 - (t - 7.0) / .7));
-      if (coreA > 0) {
+      var coreA = ease((t - 4.0) / 1.0) * (t < 7.0 ? 1 : Math.max(0, 1 - (t - 7.0) / .7)), CS2 = CVE[2], CC = CVE[3];
+      if (coreA > 0 && CS2 === 'heart') {
         var rc = R * .40;
         ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = coreA * bgA; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(X, Y, rc * .97, 0, 7); ctx.fill();
         ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = coreA; ctx.lineWidth = 3 * F;
         if (RIM) ctx.strokeStyle = RIM; else { var cg = ctx.createConicGradient ? ctx.createConicGradient(t * .3, X, Y) : null; if (cg) { SPEC.concat(SPEC[0]).forEach(function (h, j) { cg.addColorStop(j / 7, h); }); ctx.strokeStyle = cg; } else ctx.strokeStyle = '#22d3ee'; }
         ctx.beginPath(); ctx.arc(X, Y, rc, 0, 7); ctx.stroke(); ctx.globalAlpha = coreA * .5; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(X, Y, rc * 1.07, 0, 7); ctx.stroke();
         ctx.globalAlpha = coreA * .55; ctx.drawImage(RIM === '#fb010d' ? glowS[7] : glowS[RIM ? 5 : 3], X - rc * 1.9, Y - rc * 1.9, rc * 3.8, rc * 3.8);
+      }
+      if (coreA > 0 && CS2 !== 'heart' && CS2 !== 'none') {
+        var rc2 = R * .40, cgS = null; ctx.globalCompositeOperation = 'lighter';
+        if (ctx.createConicGradient) { cgS = ctx.createConicGradient(t * .5, X, Y); SPEC.concat(SPEC[0]).forEach(function (h, j) { cgS.addColorStop(j / 7, h); }); }
+        var STK = CC || cgS || '#22d3ee';
+        if (CS2 === 'eclipse') {   // black disc with a silver corona
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = coreA * bgA; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(X, Y, rc2 * .97, 0, 7); ctx.fill();
+          ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = coreA * .9; ctx.drawImage(glowW, X - rc2 * 1.6, Y - rc2 * 1.6, rc2 * 3.2, rc2 * 3.2);
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = coreA * bgA; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(X, Y, rc2 * .95, 0, 7); ctx.fill();
+          ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = coreA * .8; ctx.strokeStyle = CC; ctx.lineWidth = 1.6 * F; ctx.beginPath(); ctx.arc(X, Y, rc2, 0, 7); ctx.stroke();
+        } else if (CS2 === 'orb') {   // bright glowing core
+          var og = ctx.createRadialGradient(X, Y, 0, X, Y, rc2 * 1.5); og.addColorStop(0, '#ffffff'); og.addColorStop(.25, CC); og.addColorStop(1, CC + '00');
+          ctx.globalAlpha = coreA * (.75 + .25 * Math.sin(t * 6)); ctx.fillStyle = og; ctx.beginPath(); ctx.arc(X, Y, rc2 * 1.5, 0, 7); ctx.fill();
+        } else if (CS2 === 'star') {   // lens-flare star
+          ctx.globalAlpha = coreA; ctx.drawImage(glowW, X - rc2, Y - rc2, rc2 * 2, rc2 * 2); ctx.strokeStyle = CC; ctx.lineWidth = 1.4 * F;
+          for (var sk = 0; sk < 4; sk++) { var sa2 = sk / 4 * Math.PI + t * .4, ln = rc2 * (sk % 2 ? 1.6 : 2.6) * (.9 + .1 * Math.sin(t * 5)); ctx.globalAlpha = coreA * .7; ctx.beginPath(); ctx.moveTo(X - Math.cos(sa2) * ln, Y - Math.sin(sa2) * ln); ctx.lineTo(X + Math.cos(sa2) * ln, Y + Math.sin(sa2) * ln); ctx.stroke(); }
+        } else if (CS2 === 'pulse') {   // rings pulsing outwards in the spectrum
+          ctx.lineWidth = 2 * F; for (var pk = 0; pk < 4; pk++) { var ph = (t * .7 + pk / 4) % 1; ctx.globalAlpha = coreA * (1 - ph) * .8; ctx.strokeStyle = SPEC[(pk * 2) % 7]; ctx.beginPath(); ctx.arc(X, Y, rc2 * (.3 + ph * 1.6), 0, 7); ctx.stroke(); }
+        } else if (CS2 === 'hex') {
+          ctx.globalAlpha = coreA; ctx.strokeStyle = STK; ctx.lineWidth = 2.6 * F; ctx.beginPath();
+          for (var hk = 0; hk <= 6; hk++) { var ha = hk / 6 * TAU + t * .3; ctx.lineTo(X + Math.cos(ha) * rc2, Y + Math.sin(ha) * rc2); } ctx.stroke();
+        } else if (CS2 === 'sigma') {   // the gold Σ in the centre
+          ctx.globalAlpha = coreA * .6; ctx.drawImage(glowS[5], X - rc2 * 1.6, Y - rc2 * 1.6, rc2 * 3.2, rc2 * 3.2);
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = coreA; ctx.fillStyle = CC; ctx.font = '700 ' + Math.round(rc2 * 1.5) + 'px Georgia,serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('Σ', X, Y + rc2 * .05); ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+        } else {   // 'ring' and 'spectral': a coloured ring, no black disc
+          ctx.globalAlpha = coreA; ctx.strokeStyle = STK; ctx.lineWidth = 3 * F; ctx.beginPath(); ctx.arc(X, Y, rc2, 0, 7); ctx.stroke();
+          ctx.globalAlpha = coreA * .5; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(X, Y, rc2 * 1.07, 0, 7); ctx.stroke();
+          ctx.globalAlpha = coreA * .45; ctx.drawImage(CC === '#facc15' ? glowS[5] : CC === '#8b5cf6' ? glowS[0] : CC === '#e879f9' ? glowS[1] : glowS[3], X - rc2 * 1.9, Y - rc2 * 1.9, rc2 * 3.8, rc2 * 3.8);
+        }
       }
       // ---------- UNIVERSE REVEAL: multicolour energy wave, camera pull-back (cam()), the backdrop dissolves into the home
       if (t > 5.9) {
