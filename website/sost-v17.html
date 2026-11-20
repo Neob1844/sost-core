@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST V17 — What's New · Network Upgrade at Block #40,000</title>
-<meta name="description" content="SOST V17: the coordinated network upgrade targeting block #40,000. What changes, the real status of every item, rewards 80/10/5/5 (proposed), maturity, reorganization safety, Digital Vault, bridge and decentralization.">
+<meta name="description" content="SOST V17: the coordinated network upgrade targeting block #40,000. What changes, the real status of every item, rewards 70/5/5/20, maturity, reorganization safety, Digital Vault, bridge (integrated, closed) and decentralization.">
 <link rel="canonical" href="https://sostcore.com/sost-v17.html">
 <meta property="og:title" content="SOST V17 — Network Upgrade at Block #40,000">
 <meta property="og:description" content="What changes in V17, the real status of every item, and what node operators and miners must do.">
@@ -51,8 +51,8 @@ All validating nodes and miners must prepare the approved V17 release before blo
 The final release must be published <b>before</b> #39,900: the window is for installing and verifying it, not for starting distribution. The window is counted in blocks; its length in hours depends on the real block rate.</div>
 
 <nav class="toc" aria-label="Contents">
-  <a href="#status">Status</a><a href="#changes">V30000 &rarr; V17</a><a href="#rewards">Rewards 80/10/5/5</a><a href="#maturity">Maturity</a>
-  <a href="#reorg">Reorganization safety</a><a href="#vault">Digital Vault</a><a href="#bridge">Atomic Bridge</a>
+  <a href="#status">Status</a><a href="#changes">V30000 &rarr; V17</a><a href="#rewards">Rewards 70/5/5/20</a><a href="#maturity">Maturity</a>
+  <a href="#reorg">Reorganization safety</a><a href="#vault">Digital Vault</a><a href="#bridge">Bridge (closed)</a>
   <a href="#decentralization">Decentralization</a><a href="#compat">Compatibility</a><a href="#inventory">Full inventory</a>
 </nav>
 
@@ -72,7 +72,7 @@ The final release must be published <b>before</b> #39,900: the window is for ins
 <h2 id="changes"><small>Summary</small>What changes from V30000 to V17</h2>
 <div class="tbl"><table>
 <tr><th>Area</th><th>Today (V30000 rules)</th><th>V17 candidate (from #40,000)</th><th>Status</th></tr>
-<tr><td>Block reward split</td><td>50% miner / 50% DTD</td><td>Proposed: 80% miner / 10% DTD / 5% Jackpot accumulator / 5% Useful Compute vault (the candidate code still implements 80% / 15% / 5%)</td><td><span class="tag t-dec">PROPOSED &mdash; CODE CHANGE PENDING</span></td></tr>
+<tr><td>Block reward split</td><td>50% miner / 50% DTD</td><td>70% miner / 5% DTD / 5% Jackpot accumulator J / 20% Useful Compute vault U (withheld; Useful Compute stays OFF)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>Transaction fees</td><td>Split with the subsidy</td><td>100% to the block miner</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>Jackpot funding</td><td>Frozen reserve only (H)</td><td>Reserve H first, then the new accumulator J</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>DTD / Jackpot winner seed</td><td>From the block id (can be re-signed)</td><td>From the PoW commit (DTD-F1): re-signing a block no longer changes the winner</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
@@ -85,48 +85,45 @@ The final release must be published <b>before</b> #39,900: the window is for ins
 <tr><td>Total supply and emission schedule</td><td>~4.669 M SOST maximum</td><td>Unchanged</td><td><span class="tag t-def">NO CHANGE</span></td></tr>
 </table></div>
 
-<h2 id="rewards"><small>Economics</small>Rewards: 80 / 10 / 5 / 5 (proposed)</h2>
-<p><b>Before #40,000 this is a proposal, not an active rule.</b> Every block below #40,000 keeps the current rule: 50% to the miner and 50% to the DTD, fees included.</p>
-<p><b>Proposed revision (17 November 2026):</b> reserve 5% of every block subsidy for a <b>Useful Compute vault</b>, taken from the DTD share (15% &rarr; 10%). The V17 candidate code (<code>include/sost/v17_economics.h</code>, spec <code>docs/v40000/V17_ECONOMICS_NORMATIVE.md</code>) still implements 80 / 15 / 5; the new split needs code changes, tests and review before it can be part of a published release. The table shows the proposed split.</p>
+<h2 id="rewards"><small>Economics</small>Rewards: 70 / 5 / 5 / 20</h2>
+<p><b>Before #40,000 this is not an active rule.</b> Every block below #40,000 keeps the current rule: 50% to the miner and 50% to the DTD, fees included.</p>
+<p><b>Final V17 split (owner decision, November 2026), implemented in the V17 release candidate</b> (<code>include/sost/v17_economics.h</code>, spec <code>docs/v40000/V17_ECONOMICS_NORMATIVE.md</code>). It becomes active only with a published, approved release.</p>
 <div class="tbl"><table>
 <tr><th>Destination</th><th>Share of the block subsidy</th><th class="n">Block #40,000 (subsidy 7.85100863 SOST)</th><th class="n">Same block today (50/50)</th></tr>
-<tr><td>Proof-of-Work miner</td><td>80% (+ all fees)</td><td class="n">6.28080691 SOST</td><td class="n">3.92550432 SOST</td></tr>
-<tr><td>Deterministic Token Distribution (DTD)</td><td>10%</td><td class="n">0.78510086 SOST</td><td class="n">3.92550431 SOST</td></tr>
+<tr><td>Proof-of-Work miner</td><td>70% (+ all fees)</td><td class="n">5.49570605 SOST</td><td class="n">3.92550432 SOST</td></tr>
+<tr><td>Deterministic Token Distribution (DTD)</td><td>5%</td><td class="n">0.39255043 SOST</td><td class="n">3.92550431 SOST</td></tr>
 <tr><td>Jackpot accumulator J</td><td>5%</td><td class="n">0.39255043 SOST</td><td class="n">&mdash;</td></tr>
-<tr><td>Useful Compute vault U (proposed)</td><td>5%</td><td class="n">0.39255043 SOST</td><td class="n">&mdash;</td></tr>
+<tr><td>Useful Compute vault U (withheld)</td><td>20%</td><td class="n">1.57020172 SOST</td><td class="n">&mdash;</td></tr>
 </table></div>
 <ul>
-<li><b>Per block, in integer units</b> (1 SOST = 100,000,000 stocks): DTD = subsidy &times; 10 / 100, J = subsidy &times; 5 / 100 and U = subsidy &times; 5 / 100, each rounded down; the miner receives the rest. The miner therefore absorbs any rounding remainder (at most 3 stocks), and the four parts always add up to the subsidy exactly.</li>
+<li><b>Per block, in integer units</b> (1 SOST = 100,000,000 stocks): DTD = subsidy &times; 5 / 100, J = subsidy &times; 5 / 100 and U = subsidy &times; 20 / 100, each rounded down; the miner receives the rest. The miner therefore absorbs any rounding remainder, and the four parts always add up to the subsidy exactly.</li>
 <li><b>Fees:</b> 100% to the miner of the block. They are not split, not burned.</li>
-<li><b>DTD:</b> paid every block to one eligible winner, as today. If nobody is eligible, the 10% rolls over to the next block, as today.</li>
-<li><b>Useful Compute vault U (proposed):</b> a consensus balance (no address, no key, no custodian) that would grow by 5% of each block subsidy, about 0.39 SOST per block today. It would pay rewards only for computation verified independently, never twice for the same task. The verification and payout rules are still being designed; until they are specified, tested and activated, U cannot be spent.</li>
+<li><b>DTD:</b> unchanged lottery, paid every block to one eligible winner. If nobody is eligible, the 5% rolls over to the next block, as today.</li>
+<li><b>Useful Compute vault U:</b> a consensus balance (no address, no key, no custodian) that grows by 20% of each block subsidy, about 1.57 SOST per block today. <b>Useful Compute is OFF in V17:</b> U cannot be spent by anyone. Paying from U will need a later, separately tested and announced consensus release.</li>
 <li><b>Accumulator J:</b> a consensus balance (no address, no key, no custodian) that grows by 5% of each block subsidy, about 0.39 SOST per block today (about 113 SOST per 288-block Jackpot cycle).</li>
-<li><b>Jackpot prizes:</b> unchanged rules &mdash; every 288 blocks, base 100 SOST, rollover up to a 500 SOST cap, Jackpot V2 winner (NODE_BIND + heartbeats, weighted by PoW). Only the funding changes: the historical reserve <b>H</b> pays first; when H is not enough, J pays the rest. The first V17 Jackpot is at #40,266.</li>
+<li><b>Jackpot prizes:</b> every 288 blocks, base 100 SOST, rollover up to a 500 SOST cap. The winner is drawn among eligible miners (active NODE_BIND, heartbeats, at least 3 valid blocks in the window) with a chance <b>proportional to the valid PoW blocks</b> each one mined. Splitting the same hashpower across many identities gives no advantage. The historical reserve <b>H</b> pays first; when H is not enough, J pays the rest. The first V17 Jackpot is at #40,266.</li>
 <li><b>Historical reserve:</b> H (about 64,674 SOST today) stays reserved for Jackpot payments only. It is not moved and not reassigned.</li>
-<li><b>Supply:</b> the emission schedule and the maximum supply (~4.669 M SOST) do not change. No new SOST is created and nothing is burned: J and U only hold back part of the subsidy and pay it out later. At every height: unspent outputs + pending DTD + J + U = everything emitted.</li>
+<li><b>Supply:</b> the emission schedule and the maximum supply (~4.669 M SOST) do not change. No new SOST is created and nothing is burned: J and U only hold back part of the subsidy. At every height: unspent outputs + pending DTD + J + U = everything emitted. Circulating supply excludes J and U.</li>
 <li><b>Maturity of payouts:</b> the miner output and J-funded Jackpot payouts follow coinbase maturity; H-funded payouts stay immediately spendable, as today.</li>
 </ul>
 
 <h2 id="maturity"><small>Spendability</small>Coinbase maturity: 1,000 and 5,000 blocks</h2>
-<div class="note"><b>Decision pending.</b> The participation-based maturity has two variants (B and C) that are <b>incompatible with each other</b>. Both were tested on a devnet (20/20 each); the choice is the owner's and has not been made. If no decision is taken in time, V17 ships <b>without</b> this rule and maturity stays at 1,000 blocks for every coinbase output. This page will not present either variant as final before that decision.</div>
-<h3>The rule in force today (and in V17 unless a variant is approved)</h3>
+<div class="note"><b>Decided (15 November 2026) and implemented in the V17 release candidate:</b> rule C. Spec: <code>docs/v40000/V17_PARTICIPATION_MATURITY.md</code>.</div>
+<h3>Today</h3>
 <p>Every coinbase output can be spent after <b>1,000 confirmations</b>. A reward with fewer confirmations is <b>immature</b> and is not spendable: wallets and the Explorer must show it as immature, never as available.</p>
-<h3>The proposal</h3>
+<h3>From #40,000</h3>
 <div class="tbl"><table>
-<tr><th></th><th>Variant B</th><th>Variant C (recommended by the technical report)</th></tr>
-<tr><td>1,000 blocks if&hellip;</td><td>the miner is Jackpot V2-eligible at H&minus;1: SbPoW signature, &ge; 3 blocks in the last 2,016, active NODE_BIND, heartbeats</td><td>the miner runs a participating node: active NODE_BIND at H&minus;1 and 3 of the last 4 heartbeats (no block quota)</td></tr>
-<tr><td>5,000 blocks if&hellip;</td><td>any of those conditions is missing</td><td>no active NODE_BIND or not enough heartbeats</td></tr>
-<tr><td>Small miners (&lt; 3 blocks in 2,016)</td><td>always 5,000, even with a node</td><td>1,000 if they run a node</td></tr>
-<tr><td>Measured on mainnet #32,814&ndash;#34,157</td><td>3.65% of blocks would get 5,000 &mdash; all 49 small miners</td><td>3.65% today (no small miner runs a node yet); 0 if they run one</td></tr>
+<tr><th>Miner output maturity</th><th>Condition at the block height H</th></tr>
+<tr><td><b>1,000 blocks</b></td><td>the miner runs a participating node: active NODE_BIND at H&minus;1 and 3 of the last 4 heartbeats (no block quota, so small miners qualify too)</td></tr>
+<tr><td><b>5,000 blocks</b></td><td>no active NODE_BIND or not enough heartbeats</td></tr>
 </table></div>
 <ul>
-<li><b>Only the miner output</b> (<code>OUT_COINBASE_MINER</code>) is affected. DTD, Jackpot, transfers and every non-coinbase output are not.</li>
+<li><b>Only the miner output</b> (<code>OUT_COINBASE_MINER</code>, including its fees) is affected. DTD, Jackpot, transfers and every non-coinbase output are not.</li>
 <li><b>Not retroactive:</b> rewards created before #40,000 keep the 1,000-block rule.</li>
 <li><b>Fixed at creation:</b> the maturity is decided when the reward is created; gaining or losing eligibility later does not change it.</li>
-<li><b>Reorganizations:</b> recomputed from the state before the block when a block is reconnected; restored when it is disconnected (tested on devnet).</li>
+<li><b>Reorganizations:</b> recomputed when a block is reconnected, restored when it is disconnected (tested on devnet).</li>
 <li><b>Worst case:</b> 5,000 blocks, about 35 days at the 10-minute target. No funds are locked permanently.</li>
-<li><b>Example:</b> a miner without a node finds block #40,500. Under B or C its 6.28 SOST become spendable at #45,500. With an active NODE_BIND and 3 of 4 heartbeats (C), or also &ge; 3 blocks in the last 2,016 (B), they become spendable at #41,500.</li>
-<li><b>Where to see it:</b> on the maturity development branch the CLI and the local wallet already read the per-output maturity (tested 10/10). The web wallet, the Digital Vault and the Explorer still have to display it before the rule can be activated.</li>
+<li><b>Example:</b> a miner without a node finds block #40,500: its 5.50 SOST become spendable at #45,500. With an active NODE_BIND and 3 of 4 heartbeats they become spendable at #41,500.</li>
 </ul>
 
 <h2 id="reorg"><small>Security</small>Reorganization and network safety</h2>
@@ -165,15 +162,13 @@ The final release must be published <b>before</b> #39,900: the window is for ins
 </table></div>
 <p><b>Important limit:</b> these checks run in the browser. While a wallet is unlocked its key is in the page&rsquo;s memory, so malicious code in the page or a malicious extension could sign without them. They protect against mistakes and many attacks, but they are <b>not</b> an independent cryptographic control such as a separate signing device or multisig.</p>
 
-<h2 id="bridge"><small>Ethereum</small>SOST &harr; wSOST Atomic Bridge &mdash; under development</h2>
-<p><span class="tag t-plan">UNDER DEVELOPMENT</span> The bridge is <b>not</b> part of V17 and is not activated by it. It needs its own security review and its own launch authorization. No bridge contract holds real funds.</p>
+<h2 id="bridge"><small>Ethereum</small>SOST &harr; wSOST Bridge &mdash; integrated, CLOSED</h2>
+<p><span class="tag t-cand">INCLUDED IN V17 CANDIDATE &mdash; CLOSED</span> The bridge rules are compiled into V17, but on mainnet the bridge is <b>closed by consensus</b>: the lock cap is 0, no bridge transaction or output is accepted at any height, and there is no administrator key or switch that can open it. Opening it will need independent security audits and a later, public consensus release. <b>No real funds.</b></p>
 <ul>
-<li><b>Design:</b> 1:1 in both directions. Native SOST is locked on the SOST chain; the same amount of wSOST is delivered on Ethereum; returning wSOST burns it and releases the SOST.</li>
-<li><b>Reserve:</b> verifiable on-chain at any time (locked SOST = wSOST in circulation).</li>
-<li><b>Verification:</b> a light client of the SOST chain on Ethereum checks the PoW of the relevant blocks; independent watchers can raise alarms. Measures against double spending and a confirmation depth against reorganizations are part of the design.</li>
-<li><b>Fees:</b> no protocol fee. Users pay external Ethereum gas (lab measurement: about 190,000 gas per claim).</li>
-<li><b>Ethereum L1 or L2:</b> still being evaluated.</li>
-<li><b>State:</b> contracts and tests in the lab only. The native lock on the SOST side is not in the V17 consensus. Mining concentration must improve before a bridge can rely on SOST confirmations.</li>
+<li><b>Design:</b> 1:1 in both directions, no protocol fee. Native SOST is locked on the SOST chain and the same amount of wSOST is minted on Ethereum; returning wSOST burns it and releases the SOST.</li>
+<li><b>No pre-mint:</b> wSOST in circulation always equals the SOST locked; the reserve is verifiable on both chains at any time.</li>
+<li><b>Verification:</b> SOST follows Ethereum through a sync-committee light client and accepts a bridge outcome only from a storage proof of the bridge contract at a finalized Ethereum state. On Ethereum, SOST blocks are verified by their PoW, with watchers and a 500-block reorganization cap.</li>
+<li><b>State:</b> complete in the lab (end-to-end tests on a devnet). Users pay only external Ethereum gas.</li>
 </ul>
 
 <h2 id="decentralization"><small>Goals and measurements</small>Decentralization &amp; network resilience</h2>
@@ -215,7 +210,8 @@ The final release must be published <b>before</b> #39,900: the window is for ins
 <div class="tbl"><table>
 <tr><th>Item</th><th>Status</th></tr>
 <tr><td>Jackpot accumulator J</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
-<tr><td>Reward split: proposed 80/10/5/5 with a Useful Compute vault (candidate code still 80/15/5)</td><td><span class="tag t-dec">PROPOSED &mdash; CODE CHANGE PENDING</span></td></tr>
+<tr><td>Reward split 70/5/5/20 (Useful Compute vault U withheld, Useful Compute OFF)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Jackpot weighted by valid PoW blocks (NODE_BIND + heartbeats + eligibility)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>DTD-F1: winner seeds from the PoW commit</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>DTD node-participation gate (NODE_BIND + heartbeats)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>ConvergenceX Transcript V3</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
@@ -229,15 +225,15 @@ The final release must be published <b>before</b> #39,900: the window is for ins
 <tr><td>RPC: <code>getjackpotstate</code>, V17 fields in <code>getblock</code>, <code>getlotterystate</code>, <code>getsupplyinfo</code>, multisig in <code>getaddressinfo</code></td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>Miner: builds the V17 coinbase, refuses to mine V17 without a V17 template</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>CLI: NODE_BIND signed in two halves (node key and mining key on different machines)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
-<tr><td>libsecp256k1 pinned to v0.6.0, statically linked, reproducible build</td><td><span class="tag t-test">TESTING</span> (separate branch, gates to repeat after merge)</td></tr>
-<tr><td>Participation maturity 1,000 / 5,000 (B or C)</td><td><span class="tag t-dec">TESTING &mdash; DECISION PENDING</span></td></tr>
+<tr><td>libsecp256k1 v0.6.0 and blst v0.3.16 pinned, statically linked, reproducible build</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
+<tr><td>Participation maturity 1,000 / 5,000 (rule C)</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE</span></td></tr>
 <tr><td>Digital Vault protections</td><td><span class="tag t-test">TESTING</span></td></tr>
 <tr><td>Explorer: V17 reward row, H and J shown separately, maturity</td><td><span class="tag t-test">TESTING</span></td></tr>
 <tr><td>Independent DNS seeds and seed nodes</td><td><span class="tag t-plan">PLANNED</span></td></tr>
-<tr><td>SOST &harr; wSOST Atomic Bridge</td><td><span class="tag t-plan">UNDER DEVELOPMENT</span> (separate authorization)</td></tr>
+<tr><td>SOST &harr; wSOST bridge rules</td><td><span class="tag t-cand">INCLUDED IN V17 CANDIDATE &mdash; CLOSED</span> (lock cap 0; opening needs audits and a later consensus release)</td></tr>
 <tr><td>New chain-selection (work) rule</td><td><span class="tag t-def">DEFERRED</span></td></tr>
 <tr><td>Deep-reorganization rule SACS V2</td><td><span class="tag t-def">DEFERRED</span> (500-block cap stays)</td></tr>
-<tr><td>Native assets for the public</td><td><span class="tag t-def">DEFERRED</span> (#50,000 or later)</td></tr>
+<tr><td>SOST Universal Assets (tokenization)</td><td><span class="tag t-def">CLOSED</span> (built and tested separately; real issuance only after regulatory validation per asset class and jurisdiction, a security audit and a later consensus release)</td></tr>
 <tr><td>V30000 rules, NODE_BIND, heartbeats, Jackpot V2</td><td><span class="tag t-active">ACTIVE</span> (since #30,000)</td></tr>
 </table></div>
 
