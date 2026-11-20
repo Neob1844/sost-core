@@ -90,14 +90,13 @@
 '  <p class="sost-v17-live" data-v17-live>SOST V17 &mdash; network upgrade &middot; block #40,000</p>' +
 '  <p>SOST is preparing a coordinated network upgrade targeting block <b>#40,000</b>. Proposed improvements include revised mining and DTD rewards, ' +
 '  new coinbase maturity rules, stronger reorganization safeguards, improved P2P synchronization and enhanced node and wallet security.</p>' +
-'  <div class="sost-v17-split"><span class="h">PROPOSED V17 &mdash; NOT ACTIVE</span>' +
-'   <ul><li>&#9935;&#65039; <b>80%</b> PoW miners</li>' +
-'   <li>&#127919; <b>10%</b> Deterministic Token Distribution (DTD)</li>' +
-'   <li>&#127942; <b>5%</b> DTD Jackpot</li>' +
-'   <li>&#129504; <b>5%</b> Useful Compute Reward</li></ul>' +
-'   <p>This split replaces the earlier 80/15/5 proposal. It is <b>not yet implemented or activated in consensus</b>, and it does not increase the total SOST emission.</p>' +
-'   <p><b>Useful Compute Reward (5%, proposed):</b> A future protocol-controlled vault intended to fund independently verified CPU/GPU computational tasks, ' +
-'   including scientific research, simulations and data processing. Verification and payment rules remain under development; no Useful Compute rewards are active.</p></div>' +
+'  <div class="sost-v17-split"><span class="h">V17 RELEASE CANDIDATE &mdash; NOT ACTIVE</span>' +
+'   <ul><li>&#9935;&#65039; <b>70%</b> PoW miners (+ all fees)</li>' +
+'   <li>&#127919; <b>5%</b> Deterministic Token Distribution (DTD)</li>' +
+'   <li>&#127942; <b>5%</b> Jackpot accumulator (winner weighted by valid PoW blocks)</li>' +
+'   <li>&#129504; <b>20%</b> Useful Compute vault (withheld)</li></ul>' +
+'   <p>This is the final V17 split (it replaces the 80/15/5 and 80/10/5/5 drafts). It is implemented in the release candidate but <b>not active</b>, and it does not increase the total SOST emission.</p>' +
+'   <p><b>Useful Compute vault (20%):</b> a consensus balance with no address or key. Useful Compute stays OFF in V17, so nobody can spend it; paying from it needs a later, tested consensus release.</p></div>' +
 '  <p>Node operators and miners must prepare compatible, verified software before activation. The release remains subject to final testing and approval.</p>' +
 '  <p style="color:#a9b1bf">Status: <b style="color:#f6d77a">' + STATUS + '</b> &mdash; ' + STATUS_NOTE + '</p>' +
 '  <div class="sost-v17-crit"><span class="h">&#9888; CRITICAL &mdash; COORDINATED NETWORK UPGRADE REQUIRED</span>' +

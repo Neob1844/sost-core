@@ -18,7 +18,7 @@
  ['OTC / P2P','retired','Swap paths disabled under H-01.','../sost-otc.html'],
  ['wSOST / bridge','research','Research roadmap; not live. No bridge is active.','../sost-wsost-gold-vault.html','NOT ACTIVE'],
  ['E2E coordination','research','Signed off-chain offers and notices; design work.','../sost-e2e.html'],
- ['#40,000 reward study','research','80/15/5 scenario; not consensus.','#research'],
+ ['#40,000 reward study','research','superseded: V17 implements 70/5/5/20.','#research'],
  ['Post-quantum migration','research','Study only; signatures are ECDSA today.','../sost-security.html'],
  ['Metals reserve (25 %)','retired','Ended at #25,000; the reserve is drained by the DTD Jackpot.','../sost-gold-reserve.html'],
  ['PoPC (25 %)','retired','Paused / legacy since #25,000; escrow kept for reference only.','../sost-popc.html'],
