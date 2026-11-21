@@ -951,7 +951,7 @@ html.sx-loading #jackpotHint{visibility:hidden!important}
 
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-11-21-v588-cryptopairs';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-11-21-v588-cryptopairs-rows';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1445,12 +1445,12 @@ createCollapsibleProducerList('dwzJpListPanel','winner list');
     </div>
     <div class="price-card">
       <div class="price-card-head">
-        <div class="price-card-title">// <b style="color:#26a17b">USDT / BTC</b> &mdash; Tether vs Bitcoin</div>
+        <div class="price-card-title">// <b style="color:#627eea">ETH / USDC</b> &mdash; Ethereum vs USD Coin</div>
         <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
       </div>
-      <div class="price-card-val" id="usdtbtcPrice" style="color:#26a17b">&mdash;</div>
-      <div class="price-change" id="usdtbtcChange">&mdash;</div>
-      <div class="tf-btns" id="usdtbtcTfBtns">
+      <div class="price-card-val" id="ethusdcPrice" style="color:#627eea">&mdash;</div>
+      <div class="price-change" id="ethusdcChange">&mdash;</div>
+      <div class="tf-btns" id="ethusdcTfBtns">
         <button class="tf-btn" data-tf="1H">1H</button>
         <button class="tf-btn" data-tf="4H">4H</button>
         <button class="tf-btn" data-tf="8H">8H</button>
@@ -1464,11 +1464,11 @@ createCollapsibleProducerList('dwzJpListPanel','winner list');
         <button class="tf-btn" data-tf="5Y">5Y</button>
       </div>
       <div class="chart-wrap">
-        <canvas id="usdtbtcChart" style="width:100%;height:150px"></canvas>
-        <canvas id="usdtbtcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
-        <div class="price-tooltip" id="usdtbtcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+        <canvas id="ethusdcChart" style="width:100%;height:150px"></canvas>
+        <canvas id="ethusdcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="ethusdcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
       </div>
-      <div class="price-card-range" id="usdtbtcRange"></div>
+      <div class="price-card-range" id="ethusdcRange"></div>
     </div>
     <div class="price-card">
       <div class="price-card-head">
@@ -1555,12 +1555,13 @@ createCollapsibleProducerList('dwzJpListPanel','winner list');
     </div>
     <div class="price-card">
       <div class="price-card-head">
-        <div class="price-card-title">// <b style="color:#627eea">ETH / USDC</b> &mdash; Ethereum vs USD Coin</div>
+        <div class="price-card-title">// <b style="color:#26a17b">USDT / BTC</b> &mdash; Tether vs Bitcoin</div>
         <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
       </div>
-      <div class="price-card-val" id="ethusdcPrice" style="color:#627eea">&mdash;</div>
-      <div class="price-change" id="ethusdcChange">&mdash;</div>
-      <div class="tf-btns" id="ethusdcTfBtns">
+      <div class="price-card-val" id="usdtbtcPrice" style="color:#26a17b">&mdash;</div>
+      <div class="price-change" id="usdtbtcChange">&mdash;</div>
+      <div class="cdl-bar" aria-hidden="true" style="visibility:hidden"><button type="button" class="cdl-mode" tabindex="-1" disabled>LINE</button></div><!-- spacer: same height as the LINE/CANDLES bar of the USDC card on this row -->
+      <div class="tf-btns" id="usdtbtcTfBtns">
         <button class="tf-btn" data-tf="1H">1H</button>
         <button class="tf-btn" data-tf="4H">4H</button>
         <button class="tf-btn" data-tf="8H">8H</button>
@@ -1574,11 +1575,11 @@ createCollapsibleProducerList('dwzJpListPanel','winner list');
         <button class="tf-btn" data-tf="5Y">5Y</button>
       </div>
       <div class="chart-wrap">
-        <canvas id="ethusdcChart" style="width:100%;height:150px"></canvas>
-        <canvas id="ethusdcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
-        <div class="price-tooltip" id="ethusdcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+        <canvas id="usdtbtcChart" style="width:100%;height:150px"></canvas>
+        <canvas id="usdtbtcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="usdtbtcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
       </div>
-      <div class="price-card-range" id="ethusdcRange"></div>
+      <div class="price-card-range" id="usdtbtcRange"></div>
     </div>
     <div class="price-card">
       <div class="price-card-head">
@@ -1587,6 +1588,7 @@ createCollapsibleProducerList('dwzJpListPanel','winner list');
       </div>
       <div class="price-card-val" id="usdtethPrice" style="color:#26a17b">&mdash;</div>
       <div class="price-change" id="usdtethChange">&mdash;</div>
+      <div class="cdl-bar" aria-hidden="true" style="visibility:hidden"><button type="button" class="cdl-mode" tabindex="-1" disabled>LINE</button></div><!-- spacer: same height as the LINE/CANDLES bar of the USDC card on this row -->
       <div class="tf-btns" id="usdtethTfBtns">
         <button class="tf-btn" data-tf="1H">1H</button>
         <button class="tf-btn" data-tf="4H">4H</button>
