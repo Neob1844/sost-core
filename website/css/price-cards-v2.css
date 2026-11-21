@@ -12,6 +12,9 @@
 .price-card:has(#xautbtcTfBtns),.price-card:has(#paxgbtcTfBtns){--acc:#f7931a}
 .price-card:has(#xautethTfBtns),.price-card:has(#paxgethTfBtns){--acc:#627eea}
 .price-card:has(#ovbtcethTfBtns){--acc:#f7931a}
+.price-card:has(#btcusdcTfBtns){--acc:#f7931a}
+.price-card:has(#ethusdcTfBtns){--acc:#627eea}
+.price-card:has(#usdtbtcTfBtns),.price-card:has(#usdtethTfBtns){--acc:#26a17b}
 .price-card:has(#chartSost){--acc:#ffd700}
 .price-card-title{font-size:10.5px;color:#8b8b8b;letter-spacing:1.8px}
 .price-card-val{font-size:26px;letter-spacing:.3px;text-shadow:0 0 18px color-mix(in srgb,var(--acc) 35%,transparent)}

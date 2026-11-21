@@ -58,6 +58,7 @@ YAHOO_SYM = {'tether-gold': 'XAUT', 'pax-gold': 'PAX-gold-placeholder',
              'bitcoin': 'BTC', 'ethereum': 'ETH'}
 # pax-gold's Yahoo symbol is PAXG (not pax-gold); set explicitly to avoid the dash clash.
 YAHOO_SYM['pax-gold'] = 'PAXG'
+YAHOO_SYM['tether'] = 'USDT'
 LONG_HISTORY_DAYS = 365          # strictly greater than this -> Yahoo
 USER_AGENT = 'sost-market-proxy/1.0 (+https://sostcore.com)'
 
@@ -67,7 +68,9 @@ USER_AGENT = 'sost-market-proxy/1.0 (+https://sostcore.com)'
 # explorer draws the two gold assets priced in a crypto denominator (vs=btc / vs=eth)
 # and, alongside them, that denominator's own USD line (asset=bitcoin / asset=ethereum,
 # vs=usd). Nothing else about the request shape changes.
-ASSETS = {'tether-gold', 'pax-gold', 'bitcoin', 'ethereum'}
+# `tether` (USDT) is here for the explorer's USDT / BTC and USDT / ETH cards: the stablecoin
+# priced in each crypto denominator (vs=btc / vs=eth), same request shape as the gold pairs.
+ASSETS = {'tether-gold', 'pax-gold', 'bitcoin', 'ethereum', 'tether'}
 VS = {'usd', 'btc', 'eth'}
 # range label -> days asked of the upstream API.
 RANGES = {'1H': 1, '4H': 1, '8H': 1, '24H': 1, '3D': 3, '7D': 7,
@@ -524,7 +527,10 @@ KRAKEN_IV = {'5m': 5, '15m': 15, '30m': 30, '1h': 60, '4h': 240, '1d': 1440, '1w
 MARKETS = {('tether-gold', 'btc'): ('binance', 'XAUTBTC', 'XAUT'),
            ('pax-gold', 'btc'): ('binance', 'PAXGBTC', 'PAXG'),
            ('pax-gold', 'eth'): ('kraken', 'PAXGETH', 'PAXG'),
-           ('tether-gold', 'eth'): None}       # no real market anywhere
+           ('tether-gold', 'eth'): None,       # no real market anywhere
+           # BTC / USDC and ETH / USDC cards: the real USDC books.
+           ('bitcoin', 'usdc'): ('binance', 'BTCUSDC', 'BTC'),
+           ('ethereum', 'usdc'): ('binance', 'ETHUSDC', 'ETH')}
 USDT_CODES = ('XAUT', 'PAXG', 'BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'DOT', 'LINK', 'LTC', 'BCH', 'XLM', 'USDC')
 MARKETS.update({(c, 'usdt'): ('binance', c + 'USDT', c) for c in USDT_CODES})
 # Liquid USDT books trade every minute: 1H uses the real 1m candle (60 of them) there.
@@ -552,7 +558,7 @@ def ohlc_plan(asset, vs, label):
     if m is None:
         return None
     venue, sym, base = m
-    iv, win = (USDT_PLAN if vs == 'usdt' else VENUE_PLAN).get(label, OHLC_PLAN[label])
+    iv, win = (USDT_PLAN if vs in ('usdt', 'usdc') else VENUE_PLAN).get(label, OHLC_PLAN[label])
     if venue == 'kraken' and label == '5Y':
         iv, win = KRAKEN_5Y
     return venue, sym, iv, win, base

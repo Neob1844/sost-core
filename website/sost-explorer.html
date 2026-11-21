@@ -612,7 +612,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <script src="js/security.js?v=v576"></script>
 <script src="js/nav-toggle.js?v=rs20261112g-f20261117d"></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
-<link rel="stylesheet" href="css/price-cards-v2.css?v=532">
+<link rel="stylesheet" href="css/price-cards-v2.css?v=533">
 <link rel="preload" href="fonts/goldman-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/sost-wordmark.css?v=v569">
 <!-- explorer-shell (DIRECTIVA 4F/4G) -->
@@ -951,7 +951,7 @@ html.sx-loading #jackpotHint{visibility:hidden!important}
 
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-11-20-v587-splashspin';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-11-21-v588-cryptopairs';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1418,6 +1418,60 @@ createCollapsibleProducerList('dwzJpListPanel','winner list');
     </div>
     <div class="price-card">
       <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:#f7931a">BTC / USDC</b> &mdash; Bitcoin vs USD Coin</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="btcusdcPrice" style="color:#f7931a">&mdash;</div>
+      <div class="price-change" id="btcusdcChange">&mdash;</div>
+      <div class="tf-btns" id="btcusdcTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="btcusdcChart" style="width:100%;height:150px"></canvas>
+        <canvas id="btcusdcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="btcusdcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="btcusdcRange"></div>
+    </div>
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:#26a17b">USDT / BTC</b> &mdash; Tether vs Bitcoin</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="usdtbtcPrice" style="color:#26a17b">&mdash;</div>
+      <div class="price-change" id="usdtbtcChange">&mdash;</div>
+      <div class="tf-btns" id="usdtbtcTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="usdtbtcChart" style="width:100%;height:150px"></canvas>
+        <canvas id="usdtbtcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="usdtbtcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="usdtbtcRange"></div>
+    </div>
+    <div class="price-card">
+      <div class="price-card-head">
         <div class="price-card-title">// <b style="color:var(--gold)">XAUT / BTC</b> &mdash; Tether Gold vs Bitcoin</div>
         <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
       </div>
@@ -1498,6 +1552,60 @@ createCollapsibleProducerList('dwzJpListPanel','winner list');
         <div class="price-tooltip" id="paxgTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
       </div>
       <div class="price-card-range" id="paxgRange"></div>
+    </div>
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:#627eea">ETH / USDC</b> &mdash; Ethereum vs USD Coin</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="ethusdcPrice" style="color:#627eea">&mdash;</div>
+      <div class="price-change" id="ethusdcChange">&mdash;</div>
+      <div class="tf-btns" id="ethusdcTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="ethusdcChart" style="width:100%;height:150px"></canvas>
+        <canvas id="ethusdcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="ethusdcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="ethusdcRange"></div>
+    </div>
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:#26a17b">USDT / ETH</b> &mdash; Tether vs Ethereum</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="usdtethPrice" style="color:#26a17b">&mdash;</div>
+      <div class="price-change" id="usdtethChange">&mdash;</div>
+      <div class="tf-btns" id="usdtethTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="usdtethChart" style="width:100%;height:150px"></canvas>
+        <canvas id="usdtethOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="usdtethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="usdtethRange"></div>
     </div>
     <div class="price-card">
       <div class="price-card-head">
@@ -9200,32 +9308,39 @@ var COINS=[
   {id:'pax-gold',key:'paxgbtc',color:'#4ade80',vs:'btc'},
   {id:'tether-gold',key:'xauteth',color:'#b8860b',vs:'eth'},
   {id:'pax-gold',key:'paxgeth',color:'#4ade80',vs:'eth'},
+  // Crypto reference pairs under the gold cards. BTC/ETH in USDC: the USD series of the
+  // shared gateway (USDC tracks USD); USDT priced in BTC / ETH: the stablecoin's own
+  // ratio series. They ride the same fetch/refresh loop as the gold ratio pairs.
+  {id:'bitcoin',key:'btcusdc',color:'#f7931a',vs:'usd',pair:true},
+  {id:'ethereum',key:'ethusdc',color:'#627eea',vs:'usd',pair:true},
+  {id:'tether',key:'usdtbtc',color:'#26a17b',vs:'btc',pair:true},
+  {id:'tether',key:'usdteth',color:'#26a17b',vs:'eth',pair:true},
   {id:null,key:'sost',color:'#fb010d',vs:'usd'}
 ];
 // The ratio charts (gold priced in a crypto denominator) are driven off COINS rather
 // than listed again: fetching, refreshing and the spot-price label all walk this list,
 // so adding a denominator is one line above and nothing else.
-var RATIO_PAIRS=COINS.filter(function(c){return c.id&&c.vs!=='usd';})
+var RATIO_PAIRS=COINS.filter(function(c){return c.id&&(c.vs!=='usd'||c.pair);})
                      .map(function(c){return {id:c.id,key:c.key,vs:c.vs};});
 var TF_MAP={
   '1H':{days:1,ms:3600000},'4H':{days:1,ms:14400000},'8H':{days:1,ms:28800000},
   '24H':{days:1,ms:null},'3D':{days:3,ms:null},'7D':{days:7,ms:null},
   '30D':{days:30,ms:null},'6M':{days:180,ms:null},'1Y':{days:365,ms:null},'3Y':{days:1095,ms:null},'5Y':{days:1825,ms:null}
 };
-var cache={},cacheTimes={},CACHE_TTL=300000,activeTf={xaut:'24H',paxg:'24H',xautbtc:'24H',paxgbtc:'24H',xauteth:'24H',paxgeth:'24H',sost:'24H'},sostId=null,sostChecked=false;
+var cache={},cacheTimes={},CACHE_TTL=300000,activeTf={xaut:'24H',paxg:'24H',xautbtc:'24H',paxgbtc:'24H',xauteth:'24H',paxgeth:'24H',btcusdc:'24H',ethusdc:'24H',usdtbtc:'24H',usdteth:'24H',sost:'24H'},sostId=null,sostChecked=false;
 var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var codeFont;try{codeFont=getComputedStyle(document.documentElement).getPropertyValue('--code');}catch(e){}
 if(!codeFont)codeFont="'Fira Code',monospace";
 
 function fmtUsd(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function fmtBtc(n){if(n>=1)return'\u20BF'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:6});return'\u20BF'+n.toLocaleString('en-US',{minimumFractionDigits:6,maximumFractionDigits:8});}
-function fmtEth(n){if(n>=1)return'\u039E'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:6});return'\u039E'+n.toLocaleString('en-US',{minimumFractionDigits:6,maximumFractionDigits:8});}
+function fmtBtc(n){if(n>0&&n<0.001)return'\u20BF'+n.toLocaleString('en-US',{minimumFractionDigits:10,maximumFractionDigits:10});if(n>=1)return'\u20BF'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:6});return'\u20BF'+n.toLocaleString('en-US',{minimumFractionDigits:6,maximumFractionDigits:8});}
+function fmtEth(n){if(n>0&&n<0.001)return'\u039E'+n.toLocaleString('en-US',{minimumFractionDigits:10,maximumFractionDigits:10});if(n>=1)return'\u039E'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:6});return'\u039E'+n.toLocaleString('en-US',{minimumFractionDigits:6,maximumFractionDigits:8});}
 function vsOf(key){var co=COINS.find(function(c){return c.key===key;});return co&&co.vs?co.vs:'usd';}
 function fmtFor(key,n){var v=vsOf(key);return v==='btc'?fmtBtc(n):(v==='eth'?fmtEth(n):fmtUsd(n));}
 function fmtTip(ts){var d=new Date(ts);return MO[d.getUTCMonth()]+' '+d.getUTCDate()+', '+('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2)+' UTC';}
 function shortTf(tf){return tf==='1H'||tf==='4H'||tf==='8H'||tf==='24H';}
 function fmtAx(ts,period){var d=new Date(ts);if(period==='1H'||period==='4H'||period==='8H')return('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);if(period==='24H')return('0'+d.getUTCHours()).slice(-2)+':00';if(period==='3D'||period==='7D'||period==='30D')return MO[d.getUTCMonth()]+' '+d.getUTCDate();if(period==='6M'||period==='1Y')return MO[d.getUTCMonth()]+' '+d.getUTCFullYear().toString().slice(-2);if(period==='3Y'||period==='5Y')return d.getUTCFullYear().toString();return MO[d.getUTCMonth()]+' '+d.getUTCDate();}
-function cid(key){if(key==='xaut'||key==='xautbtc'||key==='xauteth')return'tether-gold';if(key==='paxg'||key==='paxgbtc'||key==='paxgeth')return'pax-gold';return sostId;}
+function cid(key){var co=COINS.find(function(c){return c.key===key;});if(co&&co.pair)return co.id;if(key==='xaut'||key==='xautbtc'||key==='xauteth')return'tether-gold';if(key==='paxg'||key==='paxgbtc'||key==='paxgeth')return'pax-gold';return sostId;}
 function cKey(idOrKey,vs){var id=(idOrKey&&typeof idOrKey==='string'&&idOrKey.indexOf(':')===-1)?idOrKey:idOrKey;return (vs&&vs!=='usd')?id+':'+vs:id;}   // usd keeps the bare id; btc/eth get their own slot
 
 function getData(key){
@@ -9325,7 +9440,7 @@ function fetchHist(id,days,vsOrCb,cb){
           _outOfRange[ck]=true;
           // Dim that timeframe on every chart that shares the series, not only on the one
           // that happened to ask: the range is unavailable for all of them equally.
-          try{['xaut','paxg','xautbtc','paxgbtc','xauteth','paxgeth'].forEach(checkTfAvail);}catch(e){}
+          try{['xaut','paxg','xautbtc','paxgbtc','xauteth','paxgeth','btcusdc','ethusdc','usdtbtc','usdteth'].forEach(checkTfAvail);}catch(e){}
           finish('out_of_range');
         } else if(!r.ok){
           var e=(d&&d.error)||'http_error';
@@ -9646,7 +9761,7 @@ function refresh(){
 }
 
 // Init
-['xaut','paxg','xautbtc','paxgbtc','xauteth','paxgeth','sost'].forEach(function(k){setupTfBtns(k);setupTooltip(k);});
+['xaut','paxg','xautbtc','paxgbtc','xauteth','paxgeth','btcusdc','ethusdc','usdtbtc','usdteth','sost'].forEach(function(k){setupTfBtns(k);setupTooltip(k);});
 var goldFetchDone={xaut:false,paxg:false,xautbtc:false,paxgbtc:false,xauteth:false,paxgeth:false};
 // Fan-out the crypto-denominated fetches for the two gold coins so those charts
 // populate alongside USD.
@@ -9863,7 +9978,7 @@ setInterval(refresh,60000);
   function setupOvTf(cfg){ var cont=document.getElementById(cfg.key+'TfBtns'); if(!cont)return; var btns=cont.querySelectorAll('.tf-btn'); btns.forEach(function(btn){ btn.addEventListener('click',function(){ btns.forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); ovTf[cfg.key]=btn.getAttribute('data-tf'); ovEnsureDraw(cfg); }); }); }
   OVERLAYS.forEach(function(cfg){ setupOvTf(cfg); setupOvTooltip(cfg); ovEnsureDraw(cfg); });
 
-window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','xauteth','paxgeth','sost'].forEach(drawChart);OVERLAYS.forEach(drawOverlay);});
+window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','xauteth','paxgeth','btcusdc','ethusdc','usdtbtc','usdteth','sost'].forEach(drawChart);OVERLAYS.forEach(drawOverlay);});
 })();
 
 </script>
@@ -11286,7 +11401,7 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
   window.ainPage=function(d){ _page+=d; renderPage(); };
 })();
 </script>
-<script src="js/market-candles.js?v=543" defer></script>
+<script src="js/market-candles.js?v=544" defer></script>
 <script>
 /* v538 pro skin: tag tiles with their value colour (r,g,b) so the CSS can glow in that colour.
    Re-run on a timer because several panels are re-rendered from live RPC data. */

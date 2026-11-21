@@ -21,14 +21,18 @@
   var XU = S('tether-gold', 'usd', 'XAUT / USD'), PU = S('pax-gold', 'usd', 'PAXG / USD'),
       BU = S('bitcoin', 'usd', 'BTC / USD'), EU = S('ethereum', 'usd', 'ETH / USD'),
       XB = S('tether-gold', 'btc', 'XAUT / BTC'), PB = S('pax-gold', 'btc', 'PAXG / BTC'),
-      PE = S('pax-gold', 'eth', 'PAXG / ETH');
+      PE = S('pax-gold', 'eth', 'PAXG / ETH'),
+      BC = S('bitcoin', 'usdc', 'BTC / USDC'), EC = S('ethereum', 'usdc', 'ETH / USDC');
   // Candles only where a chart IS one traded market. The comparison overlays (two series on two
   // axes) are not a market and stay LINE; XAUT/ETH has no market anywhere, so it gets no switch.
   // The BTC + ETH overlay is the only BTC and ETH chart, so it offers each one's own market.
   var CARDS = [
     { key: 'xaut', series: [XU] }, { key: 'paxg', series: [PU] },
     { key: 'xautbtc', series: [XB] }, { key: 'paxgbtc', series: [PB] }, { key: 'paxgeth', series: [PE] },
-    { key: 'ovbtceth', series: [BU, EU] }
+    { key: 'ovbtceth', series: [BU, EU] },
+    // BTC / USDC and ETH / USDC are real books (Binance USDC spot). USDT / BTC and USDT / ETH
+    // are only the inverse of a market, not one, so like XAUT / ETH they stay LINE.
+    { key: 'btcusdc', series: [BC] }, { key: 'ethusdc', series: [EC] }
   ];
   var UNIT = { usd: '$', btc: '₿', eth: 'Ξ' };
   var UP = '#2ee66b', DOWN = '#ff3b47', GRID = 'rgba(255,255,255,.055)', AXIS = '#9a96ad';
@@ -44,10 +48,11 @@
     var d = v >= 1 ? 2 : 6;
     return Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
   }
-  function money(v, vs) { return vs === 'usdt' ? num(v, vs) + ' USDT' : UNIT[vs] + num(v, vs); }
+  function stable(vs) { return vs === 'usdt' || vs === 'usdc'; }
+  function money(v, vs) { return stable(vs) ? num(v, vs) + ' ' + vs.toUpperCase() : UNIT[vs] + num(v, vs); }
   function axis(v, vs) {
-    if ((vs === 'usd' || vs === 'usdt') && v >= 10000) return (vs === 'usd' ? '$' : '') + Math.round(v).toLocaleString('en-US');
-    return vs === 'usdt' ? num(v, vs) : money(v, vs);
+    if ((vs === 'usd' || stable(vs)) && v >= 10000) return (vs === 'usd' ? '$' : '') + Math.round(v).toLocaleString('en-US');
+    return stable(vs) ? num(v, vs) : money(v, vs);
   }
   function fmtVol(v) {
     if (v == null) return '—';
