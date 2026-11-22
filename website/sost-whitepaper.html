@@ -772,7 +772,7 @@
 <li>Blocks target 600 seconds. Their proof of work is <strong>ConvergenceX</strong>, a memory-hard, sequential function about 8 GB in size.</li>
 <li>Emission decays smoothly by a factor of e^−1/4 per epoch of 131,553 blocks, towards a maximum of <strong>4,669,201.54789641 SOST</strong>.</li>
 <li>Since block #25,000 every block pays 50 % to its miner and 50 % to the <strong>DTD</strong> (Decentralised Transaction Distribution), a draw among recent miners.</li>
-<li>A proposed upgrade, <strong>V17</strong>, would change this to 80 % miner / 15 % DTD / 5 % Jackpot accumulator from block #40,000. It is <strong>not active and not released</strong>.</li>
+<li>A proposed upgrade, <strong>V17</strong>, would change this to 70 % miner / 5 % DTD / 5 % Jackpot accumulator / 20 % Useful Compute vault (withheld; Useful Compute stays OFF) from block #40,000. It is <strong>not active and not released</strong>.</li>
 </ul>
 <h2 id="sec-status">2. Feature status (15 November 2026)</h2>
 <div class="tw"><table>
@@ -937,7 +937,7 @@
 </tr>
 <tr>
 <td>40,000 onwards (if V17 is adopted)</td>
-<td>80 % miner / 15 % DTD / 5 % J; fees 100 % to the miner</td>
+<td>70 % miner / 5 % DTD / 5 % J / 20 % U (withheld); fees 100 % to the miner</td>
 <td><span class="st st-prop">PROPOSED</span></td>
 </tr>
 </tbody>
@@ -1110,7 +1110,7 @@
 <tbody>
 <tr>
 <td>Block reward</td>
-<td>80 % miner / 15 % DTD / 5 % Jackpot accumulator J (DTD and J rounded down; the miner takes the remainder)</td>
+<td>70 % miner / 5 % DTD / 5 % Jackpot accumulator J / 20 % Useful Compute vault U (DTD, J and U rounded down; the miner takes the remainder). U is withheld: no address, no key, no spend path while Useful Compute stays OFF</td>
 </tr>
 <tr>
 <td>Fees</td>
@@ -1119,6 +1119,10 @@
 <tr>
 <td>J</td>
 <td>integer consensus balance with no address, key or custodian. Jackpots pay from the frozen reserve first, then from J</td>
+</tr>
+<tr>
+<td>Jackpot draw</td>
+<td>uniform among eligible miners (1/E; NODE_BIND, heartbeats, at least 3 valid blocks in the window). The prize goes to a keyless escrow; a class-group VDF (2<sup>32</sup> sequential steps) over the draw seed decides the winner, and a permissionless claim pays the winner exactly the escrowed amount after 1,000 blocks. No expiry, no re-draw; the chain never waits for the proof</td>
 </tr>
 <tr>
 <td>Winner seed (DTD-F1)</td>

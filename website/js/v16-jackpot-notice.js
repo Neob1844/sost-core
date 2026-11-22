@@ -93,7 +93,7 @@
 '  <div class="sost-v17-split"><span class="h">V17 RELEASE CANDIDATE &mdash; NOT ACTIVE</span>' +
 '   <ul><li>&#9935;&#65039; <b>70%</b> PoW miners (+ all fees)</li>' +
 '   <li>&#127919; <b>5%</b> Deterministic Token Distribution (DTD)</li>' +
-'   <li>&#127942; <b>5%</b> Jackpot accumulator (winner weighted by valid PoW blocks)</li>' +
+'   <li>&#127942; <b>5%</b> Jackpot accumulator (uniform draw among eligible miners, resolved by a VDF)</li>' +
 '   <li>&#129504; <b>20%</b> Useful Compute vault (withheld)</li></ul>' +
 '   <p>This is the final V17 split (it replaces the 80/15/5 and 80/10/5/5 drafts). It is implemented in the release candidate but <b>not active</b>, and it does not increase the total SOST emission.</p>' +
 '   <p><b>Useful Compute vault (20%):</b> a consensus balance with no address or key. Useful Compute stays OFF in V17, so nobody can spend it; paying from it needs a later, tested consensus release.</p></div>' +
