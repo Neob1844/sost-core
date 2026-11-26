@@ -340,6 +340,7 @@ html.u-imm.peek-nav .imm-fab{top:calc(var(--hud-h,66px) + 22px)}
 @media (max-width:380px){.u-bar{column-gap:6px;padding-left:54px;padding-right:8px}.u-bar .imm-t,.u-bar .bar-more{padding-left:9px;padding-right:9px}.u-bar .imm-t svg{display:none}.u-bar #uStatus .st{padding-left:6px;padding-right:6px}}
 </style>
 <link rel="stylesheet" href="core/u-audio.css?v=gm-20261104">
+<link rel="stylesheet" href="core/u-auc.css?v=auc20261127">
 <link rel="preload" href="../fonts/inter-latin-wght400-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/spacegrotesk-500-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../universe/core/u-type.css?v=id30000">
@@ -403,6 +404,84 @@ html.u-imm.peek-nav .imm-fab{top:calc(var(--hud-h,66px) + 22px)}
   </nav>
   <div class="hline" aria-hidden="true"></div>
 </section>
+
+<div id="sost-v16-notice-mount" style="max-width:1400px;margin:14px auto 0;padding:0 var(--gutter,16px)"></div>
+
+<section class="auc" id="auc" aria-labelledby="aucH">
+ <div class="auc-in">
+  <div class="auc-eyebrow">Sovereign Stock Token &mdash; SOST</div>
+  <h2 id="aucH">Autonomous Useful Compute</h2>
+  <p class="auc-sub">The world&rsquo;s computing power. Connected by SOST.</p>
+  <p class="auc-lead">An autonomous marketplace where customers request computational work, independent CPU and GPU providers compete to execute it, verifiable results unlock settlement, and payments are made in SOST.</p>
+
+  <div class="auc-stage" role="img" aria-label="Concept animation: a request reaches the SOST core, is matched to CPU and GPU providers, executed, verified, and settled in SOST. Conceptual illustration, not live data.">
+   <svg class="auc-static" viewBox="0 0 800 500" aria-hidden="true">
+    <defs><radialGradient id="aucG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#22d3ee" stop-opacity=".25"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+     <linearGradient id="aucR" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#5eead4"/><stop offset=".5" stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>
+    <circle cx="400" cy="250" r="230" fill="url(#aucG)"/>
+    <ellipse cx="400" cy="250" rx="310" ry="104" fill="none" stroke="#60a5fa" stroke-opacity=".25" stroke-dasharray="5 8"/>
+    <g stroke="#5eead4" stroke-opacity=".35" stroke-dasharray="3 6"><path d="M400 250 L110 250"/><path d="M400 250 L690 250"/><path d="M400 250 L250 160"/><path d="M400 250 L560 160"/><path d="M400 250 L250 340"/><path d="M400 250 L560 340"/></g>
+    <circle cx="400" cy="250" r="72" fill="#0c1a3a" stroke="url(#aucR)" stroke-width="3"/>
+    <g fill="#0a1224" stroke="#5eead4" stroke-width="1.5"><circle cx="110" cy="250" r="9"/><rect x="681" y="241" width="18" height="18" rx="5"/><rect x="241" y="151" width="18" height="18" rx="5"/><circle cx="560" cy="160" r="9"/><rect x="241" y="331" width="18" height="18" rx="5"/><circle cx="560" cy="340" r="9"/></g>
+   </svg>
+   <canvas aria-hidden="true"></canvas>
+   <div class="auc-core" aria-hidden="true"><b>SOST</b><span>COMPUTE</span></div>
+   <span class="auc-tag t1" aria-hidden="true">Requests</span><span class="auc-tag t2" aria-hidden="true">CPU / GPU providers</span>
+   <span class="auc-tag t3" aria-hidden="true">Customers</span><span class="auc-tag t4" aria-hidden="true">Payments in SOST</span>
+  </div>
+
+  <ol class="auc-steps" aria-label="How a compute job flows">
+   <li><button type="button" class="auc-step" aria-pressed="true"><i><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M12 11v6"/></svg></i>REQUEST</button></li>
+   <li><button type="button" class="auc-step" aria-pressed="false"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><circle cx="5" cy="19" r="2.2"/><circle cx="19" cy="19" r="2.2"/><path d="M11 7 6 17M13 7l5 10M7.2 19h9.6"/></svg></i>MATCH</button></li>
+   <li><button type="button" class="auc-step" aria-pressed="false"><i><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></i>EXECUTE</button></li>
+   <li><button type="button" class="auc-step" aria-pressed="false"><i><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></i>VERIFY</button></li>
+   <li><button type="button" class="auc-step" aria-pressed="false"><i><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14.5h2"/><path d="M7 3h10"/></svg></i>SETTLE</button></li>
+  </ol>
+  <div class="auc-explain" aria-live="polite"><b data-auc-k>REQUEST</b><span data-auc-t>A company or researcher submits a computational job, its input data and the price it is willing to pay.</span><button type="button" class="auc-play" hidden>&#9654; Play cycle</button></div>
+
+  <div class="auc-status"><b>IN DEVELOPMENT &middot; LAB TESTING</b><span>Autonomous commercial compute is not active on mainnet. The animation is a concept, not live jobs, providers or payments.</span></div>
+
+  <div class="auc-j">
+   <div class="auc-tabs" role="tablist" aria-label="Choose a journey">
+    <button type="button" class="auc-tab" role="tab" id="aucTabNeed" aria-selected="true" aria-controls="aucNeed">I NEED COMPUTE</button>
+    <button type="button" class="auc-tab" role="tab" id="aucTabProv" aria-selected="false" aria-controls="aucProv" tabindex="-1">I PROVIDE COMPUTE</button>
+   </div>
+   <div class="auc-jp" id="aucNeed" role="tabpanel" aria-labelledby="aucTabNeed">
+    <h3>Buying verified computation<span class="fut">FUTURE &middot; NOT ACTIVE</span></h3>
+    <ol>
+     <li><b>Describe the job</b>Upload the task and its inputs, choose a verification method and set the maximum price.</li>
+     <li><b>Fund Compute Credits</b>Deposit SOST as a prepaid compute balance. It is a deposit, not a new token.</li>
+     <li><b>Get matched</b>Compatible providers are selected automatically by capacity and price.</li>
+     <li><b>Receive checked results</b>Results are verified before they are accepted.</li>
+     <li><b>Pay only on settlement</b>Your deposit is drawn down only for work that settles under the contract rules.</li>
+    </ol>
+   </div>
+   <div class="auc-jp" id="aucProv" role="tabpanel" aria-labelledby="aucTabProv" hidden>
+    <h3>Earning SOST with your computer<span class="fut">FUTURE &middot; NOT ACTIVE</span></h3>
+    <ol>
+     <li><b>Register capacity</b>Declare your CPU or GPU resources and the price you accept.</li>
+     <li><b>Receive work units</b>The market assigns jobs your hardware can execute.</li>
+     <li><b>Compute</b>Run the work units with the reference software.</li>
+     <li><b>Pass verification</b>Your results are checked; incorrect or late results are not paid.</li>
+     <li><b>Get paid in SOST</b>Settlement releases payment from the customer&rsquo;s deposit to your address.</li>
+    </ol>
+   </div>
+  </div>
+
+  <div class="auc-cards">
+   <article class="auc-card"><span class="st">LAB &middot; IN DEVELOPMENT</span><h3>SOST Verified Compute</h3>
+    <p class="q">&ldquo;Pay for computational results that can be objectively verified.&rdquo;</p>
+    <p>Jobs whose results can be checked by recomputation, proofs or redundancy. Payment is released only after verification. Tested in the lab; not active on mainnet.</p></article>
+   <article class="auc-card"><span class="st c">FUTURE COMMERCIAL CONCEPT</span><h3>SOST AI Compute Marketplace</h3>
+    <p class="q">&ldquo;Future access to independently provided CPU and GPU capacity.&rdquo;</p>
+    <p>Rental of compute capacity for AI and other workloads, arranged and paid in SOST. A future commercial service: it is not active and does not require new consensus rules in V17.</p></article>
+  </div>
+  <div class="auc-credits"><b>SOST Compute Credits</b> are prepaid compute deposits: a customer sets aside SOST to cover future jobs, and the balance is drawn down as verified work settles. Credits are a deposit, <b>not a new token</b> &mdash; no new coin is created. Customer payments are separate from the <b>20&nbsp;% Useful Compute Vault</b> proposed for V17, which is part of the fixed block emission and stays locked until a later, tested activation.</div>
+  <div class="auc-more"><a href="../sost-autonomous-compute.html">How Autonomous Useful Compute Works &rarr;</a></div>
+  <p class="auc-note">Autonomous Useful Compute is SOST&rsquo;s principal direction for economic utility. Nothing in this section is live: no jobs, providers, prices or payments are shown as real data.</p>
+ </div>
+</section>
+
 
 <section class="sec snap" id="snapshot" aria-labelledby="snapH">
   <div class="eyebrow">Protocol snapshot</div>
@@ -556,9 +635,9 @@ html.u-imm.peek-nav .imm-fab{top:calc(var(--hud-h,66px) + 22px)}
 </section>
 
 <section class="sec" id="research" aria-labelledby="rH">
-  <div class="eyebrow">Research <span class="ms research">RESEARCH</span></div>
-  <h2 id="rH">#40,000 — V17 proposed upgrade (not active)</h2>
-  <p class="lead">V17 is a release candidate under testing: no release has been published and nothing is active. From #40,000 (not active yet): 70 % PoW miners / 5 % DTD / 5 % Jackpot accumulator / 20 % Useful Compute vault &mdash; withheld by consensus and not spendable while Useful Compute stays OFF (no new supply), a uniform Jackpot draw among eligible miners resolved by a verifiable delay function (VDF), a PoW-commit winner seed, full re-execution of ConvergenceX proofs and native multisig. The wSOST bridge rules are included but CLOSED on mainnet (no real funds); Universal Assets stay closed. If the release criteria are not met, nothing activates (the only alternative height prepared is #50,000). Current consensus is unchanged: 50 % miner / 50 % DTD. <a href="../news.html#decentralization">Read the notice</a></p>
+  <div class="eyebrow">V17 <span class="ms research">IN DEVELOPMENT</span></div>
+  <h2 id="rH">V17 &mdash; target block #45,000 (not active)</h2>
+  <p class="lead">V17 is in development and nothing in it is active: no official release, tag or checksums exist yet. The earlier #40,000 target and its upgrade window are obsolete. Proposed V17 allocation of the block subsidy: <b>70&nbsp;% PoW miners / 5&nbsp;% DTD / 5&nbsp;% Jackpot / 20&nbsp;% Useful Compute Vault</b> &mdash; the vault is a consensus balance with no key, locked until a later tested activation, and the maximum supply of 4,669,201.54789641 SOST does not change. V17 also brings a uniform Jackpot draw among eligible miners resolved by a verifiable delay function (VDF), per-UTXO miner coinbase maturity of 1,000 blocks for active node participants and 5,000 for others, P2P, reorg and consensus hardening and native multisig. Universal Assets and the SOST&harr;wSOST bridge are developed but closed to public use and real funds. Mainnet today runs V16: 50&nbsp;% miner / 50&nbsp;% DTD. <a href="../news.html#v17-45000">Read the announcement</a> &middot; <a href="../sost-v17.html">Explore V17</a></p>
 </section>
 
 <section class="sec" id="app" aria-labelledby="aH">
@@ -633,10 +712,12 @@ html.u-imm.peek-nav .imm-fab{top:calc(var(--hud-h,66px) + 22px)}
  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&H.classList.contains('u-imm')&&(H.classList.contains('peek-nav')||H.classList.contains('peek-cards'))){peek('nav',false);peek('cards',false)}});
 })();
 </script>
-<script src="core/u-nav.js?v=in20261113a"></script>
+<script src="core/u-nav.js?v=in20261127"></script>
 <script src="core/u-home-art.js?v=p3-20261104" defer></script>
 <script src="core/u-cubes.js?v=p3-20261104" defer></script>   <!-- P3 interactive cubes over the chain canvas -->
-<script src="core/u-eco.js"></script>
+<script src="core/u-eco.js?v=eco20261127"></script>
+<script src="core/u-auc.js?v=auc20261127" defer></script>
+<script src="../js/v16-jackpot-notice.js?v=v17g" defer></script>
 <script src="core/u-core.js"></script>
 <script src="core/u-scenes.js"></script>
 <script src="core/u-audio.js?v=gm-20261104" data-autoplay defer></script>   <!-- soundtrack: tries to really play on load (random track); if the browser blocks it, starts on the first interaction -->

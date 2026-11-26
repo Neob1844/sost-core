@@ -1,139 +1,126 @@
-// SOST V17 — site-wide compact banner (14-Nov-2026). 26-Nov-2026: preventive notice — the #40,000 plan is OBSOLETE
-// (owner decision: proposed new target #45,000, conditional; full page sync only after the RC13 validation).
+// SOST V17 — the ONE site-wide status banner and the shared source of V17 facts (27-Nov-2026).
 //
-// Replaces the V30000 (#30,000) operator notice. The full V30000 text is kept, unchanged, at
-// sost-v30000-history.html and in News & Updates › Historical Network Upgrades.
-// The file name is kept so every page that already loads it (60 pages) gets the new banner.
+// Every page that loads this file gets exactly one banner; pages that want the facts (V17 page, upgrade guide, News,
+// Home) read window.SOST_V17 instead of hard-coding them. The file name is kept because ~60 pages already load it.
+// History: the V30000 (#30,000) notice lives at sost-v30000-history.html; the withdrawn #40,000 plan is archived in
+// News › Historical Network Upgrades (marked SUPERSEDED).
 //
-// Placement: inside <div id="sost-v16-notice-mount"></div> when the page has one (Explorer),
-// otherwise at the top of <body> (below the developer note strip when present).
-// Collapsed by default on every load (state never persisted): Legacy red Σ (Brand Kit /brand/legacy), title, block #40,000,
-// status and blocks left. Details opens the full text (changes, CRITICAL chain-split warning, links); a second click folds it.
-// 14-Nov-2026 owner P0: compact collapsed head; the long live sentence moved inside the panel.
+// STATUS is changed BY HAND together with an authorised release, never automatically by block height:
+//   IN DEVELOPMENT | RELEASE READY | ACTIVATION SCHEDULED | ACTIVE
 //
-// STATUS must reflect reality: PROPOSED | TESTING | RELEASE READY | ACTIVATION SCHEDULED | ACTIVE.
-// It is TESTING while no approved V17 release exists. Change it only together with the release.
+// Placement: inside <div id="sost-v16-notice-mount"></div> when the page has one (Explorer, Wallet),
+// otherwise under the page header. Collapsed by default; "Details" opens what is active / in development.
 
 (function () {
   'use strict';
   if (window.__sostV16NoticeInjected) return;
   window.__sostV16NoticeInjected = true;
 
-  var V17_HEIGHT = 40000;
-  var WINDOW_START = 39900;
-  var STATUS = 'TESTING';
-  var STATUS_NOTE = 'Candidate under final testing. No V17 release has been published. Do not install unofficial builds.';
-  var OBSOLETE = true;   // 26-Nov-2026: #40,000 target and #39,900-#39,999 window withdrawn; proposed new target #45,000 (not final)
-  var LINK_NEW = 'sost-v17.html';
-  var LINK_GUIDE = 'sost-v17-upgrade.html';
-  var LINK_REL = 'sost-v17-upgrade.html#release';
+  var V17 = window.SOST_V17 = Object.freeze({
+    target: 45000,
+    previousTarget: 40000,                 // withdrawn 26-Nov-2026
+    status: 'IN DEVELOPMENT',
+    statusLong: 'IN DEVELOPMENT — NOT ACTIVE',
+    released: false,                       // no official V17 binaries, tag or checksums exist
+    allocation: [                          // PROPOSED V17 allocation of the block subsidy
+      { pct: 70, key: 'pow', label: 'PoW', long: 'Proof-of-Work miners (+ all fees)' },
+      { pct: 5,  key: 'dtd', label: 'DTD', long: 'Deterministic Token Distribution' },
+      { pct: 5,  key: 'jackpot', label: 'Jackpot', long: 'Jackpot (uniform among eligible miners, resolved by a VDF)' },
+      { pct: 20, key: 'uc', label: 'Useful Compute', long: 'Useful Compute Vault (consensus balance, no key; spending OFF)' }
+    ],
+    today: '50% miner / 50% DTD (V16 rules)',
+    maxSupply: '4,669,201.54789641',
+    maturity: { participant: 1000, other: 5000 },
+    links: { explore: 'sost-v17.html', guide: 'sost-v17-upgrade.html', news: 'news.html#v17-45000', compute: 'sost-autonomous-compute.html' }
+  });
+
+  function fmt(n) { return Number(n).toLocaleString('en-US'); }
 
   var CSS = '' +
-'.sost-v17{max-width:1400px;margin:10px auto;border:1px solid rgba(251,1,13,.55);border-radius:12px;background:#07070a;' +
-'  color:#e8e8ec;font:13px/1.55 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;box-shadow:0 0 0 1px rgba(212,175,55,.10) inset}' +
+'.sost-v17{max-width:1400px;margin:10px auto;border:1px solid rgba(56,189,248,.38);border-radius:14px;' +
+'  background:linear-gradient(135deg,rgba(8,14,30,.97),rgba(10,8,24,.97));color:#e6ecf5;' +
+'  font:13px/1.55 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;box-shadow:0 0 0 1px rgba(139,92,246,.12) inset,0 6px 28px rgba(2,8,23,.45)}' +
 '.sost-v17 *{box-sizing:border-box}' +
-'.sost-v17-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%;padding:11px 14px;background:transparent;border:0;' +
-'  color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:12px}' +
-'.sost-v17-head:hover{background:rgba(255,255,255,.03)}' +
-'.sost-v17-head:focus-visible{outline:2px solid #d4af37;outline-offset:-2px}' +
+'.sost-v17-row{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding:11px 14px}' +
 '.sost-v17-sig{flex:0 0 auto;width:30px;height:30px;display:block}' +
-'.sost-v17-t{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}' +
-'.sost-v17-title{font-weight:800;letter-spacing:.3px;color:#fff;font-size:13.5px;white-space:nowrap}' +
-'.sost-v17-left{color:#a9b1bf;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}' +
-'.sost-v17-left b{color:#fff}' +
-'.sost-v17-title em{font-style:normal;color:#d4af37}' +
-'.sost-v17-live{color:#c9ced8;font-variant-numeric:tabular-nums}' +
-'.sost-v17-live b{color:#fff}' +
-'.sost-v17-chip{flex:0 0 auto;padding:3px 9px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:1px;' +
-'  border:1px solid #d4af37;color:#f6d77a;background:rgba(212,175,55,.10);white-space:nowrap}' +
-'.sost-v17-chip.active{border-color:#39ff14;color:#39ff14;background:rgba(57,255,20,.08)}' +
-'.sost-v17-more{flex:0 0 auto;font-size:11px;font-weight:700;color:#cfd3da;white-space:nowrap}' +
-'.sost-v17-more i{display:inline-block;font-style:normal;transition:transform .15s}' +
-'.sost-v17-head[aria-expanded="true"] .sost-v17-more i{transform:rotate(180deg)}' +
-'.sost-v17-body{padding:2px 16px 16px;border-top:1px solid rgba(255,255,255,.08);max-height:70vh;overflow-y:auto}' +
-'.sost-v17-body p{margin:.6em 0}' +
-'.sost-v17-crit{margin:12px 0;padding:11px 13px;border-radius:8px;border:2px solid #fb010d;background:rgba(251,1,13,.09);color:#ffe1e1}' +
-'.sost-v17-crit .h{display:block;color:#ff4d55;font-weight:900;letter-spacing:.8px;font-size:12px;margin-bottom:4px}' +
-'.sost-v17-crit b{color:#fff}' +
-'.sost-v17-now{margin:12px 0;padding:10px 13px;border-radius:8px;border:1px solid rgba(57,255,20,.45);background:rgba(57,255,20,.05);color:#d9f7dc}' +
-'.sost-v17-now b{color:#39ff14}' +
-'.sost-v17-split{margin:12px 0;padding:10px 13px;border-radius:8px;border:1px solid rgba(212,175,55,.45);background:rgba(212,175,55,.05)}' +
-'.sost-v17-split .h{display:block;color:#f6d77a;font-weight:900;letter-spacing:.8px;font-size:12px;margin-bottom:4px}' +
-'.sost-v17-split ul{margin:4px 0 6px;padding-left:4px;list-style:none}' +
-'.sost-v17-split li{margin:2px 0}' +
-'.sost-v17-split b{color:#fff}' +
-'.sost-v17-split p{margin:.45em 0;color:#c9ced8}' +
-'.sost-v17-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}' +
-'.sost-v17-links a{display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;border:1px solid rgba(212,175,55,.6);' +
-'  color:#f6d77a;text-decoration:none;font-size:12px;font-weight:700;background:rgba(212,175,55,.06)}' +
-'.sost-v17-links a:hover{background:rgba(212,175,55,.16)}' +
-'.sost-v17-foot{margin-top:10px;font-size:11px;color:#8a92a0}' +
-'@media (max-width:640px){.sost-v17{margin:8px}.sost-v17-head{padding:9px 11px;gap:9px;flex-wrap:nowrap}.sost-v17-title{font-size:12.5px}' +
-'  .sost-v17-chip{font-size:9.5px;padding:2px 7px}.sost-v17-left{font-size:11.5px}' +
-'  .sost-v17-body{padding:2px 12px 14px;font-size:12.5px}}';
+'.sost-v17-title{font-weight:800;letter-spacing:.4px;color:#fff;font-size:13.5px;white-space:nowrap}' +
+'.sost-v17-title em{font-style:normal;color:#5eead4}' +
+'.sost-v17-chip{flex:0 0 auto;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:1px;' +
+'  border:1px solid #f59e0b;color:#fcd34d;background:rgba(245,158,11,.10);white-space:nowrap}' +
+'.sost-v17-chip.active{border-color:#22c55e;color:#4ade80;background:rgba(34,197,94,.10)}' +
+'.sost-v17-alloc{display:flex;align-items:center;gap:6px;flex-wrap:wrap}' +
+'.sost-v17-alloc .k{font-size:10px;letter-spacing:.8px;color:#94a3b8;text-transform:uppercase;margin-right:2px}' +
+'.sost-v17-pill{padding:2px 8px;border-radius:7px;font-size:11.5px;font-weight:700;color:#e2e8f0;background:rgba(148,163,184,.10);' +
+'  border:1px solid rgba(148,163,184,.22);white-space:nowrap;font-variant-numeric:tabular-nums}' +
+'.sost-v17-pill b{color:#fff}' +
+'.sost-v17-pill.uc{border-color:rgba(94,234,212,.45);background:rgba(94,234,212,.08)}' +
+'.sost-v17-pill.uc b{color:#5eead4}' +
+'.sost-v17-sp{flex:1 1 auto}' +
+'.sost-v17-links{display:flex;gap:7px;flex-wrap:wrap}' +
+'.sost-v17-links a,.sost-v17-more{display:inline-flex;align-items:center;padding:5px 11px;border-radius:999px;' +
+'  border:1px solid rgba(56,189,248,.5);color:#7dd3fc;text-decoration:none;font:700 11.5px/1.2 inherit;background:rgba(56,189,248,.06);cursor:pointer;white-space:nowrap}' +
+'.sost-v17-links a:hover,.sost-v17-more:hover{background:rgba(56,189,248,.16)}' +
+'.sost-v17-more{border-color:rgba(148,163,184,.4);color:#cbd5e1;background:transparent}' +
+'.sost-v17-more i{display:inline-block;font-style:normal;margin-left:4px;transition:transform .15s}' +
+'.sost-v17-more[aria-expanded="true"] i{transform:rotate(180deg)}' +
+'.sost-v17-links a:focus-visible,.sost-v17-more:focus-visible{outline:2px solid #5eead4;outline-offset:2px}' +
+'.sost-v17-msg{padding:0 14px 11px;color:#cbd5e1;font-size:12.5px}' +
+'.sost-v17-msg b{color:#fff}' +
+'.sost-v17-live{color:#94a3b8;font-variant-numeric:tabular-nums}' +
+'.sost-v17-live b{color:#e2e8f0}' +
+'.sost-v17-body{padding:4px 16px 16px;border-top:1px solid rgba(148,163,184,.14)}' +
+'.sost-v17-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:10px}' +
+'.sost-v17-box{padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,.18);background:rgba(15,23,42,.55)}' +
+'.sost-v17-box h4{margin:0 0 5px;font-size:11px;letter-spacing:1px;text-transform:uppercase}' +
+'.sost-v17-box ul{margin:0;padding-left:16px}.sost-v17-box li{margin:2px 0}' +
+'.sost-v17-box.on h4{color:#4ade80}.sost-v17-box.dev h4{color:#fcd34d}.sost-v17-box.off h4{color:#f87171}' +
+'.sost-v17-foot{margin-top:10px;font-size:11px;color:#8b95a5}' +
+'@media (max-width:640px){.sost-v17{margin:8px}.sost-v17-row{padding:10px 11px;gap:8px}.sost-v17-title{font-size:12.5px;white-space:normal}' +
+'  .sost-v17-sp{display:none}.sost-v17-msg{padding:0 11px 10px;font-size:12px}.sost-v17-body{padding:4px 11px 13px;font-size:12.5px}}';
+
+  var pills = V17.allocation.map(function (a) {
+    return '<span class="sost-v17-pill' + (a.key === 'uc' ? ' uc' : '') + '" title="' + a.long + '"><b>' + a.pct + '%</b> ' + a.label + '</span>';
+  }).join('');
 
   var HTML = '' +
-'<div class="sost-v17" role="region" aria-label="SOST V17 network upgrade: the block 40,000 plan is obsolete">' +
-' <button type="button" class="sost-v17-head" aria-expanded="false" aria-controls="sostV17Body">' +
+'<div class="sost-v17" role="region" aria-label="SOST V17 status: target block ' + fmt(V17.target) + ', in development, not active">' +
+' <div class="sost-v17-row">' +
 '  <img class="sost-v17-sig" src="/brand/legacy/sost-legacy-logo-512.png" alt="" width="30" height="30" decoding="async">' +
-'  <span class="sost-v17-t"><span class="sost-v17-title">SOST V17 &middot; <em>#40,000 PLAN OBSOLETE</em></span>' +
-'   <span class="sost-v17-chip" data-v17-status>' + STATUS + '</span>' +
-'   <span class="sost-v17-left">proposed new target <b>#45,000</b> &middot; not final</span></span>' +
-'  <span class="sost-v17-more">Details <i>&#9662;</i></span>' +
-' </button>' +
+'  <span class="sost-v17-title">SOST V17 &middot; <em>TARGET BLOCK #' + fmt(V17.target) + '</em></span>' +
+'  <span class="sost-v17-chip" data-v17-status>' + V17.statusLong + '</span>' +
+'  <span class="sost-v17-alloc" aria-label="Proposed V17 allocation"><span class="k">Proposed V17 allocation</span>' + pills + '</span>' +
+'  <span class="sost-v17-sp"></span>' +
+'  <span class="sost-v17-links"><a href="' + V17.links.explore + '">Explore V17</a><a href="' + V17.links.guide + '">Operator Upgrade Guide</a>' +
+'   <button type="button" class="sost-v17-more" aria-expanded="false" aria-controls="sostV17Body">Details<i>&#9662;</i></button></span>' +
+' </div>' +
+' <div class="sost-v17-msg">Block #' + fmt(V17.previousTarget) + ' activation and the previous upgrade window are <b>obsolete</b>. ' +
+'  V17 is targeting block <b>#' + fmt(V17.target) + '</b>, subject to final validation and coordinated release. ' +
+'  Current V16 mining continues normally. <b>No official V17 binaries are available yet.</b> ' +
+'  <span class="sost-v17-live" data-v17-live></span></div>' +
 ' <div class="sost-v17-body" id="sostV17Body" hidden>' +
-'  <div class="sost-v17-crit"><span class="h">&#9888; NOTICE &mdash; 26 NOVEMBER 2026: THE #40,000 PLAN IS OBSOLETE</span>' +
-'   V17 will <b>not</b> activate at block #40,000. The #40,000 target, the #39,900&ndash;#39,999 restart window and the reward split shown below no longer apply. ' +
-'   The proposed new target is block <b>#45,000</b>, conditional on the final security review and on operator coordination; it is not final until the official release is published. ' +
-'   <b>No V17 release, tag or checksum exists yet: do not install any V17 build.</b> The network keeps running V30000 FINAL and mining continues normally. ' +
-'   The text below is the previous plan, kept for reference until the pages are updated with the release.</div>' +
-'  <p class="sost-v17-live" data-v17-live>SOST V17 &mdash; network upgrade &middot; block #40,000</p>' +
-'  <p>SOST is preparing a coordinated network upgrade targeting block <b>#40,000</b>. Proposed improvements include revised mining and DTD rewards, ' +
-'  new coinbase maturity rules, stronger reorganization safeguards, improved P2P synchronization and enhanced node and wallet security.</p>' +
-'  <div class="sost-v17-split"><span class="h">V17 RELEASE CANDIDATE &mdash; NOT ACTIVE</span>' +
-'   <ul><li>&#9935;&#65039; <b>70%</b> PoW miners (+ all fees)</li>' +
-'   <li>&#127919; <b>5%</b> Deterministic Token Distribution (DTD)</li>' +
-'   <li>&#127942; <b>5%</b> Jackpot accumulator (uniform draw among eligible miners, resolved by a VDF)</li>' +
-'   <li>&#129504; <b>20%</b> Useful Compute vault (withheld)</li></ul>' +
-'   <p>This is the final V17 split (it replaces the 80/15/5 and 80/10/5/5 drafts). It is implemented in the release candidate but <b>not active</b>, and it does not increase the total SOST emission.</p>' +
-'   <p><b>Useful Compute vault (20%):</b> a consensus balance with no address or key. Useful Compute stays OFF in V17, so nobody can spend it; paying from it needs a later, tested consensus release.</p></div>' +
-'  <p>Node operators and miners must prepare compatible, verified software before activation. The release remains subject to final testing and approval.</p>' +
-'  <p style="color:#a9b1bf">Status: <b style="color:#f6d77a">' + STATUS + '</b> &mdash; ' + STATUS_NOTE + '</p>' +
-'  <div class="sost-v17-crit"><span class="h">&#9888; CRITICAL &mdash; COORDINATED NETWORK UPGRADE REQUIRED</span>' +
-'   All miners and validating node operators must install and verify the approved V17 release before block #40,000. ' +
-'   The recommended coordinated restart window is blocks <b>#39,900&ndash;#39,999</b>. Failure to update may cause a <b>chain split</b>: ' +
-'   incompatible nodes could follow different blockchain histories, reject blocks, and report divergent balances or confirmations. ' +
-'   <b>Do not continue mining with an incompatible release after activation.</b></div>' +
-'  <div class="sost-v17-now"><b>Today (until #40,000):</b> the network runs the V30000 rules and <b>V30000 FINAL</b> is the valid build. ' +
-'   No action is needed now. Its binaries and checksums stay published on the ' +
-'   <a href="sost-v30000-history.html" style="color:#39ff14;font-weight:700">V30000 page</a>.</div>' +
-'  <div class="sost-v17-links">' +
-'   <a href="' + LINK_NEW + '">What&rsquo;s changing</a>' +
-'   <a href="' + LINK_GUIDE + '">Operator Upgrade Guide</a>' +
-'   <a href="' + LINK_REL + '">Release &amp; Checksums</a>' +
-'   <a href="news.html#historical-network-upgrades">Historical Network Upgrades</a>' +
+'  <div class="sost-v17-grid">' +
+'   <div class="sost-v17-box on"><h4>Active today (V16)</h4><ul>' +
+'    <li>Reward split <b>' + V17.today + '</b></li><li>ConvergenceX Proof-of-Work, cASERT difficulty</li>' +
+'    <li>Maximum supply <b>' + V17.maxSupply + ' SOST</b> (unchanged by V17)</li><li>Official software: the current V30000 FINAL release</li></ul></div>' +
+'   <div class="sost-v17-box dev"><h4>In V17 (not active)</h4><ul>' +
+'    <li>70 / 5 / 5 / 20 allocation (proposed)</li><li>Jackpot resolved by a VDF</li>' +
+'    <li>Miner coinbase maturity ' + fmt(V17.maturity.participant) + ' / ' + fmt(V17.maturity.other) + ' blocks per UTXO</li>' +
+'    <li>P2P, reorg and consensus hardening; multisig</li></ul></div>' +
+'   <div class="sost-v17-box off"><h4>Developed, closed to the public</h4><ul>' +
+'    <li>Useful Compute marketplace (lab only)</li><li>Universal Assets (public issuance OFF)</li>' +
+'    <li>SOST&harr;wSOST bridge (1:1 mint/burn, no pre-mint, closed to real funds)</li></ul></div>' +
 '  </div>' +
-'  <div class="sost-v17-foot">The 100-block window is counted in blocks, not hours: its duration depends on the real block rate. ' +
-'   Dates shown are estimates from the measured block rate, not commitments.</div>' +
+'  <div class="sost-v17-foot">The status changes only with an authorised, published release &mdash; never automatically at a block height. ' +
+'   Internal reviews are not independent audits. <a href="' + V17.links.news + '" style="color:#7dd3fc">Read the announcement</a> &middot; ' +
+'   <a href="news.html#historical-network-upgrades" style="color:#7dd3fc">Historical upgrades</a></div>' +
 ' </div>' +
 '</div>';
 
-  function fmt(n) { return Number(n).toLocaleString('en-US'); }
-  function live(el, le) {
+  function live(el) {
     function paint(h) {
       if (!(h > 0)) return;
-      if (OBSOLETE) { el.innerHTML = 'Current height <b>' + fmt(h) + '</b> &middot; the #40,000 plan is obsolete &middot; proposed new target #45,000 (not final)'; return; }
-      var left = V17_HEIGHT - h, w = WINDOW_START - h, txt;
-      if (left > 0) {
-        var days = Math.round(left * 600 / 86400);
-        txt = 'Current height <b>' + fmt(h) + '</b> &middot; <b>' + fmt(left) + '</b> blocks to #40,000 ' +
-              '(&asymp; ' + days + ' days at the 10-minute target)' +
-              (w > 0 ? ' &middot; upgrade window opens at #39,900' : ' &middot; <b style="color:#ff4d55">upgrade window open</b>');
-      } else {
-        txt = 'Current height <b>' + fmt(h) + '</b> &middot; block #40,000 reached &middot; check the status before acting';
-      }
-      el.innerHTML = txt;
-      le.innerHTML = left > 0 ? '<b>' + fmt(left) + '</b> blocks left' : '#40,000 reached';
+      var left = V17.target - h;
+      el.innerHTML = '&middot; Current height <b>' + fmt(h) + '</b>' + (left > 0 ? ' (' + fmt(left) + ' blocks below the target)' : '');
     }
     function get() {
       try {
@@ -146,26 +133,26 @@
 
   function inject() {
     if (document.querySelector('.sost-v17')) return;
+    if (document.documentElement.hasAttribute('data-no-v17-banner')) return;
     var st = document.createElement('style'); st.id = 'sost-v17-css'; st.textContent = CSS; document.head.appendChild(st);
     var wrap = document.createElement('div'); wrap.innerHTML = HTML; var box = wrap.firstChild;
     var mount = document.getElementById('sost-v16-notice-mount');
     if (mount) mount.appendChild(box);
     else {
-      // same flow placement as the previous notice: under the research notice, else under the page header, never above the logos
       var anchor = document.querySelector('body > .reward-research-update') || document.querySelector('body > nav') ||
                    document.querySelector('.sost-devnote-strip');
       if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(box, anchor.nextSibling);
       else document.body.insertBefore(box, document.body.firstChild);
       box.style.width = 'calc(100% - 32px)'; box.style.marginLeft = 'auto'; box.style.marginRight = 'auto';
     }
-    var head = box.querySelector('.sost-v17-head'), body = box.querySelector('.sost-v17-body');
-    head.addEventListener('click', function () {
-      var open = head.getAttribute('aria-expanded') === 'true';
-      head.setAttribute('aria-expanded', open ? 'false' : 'true'); body.hidden = open;
+    var more = box.querySelector('.sost-v17-more'), body = box.querySelector('.sost-v17-body');
+    more.addEventListener('click', function () {
+      var open = more.getAttribute('aria-expanded') === 'true';
+      more.setAttribute('aria-expanded', open ? 'false' : 'true'); body.hidden = open;
     });
-    box.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !body.hidden) { body.hidden = true; head.setAttribute('aria-expanded', 'false'); head.focus(); } });
-    if (STATUS === 'ACTIVE') box.querySelector('[data-v17-status]').classList.add('active');
-    live(box.querySelector('[data-v17-live]'), box.querySelector('[data-v17-left]'));
+    box.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !body.hidden) { body.hidden = true; more.setAttribute('aria-expanded', 'false'); more.focus(); } });
+    if (V17.status === 'ACTIVE') box.querySelector('[data-v17-status]').classList.add('active');
+    live(box.querySelector('[data-v17-live]'));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject); else inject();
 })();

@@ -174,4 +174,16 @@
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
+    <url>
+        <loc>https://sostcore.com/sost-autonomous-compute.html</loc>
+        <lastmod>2026-11-27</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://sostcore.com/sost-v17.html</loc>
+        <lastmod>2026-11-27</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
 </urlset>

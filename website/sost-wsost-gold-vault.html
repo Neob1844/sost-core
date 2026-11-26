@@ -18,19 +18,19 @@
 <link rel="canonical" href="https://sostcore.com/sost-wsost-gold-vault.html">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>wSOST — SOST Atomic Bridge (research, not active, not deployed)</title>
-<meta name="description" content="wSOST and the SOST Atomic Bridge: SOST to wSOST 1:1 from a fixed pre-issued inventory, no mint or burn per conversion, no bridge fee, no mandatory XAUT, no Gold Access Key, no privileged custodian. Research, not active, not deployed; DEMO only: no contract deployed, no real transactions, real operations blocked until an approved SOST/EUR valuation exists. Current consensus unchanged.">
+<meta name="description" content="wSOST and the SOST↔wSOST bridge. Current design (27 November 2026): 1:1 mint on deposit and burn on exit against native SOST reserves, no pre-minted wSOST, independent relayers and watchers, automatic exposure limits; in development for V17 and closed to real funds. Earlier pre-issued inventory designs are kept below as superseded research.">
 <meta name="keywords" content="wSOST, wrapped SOST, SOST bridge, Gold Reserve V2, Gold Vault, XAUT, governance, SOST governance, block 40000, research horizon">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="wSOST — SOST Atomic Bridge (research)">
-<meta property="og:description" content="wSOST (1 wSOST = 1 native SOST locked), Gold Reserve V2 of tokenized gold, on-chain SOST governance and the #40,000 research horizon. Research roadmap, not live: no bridge deployed, current consensus 50% miner / 50% DTD unchanged.">
+<meta property="og:description" content="wSOST and the SOST↔wSOST bridge. Current design (27 November 2026): 1:1 mint on deposit and burn on exit against native SOST reserves, no pre-minted wSOST, independent relayers and watchers, automatic exposure limits; in development for V17 and closed to real funds. Earlier pre-issued inventory designs are kept below as superseded research.">
 <meta property="og:url" content="https://sostcore.com/sost-wsost-gold-vault.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/universe/assets/brand/wsost/wsost-eye-512.png?v=sl20261113">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="wSOST — SOST Atomic Bridge (research)">
-<meta name="twitter:description" content="wSOST (1 wSOST = 1 native SOST locked), Gold Reserve V2 of tokenized gold, on-chain SOST governance and the #40,000 research horizon. Research roadmap, not live: no bridge deployed, current consensus 50% miner / 50% DTD unchanged.">
+<meta name="twitter:description" content="wSOST and the SOST↔wSOST bridge. Current design (27 November 2026): 1:1 mint on deposit and burn on exit against native SOST reserves, no pre-minted wSOST, independent relayers and watchers, automatic exposure limits; in development for V17 and closed to real funds. Earlier pre-issued inventory designs are kept below as superseded research.">
 <meta name="twitter:image" content="https://sostcore.com/universe/assets/brand/wsost/wsost-eye-512.png?v=sl20261113">
 <style>
   :root {
@@ -953,14 +953,14 @@
   <div class="t">
    <div style="font:800 12px ui-monospace,monospace;letter-spacing:2.5px;color:#ffd166">SOST ATOMIC BRIDGE &middot; RESEARCH &mdash; NOT ACTIVE &mdash; NOT DEPLOYED</div>
    <h1 style="font-size:34px;line-height:1.15;margin:6px 0 8px;color:#fff"><span class="wm-sost"><span style="color:#fff">w</span><span style="color:#ff1e28">SOST</span></span> <span class="wm-gold" style="font-size:.62em;letter-spacing:.06em">&middot; SOST Atomic Bridge</span></h1>
-   <span class="st res">TARGET ARCHITECTURE</span> <span class="st gated">RESEARCH / DEVELOPMENT</span> <span class="st nd">NOT ACTIVE</span> <span class="st nd">NOT MAINNET DEPLOYED</span> <span class="st nd">NOT AUDITED</span> <span class="st nd">NOT YET PROVEN</span> <span class="st gated">DEMO ONLY</span> <span class="st res">#40,000 RESEARCH HORIZON</span> <span class="st nd">NOT AN ACTIVATION COMMITMENT</span>
-   <p style="margin-top:10px">The target architecture is the <b>SOST Atomic Bridge</b>: an <b>Atomic Reserve Vault</b> of <b>preissued, immobilized wSOST</b> on Ethereum, exchanged one-for-one against native SOST through <b>atomic swaps in both directions</b> &mdash; no mint per operation, no burn on the return, no liquidity pool. Under the canonical rules below there is <b>no Gold Access Key</b> and <b>no mandatory XAUT</b>. Nothing here is live, there is no launch date, the keyless native reserve found in research (C705) needs two new SOST consensus rules that are not authorized, and any future activation is subject to security work, an external audit and legal review.</p>
+   <span class="st res">TARGET ARCHITECTURE</span> <span class="st gated">RESEARCH / DEVELOPMENT</span> <span class="st nd">NOT ACTIVE</span> <span class="st nd">NOT MAINNET DEPLOYED</span> <span class="st nd">NOT AUDITED</span> <span class="st nd">NOT YET PROVEN</span> <span class="st gated">DEMO ONLY</span> <span class="st res">V17 DEVELOPMENT (TARGET #45,000)</span> <span class="st nd">CLOSED TO REAL FUNDS</span>
+   <p style="margin-top:10px"><b>Current design (since 19 November 2026):</b> wSOST is <b>minted 1:1 when native SOST is deposited and burned when it is redeemed</b>. There is <b>no pre-minted wSOST and no inventory</b>, no bridge fee, no Gold Access Key, no mandatory XAUT and no custodian key over the reserve. The bridge is developed in the lab and integrated into the V17 development branch, and it is <b>closed to real funds</b>: no contract is deployed on Ethereum mainnet. <a href="#bridge-current" style="color:#5eead4;font-weight:700">Read the current design</a>. Earlier designs on this page, including the pre-issued inventory, are superseded research.</p>
   </div>
  </div>
  <div class="c701-status" role="note">STATUS: RESEARCH / DEVELOPMENT &middot; NOT ACTIVE &middot; NOT MAINNET DEPLOYED &middot; NOT AUDITED &middot; NOT YET PROVEN<small>SOST Atomic Bridge (Atomic Reserve Vault) &middot; no contract deployed &middot; no launch date &middot; subject to security work, external audit and legal / regulatory review</small></div>
- <div class="box" id="canonical-rules" role="note" style="border-color:#22d3ee66;background:rgba(34,211,238,.06)"><div class="bt" style="color:#67e8f9">CANONICAL RULES · OWNER DECISION 5 NOV 2026</div>
+ <div class="box" id="canonical-rules" role="note" style="border-color:#22d3ee66;background:rgba(34,211,238,.06)"><div class="bt" style="color:#fcd34d">CANONICAL RULES · 5 NOV 2026 &mdash; SUPERSEDED ON 19 NOV 2026 (the pre-issued inventory was replaced by 1:1 mint / burn with no pre-mint)</div>
  <b>wSOST</b> is the wrapped form of SOST for the <b>SOST Atomic Bridge</b> research. <b>RESEARCH &mdash; NOT ACTIVE &mdash; NOT DEPLOYED.</b> The canonical rules are:
- <ul style="margin:8px 0 0 18px;line-height:1.7"><li><b>SOST &harr; wSOST 1:1.</b></li><li><b>Fixed pre-issued inventory</b> of wSOST.</li><li><b>No mint and no burn</b> for an ordinary conversion.</li><li><b>No bridge fee</b> of its own.</li><li><b>No mandatory XAUT.</b></li><li><b>No Gold Access Key.</b></li><li><b>No privileged custodian.</b></li><li><b>No indispensable central relayer.</b></li><li><b>None of the contracts retired by H-01 is reused.</b></li></ul>
+ <ul style="margin:8px 0 0 18px;line-height:1.7"><li><b>SOST &harr; wSOST 1:1.</b></li><li><s>Fixed pre-issued inventory of wSOST.</s> <b>Superseded:</b> no pre-mint; wSOST is minted on deposit.</li><li><s>No mint and no burn for an ordinary conversion.</s> <b>Superseded:</b> 1:1 mint on deposit, burn on exit.</li><li><b>No bridge fee</b> of its own.</li><li><b>No mandatory XAUT.</b></li><li><b>No Gold Access Key.</b></li><li><b>No privileged custodian.</b></li><li><b>No indispensable central relayer.</b></li><li><b>None of the contracts retired by H-01 is reused.</b></li></ul>
  <p style="margin-top:8px">Sections further down that describe a <b>Gold Access Key paid in XAUT</b>, a <b>Gold Reserve V2</b> funded by it, a lock / mint model or the former <b>Gold Vault</b> branding are <b>earlier research, superseded by these rules</b>, and are kept only as the historical record. The current identity is <b>wSOST</b>; <b>Gold Vault</b> survives only as a historical name (the on-chain Gold Funding Vault of blocks 0&ndash;24,999 and the earlier wSOST &amp; Gold Vault concept).</p></div>
 <div class="box red" id="bridge-status-nov2026" role="note"><div class="bt">STATUS · 12 NOVEMBER 2026 · NO-GO FOR PRODUCTION</div>
  <ul style="margin:6px 0 0 18px;line-height:1.7">
@@ -970,13 +970,28 @@
  </ul>
  <p style="margin-top:6px">Details: <a href="sost-whitepaper.html#research-bridge-status" style="color:#ffd166">whitepaper §3.16.0</a>.</p></div>
 <div class="wg-not"><div>&#9940; NOT LIVE &middot; DEMO ONLY</div><div>&#9940; NO BRIDGE CONTRACT DEPLOYED</div><div>&#9940; NO GOLD RESERVE V2 FUNDS YET</div><div>&#9940; REAL OPERATIONS BLOCKED: NO APPROVED SOST/EUR VALUATION</div><div>&#9989; CURRENT SOST CONSENSUS UNCHANGED</div></div>
- <div class="box cyan"><div class="bt">#30,000 &rarr; #40,000</div><b>#30,000 built the current foundation</b> (V30000 is live). <b>#40,000 is the current coordinated research horizon</b> for the next major phase. <b>Nothing activates automatically at #40,000.</b> If engineering, external audit, legal or operational gates are not complete, the work moves later (for example #50,000). Every consensus change would need its own release, tests, audit and public notice.</div>
+ <div class="box cyan"><div class="bt">#30,000 &rarr; V17 (TARGET #45,000)</div><b>#30,000 built the current foundation</b> (V30000 is live). V17 now targets <b>block #45,000</b>; the earlier #40,000 horizon is obsolete. <b>Nothing activates automatically at a block height</b>: the bridge needs its own authorised opening decision even after V17, and stays closed to real funds until then.</div>
  <div class="wg-toc">
-  <a href="#atomic-bridge"><b>SOST Atomic Bridge (target)</b></a><a href="#ab-custody">Reserve custody problem</a><a href="#ab-conventional">vs conventional bridge</a><a href="#ab-systems">vs Atomiq / THORChain / Chainflip</a><a href="#bridge">Bridge dashboard (demo)</a><a href="#backing">Backing</a><a href="#gold-access-key">Gold Access Key</a><a href="#bridge-return">Return wSOST &rarr; SOST</a><a href="#bridge-explained">Conventional reference, explained</a><a href="#bridge-examples">Reference examples</a><a href="#bridge-compare">vs other bridges</a><a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#how-to-wrap">How the bridge works</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#popr">Dead Vault (PoPR)</a><a href="#trust">Bridge trust</a><a href="#swap-separate">Atomic Swap (separate)</a><a href="#blockers">Open blockers</a><a href="#superseded">Historical / superseded design</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
+  <a href="#bridge-current"><b>Current design (mint / burn)</b></a><a href="#atomic-bridge"><b>SOST Atomic Bridge (target)</b></a><a href="#ab-custody">Reserve custody problem</a><a href="#ab-conventional">vs conventional bridge</a><a href="#ab-systems">vs Atomiq / THORChain / Chainflip</a><a href="#bridge">Bridge dashboard (demo)</a><a href="#backing">Backing</a><a href="#gold-access-key">Gold Access Key</a><a href="#bridge-return">Return wSOST &rarr; SOST</a><a href="#bridge-explained">Conventional reference, explained</a><a href="#bridge-examples">Reference examples</a><a href="#bridge-compare">vs other bridges</a><a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#how-to-wrap">How the bridge works</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#popr">Dead Vault (PoPR)</a><a href="#trust">Bridge trust</a><a href="#swap-separate">Atomic Swap (separate)</a><a href="#blockers">Open blockers</a><a href="#superseded">Historical / superseded design</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000 (superseded)</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
  </div>
 </div></div></section>
 
+<section class="section" id="bridge-current" aria-labelledby="bc-title" style="padding-top:18px"><div class="container"><div class="wg">
+ <div style="border:1px solid rgba(94,234,212,.55);border-radius:14px;padding:18px 20px;background:linear-gradient(160deg,rgba(13,30,40,.85),rgba(8,12,24,.9))">
+  <div style="font:800 11px/1.2 system-ui;letter-spacing:2px;color:#5eead4">CURRENT DESIGN &middot; 27 NOVEMBER 2026 &middot; IN DEVELOPMENT FOR V17 &middot; CLOSED TO REAL FUNDS</div>
+  <h2 id="bc-title" style="margin:8px 0 8px;color:#fff;font-size:24px">SOST &harr; wSOST bridge: 1:1 mint / burn, no pre-mint</h2>
+  <ul style="margin:0 0 0 18px;line-height:1.75;color:#cbd5e1">
+   <li><b>No pre-minted wSOST and no inventory.</b> wSOST is minted only when native SOST is deposited, and burned when it is redeemed. wSOST supply always equals the SOST held in the native reserve.</li>
+   <li><b>1:1 reserves, checked by rules.</b> The SOST side verifies Ethereum events (light-client proofs); the Ethereum side verifies SOST deposits. Releases are exactly 1:1, with no bridge fee.</li>
+   <li><b>Verifiers, relayers and watchers.</b> Anyone can relay proofs; independent watchers can pause on inconsistency. Reorganizations on either chain are handled and tested.</li>
+   <li><b>Automatic exposure limits</b> cap deposits, exits and the total reserve; there is no custodian key that can move the reserve.</li>
+   <li><b>Status:</b> developed and tested in the lab and integrated into the V17 development branch. It is <b>closed to real funds</b>: no contract is deployed on Ethereum mainnet and no wSOST exists. Opening it needs a separate, authorised decision.</li>
+  </ul>
+  <p style="margin:10px 0 0;color:#fcd34d;font-size:13.5px"><b>The sections below describe earlier research, including a fixed pre-issued wSOST inventory. That inventory design is SUPERSEDED and is not the current design.</b> They are kept for the record.</p>
+ </div>
+</div></div></section>
 <section class="section" id="atomic-bridge" aria-labelledby="ab-title"><div class="container"><div class="wg ab">
+ <div style="margin:0 0 12px;padding:8px 12px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.08);color:#fcd34d;font:700 12.5px/1.5 system-ui">SUPERSEDED DESIGN &mdash; pre-issued wSOST inventory. Kept as research history; the current design is <a href="#bridge-current" style="color:#fde68a">1:1 mint / burn with no pre-mint</a>.</div>
  <div class="section-header"><div class="section-id">TARGET ARCHITECTURE &middot; RESEARCH / DEVELOPMENT</div><h2 class="section-title" id="ab-title"><span class="wm-sost">SOST</span> Atomic Bridge <span class="accent">&mdash; Atomic Reserve Vault</span></h2></div>
  <div class="c701-status" role="note">TARGET ARCHITECTURE &middot; RESEARCH / DEVELOPMENT &middot; NOT ACTIVE &middot; NOT MAINNET DEPLOYED &middot; NOT AUDITED &middot; NOT YET PROVEN<small>no contract deployed &middot; no real funds &middot; no launch date &middot; keyless native reserve designed in research (C705): needs two new SOST consensus rules, not in V17</small></div>
  <p style="font-size:16px;line-height:1.75"><b>SOST does not intend to mint a new wSOST for every bridge operation.</b> The target architecture uses a <b>preissued, immobilized wSOST reserve</b> and <b>bidirectional atomic swaps</b>. Native SOST received by the bridge forms the corresponding reserve. The principal research problem is making that native reserve <b>non-discretionary and safely redeemable</b>.</p>
@@ -1146,7 +1161,7 @@
   <div class="ab-ladder" aria-label="Custody levels">
    <div class="ab-step" style="--c:#ff3b3f"><div class="lv">L0</div><div class="t"><b>Single hot key in a daemon</b> &mdash; rejected as the final design</div><span class="st nd">REJECTED</span></div>
    <div class="ab-step" style="--c:#fb923c"><div class="lv">L1</div><div class="t"><b>Single cold key</b> &mdash; the only option before V17; exits not automatic</div><span class="st gated">TODAY</span></div>
-   <div class="ab-step" style="--c:#fbbf24"><div class="lv">L2</div><div class="t"><b>V17 native multisig 3-of-5</b> (#40,000): removes single-key risk &mdash; but <b>three signers can still move the whole reserve</b>. V17 lets a multisig fund an HTLC and lets an HTLC claim pay to a multisig; it does <b>not</b> allow a multisig claimant or refund key, nor a timelocked recovery path. <b>Not used for the bridge reserve.</b></div><span class="st gated">NOT USED</span></div>
+   <div class="ab-step" style="--c:#fbbf24"><div class="lv">L2</div><div class="t"><b>V17 native multisig 3-of-5</b> (V17, target #45,000): removes single-key risk &mdash; but <b>three signers can still move the whole reserve</b>. V17 lets a multisig fund an HTLC and lets an HTLC claim pay to a multisig; it does <b>not</b> allow a multisig claimant or refund key, nor a timelocked recovery path. <b>Not used for the bridge reserve.</b></div><span class="st gated">NOT USED</span></div>
    <div class="ab-step" style="--c:#a3e635"><div class="lv">L3</div><div class="t"><b>P1&ndash;P3 studied, not needed</b>: a destination-fixed HTLC, an HTLC with a multisig claimant and a delayed vault with a recovery key all keep someone in control. In a keyless design there is no key to delay or share.</div><span class="st gated">NOT NEEDED</span></div>
    <div class="ab-step" style="--c:#39ff14"><div class="lv">L4</div><div class="t"><b>Keyless reserve (C705)</b> &mdash; nobody holds a key. The reserve moves only on a <b>proven return</b> of wSOST, deposits only on a <b>proven release</b> or a <b>proven cancel</b>. Needs Rule&nbsp;1 = P4 (keyless reserve outputs with fixed spend paths) and Rule&nbsp;2 = P5 (SOST verifies Ethereum finality). Designed and model-checked; not implemented.</div><span class="st res">RESEARCH &middot; V18 CANDIDATE</span></div>
   </div>
@@ -1287,6 +1302,7 @@
 </div></div></section>
 
 <section class="section" id="bridge" aria-labelledby="cb-title"><div class="container"><div class="wg cb">
+ <div style="margin:0 0 12px;padding:8px 12px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.08);color:#fcd34d;font:700 12.5px/1.5 system-ui">SUPERSEDED DESIGN &mdash; pre-issued wSOST inventory. Kept as research history; the current design is <a href="#bridge-current" style="color:#fde68a">1:1 mint / burn with no pre-mint</a>.</div>
  <div class="section-header"><div class="section-id">SOST ATOMIC BRIDGE &middot; DEMO DASHBOARD</div><h2 class="section-title" id="cb-title"><span class="wm-sost">SOST</span> &harr; <span class="wm-sost"><span style="color:#fff">w</span>SOST</span> <span class="accent">1:1</span></h2></div>
  <div class="c701-status" role="note">STATUS: RESEARCH / DEVELOPMENT &middot; NOT ACTIVE &middot; NOT YET PROVEN</div>
  <div class="cb-demo" role="note"><span>&#9888; DEMO MODE</span><span>&middot; no contract is deployed &middot; no wallet is connected &middot; <b>no transaction is created or simulated as real</b> &middot; real operations are blocked until an approved SOST/EUR valuation exists</span></div>
@@ -1431,7 +1447,7 @@ NOT:           totalSupply(wSOST) &lt;= reserve   (totalSupply includes the immo
   <div class="card" id="q-return"><div class="h" style="color:#fff">HOW wSOST RETURNS TO SOST</div>Any wSOST holder &mdash; including one who bought on an exchange &mdash; burns wSOST with a SOST address; after the burn is final the vault releases the same amount minus the SOST network fee. <b>No XAUT</b> on the return.</div>
   <div class="card" id="q-security"><div class="h" style="color:#fff">SECURITY MODEL</div>Authorizations bound to chain id, contract, recipient, amount, deposit, expiry and nonce; each deposit usable once; per-mint, daily and total caps; signed, fresh, bounded prices; reconciliation that pauses minting; separate keys for minting, prices and administration; 2-day timelock on configuration; an event log the engine only appends to (an enforced append-only audit trail is still to be built).</div>
   <div class="card" id="q-central"><div class="h" style="color:#ff3b3f">CENTRALIZATION LIMITATION</div>Ethereum cannot read the SOST chain, so in the first version a <b>single automated verification component</b> decides that a deposit is real. That is a central point of trust: the bridge is not trustless. A stolen verifier key must not be able to mint unbacked wSOST; until that is demonstrable, the bridge stays off.</div>
-  <div class="card" id="q-v17"><div class="h" style="color:#67e8f9">FUTURE: V17 MULTISIG</div>Native SOST multisig is planned for V17 (block #40,000). The target is a <b>3-of-5 Bridge Vault</b>, with vault spending keys separate from the Ethereum authorization key, so that compromising one does not compromise the other. Until then the vault could only be a single cold key.</div>
+  <div class="card" id="q-v17"><div class="h" style="color:#67e8f9">FUTURE: V17 MULTISIG</div>Native SOST multisig is planned for V17 (target block #45,000; the #40,000 target is obsolete). The target is a <b>3-of-5 Bridge Vault</b>, with vault spending keys separate from the Ethereum authorization key, so that compromising one does not compromise the other. Until then the vault could only be a single cold key.</div>
   <div class="card" id="q-audit"><div class="h" style="color:#fbbf24">AUDIT STATUS</div><b>Not audited.</b> Contracts and engine exist as development prototypes with tests (Foundry 87/87, engine 25/25), on a development branch only. An independent security audit and a legal / regulatory review are open blockers.</div>
  </div>
 
@@ -1556,6 +1572,7 @@ Historical Gold Vault / DTD Jackpot  untouched</div>
 </div></div></section>
 
 <section class="section" id="bridge-compare"><div class="container"><div class="wg">
+ <div style="margin:0 0 12px;padding:8px 12px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.08);color:#fcd34d;font:700 12.5px/1.5 system-ui">SUPERSEDED DESIGN &mdash; pre-issued wSOST inventory. Kept as research history; the current design is <a href="#bridge-current" style="color:#fde68a">1:1 mint / burn with no pre-mint</a>.</div>
  <div class="section-header"><div class="section-id">COMPARISON</div><h2 class="section-title">How the <span class="wm-sost">SOST</span> Atomic Bridge differs <span class="accent">from most bridges</span></h2></div>
  <p>Most cross-chain bridges belong to one of five families. They differ in <b>who decides that a deposit is real</b>, <b>where the money for the other side comes from</b>, and <b>who keeps the fee</b>.</p>
  <div class="grid">
@@ -1726,6 +1743,7 @@ the historical Jackpot reserve is never touched</div>
 </div></div></section>
 
 <section class="section" id="how-to-wrap"><div class="container"><div class="wg">
+ <div style="margin:0 0 12px;padding:8px 12px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.08);color:#fcd34d;font:700 12.5px/1.5 system-ui">SUPERSEDED DESIGN &mdash; pre-issued wSOST inventory. Kept as research history; the current design is <a href="#bridge-current" style="color:#fde68a">1:1 mint / burn with no pre-mint</a>.</div>
  <div class="section-header"><div class="section-id">REFERENCE MODEL &middot; USER GUIDE</div><h2 class="section-title">How the conventional prototype <span class="accent">would work</span></h2></div>
  <div class="box gray"><div class="bt">REFERENCE &middot; CONVENTIONAL LOCK / MINT MODEL</div>This section describes the <b>conventional lock &rarr; mint / burn &rarr; release</b> model and the C701/C703 prototype built for it. It is <b>not</b> the SOST target architecture &mdash; that is the <a href="#atomic-bridge">SOST Atomic Bridge</a>. It is kept because its components (verification, single use, recovery states, Gold Access Key, Gold Reserve V2, tests) are reused.</div>
 
@@ -1851,6 +1869,7 @@ Informational ratio      $250,000 / 2,000,000 = <span class="g">$0.125 of gold r
 </div></div></section>
 
 <section class="section" id="popr"><div class="container"><div class="wg">
+ <div style="margin:0 0 12px;padding:8px 12px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.08);color:#fcd34d;font:700 12.5px/1.5 system-ui">SUPERSEDED DESIGN &mdash; pre-issued wSOST inventory. Kept as research history; the current design is <a href="#bridge-current" style="color:#fde68a">1:1 mint / burn with no pre-mint</a>.</div>
  <div class="section-header"><div class="section-id">PROPOSAL &middot; RESEARCH &middot; 30 OCT 2026</div><h2 class="section-title"><span class="wm-sost">SOST</span> Dead Vault &mdash; <span class="accent">Proof of Permanent Retirement (PoPR)</span></h2></div>
  <span class="st res">RESEARCH</span> <span class="st nd">NOT ACTIVE</span> <span class="st nd">NOT DEPLOYED</span> <span class="st gated">NEEDS A HARD FORK AFTER V17</span>
  <p>A proposed use for the XAUT collected by the <b>Gold Access Key</b>: periodically <b>buy wSOST back from the market</b> and take the same amount of native SOST <b>out of circulation forever</b>. Ordinary users of the SOST Atomic Bridge are not affected: entering and leaving keep working exactly as described above (wSOST from and back to the inventory, no mint, no burn).</p>
@@ -2084,7 +2103,8 @@ SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
 </div></div></section>
 
 <section class="section" id="h40000"><div class="container"><div class="wg">
- <div class="section-header"><div class="section-id">#40,000</div><h2 class="section-title">Research horizon &mdash; <span class="accent">not an activation commitment</span></h2></div>
+ <div style="margin:0 0 12px;padding:8px 12px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.08);color:#fcd34d;font:700 12.5px/1.5 system-ui">SUPERSEDED DESIGN &mdash; pre-issued wSOST inventory. Kept as research history; the current design is <a href="#bridge-current" style="color:#fde68a">1:1 mint / burn with no pre-mint</a>.</div>
+ <div class="section-header"><div class="section-id">#40,000 (SUPERSEDED: V17 now targets #45,000)</div><h2 class="section-title">Research horizon &mdash; <span class="accent">not an activation commitment</span></h2></div>
  <div class="box cyan"><div class="bt">RESEARCH NOTICE</div><b>#30,000 builds the foundation. #40,000 is the current target research horizon for the next coordinated upgrade &mdash; not an activation commitment.</b> Nothing is scheduled until code, tests, external audit and a public announcement exist. If not ready, it moves later (for example #50,000). <b>Current consensus remains 50% miner / 50% DTD.</b></div>
  <div class="grid">
   <div class="card"><div class="h" style="color:#d7ff00">PILLAR 1 &middot; REWARD EVOLUTION</div>Research scenario: <b>80% direct PoW miner &middot; 15% normal DTD &middot; 5% into the existing DTD Jackpot pool</b>. The 5% is <b>not a direct node payment</b>: it accumulates in the Jackpot pool, paid under the applicable Jackpot eligibility rules. <b>No new supply</b> &mdash; all from existing block emission. <span class="st res">RESEARCH</span></div>
@@ -2265,7 +2285,7 @@ SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v17x26" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17g" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- ============== BEACON — ADVISORY NOTICE CHANNEL (V13) ============== -->
@@ -2476,6 +2496,6 @@ SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
 </script>
 <!-- u-skin (DIRECTIVA 4D §5-E) -->
 <script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='ecosystem'</script>
-<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-nav.js?v=in20261127"></script>
 <script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body></html>

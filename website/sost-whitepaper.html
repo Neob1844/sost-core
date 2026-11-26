@@ -18,7 +18,7 @@
 <link rel="canonical" href="https://sostcore.com/sost-whitepaper.html">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Whitepaper v4.7 (16 Nov 2026)</title>
-<meta name="description" content="SOST technical whitepaper v4.7, 16 November 2026: ConvergenceX PoW, cASERT, exact supply 4,669,201.54789641 SOST, 50% miner / 50% DTD since #25,000, V17 #40,000 proposed (not active), wSOST planned (not deployed).">
+<meta name="description" content="SOST technical whitepaper v4.7, 16 November 2026: ConvergenceX PoW, cASERT, exact supply 4,669,201.54789641 SOST, 50% miner / 50% DTD since #25,000, V17 target #45,000 (in development, not active), wSOST planned (not deployed).">
 <meta name="keywords" content="SOST whitepaper, ConvergenceX whitepaper, proof of work whitepaper, metals reserve (historical, no longer funded) whitepaper, cASERT, constitutional protocol">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
@@ -745,8 +745,9 @@
 </nav>
 <main class="wp"><span id="adaptive-node-participation"></span><span id="research-wsost-grv2"></span><span id="research-atomic-bridge"></span><span id="research-horizon"></span><span id="pow-control"></span><span id="pow-control-three-layers"></span><span id="sec-sacs"></span><span id="sec-trading"></span><span id="sec-codebase"></span><span id="btc-eth-sost"></span><span id="sost-vs-btc-eth"></span><header class="wp-hero"><h1><b>SOST</b> — Sovereign Stock Token<br>Technical Whitepaper</h1>
 <div class="sub">Version 4.7 · 16 November 2026</div>
-<div class="wp-meta"><span>Data at block #35,246</span><span>Production rules: V16 (release V30000)</span><span>V17 #40,000: PROPOSED, not active</span>
+<div class="wp-meta"><span>Data at block #35,246</span><span>Production rules: V16 (release V30000)</span><span>V17: target #45,000 (was #40,000), in development, not active</span>
 <a href="whitepaper.pdf">PDF</a><a href="sost-whitepaper-v4.6-historical.html">v4.6 (historical)</a><a href="whitepaper-reader.html">Full historical whitepaper</a><a href="whitepaper-v4.0-historical.pdf">v4.0 PDF (historical)</a></div></header><div class="swap-retired-notice" role="alert" style="position:relative;z-index:5;margin:0 0 18px;box-sizing:border-box;padding:12px 16px;border:1px solid #5a1418;border-left:4px solid #fb010d;border-radius:10px;background:#2a0606;color:#ffb3b3;font-size:13.5px;font-weight:600;line-height:1.6;text-align:left">&#9940; SECURITY NOTICE — RETIRED: The affected HTLC atomic swap contracts have been retired following a security finding (H-01). Do not use these contracts or send funds to them. Public atomic swaps are not currently authorized. <span style="font-weight:400;opacity:.85">Reference: security advisory 2026-10-30, finding F-1 (published as H-01).</span></div><nav class="wp-toc" aria-label="Contents"><b>CONTENTS</b><ol><li><a href="#sec-notices">Important notices</a></li><li><a href="#sec-summary">1. Summary</a></li><li><a href="#sec-status">2. Feature status (15 November 2026)</a></li><li><a href="#sec-consensus">3. Consensus</a></li><li><a href="#sec-supply">4. Monetary policy and supply</a></li><li><a href="#sec-dtd">5. Block reward and the DTD</a></li><li><a href="#sec-reserve">6. Gold Funding Vault and PoPC Pool</a></li><li><a href="#sec-upgrades">7. Network upgrades (history)</a></li><li><a href="#sec-decentralization">8. Decentralisation (measured)</a></li><li><a href="#sec-v17">9. V17 — BLOCK #40,000: PROPOSED CONSENSUS UPGRADE</a></li><li><a href="#research-bridge-status">10. wSOST — PLANNED ETHEREUM ERC-20 INTEROPERABILITY</a></li><li><a href="#sec-assets">11. Universal Assets (native assets)</a></li><li><a href="#sec-wallet">12. Wallet and Digital Vault</a></li><li><a href="#sec-positioning">13. Gold reference (unit of account)</a></li><li><a href="#sec-security">14. Security and risks</a></li><li><a href="#sec-verify">15. How to verify</a></li><li><a href="#sec-revisions">Revision history</a></li></ol></nav><p><strong>Revision:</strong> whitepaper v4.7, 16 November 2026 (consolidated technical revision of 15 November 2026, approved by the owner). It supersedes whitepaper v4.6 (12 November 2026); v4.6 and the earlier versions stay available as historical documents.</p>
+<div style="margin:12px 0 16px;padding:12px 16px;border:1px solid #f59e0b;border-left:4px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.07);font-size:14px;line-height:1.6" id="wp-update-45000"><b style="color:#fcd34d">Update, 27 November 2026 &mdash; V17 target is now block #45,000.</b> This whitepaper (v4.7, 16 November 2026) was written for a #40,000 target, which is <b>obsolete</b>. Where sections 5, 6 and 9 say #40,000 (activation, TB-1, maturity, timing), read <b>#45,000</b>, subject to final validation and a coordinated, authorised release. The proposed 70/5/5/20 allocation and the 4,669,201.54789641 SOST maximum supply are unchanged. Since this version, the SOST&harr;wSOST bridge (1:1 mint/burn, no pre-mint) has been integrated into the V17 development branch, closed to real funds. A revised whitepaper will replace this notice. <a href="news.html#v17-45000" style="color:#fcd34d;font-weight:700">Read the announcement</a></div>
 <p><strong>Data as of:</strong> mainnet block #35,246 (2026-11-15 08:51:53 UTC), read from the public read-only node RPC on 2026-11-15, 10:13–10:16 UTC.</p>
 <p><strong>Code references:</strong></p>
 <ul>
@@ -1083,6 +1084,7 @@
 <li>The only operating DNS seed runs on the same server as the website and the public node.</li>
 </ul>
 <h2 id="sec-v17">9. V17 — BLOCK #40,000: PROPOSED CONSENSUS UPGRADE</h2>
+<p style="padding:8px 12px;border-left:3px solid #f59e0b;background:rgba(245,158,11,.06)"><b>Target moved to #45,000 (27 November 2026).</b> Every #40,000 in this section now reads #45,000; the timing estimate below is superseded. See the <a href="#wp-update-45000">update notice</a>.</p>
 <blockquote>
 <p><strong>Status: <span class="st st-prop">PROPOSED</span>, NOT YET ACTIVE.</strong></p>
 <ul>
@@ -1314,7 +1316,7 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v17x26" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17g" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST Watch films (2026-11 cinematic rebuild, 1920x1080, H.264 / AAC, EN/ES subtitles; music Scott Buckley, CC BY 4.0) -->
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -1442,7 +1444,7 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 </script>
 <!-- u-skin (DIRECTIVA 4D §5-E) -->
 <script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='technology'</script>
-<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-nav.js?v=in20261127"></script>
 <script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 <!-- site soundtrack player (owner order 4 Nov 2026): replaces the NES chiptune button, js/retro-sounds.js and js/sost-music.js -->
 <link rel="stylesheet" href="universe/core/u-audio.css?v=gm-20261104">

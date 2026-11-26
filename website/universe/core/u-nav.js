@@ -22,7 +22,8 @@
       ['Home', 'home.html', null, 'start overview'],
       ['News & updates', P + 'news.html', null, 'announcements releases'],
       ['Watch: SOST in 3 minutes', 'home.html#watch', null, 'video intro'],
-      ['Research notice #40,000', 'home.html#research', 'research', 'reward evolution 80 15 5'],
+      ['V17 · target #45,000', 'home.html#research', 'research', 'v17 upgrade 45000 70 5 5 20 useful compute'],
+      ['Autonomous Useful Compute', 'home.html#auc', 'research', 'useful compute marketplace gpu cpu verified compute credits'],
       ['Developer note', 'home.html#devnote', null, 'experimental not guaranteed'],
     ] },
     { id: 'technology', title: 'Technology', href: 'technology.html', items: [

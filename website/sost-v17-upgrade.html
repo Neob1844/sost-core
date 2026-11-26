@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST V17 — Operator Upgrade Guide (nodes and miners)</title>
-<meta name="description" content="Step-by-step guide for SOST node operators and miners to prepare for the V17 network upgrade at block #40,000: preparation, binaries, checksums, restart window #39,900–#39,999, checks and recovery.">
+<meta name="description" content="Step-by-step guide for SOST node operators and miners to prepare for the V17 network upgrade, target block #45,000 (in development, not active): preparation, binaries, checksums, restart window, checks and recovery. No V17 release exists yet.">
 <link rel="canonical" href="https://sostcore.com/sost-v17-upgrade.html">
 <meta property="og:title" content="SOST V17 — Operator Upgrade Guide">
-<meta property="og:description" content="How node operators and miners prepare for the V17 upgrade at block #40,000.">
+<meta property="og:description" content="How node operators and miners will prepare for the V17 upgrade (target block #45,000). No V17 release exists yet.">
 <meta property="og:url" content="https://sostcore.com/sost-v17-upgrade.html">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="/favicon.ico?v=fv20261117" sizes="16x16 32x32 48x48 64x64">
@@ -25,15 +25,14 @@
 <body>
 <main class="v17" id="top">
 
-<div class="crit"><span class="h">&#9888; NOTICE &mdash; 26 NOVEMBER 2026: THE #40,000 PLAN IS OBSOLETE</span>
-V17 will <b>not</b> activate at block #40,000. The block #40,000 target, the #39,900&ndash;#39,999 restart window, the countdowns and the dates on this page no longer apply. The proposed new target is block <b>#45,000</b>, conditional on the final security review and on operator coordination; it is not final until the official release is published. The reward split shown on this page (80/10/5/5) has also been superseded by the 70/5/5/20 proposal announced on 25 November 2026; the final figures will be published with the release.<br><b>No V17 release, tag or checksum exists yet: do not install any V17 build.</b> Until then the network keeps running V30000 FINAL and mining continues normally. This page will be fully updated when the release candidate has been validated.</div>
+<div class="note" style="border-color:#f59e0b"><b>27 November 2026 &mdash; target block #45,000.</b> The earlier #40,000 target and the #39,900&ndash;#39,999 restart window are <b>obsolete</b>. V17 is in development and not active, and <b>no official V17 binaries, tag or checksums exist yet</b>. Until an authorised release is published, keep running the current official software (V30000 FINAL.1) &mdash; there is nothing to do today. This guide explains the steps so operators can prepare; the exact window will be published with the release.</div>
 
-<p style="margin:6px 0 0"><span class="tag t-test">STATUS: TESTING &mdash; NO RELEASE YET</span> <span class="muted" style="font-size:13px">Preparation guide · 14 November 2026</span></p>
+<p style="margin:6px 0 0"><span class="tag t-test">STATUS: IN DEVELOPMENT &mdash; NO RELEASE YET</span> <span class="muted" style="font-size:13px">Preparation guide · updated 27 November 2026</span></p>
 <h1>SOST V17 &mdash; <em>Operator Upgrade Guide</em></h1>
 <p class="lead">For everyone who runs <code>sost-node</code> or <code>sost-miner</code>. Read it now, prepare now, and install only the <b>approved V17 release</b> when it is published. Plain steps, each one with a check.</p>
 
 <div class="crit"><span class="h">&#9888; CRITICAL &mdash; RISK OF BLOCKCHAIN SPLIT</span>
-All validating nodes and miners must prepare the approved V17 release before block #40,000. Running incompatible software after activation can split the network into competing chains, causing rejected blocks, divergent balances and unreliable confirmations. <b>Recommended coordinated restart window: blocks #39,900&ndash;#39,999.</b> Do not continue mining with an incompatible release after activation.</div>
+When the approved V17 release is published, all validating nodes and miners must install it before the activation block (target #45,000). Running incompatible software after activation can split the network into competing chains, causing rejected blocks, divergent balances and unreliable confirmations. <b>The coordinated restart window will be announced with the release.</b></div>
 
 <div class="note"><b>What you can do today:</b> steps 1 (preparation) and the checklists. <b>What you must not do today:</b> install a V17 build. No V17 release has been published, so there are no official V17 binaries, tag or checksums yet. Anything offered as &ldquo;V17&rdquo; before the official announcement on this page and on GitHub is not official. The valid build today is <b>V30000 FINAL</b> (<a href="sost-v30000-history.html">checksums</a>).</div>
 
@@ -46,7 +45,7 @@ All validating nodes and miners must prepare the approved V17 release before blo
 
 <nav class="toc no-print" aria-label="Steps">
   <a href="#timeline">Timeline</a><a href="#s1">1 Prepare</a><a href="#release">2 Get V17</a><a href="#s3">3 Build</a><a href="#s4">4 Verify</a>
-  <a href="#s5">5 Restart node</a><a href="#s6">6 Restart miner</a><a href="#s7">7 NODE_BIND</a><a href="#s8">8 Pre-#40,000 check</a>
+  <a href="#s5">5 Restart node</a><a href="#s6">6 Restart miner</a><a href="#s7">7 NODE_BIND</a><a href="#s8">8 Pre-activation check</a>
   <a href="#s9">9 Activation</a><a href="#s10">10 Problems</a>
 </nav>
 
@@ -54,10 +53,10 @@ All validating nodes and miners must prepare the approved V17 release before blo
 <div class="tbl"><table>
 <tr><th>Moment</th><th>What happens</th><th>What you do</th></tr>
 <tr><td>Now &rarr; release</td><td>Final testing of the candidate</td><td>Step 1. Keep running V30000 FINAL.</td></tr>
-<tr><td>Release published (well before #39,900)</td><td>Tag, binaries, SHA-256 and release notes published here and on GitHub</td><td>Steps 2&ndash;4: download or build, verify. Do not restart yet unless the release notes say so.</td></tr>
-<tr><td><b>#39,900 &rarr; #39,999</b></td><td>Coordinated restart window (100 blocks; about 17 hours at the 10-minute target, but it depends on the real block rate)</td><td>Steps 5&ndash;8: restart node, then miner, then check.</td></tr>
-<tr><td>#40,000</td><td>V17 rules activate automatically by height</td><td>Step 9: do <b>not</b> restart exactly now; watch.</td></tr>
-<tr><td>After #40,000</td><td>Verification of consensus</td><td>Step 9 checks; report problems (step 10).</td></tr>
+<tr><td>Release published (well before the window)</td><td>Tag, binaries, SHA-256 and release notes published here and on GitHub</td><td>Steps 2&ndash;4: download or build, verify. Do not restart yet unless the release notes say so.</td></tr>
+<tr><td><b>Restart window</b> (announced with the release)</td><td>Coordinated restart window before #45,000, counted in blocks; its length in hours depends on the real block rate</td><td>Steps 5&ndash;8: restart node, then miner, then check.</td></tr>
+<tr><td>#45,000 (target)</td><td>V17 rules activate by height, only in an authorised release</td><td>Step 9: do <b>not</b> restart exactly now; watch.</td></tr>
+<tr><td>After #45,000</td><td>Verification of consensus</td><td>Step 9 checks; report problems (step 10).</td></tr>
 </table></div>
 <p>Live: <span class="live" id="gH">&hellip;</span></p>
 
@@ -113,7 +112,7 @@ sha256sum -c SHA256SUMS --ignore-missing      <span class="c"># prints OK for ea
 <li>If your own build gives a different hash, do not install it. Check the tag, the compiler and library versions and the flags; or use the official binaries. <b>Never run a binary whose SHA-256 does not match.</b></li>
 </ul>
 
-<h2 id="s5"><small>Step 5</small>Restart the node (during #39,900&ndash;#39,999)</h2>
+<h2 id="s5"><small>Step 5</small>Restart the node (during the announced window)</h2>
 <ol class="check">
 <li>Your backup from step 1 is done.</li>
 <li>Stop the node cleanly: <code>sudo systemctl stop sost-node</code>, or press <kbd>Ctrl+C</kbd> once in its terminal and wait.</li>
@@ -140,16 +139,16 @@ sha256sum -c SHA256SUMS --ignore-missing      <span class="c"># prints OK for ea
 <li>Check your next block is accepted (it appears on the Explorer with your address).</li>
 <li>Confirm no old miner is still running anywhere with the same address.</li>
 </ol>
-<p><b>If a miner cannot be upgraded in time, stop it before #40,000.</b> An old miner after activation produces blocks the network rejects and wastes its work.</p>
+<p><b>If a miner cannot be upgraded in time, stop it before #45,000.</b> An old miner after activation produces blocks the network rejects and wastes its work.</p>
 
 <h2 id="s7"><small>Step 7</small>NODE_BIND and HEARTBEAT</h2>
 <ul>
 <li><b>No new registration.</b> Existing NODE_BINDs stay valid after V17 and heartbeats continue as today. No key change is required.</li>
-<li>From #40,000 a <b>miner</b> needs, besides the current mining-activity rules, an active NODE_BIND and heartbeats in 3 of the last 4 epochs (288 blocks each) to be eligible for the <b>normal DTD</b>. Today this applies to the Jackpot V2 only. A miner that wants DTD rewards and has no NODE_BIND should register one with the current tools (<code>createnodebind</code>, see the <a href="sost-v30000-history.html">V30000 page</a>) well before #40,000, so its heartbeats count in time.</li>
+<li>From #45,000 a <b>miner</b> needs, besides the current mining-activity rules, an active NODE_BIND and heartbeats in 3 of the last 4 epochs (288 blocks each) to be eligible for the <b>normal DTD</b>. Today this applies to the Jackpot V2 only. A miner that wants DTD rewards and has no NODE_BIND should register one with the current tools (<code>createnodebind</code>, see the <a href="sost-v30000-history.html">V30000 page</a>) well before #45,000, so its heartbeats count in time.</li>
 <li>New in the V17 CLI: the node key and the mining key can sign the NODE_BIND on different machines (two halves). Optional.</li>
 </ul>
 
-<h2 id="s8"><small>Step 8</small>Check before block #40,000</h2>
+<h2 id="s8"><small>Step 8</small>Check before the activation block</h2>
 <ul class="check">
 <li>The approved V17 binaries are installed (node, miner, CLI).</li>
 <li>Their SHA-256 match the release.</li>
@@ -162,10 +161,10 @@ sha256sum -c SHA256SUMS --ignore-missing      <span class="c"># prints OK for ea
 </ul>
 <p>Download: <a href="downloads/v17/SOST_V17_Checklist_Nodes.txt">node checklist</a> · <a href="downloads/v17/SOST_V17_Checklist_Miners.txt">miner checklist</a>.</p>
 
-<h2 id="s9"><small>Step 9</small>Activation at #40,000</h2>
-<p>The new rules activate <b>automatically by height</b>. Nothing has to be done at #40,000. <b>Do not restart exactly at #40,000.</b> Watch:</p>
+<h2 id="s9"><small>Step 9</small>Activation at #45,000</h2>
+<p>The new rules activate <b>automatically by height</b>. Nothing has to be done at #45,000. <b>Do not restart exactly at #45,000.</b> Watch:</p>
 <ul>
-<li>the hash of block #40,000 on your node equals the Explorer&rsquo;s;</li>
+<li>the hash of block #45,000 on your node equals the Explorer&rsquo;s;</li>
 <li>height keeps rising and blocks propagate; peers stay connected;</li>
 <li>the reward split in new blocks matches the published release (70 / 5 / 5 / 20) &mdash; <code>getblock</code> shows a <code>v17_reward</code> section;</li>
 <li>maturity, DTD and Jackpot behave as described on <a href="sost-v17.html">What&rsquo;s changing</a>;</li>
@@ -187,18 +186,18 @@ sha256sum -c SHA256SUMS --ignore-missing      <span class="c"># prints OK for ea
 <tr><td>Possible chain split (your tip differs from the Explorer for several blocks)</td><td>Stop mining. Do not send transactions. Report it in the official channels with your height, tip hash and build checksum, and follow the published instructions.</td></tr>
 </table></div>
 <div class="crit"><span class="h">Do not go back to V16 / V30000 after activation on your own</span>
-Rolling back a hard fork is not like rolling back a web page. After #40,000 an old node follows a different chain. Any return to old software would need a coordinated, tested plan announced for the whole network.</div>
+Rolling back a hard fork is not like rolling back a web page. After #45,000 an old node follows a different chain. Any return to old software would need a coordinated, tested plan announced for the whole network.</div>
 
-<p class="foot">SOST V17 Operator Upgrade Guide &middot; preparation version, 14 November 2026. It becomes the final guide only when the release section above is filled in from the approved release. Questions: the official community channels listed on <a href="sost-community.html">Community</a>.</p>
+<p class="foot">SOST V17 Operator Upgrade Guide &middot; preparation version, updated 27 November 2026 (target #45,000). It becomes the final guide only when the release section above is filled in from the approved release. Questions: the official community channels listed on <a href="sost-community.html">Community</a>.</p>
 </main>
 <script>
 (function(){var f=function(n){return Number(n).toLocaleString('en-US')};
 function get(){fetch('/api/control_room.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){var h=+d.height;if(!(h>0))return;
-var w=39900-h,l=40000-h;document.getElementById('gH').textContent='height '+f(h)+' · '+(w>0?f(w)+' blocks to the window (#39,900)':'window open')+' · '+(l>0?f(l)+' blocks to #40,000':'#40,000 reached');}).catch(function(){})}
+var l=45000-h;document.getElementById('gH').textContent='height '+f(h)+' · '+(l>0?f(l)+' blocks below the #45,000 target':'#45,000 reached')+' · no V17 release yet';}).catch(function(){})}
 get();setInterval(get,120000);})();
 </script>
 <script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='mining'</script>
-<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-nav.js?v=in20261127"></script>
 <script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 </body>
 </html>

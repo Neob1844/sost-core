@@ -190,10 +190,54 @@
     <p class="hero-sub">Every SOST hard fork, network upgrade and milestone since genesis (2026-03-15) — ordered newest-first and explained in detail. This is the canonical changelog. Public announcements are cross-posted on the <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk ANN thread</a>. Public launch: <b>2026-06-16</b>.</p>
   </div>
 </section>
+<!-- ============ V17 — TARGET #45,000 + AUTONOMOUS USEFUL COMPUTE, 27-Nov-2026 ============ -->
+<section class="section" id="v17-45000"><div class="container">
+  <article style="border:2px solid rgba(94,234,212,.6);border-radius:14px;background:linear-gradient(180deg,rgba(94,234,212,.07),transparent 55%);padding:20px 22px">
+    <div style="font:800 11px ui-monospace,monospace;letter-spacing:1.5px;color:#5eead4;text-transform:uppercase">27 Nov 2026 &middot; Network upgrade &middot; status: IN DEVELOPMENT &mdash; NOT ACTIVE</div>
+    <h2 style="font-size:25px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0);text-wrap:balance">SOST V17 &mdash; Block #45,000 Target &amp; Autonomous Useful Compute</h2>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)">V17 is the next coordinated network upgrade of <b>Sovereign Stock Token &mdash; SOST</b>. It now targets <b>block #45,000</b>, subject to final validation and a coordinated release. <b>Nothing in V17 is active, and no official V17 binaries, tag or checksums exist yet.</b> Mainnet keeps running the V16 rules (50&nbsp;% miner / 50&nbsp;% DTD) and mining continues normally.</p>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">1 &middot; Why #40,000 was dropped</h3>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)">On 26 November 2026 the #40,000 target was withdrawn. The remaining blocks did not leave enough time to finish the work, complete the security review and validation of one final build, publish it and give every operator a safe installation window. Moving the target is safer than rushing a consensus change. The #40,000 plan and its #39,900&ndash;#39,999 window are archived below and marked SUPERSEDED.</p>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">2 &middot; The proposed 70 / 5 / 5 / 20 allocation</h3>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)">From the activation block, each block subsidy would be split: <b>70&nbsp;% Proof-of-Work miners</b> (plus all fees), <b>5&nbsp;% Deterministic Token Distribution (DTD)</b>, <b>5&nbsp;% Jackpot</b> and <b>20&nbsp;% Useful Compute Vault</b>. It replaces the earlier 80/15/5 and 80/10/5/5 drafts. The emission schedule and the maximum supply of <b>4,669,201.54789641 SOST</b> do not change: no SOST is created or burned.</p>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">3 &middot; Technical improvements in V17</h3>
+    <ul style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)"><li><b>ConvergenceX Transcript V3</b>: full re-execution of each Proof-of-Work attempt instead of sampled witnesses.</li>
+      <li><b>Jackpot resolved by a verifiable delay function (VDF)</b>: a uniform draw among eligible miners that the block producer cannot predict.</li>
+      <li><b>DTD and Jackpot seeds from the PoW commitment</b>, node participation (NODE_BIND and heartbeats) for normal DTD eligibility.</li>
+      <li><b>P2P and reorganization hardening</b>, a deterministic tie-break between equal-work chains (TB-1) and native <b>multisig</b>.</li></ul>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">4 &middot; Miner coinbase maturity: 1,000 / 5,000 blocks</h3>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)">From the activation block, the miner output of each new coinbase records its own maturity when it is created: <b>1,000 blocks</b> if the miner runs a participating node at that height (an active NODE_BIND and the required heartbeats), <b>5,000 blocks</b> otherwise. It applies per UTXO and is not retroactive: rewards created before activation keep today&rsquo;s 1,000-block rule, and 5,000 is <b>not</b> active today. DTD, Jackpot and ordinary transfers are not affected.</p>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">5 &middot; The Useful Compute Vault</h3>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)">The 20&nbsp;% share accumulates in a consensus balance with no address and no key. In V17 it <b>cannot be spent</b>: paying from it requires a later, separately tested activation designed so that it does not need another hard fork. Its intended use is to pay for verifiable protocol services. It is <b>separate</b> from commercial compute payments, which customers fund themselves.</p>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">6 &middot; Verified Compute vs GPU rental</h3>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)"><b>SOST Verified Compute</b> pays for computational results that can be checked objectively &mdash; by recomputation, proofs or redundancy &mdash; and releases payment only after verification. It is in lab testing. The <b>SOST AI Compute Marketplace</b> is a future commercial concept for renting independently provided CPU and GPU capacity; its results cannot always be verified the same way, so it runs off-consensus and needs no new consensus rules in V17. Neither is active.</p>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">7 &middot; Compute Credits: a prepaid deposit, not a new token</h3>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)">When the market opens, customers would fund <b>SOST Compute Credits</b>: a prepaid balance of SOST set aside for compute jobs and drawn down as verified work settles. Credits are a deposit; <b>no new token is created</b>.</p>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">8 &middot; Universal Assets and the SOST&harr;wSOST bridge: developed, closed</h3>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)"><b>Universal Assets</b> (on-chain asset issuance) is being developed with <b>public issuance OFF</b>. The <b>SOST&harr;wSOST bridge</b> uses a 1:1 mint / burn design with <b>no pre-minted wSOST</b> and is <b>closed to real funds</b>; no bridge contract is deployed on Ethereum mainnet. Both are built so that a later authorised opening does not need another planned fork. Internal reviews and tests are not independent audits.</p>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">9 &middot; What operators should do today</h3>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)"><b>Nothing changes today.</b> Keep running the current official software (V30000 FINAL.1). Do not install unofficial or candidate V17 builds. When an authorised release exists it will be announced here, on the <a href="sost-v17.html" style="color:#5eead4">V17 page</a> and on BitcoinTalk, with binaries, SHA-256 checksums and an installation window before the activation block.</p>
+
+    <h3 style="font-size:15px;letter-spacing:.3px;color:#5eead4;margin:20px 0 6px;font-weight:800">A historical milestone</h3>
+    <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)">The first Useful Compute payment from the Trinity experiment was recorded on mainnet in block <a href="sost-explorer.html?search=8512" style="color:#5eead4">#8,512</a> on 13 May 2026 (transaction <a href="sost-explorer.html?search=787cda89dec3d31f40b6281e10ba1b711685e4a713d4117a4e44dccd616f2d82" style="color:#5eead4;word-break:break-all">787cda89&hellip;6f2d82</a>). The autonomous commercial market is not active.</p>
+
+    <p style="margin-top:14px"><a href="sost-autonomous-compute.html" style="color:#5eead4;font-weight:700">How Autonomous Useful Compute works</a> &nbsp;&middot;&nbsp; <a href="sost-v17.html" style="color:#5eead4;font-weight:700">Explore V17</a> &nbsp;&middot;&nbsp; <a href="sost-v17-upgrade.html" style="color:#5eead4;font-weight:700">Operator Upgrade Guide</a> &nbsp;&middot;&nbsp; <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#5eead4;font-weight:700">BitcoinTalk ANN</a></p>
+  </article>
+</div></section>
 <!-- ============ V17 — PHASE 1 (PREPARATION), 14-Nov-2026 ============ -->
 <section class="section" id="v17-network-upgrade-40000"><div class="container">
-  <article style="border:2px solid #d4af37;border-radius:14px;background:linear-gradient(180deg,rgba(212,175,55,.07),transparent 60%);padding:20px 22px">
-    <div style="font:800 11px ui-monospace,monospace;letter-spacing:1.5px;color:#d4af37;text-transform:uppercase">14 Nov 2026 &middot; Network upgrade &middot; Phase 1 &mdash; preparation &middot; status: TESTING</div>
+  <article style="border:1px solid rgba(255,255,255,.18);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 60%);padding:20px 22px">
+    <div style="margin:0 0 10px;padding:7px 12px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:#fcd34d;font:800 12px/1.5 ui-monospace,monospace;letter-spacing:.6px">SUPERSEDED &mdash; 26 NOV 2026: the #40,000 target and the #39,900&ndash;#39,999 window below are obsolete. V17 now targets #45,000 &mdash; <a href="#v17-45000" style="color:#fde68a">read the current announcement</a>. Kept as archive.</div>
+    <div style="font:800 11px ui-monospace,monospace;letter-spacing:1.5px;color:#d4af37;text-transform:uppercase">14 Nov 2026 &middot; Network upgrade &middot; Phase 1 &mdash; preparation &middot; SUPERSEDED</div>
     <h2 style="font-size:24px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0);text-wrap:balance">SOST V17 &mdash; network upgrade targeting block <span style="color:#d4af37">#40,000</span></h2>
     <p style="font-size:14.5px;line-height:1.75;color:var(--text-secondary,#94a3b8)">SOST is preparing a coordinated network upgrade targeting block #40,000. Proposed improvements include revised mining and DTD rewards (70% miner / 5% DTD / 5% Jackpot / 20% Useful Compute vault (withheld, OFF) accumulator), new coinbase maturity rules, stronger reorganization safeguards, improved P2P synchronization and enhanced node and wallet security. Node operators and miners must prepare compatible, verified software before activation. <b>The release remains subject to final testing and approval; nothing is active yet and there is nothing to install today.</b></p>
     <div style="margin:12px 0;padding:11px 14px;border:2px solid #FB010D;border-radius:9px;background:rgba(251,1,13,.08);color:#ffe3e3;font-size:14px;line-height:1.65"><b style="color:#ff4d55">CRITICAL &mdash; risk of blockchain split.</b> All validating nodes and miners must install the approved V17 release before block #40,000. Incompatible software after activation can split the network, with rejected blocks, divergent balances and unreliable confirmations. Recommended coordinated restart window: <b style="color:#fff">blocks #39,900&ndash;#39,999</b>. The release will be published before the window opens.</div>
@@ -391,6 +435,7 @@ sha256sum build/sost-miner     # 53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00
 @media (max-width:760px){.nb .three,.nb .steps,.nb .steps.x3,.nb .two{grid-template-columns:minmax(0,1fr)}.nb .who>div{grid-template-columns:minmax(0,1fr)}}
 </style>
 <section class="section" id="sost-atomic-bridge-explained"><span id="c704-atomic-bridge"></span><span id="c703-automated-bridge-v2"></span><span id="c702-bridge-comparison"></span><span id="c701-bridge-architecture"></span><span id="wsost-gold-reserve-v2"></span><div class="container">
+<div style="margin:0 0 10px;padding:7px 12px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:#fcd34d;font:800 12px/1.5 ui-monospace,monospace;letter-spacing:.6px">SUPERSEDED &mdash; 19 NOV 2026: the pre-issued wSOST inventory described below was replaced by a 1:1 mint / burn design with no pre-minted wSOST, closed to real funds &mdash; <a href="#v17-45000" style="color:#fde68a">current status</a>. Kept as archive.</div>
   <article class="nb" style="border:2px solid #d4af37;border-radius:14px;background:linear-gradient(180deg,rgba(212,175,55,.07),transparent 60%);padding:20px 22px">
     <div class="chips">
       <span style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ffd166">// RESEARCH / DEVELOPMENT &middot; 26 OCT 2026 &middot; UPDATED 30 OCT 2026</span>
@@ -615,7 +660,7 @@ MATURE NETWORK  (only once objective maturity conditions hold)
     <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Maturity should not be measured by NODE_BIND count alone, but by a <b>combination</b> of distinct active miners, distinct active bound node identities, the share of miners with an active bound node, persistence over time, network stability, observable node diversity, a minimum duration before activation and protection against temporary spikes. <b>No number is proposed here</b>: the thresholds have to come out of simulation and incentive analysis.</p>
     <h3 style="font-size:14px;letter-spacing:.4px;color:#22d3ee;margin:18px 0 6px;font-weight:800">Running a node first has to be easy</h3>
     <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Before NODE_BIND is required more broadly, running a node should be close to one click. Target experience (design direction, not a shipped feature): <b>Enable full participation</b> &rarr; run node &middot; run miner &middot; create NODE_BIND &middot; automatic heartbeats &middot; Jackpot eligibility.</p>
-    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Separate from <b>#40,000</b>: the planned 80% miner / 15% DTD normal / 5% DTD Jackpot split and this proposal are two different decisions and are not tied to the same activation. Terminology: NODE_BIND proves a cryptographic link between a mining key and a node key &mdash; a <b>bound node identity</b> &mdash; not that a physical machine is unique. Full technical note: <a href="sost-whitepaper.html#adaptive-node-participation" style="color:#22d3ee">whitepaper</a>.</p>
+    <p style="font-size:11.5px;color:#fcd34d;font-weight:700;margin:0">SUPERSEDED: the #40,000 target and the 80/15/5 split were replaced (V17 now targets #45,000 with a proposed 70/5/5/20 allocation).</p><p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Separate from <b>#40,000</b>: the planned 80% miner / 15% DTD normal / 5% DTD Jackpot split and this proposal are two different decisions and are not tied to the same activation. Terminology: NODE_BIND proves a cryptographic link between a mining key and a node key &mdash; a <b>bound node identity</b> &mdash; not that a physical machine is unique. Full technical note: <a href="sost-whitepaper.html#adaptive-node-participation" style="color:#22d3ee">whitepaper</a>.</p>
   </article>
 </div></section>
 
@@ -1079,7 +1124,7 @@ NODE STAYS ALIVE</pre></div>
       <p style="font-size:12.5px;color:#cbb6e6;line-height:1.7;margin:0"><b>Under study (ranges, nothing fixed):</b> miner 70&ndash;80% / DTD 15&ndash;25% / jackpot 5&ndash;10%; jackpot interval ~2,500&ndash;5,000 blocks (block time verified 600&nbsp;s). A key simulation finding: a uniform-per-identity jackpot is Sybil-gameable, so a large jackpot would need <b>PoW-weighted, capped</b> eligibility (V2-style), not a bare address/identity draw. <b>No activation height. No final interval. No consensus change. Any implementation would require a hard fork.</b> 75/20/5 is a <b>candidate only</b>.</p>
       <div class="reward-research-update" style="margin-top:12px;background:rgba(215,255,0,.06);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:10px;padding:14px 16px;color:#e8ffb0">
         <div style="color:#d7ff00;font:900 12px/1.2 ui-monospace;letter-spacing:.8px;margin-bottom:8px">&#11042; V17 FINAL SPLIT &mdash; IN THE RELEASE CANDIDATE, NOT YET ACTIVE</div>
-        <p style="font-size:12.5px;line-height:1.7;margin:0 0 7px;color:#e8ffb0"><b style="color:#d7ff00">70 / 5 / 5 / 20 is the split implemented for block #40,000.</b> It is <b>not active</b>: the current rule is 50% miner / 50% DTD, and V17 activates only with an approved, published release. Details: <a href="sost-v17.html#rewards" style="color:#d7ff00;font-weight:700">What&rsquo;s changing in V17</a>. This replaces the earlier 80/15/5 and 80/10/5/5 drafts; the research note above is kept for reference only.</p>
+        <p style="font-size:12.5px;line-height:1.7;margin:0 0 7px;color:#e8ffb0"><b style="color:#d7ff00">70 / 5 / 5 / 20 is the proposed V17 split (target block #45,000; the earlier #40,000 target is obsolete).</b> It is <b>not active</b>: the current rule is 50% miner / 50% DTD, and V17 activates only with an approved, published release. Details: <a href="sost-v17.html#rewards" style="color:#d7ff00;font-weight:700">What&rsquo;s changing in V17</a>. This replaces the earlier 80/15/5 and 80/10/5/5 drafts; the research note above is kept for reference only.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">
           <div style="flex:1 1 120px;border:1px solid #7a8a00;border-radius:8px;padding:9px 11px;background:rgba(215,255,0,.04)"><div style="font:900 18px ui-monospace;color:#d7ff00">70%</div><div style="font-size:10.5px;color:#cfe88a">PoW miner (+ all fees)</div></div>
           <div style="flex:1 1 120px;border:1px solid #7a8a00;border-radius:8px;padding:9px 11px;background:rgba(215,255,0,.04)"><div style="font:900 18px ui-monospace;color:#d7ff00">5%</div><div style="font-size:10.5px;color:#cfe88a">normal DTD every block</div></div>
@@ -2171,7 +2216,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v17x26" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17g" defer></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->
 <section style="border-top:1px solid var(--border-dim);background:rgba(245,158,11,0.04)">
@@ -2356,7 +2401,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="sost-search.js?v=v553"></script>
 <!-- u-skin (DIRECTIVA 4D §5-E) -->
 <script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='ecosystem'</script>
-<script src="universe/core/u-nav.js?v=in20261113a"></script>
+<script src="universe/core/u-nav.js?v=in20261127"></script>
 <script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
 <!-- site soundtrack player (owner order 4 Nov 2026): replaces the NES chiptune button, js/retro-sounds.js and js/sost-music.js -->
 <link rel="stylesheet" href="universe/core/u-audio.css?v=gm-20261104">

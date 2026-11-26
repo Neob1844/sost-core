@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autonomous Useful Compute — SOST</title>
+<meta name="description" content="How SOST Autonomous Useful Compute would work: customers request computational work, independent CPU and GPU providers execute it, verifiable results unlock settlement in SOST. In development and lab testing; not active on mainnet.">
+<link rel="canonical" href="https://sostcore.com/sost-autonomous-compute.html">
+<meta property="og:title" content="Autonomous Useful Compute — SOST">
+<meta property="og:description" content="The world's computing power. Connected by SOST. In development, not active on mainnet.">
+<meta property="og:url" content="https://sostcore.com/sost-autonomous-compute.html">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/favicon.ico?v=fv20261117" sizes="16x16 32x32 48x48 64x64">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=fv20261117">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=fv20261117">
+<link rel="manifest" href="/site.webmanifest?v=sl20261114a">
+<link rel="stylesheet" href="universe/core/u-legacy-skin.css">
+<script>(function(c){c.add('u-skin-pre');addEventListener('load',function(){if(!c.contains('u-skin'))c.remove('u-skin-pre')})})(document.documentElement.classList)</script>
+<link rel="stylesheet" href="universe/core/u-type.css?v=id30000">
+<link rel="stylesheet" href="css/v17.css?v=v17a">
+<link rel="stylesheet" href="universe/core/u-auc.css?v=auc20261127">
+<style>
+body{background:#02040a}
+#auc .auc-more{display:none}
+.auc-page{max-width:1000px;margin:0 auto;padding:10px 16px 60px}
+.auc-flow{list-style:none;margin:14px 0;padding:0;counter-reset:f;display:grid;gap:10px}
+.auc-flow li{counter-increment:f;position:relative;padding:12px 14px 12px 50px;border-radius:12px;background:rgba(15,23,42,.6);border:1px solid rgba(148,163,184,.14);color:#cbd5e1;line-height:1.6}
+.auc-flow li::before{content:counter(f);position:absolute;left:14px;top:12px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:800 12px/1 system-ui;color:#02040a;background:linear-gradient(135deg,#5eead4,#a78bfa)}
+.auc-flow b{color:#fff}
+.auc-page .tag{display:inline-block;padding:2px 8px;border-radius:999px;font:800 10.5px/1.4 system-ui;letter-spacing:.8px;border:1px solid}
+.tg-on{color:#4ade80;border-color:#4ade80}.tg-lab{color:#fcd34d;border-color:#f59e0b}.tg-off{color:#f87171;border-color:#f87171}.tg-fut{color:#c4b5fd;border-color:#a78bfa}
+</style>
+</head>
+<body>
+<main>
+<section class="auc" id="auc" aria-labelledby="aucH">
+ <div class="auc-in">
+  <div class="auc-eyebrow">Sovereign Stock Token &mdash; SOST</div>
+  <h1 id="aucH" style="margin:10px 0 6px;text-align:center;font:800 clamp(30px,5vw,58px)/1.04 system-ui;letter-spacing:-.5px;background:linear-gradient(92deg,#e0f2fe 0%,#5eead4 38%,#60a5fa 66%,#a78bfa 100%);-webkit-background-clip:text;background-clip:text;color:transparent">Autonomous Useful Compute</h1>
+  <p class="auc-sub">The world&rsquo;s computing power. Connected by SOST.</p>
+  <p class="auc-lead">An autonomous marketplace where customers request computational work, independent CPU and GPU providers compete to execute it, verifiable results unlock settlement, and payments are made in SOST.</p>
+  <div class="auc-stage" role="img" aria-label="Concept animation of a compute job flowing through request, match, execute, verify and settle. Conceptual illustration, not live data.">
+   <canvas aria-hidden="true"></canvas>
+   <div class="auc-core" aria-hidden="true"><b>SOST</b><span>COMPUTE</span></div>
+   <span class="auc-tag t1" aria-hidden="true">Requests</span><span class="auc-tag t2" aria-hidden="true">CPU / GPU providers</span>
+   <span class="auc-tag t3" aria-hidden="true">Customers</span><span class="auc-tag t4" aria-hidden="true">Payments in SOST</span>
+  </div>
+  <ol class="auc-steps" aria-label="How a compute job flows">
+   <li><button type="button" class="auc-step" aria-pressed="true">REQUEST</button></li>
+   <li><button type="button" class="auc-step" aria-pressed="false">MATCH</button></li>
+   <li><button type="button" class="auc-step" aria-pressed="false">EXECUTE</button></li>
+   <li><button type="button" class="auc-step" aria-pressed="false">VERIFY</button></li>
+   <li><button type="button" class="auc-step" aria-pressed="false">SETTLE</button></li>
+  </ol>
+  <div class="auc-explain" aria-live="polite"><b data-auc-k>REQUEST</b><span data-auc-t>A company or researcher submits a computational job, its input data and the price it is willing to pay.</span><button type="button" class="auc-play" hidden>&#9654; Play cycle</button></div>
+  <div class="auc-status"><b>IN DEVELOPMENT &middot; LAB TESTING</b><span>Autonomous commercial compute is not active on mainnet. Nothing on this page is live data.</span></div>
+ </div>
+</section>
+
+<div class="auc-page v17">
+<h2 id="what"><small>The idea</small>What Autonomous Useful Compute is</h2>
+<p>Proof-of-Work secures SOST. Autonomous Useful Compute is SOST&rsquo;s principal direction for economic utility: a market in which computation that someone actually needs is requested, executed by independent machines, checked, and paid for in SOST &mdash; with rules that run automatically instead of an operator deciding who is paid.</p>
+<p>It is <b>not</b> a new coin, not a mining pool and not a replacement for Proof-of-Work. Mining keeps securing the chain; the compute market would add a reason to hold and use SOST.</p>
+
+<h2 id="flow"><small>Step by step</small>The market cycle</h2>
+<ol class="auc-flow">
+ <li><b>Quote.</b> The customer describes the job (software, inputs, size) and the verification method, and receives a price estimate.</li>
+ <li><b>Deposit.</b> The customer funds <b>Compute Credits</b>: a prepaid deposit of SOST reserved for the job.</li>
+ <li><b>Match.</b> The market selects providers whose hardware fits the job and whose asking price is within the customer&rsquo;s limit.</li>
+ <li><b>Assign.</b> The job is split into work units, each sent to one or more providers.</li>
+ <li><b>Execute.</b> Providers run the work units on their CPUs or GPUs with the reference software.</li>
+ <li><b>Verify.</b> Results are checked objectively &mdash; by recomputation, proofs or redundant execution &mdash; wherever a reliable method exists.</li>
+ <li><b>Settle.</b> Verified results go to the customer and SOST is released from the deposit to the providers under the contract rules.</li>
+ <li><b>Close.</b> Work that fails verification is not paid; the unused part of the deposit stays available to the customer.</li>
+</ol>
+
+<h2 id="products"><small>Two products</small>Verified Compute and the AI Compute Marketplace</h2>
+<div class="tbl"><table>
+<tr><th></th><th>SOST Verified Compute</th><th>SOST AI Compute Marketplace</th></tr>
+<tr><td>Promise</td><td>&ldquo;Pay for computational results that can be objectively verified.&rdquo;</td><td>&ldquo;Future access to independently provided CPU and GPU capacity.&rdquo;</td></tr>
+<tr><td>What is paid for</td><td>A result that passes a check</td><td>Time on a machine (rental)</td></tr>
+<tr><td>Verification</td><td>Recomputation, proofs or redundancy</td><td>Not always possible; relies on service rules and reputation</td></tr>
+<tr><td>Consensus</td><td>Built for protocol-level settlement</td><td>Off-consensus; needs no new consensus rules in V17</td></tr>
+<tr><td>Status</td><td><span class="tag tg-lab">LAB &middot; IN DEVELOPMENT</span></td><td><span class="tag tg-fut">FUTURE COMMERCIAL CONCEPT</span></td></tr>
+</table></div>
+
+<h2 id="credits"><small>Payments</small>SOST Compute Credits</h2>
+<p><b>Compute Credits</b> are prepaid compute deposits. A customer sets aside SOST for future jobs and the balance is drawn down as verified work settles. Credits are a deposit &mdash; <b>no new token is created</b>, and no SOST is minted for them.</p>
+
+<h2 id="vault"><small>V17</small>The Useful Compute Vault (20&nbsp;%)</h2>
+<p>V17 proposes that 20&nbsp;% of each block subsidy accumulates in the <b>Useful Compute Vault</b>, a consensus balance with no address and no key. It does not increase the maximum supply of 4,669,201.54789641 SOST. In V17 the vault <b>cannot be spent</b>; a later, separately tested activation would allow it to pay only for verifiable protocol services, with a cap on how much can be used. Customer payments for commercial compute are <b>separate</b>: they come from the customers&rsquo; own deposits, not from the vault.</p>
+
+<h2 id="status"><small>Honest status</small>What exists today</h2>
+<div class="tbl"><table>
+<tr><th>Item</th><th>Status</th></tr>
+<tr><td>First Useful Compute payment (Trinity experiment), block <a href="sost-explorer.html?search=8512">#8,512</a>, 13 May 2026, tx <a href="sost-explorer.html?search=787cda89dec3d31f40b6281e10ba1b711685e4a713d4117a4e44dccd616f2d82" style="word-break:break-all">787cda89&hellip;6f2d82</a></td><td><span class="tag tg-on">HISTORICAL &middot; ON MAINNET</span></td></tr>
+<tr><td>Market protocol (requests, matching, verification, settlement) on test networks</td><td><span class="tag tg-lab">LAB TESTING</span></td></tr>
+<tr><td>Useful Compute Vault (20&nbsp;% of the V17 subsidy)</td><td><span class="tag tg-lab">IN V17 DEVELOPMENT &middot; SPENDING OFF</span></td></tr>
+<tr><td>Commercial compute on mainnet</td><td><span class="tag tg-off">NOT ACTIVE</span></td></tr>
+<tr><td>AI Compute Marketplace (GPU rental)</td><td><span class="tag tg-fut">FUTURE CONCEPT</span></td></tr>
+</table></div>
+<p class="muted">No job counts, provider numbers, prices or payments are shown on this site as live data, because none are live. Internal tests are not independent audits.</p>
+
+<h2 id="faq"><small>Questions</small>Short answers</h2>
+<ul>
+<li><b>Can I earn SOST with my computer today?</b> Only by mining. The compute market is not open.</li>
+<li><b>Does V17 open the market?</b> No. V17 would start the Useful Compute Vault; using it, and opening the market, need later authorised activations.</li>
+<li><b>Is there a compute token?</b> No. Compute Credits are deposits of SOST.</li>
+<li><b>Who decides who gets paid?</b> The goal is that rules do: a provider is paid when its result passes verification.</li>
+</ul>
+<p style="margin-top:22px"><a class="btn primary" href="sost-v17.html">Explore V17</a> <a class="btn" href="news.html#v17-45000">Read the announcement</a> <a class="btn" href="/">Home</a></p>
+</div>
+</main>
+<script src="universe/core/u-auc.js?v=auc20261127" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v17g" defer></script>
+<script>window.SOSTU_NAV_FROM_ROOT=true;window.SOSTU_SECTION='mining'</script>
+<script src="universe/core/u-nav.js?v=in20261127"></script>
+<script src="universe/core/u-legacy-skin.js?v=rs20261112g"></script>
+</body>
+</html>
