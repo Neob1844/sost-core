@@ -1,4 +1,5 @@
-// SOST V17 — network upgrade at block #40,000 — site-wide compact banner (14-Nov-2026).
+// SOST V17 — site-wide compact banner (14-Nov-2026). 26-Nov-2026: preventive notice — the #40,000 plan is OBSOLETE
+// (owner decision: proposed new target #45,000, conditional; full page sync only after the RC13 validation).
 //
 // Replaces the V30000 (#30,000) operator notice. The full V30000 text is kept, unchanged, at
 // sost-v30000-history.html and in News & Updates › Historical Network Upgrades.
@@ -22,6 +23,7 @@
   var WINDOW_START = 39900;
   var STATUS = 'TESTING';
   var STATUS_NOTE = 'Candidate under final testing. No V17 release has been published. Do not install unofficial builds.';
+  var OBSOLETE = true;   // 26-Nov-2026: #40,000 target and #39,900-#39,999 window withdrawn; proposed new target #45,000 (not final)
   var LINK_NEW = 'sost-v17.html';
   var LINK_GUIDE = 'sost-v17-upgrade.html';
   var LINK_REL = 'sost-v17-upgrade.html#release';
@@ -71,15 +73,20 @@
 '  .sost-v17-body{padding:2px 12px 14px;font-size:12.5px}}';
 
   var HTML = '' +
-'<div class="sost-v17" role="region" aria-label="SOST V17 network upgrade at block 40,000">' +
+'<div class="sost-v17" role="region" aria-label="SOST V17 network upgrade: the block 40,000 plan is obsolete">' +
 ' <button type="button" class="sost-v17-head" aria-expanded="false" aria-controls="sostV17Body">' +
 '  <img class="sost-v17-sig" src="/brand/legacy/sost-legacy-logo-512.png" alt="" width="30" height="30" decoding="async">' +
-'  <span class="sost-v17-t"><span class="sost-v17-title">SOST V17 &middot; <em>BLOCK #40,000</em></span>' +
+'  <span class="sost-v17-t"><span class="sost-v17-title">SOST V17 &middot; <em>#40,000 PLAN OBSOLETE</em></span>' +
 '   <span class="sost-v17-chip" data-v17-status>' + STATUS + '</span>' +
-'   <span class="sost-v17-left" data-v17-left>&hellip; blocks left</span></span>' +
+'   <span class="sost-v17-left">proposed new target <b>#45,000</b> &middot; not final</span></span>' +
 '  <span class="sost-v17-more">Details <i>&#9662;</i></span>' +
 ' </button>' +
 ' <div class="sost-v17-body" id="sostV17Body" hidden>' +
+'  <div class="sost-v17-crit"><span class="h">&#9888; NOTICE &mdash; 26 NOVEMBER 2026: THE #40,000 PLAN IS OBSOLETE</span>' +
+'   V17 will <b>not</b> activate at block #40,000. The #40,000 target, the #39,900&ndash;#39,999 restart window and the reward split shown below no longer apply. ' +
+'   The proposed new target is block <b>#45,000</b>, conditional on the final security review and on operator coordination; it is not final until the official release is published. ' +
+'   <b>No V17 release, tag or checksum exists yet: do not install any V17 build.</b> The network keeps running V30000 FINAL and mining continues normally. ' +
+'   The text below is the previous plan, kept for reference until the pages are updated with the release.</div>' +
 '  <p class="sost-v17-live" data-v17-live>SOST V17 &mdash; network upgrade &middot; block #40,000</p>' +
 '  <p>SOST is preparing a coordinated network upgrade targeting block <b>#40,000</b>. Proposed improvements include revised mining and DTD rewards, ' +
 '  new coinbase maturity rules, stronger reorganization safeguards, improved P2P synchronization and enhanced node and wallet security.</p>' +
@@ -116,6 +123,7 @@
   function live(el, le) {
     function paint(h) {
       if (!(h > 0)) return;
+      if (OBSOLETE) { el.innerHTML = 'Current height <b>' + fmt(h) + '</b> &middot; the #40,000 plan is obsolete &middot; proposed new target #45,000 (not final)'; return; }
       var left = V17_HEIGHT - h, w = WINDOW_START - h, txt;
       if (left > 0) {
         var days = Math.round(left * 600 / 86400);
