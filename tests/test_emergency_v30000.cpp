@@ -661,6 +661,14 @@ static void test_no_sost_burn() {
 
 int main() {
     std::printf("== test_emergency_v30000 (2026-10-08 audit regressions) ==\n");
+    {   // AEGIS H1 (27-Nov-2026): explicit precondition instead of a SegFault in a non-consensus (SbPoW OFF) build
+        sbpow::MinerPrivkey sk; sbpow::MinerPubkey pk; Bytes32 m{}; m.fill(0x5a); sbpow::MinerSignature sg{};
+        if (!mk(1, sk, pk) || !sbpow::sign_sbpow_commitment(sk, m, sg) || !sbpow::verify_sbpow_signature(pk, m, sg)) {
+            std::printf("FAIL: Schnorr sign/verify unavailable — this binary was built with SOST_ENABLE_PHASE2_SBPOW=OFF "
+                        "and is NOT consensus-capable; build the mainnet configuration\n");
+            return 1;
+        }
+    }
     test_constants();
     test_node_poison();
     test_bind_takeover_fixed();

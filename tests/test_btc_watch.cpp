@@ -10,6 +10,8 @@
 #include <map>
 #include <string>
 #include <sys/stat.h>
+#include <filesystem>
+#include <unistd.h>
 
 using namespace sost::atomic_swap::btc;
 
@@ -86,7 +88,8 @@ int main() {
 
     // ---- Store round-trip + 0600 ----
     {
-        std::string path = "/tmp/claude-1001/btc_swaps_test.dat";
+        const std::string path = (std::filesystem::temp_directory_path() / ("sost_btc_swaps_test_" + std::to_string(::getpid()) + ".dat")).string();
+        std::remove(path.c_str());
         BtcSwapStore store;
         BtcSwapRecord a; a.swap_id="A"; a.party=BtcParty::Funder; a.refund_height=800200; a.funding_txid=std::string(64,'f');
         a.state=BtcSwapState::Locked; a.lock_amount_sats=500000;
@@ -115,7 +118,7 @@ int main() {
 
         // missing file → empty, ok
         BtcSwapStore empty;
-        CHECK(empty.Load("/tmp/claude-1001/does_not_exist_xyz.dat"), "missing file loads empty ok");
+        CHECK(empty.Load((std::filesystem::temp_directory_path() / "sost_does_not_exist_xyz.dat").string()), "missing file loads empty ok");
         CHECK(empty.records().empty(), "missing file → empty");
     }
 

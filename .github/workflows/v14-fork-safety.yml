@@ -82,20 +82,23 @@ jobs:
           ./build/test-atomic-swap-coordinator
           ./build/test-atomic-swap-e2e-sim
 
-  # Best-effort full suite. Allowed to fail (informational) until all deps are
-  # pinned in CI; the v14-safety job above is the hard gate.
+  # Full suite, HARD GATE (AEGIS H1, 27-Nov-2026). Built in the MAINNET configuration: SbPoW ON (default) with the
+  # libsecp256k1 (schnorrsig) from the distribution package. The old job built SOST_ENABLE_PHASE2_SBPOW=OFF,
+  # a binary that is NOT consensus-capable (Schnorr verification stubbed to false), and was allowed to fail, which hid
+  # 3 failures (2 of them artefacts of that stub) and never ran the Schnorr / SbPoW tests at all.
   full-ctest:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Install build deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake g++ libssl-dev libsecp256k1-dev
-      - name: Configure + build
+          sudo apt-get install -y cmake g++ libssl-dev libsecp256k1-dev m4
+      - name: Configure + build (mainnet configuration)
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=OFF
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build -j2
+      - name: Binary is consensus-capable (SbPoW path compiled in)
+        run: test "$(strings build/sost-node | grep -c 'POW-SIG/v11')" -gt 0
       - name: ctest
         run: ctest --test-dir build --output-on-failure
